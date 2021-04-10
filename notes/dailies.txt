@@ -1,0 +1,20 @@
+4/9/21
+------
+X -update cookiecutter template makefile and notes files
+X -choose project name
+X -final investigation of dearpygui vs kivy (+kivymd)
+    [dearpygui mobile won't be ready in time. Use this if you want to build a desktop app, use kivy if you want to build mobile. Leaning mobile - dearpygui looks cool but I feel if I'm going to do something non-streamlit/dash, I should make it REALLY different. I'm now thinking the gans could be a problem though - gpt3 is just an api so that's fine, but I'd need to host the gans somewhere. This is meant to be pretty open ended though so I could do gan stuff on paperspace and then a voice app or something else for mobile (spoken/written bullet points -> speech in my voice?). Time may be a constraint though if I try to do both - gpt3 trial expires at end of June. Maybe learning fund can help out there.]
+X -make new git project
+X -write project requirements
+X -write premortem
+-write lessons from last time
+
+4/10/21
+-------
+-write lessons from last time
+-try out openai pypi package to make sure I can communicate w/ gpt3 programmatically
+    -if necessary, write my own helper functions to wrap common actions
+-look into how to use various gan packages (install? clone?)
+-make sure I can still access paperspace
+    -maybe update dotfiles/envs etc. on machine if necessary
+
