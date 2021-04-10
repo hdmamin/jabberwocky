@@ -1,0 +1,188 @@
+Description:
+Talk to famous person (hdm: does this allow you to respond as Mark or is it not interactive?)
+
+Source:
+https://github.com/maraoz/gpt-scrolls/blob/master/scrolls/chat/famous-person.txt
+
+Prompt: 
+The following is a transcript of a conversation between Mark, a computer science student, and ${famous person's name}. ${paste first paragraph of famous person's wikipedia page}.
+
+Mark: Hi there, $name. Honored to meet you.
+$name: 
+
+-------------------------------------------------------------------------------
+Description:
+Generate music (not familiar with this exact format).
+
+Source:
+https://github.com/maraoz/gpt-scrolls/blob/master/scrolls/creative/music/abc-music.txt
+Prompt:
+X:1
+T:The Legacy Jig
+M:6/8
+L:1/8
+R:jig
+K:G
+GFG BAB | gfg gab | GFG BAB | d2A AFD |
+GFG BAB | gfg gab | age edB |1 dBA AFD :|2 dBA ABd |:
+efe edB | dBA ABd | efe edB | gdB ABd |
+efe edB | d2d def | gfe edB |1 dBA ABd :|2 dBA AFD |] X:2
+
+X:2
+T:Whitby Pier
+C:trad. arr. Robin Garside
+Z:ABC version by Jack Campin
+M:6/8
+L:1/8
+Q:3/8=120
+K:D
+A|"D"F2A d2e|   fed    cBA|"G" BdB "D" AFD|   FAF "A"E2
+A|"D"F2A d2e|   fed    cBA|"Em"Bgf "A" edc|"D"d3     d2:|
+g|"D"faf d2f|"G"gbg    e2g|"D" fed     faf|"A"ecA    A2
+g|"D"faf d2f|"G"bag "D"fed|"Em"Bgf "A7"edc|"D"d3     d2:|
+
+X: 3
+T: Cooley's
+M: 4/4
+L: 1/8
+R: reel
+K: Emin
+|:D2|EB{c}BA B2 EB|~B2 AB dBAG|FDAD BDAD|FDAD dAFD|
+EBBA B2 EB|B2 AB defg|afe^c dBAF|DEFD E2:|
+|:gf|eB B2 efge|eB B2 gedB|A2 FA DAFA|A2 FA defg|
+eB B2 eBgB|eB B2 defg|afe^c dBAF|DEFD E2:|
+
+
+X: 4
+T:
+
+-------------------------------------------------------------------------------
+Description:
+Combine two concepts. Good for a brainstorming assistant.
+
+Source:
+https://github.com/maraoz/gpt-scrolls/blob/master/scrolls/rephrase/conceptual-blending.txt
+
+Prompt:
+Conceptual blending is where two or more existing concepts are blended together to form a new concept. The blending of the concepts is done in a way that is non-arbitrary. A new concept is formed by taking the meaning of one concept and the form of another. For example, the concept of a car and the concept of a plane are blended to form the concept of a carplane. The concept of a carplane is a non-arbitrary combination of the two concepts. The concept of a carplane is a new concept, with a new meaning, and a new form.
+Conceptual blending theory is a theory of how concepts are formed. The theory was developed by Fauconnier and Turner (2002) and was inspired by the theory of conceptual metaphor developed by Lakoff and Johnson (1980). Conceptual blending theory is an extension of conceptual metaphor theory, and conceptual metaphor theory is an extension of the theory of categorization developed by Rosch (1975).
+
+Here are some examples of conceptual blending (where sometimes 2 seemingly disparate ideas are blended): 
+
+Idea 1: Airplane
+Idea 2: Car
+Blended Idea: Flying Car: A car that can fly.
+
+Idea 1: Hierarchy 
+Idea 2: Attire
+Blended Idea: Hierarchical attire: In a workplace, a CEO may be wearing a different kind of attire (more expensive) than a director in the company. And a director would probably be wearing more expensive attire than a janitor in the company. So you have a kind of hierarchical attire.
+
+Idea 1: Two-Dimensional Space
+Idea 2: Three-Dimensional Space
+Blended Idea: 2.5-Dimensional Space
+
+Idea 1: Old
+Idea 2: New
+Blended Idea: Recycled
+
+Idea 1: Geology
+Idea 2: Neurology
+Blended Idea: Sediment neurology: When sediments are buried deep under the ground, they can act like a soft layer of neurological tissue in that they will be compressed over time and can get folded and distorted. In neurology, this is called cortical folding. In geology, this is called tectonic folding.
+
+Idea 1: Mathematics
+Idea 2: Fecal matter
+Blended Idea: Brownian motion: Brownian motion is a type of random motion that happens when you observe the movements of fecal matter (such as protozoans) under a microscope.
+
+Idea 1: More
+Idea 2: Less
+Blended Idea: Just-Right
+
+Idea 1: Triangle
+Idea 2: Square
+Blended Idea: Trapezoid
+
+Idea 1: War
+Idea 2: Peace
+Blended Idea: Armistice
+
+Idea 1:
+
+-------------------------------------------------------------------------------
+Description:
+Step by step instructions to solve everyday problems (good for virtual assistant).
+
+Source:
+https://github.com/maraoz/gpt-scrolls/blob/master/scrolls/rephrase/how-to.txt
+
+Prompt:
+How to change a lightbulb:
+1. Turn off the light switch. 
+2. Using a cloth, push the bulb in, furn anti clockwise and remove it.
+3. Insert the new bulb and twist to find the right fit. Push it in and turn clockwise.
+4. Turn on the light to test it.
+
+How to tie a tie:
+1. Place tie around your neck.
+2. Cross the wide end over the thinner end.
+3. Run wide end under tie and pull it across again.
+4. Pull the wide end through the center.
+5. Loop through the knot.
+6. Tighten the knot.
+
+How to fry an egg:
+1. Crack the Eggs. 
+2. Add the Eggs to the Pan. 
+3. Cover When the Edges Turn White.
+4. Wait until it's done.
+5. Serve.
+
+How to
+
+-------------------------------------------------------------------------------
+Description:
+Full emamil from barebones prompt.
+
+Source:
+https://github.com/maraoz/gpt-scrolls/blob/master/scrolls/rephrase/email-expand.txt
+
+Prompt:
+This email writing program can generate full emails from simple commands. Some examples:
+
+Command: Thank John for the book
+Output: Dear John, Thank you so much for the book. I really appreciate it. I hope to hang out soon. Your friend, Sarah.
+
+Command: Tell TechCorp I appreciate the great service
+Output: To Whom it May Concern, I want you to know that I appreciate the great service at TechCorp. The staff is outstanding and I enjoy every visit. Sincerely, Bill Johnson.
+
+Command: Invoice Kelly Watkins $500 for design consultation
+Output: Dear Ms. Watkins, This is my invoice for $500 for design consultation. It was a pleasure to work with you. Sincerely, Emily Fields
+
+Command: Invite Amanda and Paul to the company event Friday night
+Output: Dear Amanda and Paul, I hope this finds you doing well. I want to invite you to our company event on Friday night. It will be a great opportunity for networking and there will be food and drinks. Should be fun. Best, Ryan
+
+Command: Ask Amy out for a date
+Output: Dear Amy, I'd love to take you out for dinner. What is your schedule like this Friday? If you are free, we could go out for dinner and maybe see a movie. I look forward to hearing from you. Regards, Charles
+
+Command: 
+
+-------------------------------------------------------------------------------
+Description:
+Simplify complex explanations.
+
+Source:
+https://github.com/maraoz/gpt-scrolls/blob/master/scrolls/rephrase/simplify.txt
+
+Prompt:
+Complex: A black hole is a region of spacetime where gravity is so strong that nothing—no particles or even electromagnetic radiation such as light—can escape from it. The theory of general relativity predicts that a sufficiently compact mass can deform spacetime to form a black hole. The boundary of the region from which no escape is possible is called the event horizon. Although the event horizon has an enormous effect on the fate and circumstances of an object crossing it, according to general relativity it has no locally detectable features. In many ways, a black hole acts like an ideal black body, as it reflects no light. Moreover, quantum field theory in curved spacetime predicts that event horizons emit Hawking radiation, with the same spectrum as a black body of a temperature inversely proportional to its mass. This temperature is on the order of billionths of a kelvin for black holes of stellar mass, making it essentially impossible to observe.
+
+Short & Simple: A black hole is a region of space from which nothing can escape, according to the general theory of relativity, it is the result of the curving of spacetime caused by a huge mass. Around a black hole there is a position of no return, called the event horizon. It is called "black" because it absorbs all the light that hits it, reflecting nothing, just like a perfect black body in thermodynamics.
+
+
+Complex: Nihilism (/ˈnaɪ(h)ɪlɪzəm, ˈniː-/; from Latin: nihil, lit. 'nothing') is the philosophical view that all knowledge and values are baseless; that is, all knowledge lacks a certain basis and all values are subjective. Most commonly, nihilism is presented in the form of existential nihilism, in which life is believed to be without objective meaning, purpose, or intrinsic value. Moral nihilists assert that morality does not exist at all. Nihilism may also take epistemological, ontological, or metaphysical forms, whereby, respectively, knowledge is not possible, or reality does not actually exist.
+
+Short & Simple: Nihilism comes from the Latin nihil, or nothing. It is the belief that values are falsely invented. The term 'nihilism' can also be used to describe the idea that life, or the world, has no distinct meaning or purpose. Nihilists believe that there are no true morals. Many people think of the German philosopher Friedrich Nietzsche when they think about nihilism, because he said that morals were invented. But in his books, Nietzsche said that people needed to create their own morals to get over nihilism.
+
+
+Complex: [insert complex text here]
+
+Short & Simple:

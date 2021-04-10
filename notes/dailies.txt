@@ -11,10 +11,35 @@ X -write premortem
 
 4/10/21
 -------
--write lessons from last time
--try out openai pypi package to make sure I can communicate w/ gpt3 programmatically
+X -write lessons from last time
+    X -documented various project ideas
+    X -looked through openai repos for more ideas. Briefly tried out dall-e notebook.
+~ -try out openai pypi package to make sure I can communicate w/ gpt3 programmatically
+    [Looked through a few options but haven't tried/confirmed one yet]
     -if necessary, write my own helper functions to wrap common actions
 -look into how to use various gan packages (install? clone?)
 -make sure I can still access paperspace
     -maybe update dotfiles/envs etc. on machine if necessary
 
+4/11/21
+-------
+-settle on a package for programmatic gpt3 access
+    -if necessary, write my own helper functions to wrap common actions
+-make sure I can still access paperspace
+    -maybe update dotfiles/envs etc. on machine if necessary
+-set up api key so I can access it programmatically (config file, dropbox, etc.) + function
+
+
+
+-------------------------------------------------------------------------------
+easy tasks for low energy days
+
+-
+
+-------------------------------------------------------------------------------
+backlog
+
+-store api key somewhere (drive? dropbox?) and write load func. Could have local config file but need to make this available when working in paperspace etc.
+-look through and/or download coursera video gan notebook
+-review kilcher videos on dall-e, clip, maybe other gans
+-look through instructions/demo for voice cloning app - how much audio do we need? Does it need to be custom or could I plausibly find enough for a famous person?

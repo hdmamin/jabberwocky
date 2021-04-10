@@ -60,6 +60,13 @@ What could go wrong?
 -There are a few things I'd like to try and doing all of them thoroughly could take ages. Don't be afraid to postpone 1 or more of these til later. The models will only keep getting better the longer you wait.
 -Introduce a mid-way checkin (not sure of name yet, but it makes sense: we have a premortem at the start, a postmortem at the end, now we add something in the middle.) Let's schedule something now for 8 weeks out so I don't forget. This is a time to take stock - am I enjoying the project, am I learning the things I thought I would, are things going wrong that I did or didn't foresee? Should I wrap up early?
 
+7. Project is too poorly defined and I can't decide which direction to pursue, resulting in several poorly done partial projects.
+[SOLUTION]
+-Add reminder at the 6 week mark to commit to something.
+
 Lessons from last time
 ----------------------
-
+-Burnout is always a risk, so keep your educational book expectations really low. Anki flashcards might need to be discarded or reduced to a really tiny expectation.
+-Really try to push (in terms of project difficulty/ambition, not time commitment). The point is largely to test the boundaries of my abilities so failure is expected and welcome. If I try something hard and fail, that's better than not trying and just staying at the same level of skill forever.
+-Pay close attention to what aspects you enjoy. I had trouble choosing a project after finishing webgraph, and it would be nice if that process is easier next time.
+-Make some time for a 100% break afterwards (not even project research) and make that mandatory. This time, I ended up only halfway committing to the break and it ended up being both longer and less relaxing than would be ideal.
