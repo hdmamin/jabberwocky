@@ -19,6 +19,8 @@ X -try out openai pypi package to make sure I can communicate w/ gpt3 programmat
 X -choose method of loading api key and write func
     [dotfile or env var both supported]
 X -define constants to easily access engine names by index and view prices
+X -watch video on sirens (in this context, basically a way to create better combinations of inputs (e.g. images) than simple interpolation)
+X -run dall-e and deep-daze demo notebooks in colab
 -look into how to use various gan packages (install? clone?)
 -make sure I can still access paperspace
     -maybe update dotfiles/envs etc. on machine if necessary
