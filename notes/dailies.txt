@@ -14,20 +14,24 @@ X -write premortem
 X -write lessons from last time
     X -documented various project ideas
     X -looked through openai repos for more ideas. Briefly tried out dall-e notebook.
-~ -try out openai pypi package to make sure I can communicate w/ gpt3 programmatically
-    [Looked through a few options but haven't tried/confirmed one yet]
+X -try out openai pypi package to make sure I can communicate w/ gpt3 programmatically
     -if necessary, write my own helper functions to wrap common actions
+X -choose method of loading api key and write func
+    [dotfile or env var both supported]
+X -define constants to easily access engine names by index and view prices
 -look into how to use various gan packages (install? clone?)
 -make sure I can still access paperspace
     -maybe update dotfiles/envs etc. on machine if necessary
 
 4/11/21
 -------
--settle on a package for programmatic gpt3 access
+-try out chronology lib for programmatic gpt3 access and see if it looks helpful compared to openai lib
     -if necessary, write my own helper functions to wrap common actions
 -make sure I can still access paperspace
     -maybe update dotfiles/envs etc. on machine if necessary
--set up api key so I can access it programmatically (config file, dropbox, etc.) + function
+    -copy over openai dotfile
+-choose a first use case to work on
+    -download/install a gan package?
 
 
 
