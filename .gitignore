@@ -2,7 +2,8 @@
 __pycache__/
 .ipynb_checkpoints
 .idea/
-data/
+data/*
+!data/prompts
 *egg-info*
 *.swp
 
