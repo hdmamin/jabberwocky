@@ -52,10 +52,10 @@ def bold(text):
     -------
 
     """
-    return C.BOLD_START + text + C.BOLD_END
+    return C.bold_start + text + C.bold_end
 
 
 def print_response(prompt, response):
-    print(bold(prompt))
+    print(bold(prompt), end='')
     print(response)
 
