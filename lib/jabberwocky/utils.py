@@ -1,11 +1,8 @@
 import os
 from pathlib import Path
 
-from htools.structures import IndexedDict
-
-
-ENGINES = ['ada', 'babbage', 'curie', 'davinci']
-PRICES = IndexedDict(zip(ENGINES, [.0008, .0012, .006, .06]))
+from htools import load
+from jabberwocky.config import C
 
 
 def load_api_key() -> str:
@@ -17,4 +14,48 @@ def load_api_key() -> str:
         with open(Path('~/.openai').expanduser(), 'r') as f:
             key = f.read().strip()
     return key
+
+
+def openai_auth():
+    """
+    # TODO: docs
+    Returns
+    -------
+
+    """
+    os.environ['OPENAI_API_KEY'] = load_api_key()
+
+
+def load_prompt(name) -> str:
+    """
+    # TODO: docs
+
+    Parameters
+    ----------
+    name
+
+    Returns
+    -------
+
+    """
+    return load(f'data/prompts/{name}.txt').strip()
+
+
+def bold(text):
+    """
+    # TODO: docs
+    Parameters
+    ----------
+    text
+
+    Returns
+    -------
+
+    """
+    return C.BOLD_START + text + C.BOLD_END
+
+
+def print_response(prompt, response):
+    print(bold(prompt))
+    print(response)
 
