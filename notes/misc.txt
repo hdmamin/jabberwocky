@@ -6,6 +6,8 @@
 -provide written (or spoken, followed by speech to text lib) bullet points, then expand to a full speech of some kind in your own voice. Think virtual assistant.
     -chatbot with yourself (prompt gpt3 with your own writing, then use voice cloning app for text to speech)
     -chatbot with famous person (others have done this with gpt3 so should be good pre-existing prompts) combined with voice cloner, so you can actually "chat" with (e.g.) jk rowling in real time. Not sure what audio requirements are for voice cloner yet.
+    -transcribe audio (of a meeting, phone call, speech, etc.), generate written feedback, maybe deliver via audio
 -ask how to do something, gpt3 provides step by step instructions in text (then text to speech app for a virtual assistant)
 -something with GANs for video? Look through coursera notebook.
     -or gans for music? gpt-scrolls pypi lib has example of this, not sure how well it works but I imagine we could find a lib to convert those notes to audio. (Compose background music for gan-generated gif?)
+
