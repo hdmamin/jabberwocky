@@ -39,6 +39,7 @@ X -create prompts dir and write func to load_prompt
     X -allow data/prompts subdir in git (not very big)
 X -write helper to print prompt in bold and resp in normal text
 X -add jabberwocky imports to template nb
+X -re-watched kilcher Clip video
 -choose a first use case to work on
     -download/install a gan package?
 
