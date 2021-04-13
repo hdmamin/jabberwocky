@@ -43,18 +43,31 @@ X -re-watched kilcher Clip video
 -choose a first use case to work on
     -download/install a gan package?
 
-4/12/22
+4/12/21
 -------
--more api exploration
+~ -more api exploration
     -try out chronology lib for programmatic gpt3 access and see if it looks helpful compared to openai lib
     -if necessary, write my own helper functions to wrap common actions
-    -check if there's a free gpt2 endpoint?
-        -if not, maybe create mock request func to save credits (though ada is pretty cheap)
+    ~ -check if there's a free gpt2 endpoint?
+        [pypi library booste. API key is in gmail 55.]
+        ~ -if not, maybe create mock request func to save credits (though ada is pretty cheap)
+X -try free content filter in openai api
+    X -write wrapper
+X -udpate openai_auth func to set key automatically
 -choose a first use case to work on
     -download/install a gan package?
 
-
-
+4/13/21
+-------
+-try chronology lib
+-finish signup for booste lib (programmatic gpt2 and clip; not sure if hosted remotely or not since code is private)
+    -write api key loading func
+-finish query_gpt3 func
+    -how to handle logprobs?
+    -add tab completion for extra params? Would take some py magic
+-port query_content_filter func
+    -finish documenting
+-re-watch dall-e video
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 

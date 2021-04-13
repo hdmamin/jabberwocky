@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+import sys
+import warnings
 
 from htools import load
 from jabberwocky.config import C
@@ -23,7 +25,12 @@ def openai_auth():
     -------
 
     """
-    os.environ['OPENAI_API_KEY'] = load_api_key()
+    os.environ['OPENAI_API_KEY'] = key = load_api_key()
+    try:
+        module = sys.modules['openai']
+        module.api_key = key
+    except Exception as e:
+        warnings.warn('openai library has not been imported. API key not set.')
 
 
 def load_prompt(name) -> str:
