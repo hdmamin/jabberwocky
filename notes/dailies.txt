@@ -54,24 +54,41 @@ X -re-watched kilcher Clip video
 X -try free content filter in openai api
     X -write wrapper
 X -udpate openai_auth func to set key automatically
+X -finish signup for booste lib
 -choose a first use case to work on
     -download/install a gan package?
 
 4/13/21
 -------
 -try chronology lib
--finish signup for booste lib (programmatic gpt2 and clip; not sure if hosted remotely or not since code is private)
-    -write api key loading func
--finish query_gpt3 func
-    -how to handle logprobs?
+X -write booste api key loading func
+X -port and finalize text_segment func for youtube transcription idea
+X -document functions in utils
+X -finish query_gpt3 func
+    X -how to handle logprobs?
+        [Just let user choose to return everything if they want.]
+    X -try stream=True
+        -write generator version of query_gpt3 (func must be one or the other)
     -add tab completion for extra params? Would take some py magic
--port query_content_filter func
-    -finish documenting
+X -create even shorter prompt to save tokens
+X -port query_content_filter func
+    X -finish documenting
 -re-watch dall-e video
+
+4/14/21
+-------
+-port query_gpt3
+    -document
+    -tab completion magic?
+    -write generator version of query_gpt3 (func must be one or the other)
+-try chronology lib
+-try booste lib
+-re-watch dall-e video
+
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
-- several docstrings in pylib
+- artbreeder tutorial
 
 -------------------------------------------------------------------------------
 backlog

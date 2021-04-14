@@ -10,4 +10,9 @@
 -ask how to do something, gpt3 provides step by step instructions in text (then text to speech app for a virtual assistant)
 -something with GANs for video? Look through coursera notebook.
     -or gans for music? gpt-scrolls pypi lib has example of this, not sure how well it works but I imagine we could find a lib to convert those notes to audio. (Compose background music for gan-generated gif?)
-
+-youtube assistant (chrome extension?)
+    -specify a time chunk of a video and have gpt3 explain it in simpler terms (i.e. explain a difficult concept in a stats lecture to a 5th grader, 9th grader, etc.)
+        -could even try to generate audio using the voice of the person in the video, though this might not work that well (not much available data, some have multiple speakers)
+    -identify emotion/tone throughout the video (see spikes of anger, humor, sadness)
+    -identify key points/takeaways
+    -generate questions corresponding to various timestamps
