@@ -77,12 +77,24 @@ X -port query_content_filter func
 
 4/14/21
 -------
--port query_gpt3
-    -document
+X -port query_gpt3
+    X -document
+    X -save sample response and use it for better mocking
+    X -write generator version of query_gpt3 (func must be one or the other)
+        X -port and document
     -tab completion magic?
-    -write generator version of query_gpt3 (func must be one or the other)
 -try chronology lib
 -try booste lib
+-re-watch dall-e video
+
+4/15/21
+-------
+-tab completion magic for query_gpt3 and generator?
+-try chronology lib
+-try booste lib
+-look through misc.txt notes and decide on a first use case to try
+    -if videos, start messing around with youtube transcription package
+    -if gans, select a gan to start with and look into download/installation (dall-e, deep daze, etc.)
 -re-watch dall-e video
 
 -------------------------------------------------------------------------------

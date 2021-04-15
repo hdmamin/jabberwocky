@@ -16,3 +16,4 @@
     -identify emotion/tone throughout the video (see spikes of anger, humor, sadness)
     -identify key points/takeaways
     -generate questions corresponding to various timestamps
+    -not just youtube videos: live lectures from remote learning!
