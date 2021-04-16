@@ -10,3 +10,8 @@ class C:
     engines = ['ada', 'babbage', 'curie', 'davinci']
     prices = IndexedDict(zip(engines, [.0008, .0012, .006, .06]))
 
+    # Data
+    mock_stream_paths = {True: 'data/misc/sample_stream_response.pkl',
+                         False: 'data/misc/sample_response.pkl'}
+
+

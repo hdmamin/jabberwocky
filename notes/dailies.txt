@@ -89,13 +89,26 @@ X -port query_gpt3
 
 4/15/21
 -------
--tab completion magic for query_gpt3 and generator?
+_ -tab completion magic for query_gpt3 and generator?
+    UPDATE: looked into this but doesn't look like openai api includes this anywhere. Good enough - I included the major kwargs.
+X -rewrite 2 query functions into 1 merged function (stream=True returns a generator rather than yielding values)
 -try chronology lib
 -try booste lib
 -look through misc.txt notes and decide on a first use case to try
     -if videos, start messing around with youtube transcription package
     -if gans, select a gan to start with and look into download/installation (dall-e, deep daze, etc.)
 -re-watch dall-e video
+
+4/16/21
+-------
+-look through misc.txt notes and decide on a first use case to try (leaning heavily towards youtube transcription-related stuff)
+-if youtube, start messing around with youtube transcription package
+    -do all/most videos have transcripts?
+    -maybe wrap text_segment func to work if we want the PREV n seconds instead of specifying start/end
+    -try out "explain to a fifth grader" etc. prompts from docs
+    -save some in prompts dir
+    -consider cleaning up text_segment and related funcs to act on whole sentences when possible
+-if gans, select a gan to start with and look into download/installation (dall-e, deep daze, etc.)
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -105,7 +118,10 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
--store api key somewhere (drive? dropbox?) and write load func. Could have local config file but need to make this available when working in paperspace etc.
+-re-watch dall-e video
+-add booste config file to paperspace
 -look through and/or download coursera video gan notebook
 -review kilcher videos on dall-e, clip, maybe other gans
 -look through instructions/demo for voice cloning app - how much audio do we need? Does it need to be custom or could I plausibly find enough for a famous person?
+-try chronology lib
+-try booste lib
