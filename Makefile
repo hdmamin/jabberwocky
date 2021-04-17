@@ -17,5 +17,5 @@ pypi: lib
 		cd lib && twine upload --repository pypi dist/*
 
 readmes:
-	htools update_readmes "['bin', 'analysis', 'lib/jabberwocky']"
+	htools update_readmes "['bin', 'notebooks', 'lib/jabberwocky']"
  

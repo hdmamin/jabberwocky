@@ -17,3 +17,8 @@
     -identify key points/takeaways
     -generate questions corresponding to various timestamps
     -not just youtube videos: live lectures from remote learning!
+-translate my rambling questions/explanations into more concise points (a Harrison translator!)
+
+4/16/21
+-------
+-idea: we can show gpt3 some paired examples of generated and manual transcripts in hopes it can "translate" from generated to manual. That way, we can get improved transcript quality for videos that only have generated transcripts.
