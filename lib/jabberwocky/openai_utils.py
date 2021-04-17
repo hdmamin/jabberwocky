@@ -3,6 +3,7 @@ import openai
 
 from htools import load
 from jabberwocky.config import C
+from jabberwocky.utils import openai_auth
 
 
 def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
@@ -112,4 +113,8 @@ def query_content_filter(text):
     if label == '2' and logp < -.355 and cls2logp:
         label, logp = max(cls2logp.items(), key=lambda x: x[-1])
     return int(label), np.exp(logp)
+
+
+# I figure if we're importing these functions, we'll need to authenticate.
+openai_auth()
 

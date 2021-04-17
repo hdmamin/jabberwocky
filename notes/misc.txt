@@ -22,3 +22,14 @@
 4/16/21
 -------
 -idea: we can show gpt3 some paired examples of generated and manual transcripts in hopes it can "translate" from generated to manual. That way, we can get improved transcript quality for videos that only have generated transcripts.
+    -4/17 update: after some thought, I've concluded the paired transcripts are a bit less useful than I thought. We could construct something similar by taking fully punctuated text and removing all punctuation. It wouldn't have the occasional errors of speech-to-text (e.g. "adverse cereal" vs "adversarial") but the sentence tokenization task would be solvable that way.
+
+4/17/21
+-------
+-explain to a 2nd grader prompt:
+    -ada and babbage just repeat the input. Curie maybe shortened sentences a bit but wasn't that impressive. Seems like we really do have to use davinci here.
+-idea: video recommender or clustering system. gpt3 is good at semantic search, and transcripts let us easily turn videos into "documents". (babbage engine suggested)
+-idea: integrate with apple arkit
+    -have gpt3 write a story, then use text descriptions plus clip to find available artifacts online to insert into the scene as illustration
+    -img recognition -> text description of your surroundings -> some kind of instructions/feedback?
+        -batting/yoga/lifting form feedback

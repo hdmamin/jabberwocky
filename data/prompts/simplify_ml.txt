@@ -1,0 +1,25 @@
+My fifth grader asked me what this passage means. I rephrased it for him, in plain language a fifth grader can understand.
+
+Passage:
+Here we show that scaling up language models greatly improves task-agnostic, few-shot performance, sometimes even reaching competitiveness with prior state-of-the-art finetuning approaches. Specifically, we train GPT-3, an autoregressive language model with 175 billion parameters, 10x more than any previous non-sparse language model, and test its performance in the few shot setting. For all tasks, GPT-3 is applied with any gradient updates or fine-tuning, with tasks and few-shot demonstrations specified purely via text interaction with the model.
+Summary:
+Larger language models can do well on new tasks they weren't trained on. We trained the biggest language model ever and tested it on new tasks, and it did really well. This model can perform new tasks without any extra training.
+
+Passage:
+Second, the potential to exploit spurious correlations in training data fundamentally grows with the expressiveness of the model and the narrowness of the training distribution. This can create problems for the pre-training plus fine-tuning paradigm, where models are designed to be large to absorb information during pre-training, but are then fine-tuned on very narrow task distributions. For instance observe that larger models do not necessarily generalize better out-of-distribution. There is evidence that suggests that the generalization achieved under this paradigm can be poor because the model is overly specific to the training distribution and does not generalize well outside it. Thus, the performance of fine-tuned models on specific benchmarks, even when it is nominally at human-level, may exaggerate actual performance on the underlying task.
+Summary:
+Big models work well on data they've see but don't always work well on new data. This problem is worse when the training dataset is small. Fine-tuning big language models on new tasks may appear to work well, but their performance may look better than it really is.
+
+Passage:
+Learning reusable feature representations from large unlabeled datasets has been an area of active research. In the context of computer vision, one can leverage the practically unlimited amount of unlabeled images and videos to learn good intermediate representations, which can then be used on a variety of supervised learning tasks such as image classification. We propose that one way to build good image representations is by training Generative Adversarial Networks (GANs), and later reusing parts of the generator and discriminator networks as feature extractors for supervised tasks. We propose and evaluate a set of constraints on the architectural topology of Convolutional GANs that make them stable to train in most settings.
+Summary:
+Learning from unlabeled data is useful because it's easy to collect large amounts. GANs use these to learn good representations of images, and parts of the trained models can be reused for other tasks. We built a new model architecture that makes them easier to train.
+
+Passage:
+Adversarial training has been shown effective at endowing the learned representations with stronger generalization ability. However, it typically requires expensive computation to determine the direction of the injected perturbations. In this paper, we introduce a set of simple yet effective data augmentation strategies dubbed cutoff, where part of the information within an input sentence is erased to yield its restricted views (during the fine-tuning stage). Notably, this process relies merely on stochastic sampling and thus adds little computational overhead. To verify the effectiveness of the proposed strategies, we apply cutoff to natural language understanding, text classification, and text generation.
+Summary:
+Adversarial training is a way to improve the generalization of learned models. We found a simple data augmentation method that helps models generalize without slowing down training. This is helpful for many natural language processing tasks.
+
+Passage:
+{}
+Summary:
