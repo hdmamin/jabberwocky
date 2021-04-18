@@ -19,5 +19,4 @@ How to fry an egg:
 4. Wait until it's done.
 5. Serve.
 
-How to
-
+{}

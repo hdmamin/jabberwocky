@@ -1,3 +1,4 @@
 htools
 incendio
 openai
+pyyaml==5.2.*

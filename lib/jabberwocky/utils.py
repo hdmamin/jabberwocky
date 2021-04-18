@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import yaml
 import sys
 import warnings
 
@@ -45,19 +46,68 @@ def openai_auth():
         warnings.warn('openai library has not been imported. API key not set.')
 
 
-def load_prompt(name) -> str:
-    """Load a gpt3 prompt from a text file in data/prompts.
+def load_yaml(path, section=None):
+    """Load a yaml file. Useful for loading prompts.
+
+    Parameters
+    ----------
+    path: str or Path
+    section: str or None
+        I vaguely recall yaml files can define different subsections. This lets
+        you return a specific one if you want. Usually leave as None which
+        returns the whole contents.
+
+    Returns
+    -------
+    dict
+    """
+    with open(path, 'r') as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+    return data.get(section, data)
+
+
+def load_prompt(name, prompt='', rstrip=True):
+    """Load a gpt3 prompt from data/prompts. Note that this function went
+    through several iterations and early versions of this function didn't
+    allow for an input prompt parameter. This worked fine for toy examples
+    where the prompt is static (e.g. reformatting some dates) but as we get to
+    more powerful prompts we often want to specify recommended hyperparameters
+    and allow for inputting new text, so a yaml file became more appropriate.
+    However, getting new lines, special characters, and brackets (for string
+    formatting) to all work in yaml files turns out to be surprisingly hard, so
+    we instead place the prompt in its own .txt file and leave the .yaml file
+    for hypers.
 
     Parameters
     ----------
     name: str
-        Name of file, not counting the extension or preceding directories.
+        Name of subdirectory in data/prompts. Ex: 'simplify_ml'
+    prompt: str
+        Additional input to be inserted into the prompt template. For example,
+        our tldr template prompt is "{}\n\ntl;dr:". We need to pass in text
+        to summarize (this replaces the brackets like in a python f-string).
+    rstrip: bool
+        This is a safety measure to prevent us from accidentally leaving a
+        trailing space after the end of the prompt (which leads to worse gpt3
+        completions). We let the user turn it off in case a prompt requires it.
 
     Returns
     -------
-    str: Text in file with start/end spaces stripped.
+    dict: Keys are all kwargs for query_gpt3(). You may want to override some
+    of these at times, but they at least provide reasonable defaults. Some are
+    more important than others: for example, a 'stop' value will likely always
+    be relevant, while 'max_tokens' or 'engine_i' may depend on the specific
+    usage.
     """
-    return load(f'data/prompts/{name}.txt').strip()
+    dir_ = Path(f'data/prompts/{name}')
+    prompt_fmt = load(dir_/'prompt.txt')
+    kwargs = load_yaml(dir_/'config.yaml')
+    prompt = prompt_fmt.format(prompt)
+    if rstrip: prompt = prompt.rstrip()
+    kwargs['prompt'] = prompt
+    msg = kwargs.pop('reminder', None)
+    if msg: print(msg)
+    return kwargs
 
 
 def bold(text):
@@ -87,4 +137,5 @@ def print_response(prompt, response):
     """
     print(bold(prompt), end='')
     print(response)
+
 
