@@ -25,6 +25,8 @@ def text_segment(df, start, end):
     we might end up with time=2s to time=13s because we don't have more
     fine-grained information).
     """
+    assert end > start, 'End time must be later than start time.'
+
     if start < df.start.iloc[0]:
         start_idx = 0
     else:
@@ -57,7 +59,7 @@ def video_id(url):
     return parts[-1]
 
 
-def get_transcripts(url):
+def get_transcripts(url, verbose=True):
     """Fetch one or more transcripts for a youtube video given its URL.
 
     Parameters
@@ -78,5 +80,8 @@ def get_transcripts(url):
         if trans.language_code == 'en':
             rows = trans.fetch()
             results[types[trans.is_generated]] = pd.DataFrame(rows)
+    if verbose:
+        null_keys = [k for k, v in results.items() if v is None]
+        print(f'The following keys are null: {repr(null_keys)}')
     return DotDict(**results, id=id_)
 

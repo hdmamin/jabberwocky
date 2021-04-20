@@ -4,7 +4,7 @@ import yaml
 import sys
 import warnings
 
-from htools import load
+from htools import load, spacer
 from jabberwocky.config import C
 
 
@@ -106,7 +106,7 @@ def load_prompt(name, prompt='', rstrip=True):
     if rstrip: prompt = prompt.rstrip()
     kwargs['prompt'] = prompt
     msg = kwargs.pop('reminder', None)
-    if msg: print(msg)
+    if msg: print(msg + spacer())
     return kwargs
 
 
