@@ -148,14 +148,22 @@ X -update load_prompt to separate printed reminder from main prompt
 4/20/21
 -------
 -consider cleaning up text_segment and related funcs to act on whole sentences when possible
-    -consider: add punctuation once (to whole transcript) or add it to a small segment each time we ask for a summary/eli5 etc?
+    ~ -consider: add punctuation once (to whole transcript) or add it to a small segment each time we ask for a summary/eli5 etc?
 -start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
 -try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
 -try out other tasks and add to prompts dir:
     -key point extraction
     -question generation
 
-
+4/21/21
+-------
+-continue working on func to re-map punctuated text to timestamps. (Even if we don't do this all at once, we should probably cache results from translating chunks.)
+-consider cleaning up text_segment and related funcs to act on whole sentences when possible
+-start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
+-try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
+-try out other tasks and add to prompts dir:
+    -key point extraction
+    -question generation
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
