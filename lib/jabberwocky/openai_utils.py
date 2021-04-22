@@ -6,9 +6,13 @@ from jabberwocky.config import C
 from jabberwocky.utils import openai_auth
 
 
+def strip(text, do_strip=True):
+    return text.strip() if do_strip else text
+
+
 def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
                logprobs=None, stream=False, mock=False, return_full=False,
-               **kwargs):
+               strip_output=True, **kwargs):
     """Convenience function to query gpt3.
 
     Parameters
@@ -70,10 +74,10 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
 
     # Extract text and return. Zip maintains lazy evaluation.
     if stream:
-        texts = (chunk.choices[0].text for chunk in res)
+        texts = (strip(chunk.choices[0].text, strip_output) for chunk in res)
         return zip(texts, res) if return_full else texts
     else:
-        output = (prompt, res.choices[0].text, res)
+        output = (prompt, strip(res.choices[0].text, strip_output), res)
         return output if return_full else output[:-1]
 
 
