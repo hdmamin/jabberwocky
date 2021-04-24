@@ -184,10 +184,18 @@ X -continue working on func to re-map punctuated text to timestamps. (Even if we
 
 4/23/21
 -------
--evaluate fuzzywuzzy realignment approach on a couple more chunks
--consider updating alignment func to update a chunk of a df instead of returning a new df?
--maybe update get_transcripts to check for british english manual transcripts (better than US generated + saves tokens)
+~ -evaluate fuzzywuzzy realignment approach on a couple more chunks
+~ -consider updating alignment func to update a chunk of a df instead of returning a new df?
+    UPDATE: think it may be a good idea to write a class which maintains two copies of the df, original and punctuated. If the user asks for an overlapping chunk, maybe we can punctuate only the portion that needs it.
+X -maybe update get_transcripts to check for british english manual transcripts (better than US generated + saves tokens)
+X -add warnings to realignment func when max similarity score is low
 -consider cleaning up text_segment and related funcs to act on whole sentences when possible
+
+4/24/21
+-------
+-start designing obj that will track unpunct and punct dfs
+    -rewrite text_segment if necessary to (optionally?) return df slice/ids so we can avoid punctuating overlaps twice.
+    -consider cleaning up text_segment and related funcs to act on whole sentences when possible
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

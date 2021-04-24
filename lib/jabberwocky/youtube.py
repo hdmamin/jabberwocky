@@ -2,7 +2,8 @@ from fuzzywuzzy import fuzz
 import numpy as np
 import pandas as pd
 import re
-from youtube_transcript_api import YouTubeTranscriptApi
+import warnings
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
 from htools import DotDict
 
@@ -68,6 +69,11 @@ def get_transcripts(url, verbose=True):
     Parameters
     ----------
     url: str
+        Don't include any channel-related suffix. E.G. use
+        https://www.youtube.com/watch?v=OZbCRN3C_Hs, not
+        https://www.youtube.com/watch?v=OZbCRN3C_Hs&ab_channel=BBC.
+    verbose: bool
+        Warn
 
     Returns
     -------
@@ -76,20 +82,30 @@ def get_transcripts(url, verbose=True):
     found). Manual transcripts are human-created. Generated transcripts are a
     bit lower quality and tend to lack punctuation.
     """
+    langs = ['en', 'en-GB']
     id_ = video_id(url)
-    types = {True: 'generated', False: 'manual'}
-    results = dict.fromkeys(types.values())
-    for trans in YouTubeTranscriptApi.list_transcripts(id_):
-        if trans.language_code == 'en':
-            rows = trans.fetch()
-            results[types[trans.is_generated]] = pd.DataFrame(rows)
+    res = {'generated': None, 'manual': None}
+    transcripts = YouTubeTranscriptApi.list_transcripts(id_)
+    res['generated'] = transcripts.find_generated_transcript(langs)
+    try:
+        res['manual'] = transcripts.find_manually_created_transcript(langs)
+    except NoTranscriptFound:
+        if verbose: warnings.warn('No manual transcript found.')
     if verbose:
-        null_keys = [k for k, v in results.items() if v is None]
-        print(f'The following keys are null: {repr(null_keys)}')
-    return DotDict(**results, id=id_)
+        non_en_keys = [k for k, v in res.items()
+                       if v and ('United Kingdom' in v.language)]
+        if non_en_keys:
+            warnings.warn(
+                f'{non_en_keys} {"has" if len(non_en_keys) == 1 else "have"} '
+                'language en-GB, not en.'
+            )
+    return DotDict(
+        **{k: pd.DataFrame(v.fetch()) if v else v for k, v in res.items()},
+        id=id_
+    )
 
 
-def realign_punctuated_text(df, text, skip_1st=1, margin=2):
+def realign_punctuated_text(df, text, skip_1st=0, margin=2):
     """Realign gpt3's punctuated version of a youtube transcript with the
     original timestamps.
 
@@ -135,14 +151,19 @@ def realign_punctuated_text(df, text, skip_1st=1, margin=2):
         scores = []
         bigrams = zip(punct_words[skip_1st:], punct_words[skip_1st + 1:])
         # Avoid list comp so we can exit early if we find a perfect match.
-        for i, gram in enumerate(bigrams):
-            score = fuzz.ratio(suff, ' '.join(gram))
+        for j, gram in enumerate(bigrams):
+            score = fuzz.ratio(suff, ' '.join(gram).lower())
             if score == 100:
-                argmax = i
+                argmax = j
                 break
             scores.append(score)
         else:
             argmax = np.argmax(scores)
+            if max(scores) < 80:
+                warnings.warn(
+                    'Max score < 80. Your rows may have gotten misaligned '
+                    f'at row {i}: {chunk.text}'
+                )
         punct_len = skip_1st + argmax + 2
         rows.append(' '.join(words[start_i:start_i + punct_len]))
         start_i += punct_len
