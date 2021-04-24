@@ -66,7 +66,7 @@ def load_yaml(path, section=None):
     return data.get(section, data)
 
 
-def load_prompt(name, prompt='', rstrip=True):
+def load_prompt(name, prompt='', rstrip=True, verbose=True):
     """Load a gpt3 prompt from data/prompts. Note that this function went
     through several iterations and early versions of this function didn't
     allow for an input prompt parameter. This worked fine for toy examples
@@ -90,6 +90,10 @@ def load_prompt(name, prompt='', rstrip=True):
         This is a safety measure to prevent us from accidentally leaving a
         trailing space after the end of the prompt (which leads to worse gpt3
         completions). We let the user turn it off in case a prompt requires it.
+    verbose: bool
+        If True, this will print a message on loading if one is specified in
+        the prompt config file. This can be some kind of reminder or usage
+        note.
 
     Returns
     -------
@@ -106,7 +110,7 @@ def load_prompt(name, prompt='', rstrip=True):
     if rstrip: prompt = prompt.rstrip()
     kwargs['prompt'] = prompt
     msg = kwargs.pop('reminder', None)
-    if msg: print(msg + spacer())
+    if msg and verbose: print(msg + spacer())
     return kwargs
 
 

@@ -193,9 +193,18 @@ X -add warnings to realignment func when max similarity score is low
 
 4/24/21
 -------
--start designing obj that will track unpunct and punct dfs
-    -rewrite text_segment if necessary to (optionally?) return df slice/ids so we can avoid punctuating overlaps twice.
+~ -start designing obj that will track unpunct and punct dfs
+    ~ -rewrite text_segment if necessary to (optionally?) return df slice/ids so we can avoid punctuating overlaps twice.
+        UPDATE: currently returns relevant rows from df rather than str. May adjust interface as needed though.
     -consider cleaning up text_segment and related funcs to act on whole sentences when possible
+X -add verbose option to load_prompt
+
+4/25/21
+-------
+-continue building Transcript classes
+    -rewrite text_segment if necessary to (optionally?) return df slice/ids so we can avoid punctuating overlaps twice.
+    -add option to text_segment-related funcs to act on whole sentences when possible
+    -make unpunct transcript auto call gpt3 when accessing an unpunctuated chunk of df? First need a lot of scoping about desired interface.
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
