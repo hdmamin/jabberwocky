@@ -201,10 +201,19 @@ X -add verbose option to load_prompt
 
 4/25/21
 -------
--continue building Transcript classes
+~ -continue building Transcript classes
     -rewrite text_segment if necessary to (optionally?) return df slice/ids so we can avoid punctuating overlaps twice.
     -add option to text_segment-related funcs to act on whole sentences when possible
-    -make unpunct transcript auto call gpt3 when accessing an unpunctuated chunk of df? First need a lot of scoping about desired interface.
+    ~ -make unpunct transcript auto call gpt3 when accessing an unpunctuated chunk of df? First need a lot of scoping about desired interface.
+        UPDATE: adding punctuated_chunk method which just is loc for PunctuatedTranscript and queries gpt3 for UnpunctTranscript. Mostly works but need to troubleshoot the update to self.df_punct (settingwithcopywarning caused error).
+
+4/26/21
+-------
+-continue building Transcript classes
+    -fix settingwithcopyerror when punctuating part of df_punct
+    -rewrite time_segment/related methods to avoid re-punctuating rows we've already punctuated
+    -add functionality to make text_segment-related funcs act on whole sentences when possible
+
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

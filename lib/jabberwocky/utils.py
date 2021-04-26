@@ -106,8 +106,12 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True):
     dir_ = Path(f'data/prompts/{name}')
     prompt_fmt = load(dir_/'prompt.txt')
     kwargs = load_yaml(dir_/'config.yaml')
-    prompt = prompt_fmt.format(prompt)
-    if rstrip: prompt = prompt.rstrip()
+    # If no prompt is passed in, we load the template and store it for later.
+    if prompt:
+        prompt = prompt_fmt.format(prompt)
+        if rstrip: prompt = prompt.rstrip()
+    else:
+        prompt = prompt_fmt
     kwargs['prompt'] = prompt
     msg = kwargs.pop('reminder', None)
     if msg and verbose: print(msg + spacer())
