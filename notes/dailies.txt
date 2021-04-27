@@ -209,11 +209,20 @@ X -add verbose option to load_prompt
 
 4/26/21
 -------
--continue building Transcript classes
-    -fix settingwithcopyerror when punctuating part of df_punct
-    -rewrite time_segment/related methods to avoid re-punctuating rows we've already punctuated
+~ -continue building Transcript classes
+    X -fix settingwithcopyerror when punctuating part of df_punct
+    X -rewrite time_segment/related methods to avoid re-punctuating rows we've already punctuated
     -add functionality to make text_segment-related funcs act on whole sentences when possible
+-lots of docstrings to write for Transcript classes
 
+4/27/21
+-------
+-continue building Transcript classes
+    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+        -if possible and advisable, start building this functionality
+    -design interface for allowing multiple tasks post punct (just diff methods on generatedTranscript? Or allow user to pass in funcs somehow?)
+        -select first task to try post-punctuation (maybe tldr?)
+            -start building method
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -231,7 +240,7 @@ backlog
 -re-watch dall-e video
 -add booste config file to paperspace
 -look through and/or download coursera video gan notebook
--review kilcher videos on dall-e, clip, maybe other gans
+-review kilcher videos on dall-e, maybe other gans
 -look through instructions/demo for voice cloning app - how much audio do we need? Does it need to be custom or could I plausibly find enough for a famous person?
 -try chronology lib
 -try booste lib
