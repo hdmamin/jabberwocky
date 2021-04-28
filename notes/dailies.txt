@@ -218,11 +218,25 @@ X -add verbose option to load_prompt
 4/27/21
 -------
 -continue building Transcript classes
+    X -add option for time_segment to not punctuate text
     -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
         -if possible and advisable, start building this functionality
-    -design interface for allowing multiple tasks post punct (just diff methods on generatedTranscript? Or allow user to pass in funcs somehow?)
+    X -design interface for allowing multiple tasks post punct (just diff methods on generatedTranscript? Or allow user to pass in funcs somehow?)
+        X -first draft of PromptManager class
         -select first task to try post-punctuation (maybe tldr?)
-            -start building method
+            _ -start building method
+                UPDATE: new PromptManager class auto-loads all prompts in prompt dir so no need to do this.
+
+4/28/21
+-------
+-revise PromptManager class
+    -add option to skip certain prompts or load dynamically?
+    -clean up dynamic method generation (or find graceful way to do this)
+-continue building Transcript classes
+    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+        -if possible and advisable, start building this functionality
+        -select first task to try post-punctuation (maybe tldr?)
+-write draft of function to tie together Transcript.time_range() and PromptManager.query().
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

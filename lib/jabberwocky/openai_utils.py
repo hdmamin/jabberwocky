@@ -44,6 +44,10 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
     return_full: bool
         If True, return a third item which is the full response object.
         Otherwise we just return the prompt and response text.
+    strip_output: bool
+        If True, strip text returned by gpt3. Without this, many prompts have a
+        leading space and/or trailing newlines due to the way examples are
+        formatted.
     kwargs: any
         Additional kwargs to pass to gpt3.
         Ex: presence_penalty, frequency_penalty (both floats in [0, 1]).

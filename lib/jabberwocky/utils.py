@@ -109,12 +109,13 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True):
     # If no prompt is passed in, we load the template and store it for later.
     if prompt:
         prompt = prompt_fmt.format(prompt)
-        if rstrip: prompt = prompt.rstrip()
     else:
         prompt = prompt_fmt
+    # Vim adds trailing newline, which can hurt gpt3 quality.
+    if rstrip: prompt = prompt.rstrip()
     kwargs['prompt'] = prompt
     msg = kwargs.pop('reminder', None)
-    if msg and verbose: print(msg + spacer())
+    if msg and verbose: print(f'{name}: {msg}{spacer()}')
     return kwargs
 
 
