@@ -230,14 +230,22 @@ X -add verbose option to load_prompt
 4/28/21
 -------
 -revise PromptManager class
-    -add option to skip certain prompts or load dynamically?
-    -clean up dynamic method generation (or find graceful way to do this)
+    ~ -add option to skip certain prompts or load dynamically?
+        UPDATE: skip dynamic loading, but allow passing in a select number of prompts.
+    ~ -clean up dynamic method generation (or find graceful way to do this)
 -continue building Transcript classes
     -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
         -if possible and advisable, start building this functionality
         -select first task to try post-punctuation (maybe tldr?)
 -write draft of function to tie together Transcript.time_range() and PromptManager.query().
 
+4/29/21
+-------
+-revise PromptManager class
+    -work on rigorous_partial issues in nb
+        -handling param order in cases it changes
+        -handling new kwargs
+    -update dynamic method generation in cls
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
@@ -246,6 +254,11 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
+-continue building Transcript classes
+    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+        -if possible and advisable, start building this functionality
+        -select first task to try post-punctuation (maybe tldr?)
+-write draft of function to tie together Transcript.time_range() and PromptManager.query().
 -start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
 -try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
 -try out other tasks and add to prompts dir:
