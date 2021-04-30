@@ -242,10 +242,20 @@ X -add verbose option to load_prompt
 4/29/21
 -------
 -revise PromptManager class
-    -work on rigorous_partial issues in nb
-        -handling param order in cases it changes
-        -handling new kwargs
+    ~ -work on rigorous_partial issues in nb
+        X -handling param order in cases it changes
+        X -handling new kwargs
+            UPDATE: tentatively mostly working? Need to stop it from mutating old func though.
     -update dynamic method generation in cls
+
+4/30/21
+-------
+-stop rigorous_partial from mutating original func (look at old copy_func func)
+-test on more cases to see if it seems to work
+-add dynamic method generation to cls (hopefully going from func to method doesn't break anything)
+-return to Transcript classes
+    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
