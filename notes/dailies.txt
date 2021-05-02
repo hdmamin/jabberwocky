@@ -259,10 +259,21 @@ X -stop rigorous_partial from mutating original func (look at old copy_func func
 
 5/1/21
 ------
--Fix newfound issue when sorting new_pars (instead of using x.default, maybe can use constant or index in old parms) if defaults have mixed types
--test if renaming func works
+X -Fix newfound issue when sorting new_pars (instead of using x.default, maybe can use constant or index in old parms) if defaults have mixed types
+X -test if renaming func works
+    UPDATE: yes, but repr and str are not updated. Wrote class that can do this but haven't integrated it into the partial function yet. Might also provide a simpler way to do a lot stuff - not sure yet.
+X -fix __defaults__ and __kwdefaults__ (only worked on wrapped func before)
 -test on more cases to try to track down any other bugs
 -add dynamic method generation to cls (hopefully going from func to method doesn't break anything)
+
+5/2/21
+------
+-revise partial func to use attach_repr
+-test on more cases to try to track down any other bugs
+-add dynamic method generation to cls (hopefully going from func to method doesn't break anything)
+-port getindex
+    -port attach_repr
+    -port rigorous_partial (rename?)
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
