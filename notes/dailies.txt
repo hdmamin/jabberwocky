@@ -268,12 +268,27 @@ X -fix __defaults__ and __kwdefaults__ (only worked on wrapped func before)
 
 5/2/21
 ------
--revise partial func to use attach_repr
--test on more cases to try to track down any other bugs
--add dynamic method generation to cls (hopefully going from func to method doesn't break anything)
--port getindex
-    -port attach_repr
-    -port rigorous_partial (rename?)
+X -revise partial func to use attach_repr
+    UPDATE: technically didn't use attach_repr, but used same concept to update repr and str.
+X -test on more cases to try to track down any other bugs
+_ -add dynamic method generation to cls (hopefully going from func to method doesn't break anything)
+    UPDATE: spent some time trying this but we still run into annoying issues (apparently generating methods always has these difficulties, even with functools version of partial). Decided it's good enough for now that I got Partial working and I should really just use a non-hacky method ('query' method) for this use case. No need to burn more GPT3 trial time on this.
+X -port getindex
+    _ -port attach_repr
+        UPDATE: skip for now. Not really a common use case, I think.
+    X -port rigorous_partial (rename?)
+        UPDATE: renamed to Partial
+
+5/3/21
+------
+-finalize PromptManager
+    -port
+-maybe clean up notebook a bit
+-return to Transcript classes
+    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+    -if possible and advisable, start building this functionality
+    -select first task to try post-punctuation (maybe tldr?)
+-write draft of function to tie together Transcript.time_range() and PromptManager.query().
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
