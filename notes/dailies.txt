@@ -281,8 +281,17 @@ X -port getindex
 
 5/3/21
 ------
--finalize PromptManager
-    -port
+X -finalize PromptManager
+    X -port
+-maybe clean up notebook a bit
+-return to Transcript classes
+    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+    -if possible and advisable, start building this functionality
+    -select first task to try post-punctuation (maybe tldr?)
+-write draft of function to tie together Transcript.time_range() and PromptManager.query().
+
+5/4/21
+------
 -maybe clean up notebook a bit
 -return to Transcript classes
     -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.

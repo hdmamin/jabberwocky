@@ -1,4 +1,6 @@
 engine_i: 3
 temperature: .3
-stop: 'I rephrased this for my daughter, in plain language'
+stop: 
+- "I rephrased this for my daughter, in plain language"
+- "prompt:"
 reminder: "This uses the expensive davinci model and doesn't work so well without it."
