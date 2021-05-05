@@ -292,12 +292,22 @@ X -finalize PromptManager
 
 5/4/21
 ------
--maybe clean up notebook a bit
--return to Transcript classes
-    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
-    -if possible and advisable, start building this functionality
+X -maybe clean up notebook a bit
+~ -return to Transcript classes
+    X -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+    ~ -if possible and advisable, start building this functionality
+        UPDATE: trimmed off partial sentences at start, still need to do end.
     -select first task to try post-punctuation (maybe tldr?)
+    X -update unpunct transcript class w/ promptmanager
+    X -cleanup old code a bit
 -write draft of function to tie together Transcript.time_range() and PromptManager.query().
+
+5/5/21
+------
+-trim off partial sentences from end of time_range_str
+    -clean up methods/delete old code
+    -test on generated transcript
+-write draft of function/interface of some sort tying together transcript and external promptmanager
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

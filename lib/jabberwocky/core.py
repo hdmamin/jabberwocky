@@ -17,7 +17,7 @@ class PromptManager:
     performing tasks on a video Transcript object.
     """
 
-    def __init__(self, *tasks):
+    def __init__(self, *tasks, verbose=True):
         """
         Parameters
         ----------
@@ -27,7 +27,11 @@ class PromptManager:
             Example: PromptManager('tldr', 'punctuate')
             If none are provided, we load all available prompts in that
             directory.
+        verbose: bool
+            Passed to `load_prompt`. Might decide to use this elsewhere as well
+            later.
         """
+        self.verbose=verbose
         self.prompts = self._load_templates(set(tasks))
 
     def _load_templates(self, tasks):
@@ -51,7 +55,8 @@ class PromptManager:
             if not path.is_dir():
                 if tasks: warnings.warn(f'{path} is not a directory.')
                 continue
-            name2kwargs[path.stem] = load_prompt(path.stem)
+            name2kwargs[path.stem] = load_prompt(path.stem,
+                                                 verbose=self.verbose)
         return name2kwargs
 
     def query(self, task, text, debug=False, extra_kwargs=None, **kwargs):
