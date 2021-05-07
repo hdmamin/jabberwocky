@@ -314,11 +314,22 @@ X -trim off partial sentences from end of time_range_str
 5/6/21
 ------
 -debug time_range_str issue (not using punctuated rows but time_range is?)
+    UPDATE: found bug cause (see nb03) but haven't fixed yet.
     -consider: add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
     -clean up methods/delete old code
     -test on generated transcript
 -write draft of function/interface of some sort tying together transcript and external promptmanager
--flex task!: check Object picklability (see ipython session)
+X -flex task!: check Object picklability (see ipython session)
+    UPDATE: fleshed out Object, renamed to Results, wrote barebones docs, fixed picklability
+
+5/7/21
+------
+-consider desired behavior re time_range_str issue
+    -begin implementing
+    -consider: add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
+    -clean up methods/delete old code
+    -test on generated transcript
+-write draft of function/interface of some sort tying together transcript and external promptmanager
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
