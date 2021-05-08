@@ -1,3 +1,5 @@
+"""Utility functions for interacting with the gpt3 api."""
+
 import numpy as np
 import openai
 

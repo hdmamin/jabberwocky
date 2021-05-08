@@ -1,3 +1,5 @@
+"""General purpose utilities."""
+
 from functools import update_wrapper
 from inspect import _empty, Parameter, signature
 import os

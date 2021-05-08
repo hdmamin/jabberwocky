@@ -324,6 +324,10 @@ X -flex task!: check Object picklability (see ipython session)
 
 5/7/21
 ------
+X -write module docstrings
+    UPDATE: pretty sick so slept most of the day. Just spent a couple minutes knocking out an easy task.
+X -find cause of readme updating issue
+    UPDATE: need error handling in case dir has no relevant files. Check if df empty in self._parse_dir_files before sorting.
 -consider desired behavior re time_range_str issue
     -begin implementing
     -consider: add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
@@ -331,6 +335,16 @@ X -flex task!: check Object picklability (see ipython session)
     -test on generated transcript
 -write draft of function/interface of some sort tying together transcript and external promptmanager
 
+5/8/21
+------
+-add error handlign for empty dir in readme updater cli
+-consider reorganizing lib structure (some utils probably belong in youtube or openai modules; part of core module belongs in openai and youtube modules)
+-consider desired behavior re time_range_str issue
+    -begin implementing
+    -consider: add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
+    -clean up methods/delete old code
+    -test on generated transcript
+-write draft of function/interface of some sort tying together transcript and external promptmanager
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 

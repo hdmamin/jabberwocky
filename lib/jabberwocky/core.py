@@ -1,3 +1,5 @@
+"""Core functionality that ties together multiple APIs."""
+
 from collections.abc import Iterable, Mapping
 from fuzzywuzzy import fuzz
 import numpy as np

@@ -1,3 +1,5 @@
+"""Functionality to fetch and work with YouTube transcripts."""
+
 import pandas as pd
 import warnings
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
