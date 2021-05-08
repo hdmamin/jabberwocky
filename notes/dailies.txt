@@ -329,7 +329,6 @@ X -write module docstrings
 X -find cause of readme updating issue
     UPDATE: need error handling in case dir has no relevant files. Check if df empty in self._parse_dir_files before sorting.
 -consider desired behavior re time_range_str issue
-    -begin implementing
     -consider: add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
     -clean up methods/delete old code
     -test on generated transcript
@@ -337,14 +336,31 @@ X -find cause of readme updating issue
 
 5/8/21
 ------
--add error handlign for empty dir in readme updater cli
--consider reorganizing lib structure (some utils probably belong in youtube or openai modules; part of core module belongs in openai and youtube modules)
--consider desired behavior re time_range_str issue
+X -add error handling for empty dir in readme updater cli
+~ -look into live speech recognition options with timestamps to extend beyond youtube
+    UPDATE: pocketsphinx, but installing is proving to be a challenge. Come back to this later.
+X -consider reorganizing lib structure (some utils probably belong in youtube or openai modules; part of core module belongs in openai and youtube modules)
+X -fix time_range_str bug
+    UPDATE: just add warning suggesting what to do.
+X -fix text realignment bug
+    UPDATE: thought I'd set max_tokens somewhere but maybe I deleted it. This meant we were only receving 50 tokens back from gpt3 but many more rows of df, so realignment wasn't working properly.
+~ -consider desired behavior re time_range_str issue
+    UPDATE: Think I should add an always/never/if_necessary option as suggested below. Haven't implemented yet though.
     -begin implementing
     -consider: add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
     -clean up methods/delete old code
     -test on generated transcript
 -write draft of function/interface of some sort tying together transcript and external promptmanager
+
+5/9/21
+------
+-add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
+    -clean up methods/delete old code
+    -test on generated transcript
+-write draft of function/interface of some sort tying together transcript and external promptmanager
+-start basic gui
+-watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
+
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
