@@ -354,13 +354,21 @@ X -fix text realignment bug
 
 5/9/21
 ------
--add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
+X -add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
     -clean up methods/delete old code
     -test on generated transcript
 -write draft of function/interface of some sort tying together transcript and external promptmanager
 -start basic gui
 -watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
 
+5/10/21
+-------
+-add option/setting to avoid chopping off start/end of time_segment when fragment is sufficiently long? (Sometimes transcription fails or youtuber has a long run on sentence. Rather than throwing away 50 words (for ex), we might just want to keep it - we just don't want to feed a short meaningless fragment to gpt3).
+-add method to get punctuated indices of transcript
+-try out various transcript options
+    -passing in different kwargs (e.g. engine_i)
+    -try mock mode
+-clean up nb
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
@@ -369,10 +377,11 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
--continue building Transcript classes
-    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
-        -if possible and advisable, start building this functionality
-        -select first task to try post-punctuation (maybe tldr?)
+-start basic gui
+-try out eleuther ai model (is it a viable alternative, at least to engine_i=0? Is it too big to load in a reasonable period of time? Are there existing apis hosting it?)
+    -same for big gpt2 model? I think that does have free apis hosting it but doesn't really have the same prompt response functionailty.
+-watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
+-select first task to try post-punctuation (maybe tldr?)
 -write draft of function to tie together Transcript.time_range() and PromptManager.query().
 -start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
 -try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
