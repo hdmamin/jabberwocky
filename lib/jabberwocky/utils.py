@@ -2,17 +2,25 @@
 
 from functools import update_wrapper
 from inspect import _empty, Parameter, signature
-import os
 from pathlib import Path
 import yaml
-import sys
-import warnings
 
-from htools import load, spacer, select, bound_args, copy_func
+from htools import select, bound_args, copy_func
 from jabberwocky.config import C
 
 
 def strip(text, do_strip=True):
+    """Convenience function used in query_gpt3.
+
+    Parameters
+    ----------
+    text: str
+    do_strip: bool
+
+    Returns
+    -------
+    str: If do_strip is False, this is the same as the input.
+    """
     return text.strip() if do_strip else text
 
 
@@ -45,7 +53,6 @@ def load_yaml(path, section=None):
     with open(path, 'r') as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
     return data.get(section, data)
-
 
 
 def bold(text):

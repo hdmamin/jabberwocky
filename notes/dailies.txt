@@ -363,12 +363,17 @@ X -add another option for punctuate (always, never, if_necessary)? Might be good
 
 5/10/21
 -------
--add option/setting to avoid chopping off start/end of time_segment when fragment is sufficiently long? (Sometimes transcription fails or youtuber has a long run on sentence. Rather than throwing away 50 words (for ex), we might just want to keep it - we just don't want to feed a short meaningless fragment to gpt3).
--add method to get punctuated indices of transcript
+X -add option/setting to avoid chopping off start/end of time_segment when fragment is sufficiently long? (Sometimes transcription fails or youtuber has a long run on sentence. Rather than throwing away 50 words (for ex), we might just want to keep it - we just don't want to feed a short meaningless fragment to gpt3).
+X -add method to get punctuated indices of transcript
+    X -method to get unpunct indices
+    X -method to get punct rows
+    X -move na_index_rows from staticmethod to function
 -try out various transcript options
     -passing in different kwargs (e.g. engine_i)
     -try mock mode
 -clean up nb
+-port to lib
+    -document
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
