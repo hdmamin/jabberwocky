@@ -371,16 +371,30 @@ X -add method to get punctuated indices of transcript
 
 5/11/21
 -------
--try out various transcript options
-    -passing in different kwargs (e.g. engine_i)
-    -try mock mode
--clean up nb
--port to lib
-    -document
+X -try out various transcript options
+    X -passing in different kwargs (e.g. engine_i)
+    X -try mock mode
+        X -add option for different mock modes in query_gpt3
+        X -write mock func for punctuate task
+        X -method to reset punct df (useful after mocked calls. Considered making mock calls not update df_punct but that prevents us from testing side effects.)
+    X -fix bug where punctuated_rows called unpunct df
+_ -clean up nb
+    UPDATE: skip, these are all just dev notebooks at this point, not anything polished to display somewhere.
+X -port to lib
+    ~ -document
+
+5/12/21
+-------
+-select first task to try post-punctuation (maybe tldr?)
+-write draft of function to tie together Transcript.time_range() and PromptManager.query().
+-choose: desktop gui, mobile, or web? (web makes most sense but part of the point of this project was supposed to be learning one of the others. Maybe start with desktop for learning purposes and if it ends up being particularly cool, I could always rebuild a simple streamlit app.)
+    -maybe start building? Might be good to set up a UI early for easy experimentation.
+
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
 - artbreeder tutorial
+- lots of waiting docs in core.py
 
 -------------------------------------------------------------------------------
 backlog
@@ -389,8 +403,6 @@ backlog
 -try out eleuther ai model (is it a viable alternative, at least to engine_i=0? Is it too big to load in a reasonable period of time? Are there existing apis hosting it?)
     -same for big gpt2 model? I think that does have free apis hosting it but doesn't really have the same prompt response functionailty.
 -watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
--select first task to try post-punctuation (maybe tldr?)
--write draft of function to tie together Transcript.time_range() and PromptManager.query().
 -start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
 -try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
 -try out other tasks and add to prompts dir:

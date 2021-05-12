@@ -42,7 +42,8 @@ def openai_auth():
 
 def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
                logprobs=None, stream=False, mock=False, return_full=False,
-               strip_output=True, **kwargs):
+               strip_output=True, mock_func=None,
+               **kwargs):
     """Convenience function to query gpt3.
 
     Parameters
@@ -78,6 +79,14 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
         If True, strip text returned by gpt3. Without this, many prompts have a
         leading space and/or trailing newlines due to the way examples are
         formatted.
+    mock_func: None or function
+        When mock=True, you can provide a function here that accepts the prompt
+        and returns something which will be used as the mock text. Sample use
+        case: when punctuating a transcript, the text realignment process may
+        raise an error when loading a saved mock response. Therefore, we may
+        want to write a mock_func that extracts the new input portion of the
+        prompt (discarding instructions and examples). This option is
+        unavailable in stream mode.
     kwargs: any
         Additional kwargs to pass to gpt3.
         Ex: presence_penalty, frequency_penalty (both floats in [0, 1]).
@@ -95,6 +104,11 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
     """
     if mock:
         res = load(C.mock_stream_paths[stream])
+        if mock_func:
+            if stream:
+                raise NotImplementedError('mock_func unavailable when '
+                                          'stream=True.')
+            res.choices[0].text = mock_func(prompt)
     else:
         res = openai.Completion.create(
             engine=C.engines[engine_i],
@@ -403,6 +417,33 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True):
     msg = kwargs.pop('reminder', None)
     if msg and verbose: print(f'{name}: {msg}{spacer()}')
     return kwargs
+
+
+def punctuate_mock_func(prompt, random_punct=True, sentence_len=15):
+    """
+    #TODO docs
+
+    Parameters
+    ----------
+    prompt
+    random_punct
+    sentence_len
+
+    Returns
+    -------
+
+    """
+    text = prompt.rpartition('\n\nPassage: ')[-1]\
+                 .rpartition('\n\nPassage with punctuation:')[0]
+    if random_punct:
+        words = text.split(' ')
+        new_words = []
+        for idx in range(0, max(sentence_len, len(words)), sentence_len):
+            new_words.append(
+                ' '.join(words[idx:idx+sentence_len]).capitalize() + '.'
+            )
+        text = ' '.join(new_words)
+    return text
 
 
 # I figure if we're importing these functions, we'll need to authenticate.
