@@ -368,6 +368,9 @@ X -add method to get punctuated indices of transcript
     X -method to get unpunct indices
     X -method to get punct rows
     X -move na_index_rows from staticmethod to function
+
+5/11/21
+-------
 -try out various transcript options
     -passing in different kwargs (e.g. engine_i)
     -try mock mode
