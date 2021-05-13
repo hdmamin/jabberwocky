@@ -187,7 +187,7 @@ class PromptManager:
             Passed to `load_prompt`. Might decide to use this elsewhere as well
             later.
         """
-        self.verbose=verbose
+        self.verbose = verbose
         self.prompts = self._load_templates(set(tasks))
 
     def _load_templates(self, tasks):

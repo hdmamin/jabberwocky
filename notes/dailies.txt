@@ -385,10 +385,22 @@ X -port to lib
 
 5/12/21
 -------
--select first task to try post-punctuation (maybe tldr?)
--write draft of function to tie together Transcript.time_range() and PromptManager.query().
+X -select first task to try post-punctuation (maybe tldr?)
+    UPDATE: didn't work that well. Even the punctuation task alone is struggling. Thinking it may not have been a great idea to work on transcripts - prompt engineering guide specifically mentioned any typos or grammatical errors make it hard to get good responses.
+X -write draft of function to tie together Transcript.time_range() and PromptManager.query().
+    UPDATE: started session class to handle multiple videos. Thinking we might want to look for backup tasks (identifying similar videos?) in case running standard queries (e.g. tldr, eli5) on the transcripts doesn't work so well.
 -choose: desktop gui, mobile, or web? (web makes most sense but part of the point of this project was supposed to be learning one of the others. Maybe start with desktop for learning purposes and if it ends up being particularly cool, I could always rebuild a simple streamlit app.)
+    UPDATE: choosing desktop gui. Just want to learn here, even if it's not as practical for sharing as a web app. And initial results are not promising so that probably won't be a concern anyway.
     -maybe start building? Might be good to set up a UI early for easy experimentation.
+
+5/13/21
+-------
+-consider if there's anything else worth adding to Session
+    -port
+-code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
+-start building desktop gui
+-easier options: document Session
+    -document Transcript methods
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

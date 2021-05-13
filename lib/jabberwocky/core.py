@@ -261,9 +261,18 @@ class Transcript:
         # times.
         self.start_time, self.end_time = self.df.start.ends(1)
 
+    def punctuation_kwargs(self, **kwargs):
+        if self.is_generated:
+            return self._transcript.manager.kwargs('punctuate', **kwargs)
+        warnings.warn('No punctuation kwargs because transcipt is '
+                      'pre-punctuated.')
+        return {}
+
     def _time_range(self, start, end) -> pd.DataFrame:
         assert end > start, 'End time must be later than start time.'
         assert start >= 0 and end >= 0, 'Times must be non-negative.'
+        assert start < self.end_time, \
+            f'Timeframe must start before {self.end_time}.'
 
         df = self.df
         if start < self.start_time:
