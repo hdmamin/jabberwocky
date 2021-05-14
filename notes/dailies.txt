@@ -398,9 +398,19 @@ X -write draft of function to tie together Transcript.time_range() and PromptMan
 -consider if there's anything else worth adding to Session
     -port
 -code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
--start building desktop gui
+~ -start building desktop gui
 -easier options: document Session
     -document Transcript methods
+
+5/14/21
+-------
+-work through rest of dearpygui video
+    -look through available widgets and see if it sparks any interesting ideas
+-document session
+-document transcript methods
+-consider if there's anything else worth adding to Session
+    -port
+-code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
