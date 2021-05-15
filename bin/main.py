@@ -1,10 +1,31 @@
 from dearpygui.core import *
 from dearpygui.simple import *
+import speech_recognition as sr
 
 
-def save_callback(sender, data):
-    print('in save', type(sender), type(data))
-    print(sender, data)
+def transcribe(sender, data):
+    msg_id = data.pop('message_target', '')
+    if msg_id: show_item(msg_id)
+
+    # Record until pause.
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        print('in mic')
+        audio = recognizer.listen(source)
+    try:
+        print('in parsing try')
+        text = recognizer.recognize_google(audio)
+    except sr.UnknownValueError:
+        print('Failed to parse')
+        text = 'Parsing failed. Please try again.'
+    set_value(data['target'], text)
+    # set_value(msg_id, '')
+    hide_item(msg_id)
+
+
+def punctuate(sender, data):
+    text = get_value(data['source'])
+    set_value(data['source'], text.swapcase())
 
 
 class App:
@@ -30,10 +51,20 @@ class App:
         with window('input_window', width=self.widths[0],
                     height=self.heights[0]):
             set_window_pos('input_window', x=self.pad, y=self.pad)
-            add_text('text')
-            add_button('click me', callback=save_callback)
-            add_input_text('input text', default_value='abc')
-            add_slider_float('number', default_value=.5, max_value=10)
+            add_button('record_btn',
+                       callback_data={'message_target': 'record_msg',
+                                      'target': 'transcribed_text'},
+                       callback=transcribe)
+            add_text('record_msg', default_value='Recording in progress...',
+                     show=False)
+            # add_text('transcribed_text')
+            add_input_text('transcribed_text', height=100)
+            # add_input_text('input text', default_value='abc')
+            # add_slider_float('number', default_value=.5, max_value=10)
+            add_button('punctuate_btn',
+                       callback_data={'source': 'transcribed_text',
+                                      'target': 'transcribed_text'},
+                       callback=punctuate)
 
     def output_window(self):
         with window('output_window', width=self.widths[1],

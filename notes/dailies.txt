@@ -404,13 +404,19 @@ X -write draft of function to tie together Transcript.time_range() and PromptMan
 
 5/14/21
 -------
--work through rest of dearpygui video
-    -look through available widgets and see if it sparks any interesting ideas
--document session
--document transcript methods
--consider if there's anything else worth adding to Session
-    -port
--code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
+X -work through rest of dearpygui video
+    ~ -look through available widgets and see if it sparks any interesting ideas
+X -add microphone recording option to app
+X -add skeleton button to punctuate text
+
+5/15/21
+-------
+-figure out how to change labels (don't want element id's to be shown as text to user)
+-add option to gpt3 punctuate text?
+-add buttons/dropdown menu/etc. for different tasks (keypoints, eli5, summarize, fancier language, etc.)
+-look into possibility of longer mic sessions (don't immediately stop at first pause)
+    -maybe can translate as we go in a different thread or something? Ideally would be able to make request to google api while user is still talking and process in chunks.
+
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -421,7 +427,11 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
--start basic gui
+-document session
+-document transcript methods
+-consider if there's anything else worth adding to Session
+    -port
+-code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
 -try out eleuther ai model (is it a viable alternative, at least to engine_i=0? Is it too big to load in a reasonable period of time? Are there existing apis hosting it?)
     -same for big gpt2 model? I think that does have free apis hosting it but doesn't really have the same prompt response functionailty.
 -watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
