@@ -426,16 +426,35 @@ X -try adding tooltip
 
 5/16/21
 -------
--add buttons/dropdown menu/etc. for different tasks (keypoints, eli5, summarize, fancier language, etc.)
+X -add buttons/dropdown menu/etc. for different tasks (keypoints, eli5, summarize, fancier language, etc.)
 -add option to gpt3 punctuate text?
 -look into possibility of longer mic sessions (don't immediately stop at first pause)
     -maybe can translate as we go in a different thread or something? Ideally would be able to make request to google api while user is still talking and process in chunks.
+
+5/17/21
+-------
+-clean up layout and make more flexible
+    -methods to calculate heights/widths
+    -callback to adjust these when window is resized
+    -rename windows (would prefer to find way to separate id and label, but I don't think that's available)
+-add query button
+-look into issue of all text being displayed on same line in text input
+-aesthetic improvements
+    -diff font?
+    -diff font size?
+-add prompt warning (if exists) after selecting a task
+-add query button
+    -add query callback to actually query gpt3 and update output text
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
 - artbreeder tutorial
 - lots of waiting docs in core.py
+- dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
+    -parent stack system
+    -callbacks
+    -value storage system
 
 -------------------------------------------------------------------------------
 backlog
