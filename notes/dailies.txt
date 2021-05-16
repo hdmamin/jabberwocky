@@ -411,12 +411,25 @@ X -add skeleton button to punctuate text
 
 5/15/21
 -------
--figure out how to change labels (don't want element id's to be shown as text to user)
+X -figure out how to change labels (don't want element id's to be shown as text to user)
+    UPDATE: fixed for buttons. Input_text label suppression seems a little hacky but I think it's how the lib intends us to do it.
+~ -add menu bar
+    UPDATE: layout/alignment still a work in progress.
+X -refactor transcribe callback_data
+    UPDATE: now can pass in as many ids to show during/after as we want.
+X -try adding tooltip
+    UPDATE: a little wonky (must use context manager) but it seems to work.
 -add option to gpt3 punctuate text?
 -add buttons/dropdown menu/etc. for different tasks (keypoints, eli5, summarize, fancier language, etc.)
 -look into possibility of longer mic sessions (don't immediately stop at first pause)
     -maybe can translate as we go in a different thread or something? Ideally would be able to make request to google api while user is still talking and process in chunks.
 
+5/16/21
+-------
+-add option to gpt3 punctuate text?
+-add buttons/dropdown menu/etc. for different tasks (keypoints, eli5, summarize, fancier language, etc.)
+-look into possibility of longer mic sessions (don't immediately stop at first pause)
+    -maybe can translate as we go in a different thread or something? Ideally would be able to make request to google api while user is still talking and process in chunks.
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
