@@ -426,8 +426,8 @@ X -try adding tooltip
 
 5/16/21
 -------
--add option to gpt3 punctuate text?
 -add buttons/dropdown menu/etc. for different tasks (keypoints, eli5, summarize, fancier language, etc.)
+-add option to gpt3 punctuate text?
 -look into possibility of longer mic sessions (don't immediately stop at first pause)
     -maybe can translate as we go in a different thread or something? Ideally would be able to make request to google api while user is still talking and process in chunks.
 

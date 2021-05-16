@@ -1,9 +1,26 @@
 from dearpygui.core import *
 from dearpygui.simple import *
+import os
 import speech_recognition as sr
 
+from jabberwocky.openai_utils import PromptManager
 
-def transcribe(sender, data):
+
+os.chdir('../')
+MANAGER = PromptManager()
+
+TASK2NAME = {
+    'punctuate': 'Punctuate',
+    'tldr': 'Summarize',
+    'eli': 'Explain Like I\'m 5',
+    'simplify_ml': 'Explain Machine Learning',
+    'how_to': 'How To',
+    'short_dates': 'Dates (debug)',
+    'shortest': 'Math (debug)'
+}
+
+
+def transcribe_callback(sender, data):
     set_value(data['target_id'], '')
     show_during = data.get('show_during_ids', [])
     for id_ in show_during:
@@ -26,9 +43,15 @@ def transcribe(sender, data):
         show_item(id_)
 
 
-def punctuate(sender, data):
+def punctuate_callback(sender, data):
     text = get_value(data['source'])
     set_value(data['source'], text.swapcase())
+
+
+def task_select_callback(sender, data):
+    # add_text('tmp_name', default_value=text, parent='input_window')
+    print(sender)
+    print(MANAGER.kwargs(sender))
 
 
 class App:
@@ -70,8 +93,9 @@ class App:
                        callback_data={'show_during_ids': ['record_msg'],
                                       'target_id': 'transcribed_text',
                                       'show_after_ids': ['punctuate_btn',
-                                                         'punctuate_tooltip']},
-                       callback=transcribe)
+                                                         'punctuate_tooltip',
+                                                         'task_menu']},
+                       callback=transcribe_callback)
             add_text('record_msg', default_value='Recording in progress...',
                      show=False)
 
@@ -85,14 +109,20 @@ class App:
                        show=False,
                        callback_data={'source': 'transcribed_text',
                                       'target': 'transcribed_text'},
-                       callback=punctuate)
+                       callback=punctuate_callback)
 
             # TODO: add_tooltip produces "SystemError: returned a result with
             # an error set.
             with tooltip('punctuate_btn', 'punctuate_tooltip', show=False):
                 add_text('Auto-punctuate input with GPT3. You may also choose '
                          'to clean up the text manually.')
-            # add_slider_float('number', default_value=.5, max_value=10)
+
+            # Prompt selection
+            with menu('task_menu', label='Select Task', show=False):
+                for task in MANAGER:
+                    add_menu_item(task, label=TASK2NAME[task],
+                                  callback=task_select_callback,
+                                  callback_data={'menu_id': 'task_menu'})
 
     def output_window(self):
         with window('output_window', width=self.widths[1],
