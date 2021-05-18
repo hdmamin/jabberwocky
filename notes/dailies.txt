@@ -433,9 +433,9 @@ X -add buttons/dropdown menu/etc. for different tasks (keypoints, eli5, summariz
 
 5/17/21
 -------
--clean up layout and make more flexible
-    -methods to calculate heights/widths
-    -callback to adjust these when window is resized
+X -clean up layout and make more flexible
+    X -methods to calculate heights/widths
+    X -callback to adjust these when window is resized
     -rename windows (would prefer to find way to separate id and label, but I don't think that's available)
 -add query button
 -look into issue of all text being displayed on same line in text input
@@ -443,6 +443,16 @@ X -add buttons/dropdown menu/etc. for different tasks (keypoints, eli5, summariz
     -diff font?
     -diff font size?
 -add prompt warning (if exists) after selecting a task
+-add query button
+    -add query callback to actually query gpt3 and update output text
+
+5/18/21
+-------
+-put prompt text last after other options.
+-format so no long horizontal scrollbar.
+-update options callback to update value when prompt changes.
+-rename windows (would prefer to find way to separate id and label, but I don't think that's available)
+-look into issue of all text being displayed on same line in text input
 -add query button
     -add query callback to actually query gpt3 and update output text
 
@@ -459,6 +469,10 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
+-aesthetic improvements
+    -diff font?
+    -diff font size?
+-add prompt warning (if exists) after selecting a task
 -document session
 -document transcript methods
 -consider if there's anything else worth adding to Session
