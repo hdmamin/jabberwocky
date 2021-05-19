@@ -448,13 +448,24 @@ X -clean up layout and make more flexible
 
 5/18/21
 -------
--put prompt text last after other options.
--format so no long horizontal scrollbar.
--update options callback to update value when prompt changes.
+X -port Session
+X -put prompt text last after other options.
+_ -format so no long horizontal scrollbar.
+    UPDATE: not supported by dearpygui. Could write a function to break text into fixed length pieces but that's a bit annoying since with text box width is also variable.
+X -update options callback to update value when prompt changes.
 -rename windows (would prefer to find way to separate id and label, but I don't think that's available)
--look into issue of all text being displayed on same line in text input
--add query button
-    -add query callback to actually query gpt3 and update output text
+X -add query button
+    X -add query callback to actually query gpt3 and update output text
+
+5/19/21
+-------
+-generalize query_callback so it works on passed in data rather than hardcoded IDs
+-see if we can add places to enter options like:
+    -mock_fn
+    -stop_terms (name might be wrong here)
+-make transcription finish trigger update of options (prompt needs to be reformatted)
+-add warning in case you try to query with empty text for a prompt that needs input
+-investigate bug where options are no longer updated with each task selection.
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -469,6 +480,7 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
+-rename windows (would prefer to find way to separate id and label, but I don't think that's available)
 -aesthetic improvements
     -diff font?
     -diff font size?

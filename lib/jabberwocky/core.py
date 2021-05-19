@@ -8,7 +8,7 @@ from string import punctuation
 import warnings
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
-from htools import flatten, ifnone, Args, auto_repr
+from htools import flatten, ifnone, Args, auto_repr, add_docstring
 from jabberwocky.openai_utils import punctuate_mock_func, PromptManager
 from jabberwocky.youtube import video_id
 
@@ -430,3 +430,41 @@ class Transcript:
     def __str__(self):
         return f'{type(self).__name__}(url={self.url}, ' \
                f'is_generated={self.is_generated})'
+
+
+class Session:
+    """Manage multiple transcripts."""
+
+    def __init__(self, *tasks, **video_urls):
+        self.transcripts = {name: Transcript(url)
+                            for name, url in video_urls.items()}
+        self.manager = PromptManager(*tasks, verbose=False)
+
+    @add_docstring(Transcript.time_range_str)
+    def query(self, video, task, start_time, end_time, punctuate=True,
+              punct_extra_kwargs=None, punct_query_kwargs=None,
+              task_extra_kwargs=None, **task_kwargs):
+        text = self[video].time_range_str(
+            start_time, end_time,
+            punctuate=punctuate,
+            extra_kwargs=punct_extra_kwargs or {},
+            **ifnone(punct_query_kwargs, {})
+        )
+        prompt, resp = self.manager.query(task, text,
+                                          extra_kwargs=task_extra_kwargs,
+                                          **task_kwargs)
+        return prompt, resp
+
+    def __getitem__(self, key):
+        return self.transcripts[key]
+
+    def __iter__(self):
+        return iter(self.transcripts)
+
+    def __repr__(self):
+        name = type(self).__name__
+        sep = ',\n' + ' ' * (len(name) + 1)
+        kwarg_strs = sep.join(f'{name}={trans.url!r}' for name, trans
+                              in self.transcripts.items())
+        arg_strs = sep.join(repr(p) for p in self.manager.prompts)
+        return f'{name}({arg_strs}{sep}{kwarg_strs})'
