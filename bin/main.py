@@ -11,16 +11,6 @@ from jabberwocky.openai_utils import PromptManager, query_gpt3
 
 os.chdir('../')
 MANAGER = PromptManager(verbose=False)
-
-# TASK2NAME = {
-#     'punctuate': 'Punctuate',
-#     'tldr': 'Summarize',
-#     'eli': 'Explain Like I\'m 5',
-#     'simplify_ml': 'Explain Machine Learning',
-#     'how_to': 'How To',
-#     'short_dates': 'Dates (debug)',
-#     'shortest': 'Math (debug)'
-# }
 NAME2TASK = IndexedDict({
     'Punctuate': 'punctuate',
     'Summarize': 'tldr',
@@ -33,6 +23,11 @@ NAME2TASK = IndexedDict({
 
 
 def transcribe_callback(sender, data):
+    """data keys:
+        - target_id
+        - show_during_ids
+        - show_after_ids
+    """
     set_value(data['target_id'], '')
     show_during = data.get('show_during_ids', [])
     for id_ in show_during:
@@ -54,27 +49,49 @@ def transcribe_callback(sender, data):
     for id_ in data.get('show_after_ids', []):
         show_item(id_)
 
+    # Manually call this so prompt is updated once we finish recording.
+    task_select_callback('task_lislt',
+                         data={'task_list_id': 'task_list',
+                               'text_source_id': 'transcribed_text'})
+
 
 def punctuate_callback(sender, data):
+    """data keys:
+        - source (str: element containing text to punctuate)
+    """
     text = get_value(data['source'])
     set_value(data['source'], text.swapcase())
 
 
 def task_select_callback(sender, data):
-    for k, v in app.get_query_kwargs().items():
+    """data keys:
+        - task_list_id (str: element containing selected item. Returns an int.)
+        - text_source_id (str: element containing text for prompt input)
+    """
+    task_name, user_text = app.get_prompt_text(
+        task_list_id=data['task_list_id'],
+        text_source_id=data['text_source_id'],
+        do_format=False
+    )
+    set_value('prompt', MANAGER.prompt(task_name, user_text))
+
+    # Can't just use app.get_query_kwargs() because that merely retrieves what
+    # the GUI currently shows. We want the default kwargs which are stored by
+    # our prompt manager.
+    for k, v in MANAGER.kwargs(task_name).items():
+        print(k, v)
         set_value(k, v)
-    set_value('prompt',
-              app.get_prompt_text(task_list_id=data['task_list_id'],
-                                  text_source_id=data['text_source_id']))
 
 
 def query_callback(sender, data):
-    # kwargs = {name: get_value(name) for name in app.query_kwarg_ids}
+    """data keys:
+        - target_id (str: element to display text response in)
+    """
     kwargs = app.get_query_kwargs()
     eprint(kwargs.items())
     task, text = app.get_prompt_text(do_format=False)
     _, res = MANAGER.query(task=task, text=text, **kwargs)
-    set_value('response_text', res)
+    set_value(data['target_id'], res)
 
 
 def resize_callback(sender):
@@ -102,7 +119,7 @@ class App:
         self.heights = {}
         self.pos = []
         # These are populated in self.input_column().
-        self.query_kwarg_ids = []
+        self.query_kwarg_ids = ['mock']
         self.recompute_dimensions(width, height)
         set_main_window_size(self.width, self.height)
         set_global_font_scale(font_scale)
@@ -134,6 +151,21 @@ class App:
 
     def get_prompt_text(self, task_list_id='task_list',
                         text_source_id='transcribed_text', do_format=True):
+        """
+
+        Parameters
+        ----------
+        task_list_id
+        text_source_id
+        do_format: bool
+            If True, format prompt to get a single string with user input
+            integrated. If False, return tuple of (task_name, user_input)
+            which we can pass to manager.query().
+
+        Returns
+        -------
+        str or tuple: str if do_format=True, tuple otherwise.
+        """
         task_name = NAME2TASK[get_value(task_list_id)]
         input_text = get_value(text_source_id)
         if do_format:
@@ -141,6 +173,7 @@ class App:
         return task_name, input_text
 
     def get_query_kwargs(self):
+        # Gets currently selected kwargs from GUI.
         kwargs = {name: get_value(name) for name in self.query_kwarg_ids}
         kwargs['prompt'] = self.get_prompt_text()
         return kwargs
@@ -194,23 +227,32 @@ class App:
         with window('options_window', width=self.widths[.5],
                     height=self.heights[.5] // 2, x_pos=self.pad,
                     y_pos=self.pad + self.heights[.5]):
-            add_button('query_btn', label='Query', callback=query_callback)
+            add_button('query_btn', label='Query', callback=query_callback,
+                       callback_data={'target_id': 'response_text'})
+            add_same_line()
+            add_checkbox('mock')
             add_listbox('task_list', items=list(NAME2TASK),
                         num_items=len(NAME2TASK),
                         callback=task_select_callback,
                         callback_data={'task_list_id': 'task_list',
                                        'text_source_id': 'transcribed_text'})
-            print('in window')
-            query_params = params(query_gpt3)
-            for k, v in select(query_params, drop=['prompt']).items():
+
+            # Set default values for no specific task. These will be updated
+            # once a task is selected.
+            query_params = select(params(query_gpt3),
+                                  drop=['prompt', 'stream', 'return_full',
+                                        'strip_output', 'mock'])
+            for k, v in query_params.items():
                 v = v.default
-                if isinstance(v, bool):
-                    add_checkbox(k, default_value=v)
-                elif isinstance(v, float):
-                    add_slider_float(k, default_value=v, min_value=0.0,
-                                     max_value=1.0)
+                # if isinstance(v, bool):
+                #     add_checkbox(k, default_value=v)
+                if isinstance(v, float):
+                    add_input_float(k, default_value=v, min_value=0.0,
+                                    max_value=1.0)
                 elif isinstance(v, int):
-                    add_input_int(k, default_value=v)
+                    add_input_int(k, default_value=v,
+                                  min_value=0 if k == 'engine_i' else 1,
+                                  max_value=3 if k == 'engine_i' else 256)
                 else:
                     print('NOT DISPLAYED', k, v)
                     continue

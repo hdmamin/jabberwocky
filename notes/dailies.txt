@@ -459,13 +459,29 @@ X -add query button
 
 5/19/21
 -------
--generalize query_callback so it works on passed in data rather than hardcoded IDs
+X -generalize query_callback so it works on passed in data rather than hardcoded IDs
 -see if we can add places to enter options like:
     -mock_fn
     -stop_terms (name might be wrong here)
--make transcription finish trigger update of options (prompt needs to be reformatted)
+X -make transcription finish trigger update of options (prompt needs to be reformatted)
 -add warning in case you try to query with empty text for a prompt that needs input
--investigate bug where options are no longer updated with each task selection.
+X -investigate bug where options are no longer updated with each task selection.
+
+5/20/21
+-------
+-see if we can add places to enter options like:
+    -mock_fn
+    -stop_terms (name might be wrong here)
+-add warning in case you try to query with empty text for a prompt that needs input
+-consider how we might support other (non-gpt3) tasks
+    -what tasks might those be? (translation package, huggingface pretrained models (see py_project.txt notes)
+    -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
+    -could update manager class to support this? Would be a bit messy.
+-prevent user moving/resizing windows?
+-see if there's a way so manually typing input in record box (and then moving focus or something) can trigger options update too. This would also be useful if the user manually cleans up the punctuation after recording.
+-add more voice interface features:
+    -read gpt3 output
+    -allow voice commands? E.g. say "Task: Summarize. Input: ..."
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
