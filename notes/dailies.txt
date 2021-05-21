@@ -469,19 +469,32 @@ X -investigate bug where options are no longer updated with each task selection.
 
 5/20/21
 -------
--see if we can add places to enter options like:
-    -mock_fn
-    -stop_terms (name might be wrong here)
+X -see if we can add places to enter options like:
+    _ -mock_fn
+    UPDATE: I think this is only necessary for transcript. Fine to leave out for now.
+    X -stop_terms (name might be wrong here)
 -add warning in case you try to query with empty text for a prompt that needs input
 -consider how we might support other (non-gpt3) tasks
     -what tasks might those be? (translation package, huggingface pretrained models (see py_project.txt notes)
     -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
     -could update manager class to support this? Would be a bit messy.
--prevent user moving/resizing windows?
+X -prevent user moving/resizing windows?
+X -redo layout so options gets full height
 -see if there's a way so manually typing input in record box (and then moving focus or something) can trigger options update too. This would also be useful if the user manually cleans up the punctuation after recording.
 -add more voice interface features:
     -read gpt3 output
     -allow voice commands? E.g. say "Task: Summarize. Input: ..."
+
+5/21/21
+-------
+-add new font
+    -adjust font size
+-see if there's a way so manually typing input in record box (and then moving focus or something) can trigger options update too. This would also be useful if the user manually cleans up the punctuation after recording.
+-add output audio (see old translation file)
+-add warning from a prompt's config file in options window
+-add warning in case you try to query with empty text for a prompt that needs input
+-consider image task tie-ins
+    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -496,15 +509,16 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
+-consider how we might support other (non-gpt3) tasks
+    -what tasks might those be? (translation package, huggingface pretrained models (see py_project.txt notes)
+    -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
+    -could update manager class to support this? Would be a bit messy.
+-add more voice interface features:
+    -read gpt3 output
+    -allow voice commands? E.g. say "Task: Summarize. Input: ..."
 -rename windows (would prefer to find way to separate id and label, but I don't think that's available)
--aesthetic improvements
-    -diff font?
-    -diff font size?
--add prompt warning (if exists) after selecting a task
 -document session
 -document transcript methods
--consider if there's anything else worth adding to Session
-    -port
 -code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
 -try out eleuther ai model (is it a viable alternative, at least to engine_i=0? Is it too big to load in a reasonable period of time? Are there existing apis hosting it?)
     -same for big gpt2 model? I think that does have free apis hosting it but doesn't really have the same prompt response functionailty.

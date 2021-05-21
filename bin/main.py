@@ -78,8 +78,11 @@ def task_select_callback(sender, data):
     # Can't just use app.get_query_kwargs() because that merely retrieves what
     # the GUI currently shows. We want the default kwargs which are stored by
     # our prompt manager.
-    for k, v in MANAGER.kwargs(task_name).items():
-        print(k, v)
+    kwargs = MANAGER.kwargs(task_name)
+    kwargs.setdefault('stop', '')
+    for k, v in kwargs.items():
+        if k == 'stop' and isinstance(v, list):
+            v = '\n'.join(v)
         set_value(k, v)
 
 
@@ -99,11 +102,10 @@ def resize_callback(sender):
     # Resize callback is one of the few to not accept data. We have to find app
     # var in the global scope.
     app.recompute_dimensions(width, height)
-    for i, id_ in enumerate(['input_window', 'options_window',
-                             'output_window']):
+    for i, id_ in enumerate(['input_window', 'options_window']):
         set_item_width(id_, app.widths[.5])
-        set_item_height(id_, app.heights[.5])
-        set_window_pos(id_, *app.pos[i % 2][i // 2])
+        set_item_height(id_, app.heights[1.])
+        set_window_pos(id_, *app.pos[0][i])
 
 
 class App:
@@ -118,7 +120,7 @@ class App:
         self.widths = {}
         self.heights = {}
         self.pos = []
-        # These are populated in self.input_column().
+        # These are populated in self.left_column().
         self.query_kwarg_ids = ['mock']
         self.recompute_dimensions(width, height)
         set_main_window_size(self.width, self.height)
@@ -175,6 +177,7 @@ class App:
     def get_query_kwargs(self):
         # Gets currently selected kwargs from GUI.
         kwargs = {name: get_value(name) for name in self.query_kwarg_ids}
+        kwargs['stop'] = kwargs['stop'].splitlines()
         kwargs['prompt'] = self.get_prompt_text()
         return kwargs
 
@@ -192,9 +195,9 @@ class App:
         with window('primary_window'):
             pass
 
-    def input_column(self):
+    def left_column(self):
         with window('input_window', width=self.widths[.5],
-                    height=self.heights[.5] - self.pad, x_pos=self.pad,
+                    height=self.heights[1.] - self.pad, x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True):
             add_button('record_btn', label='Record',
                        callback_data={'show_during_ids': ['record_msg'],
@@ -224,9 +227,20 @@ class App:
                 add_text('Auto-punctuate input with GPT3. You may also choose '
                          'to clean up the text manually.')
 
+            add_spacing(count=3)
+            add_text('Response')
+            add_input_text('response_text', default_value='',
+                           multiline=True, width=self.widths[.5] - 2*self.pad,
+                           height=300)
+            set_item_label('response_text', '')
+
+    def right_column(self):
+        print(self.widths[.5], self.heights[1.], self.widths[.5] + 2*self.pad,
+              self.pad)
         with window('options_window', width=self.widths[.5],
-                    height=self.heights[.5] // 2, x_pos=self.pad, no_move=True,
-                    y_pos=self.pad + self.heights[.5], no_resize=True):
+                    height=self.heights[1.],
+                    x_pos=self.widths[.5] + 2*self.pad,
+                    y_pos=self.pad, no_resize=True, no_move=True):
             add_button('query_btn', label='Query', callback=query_callback,
                        callback_data={'target_id': 'response_text'})
             add_same_line()
@@ -244,8 +258,6 @@ class App:
                                         'strip_output', 'mock'])
             for k, v in query_params.items():
                 v = v.default
-                # if isinstance(v, bool):
-                #     add_checkbox(k, default_value=v)
                 if isinstance(v, float):
                     add_input_float(k, default_value=v, min_value=0.0,
                                     max_value=1.0)
@@ -258,30 +270,24 @@ class App:
                     continue
                 self.query_kwarg_ids.append(k)
 
+            add_spacing(count=2)
+            add_input_text('stop', default_value='', hint='TODO: hint',
+                           multiline=True)
+            self.query_kwarg_ids.append('stop')
+
             # I'd like to avoid the horizontal scrollbar but there's no
             # straightforward way to do this in dearpygui at the moment.
-            # prompt = MANAGER.prompt(NAME2TASK[get_value('task_list')],
-            #                         text=get_value('transcribed_text'))
+            # add_label_text('test label') # TODO rm
+            add_spacing(count=2)
             add_input_text('prompt', default_value=self.get_prompt_text(),
                            multiline=True, width=self.widths[.5] - 2*self.pad,
-                           height=300)
-
-    def output_column(self):
-        with window('output_window', width=self.widths[.5],
-                    height=self.heights[1.],
-                    x_pos=self.widths[.5] + 2*self.pad,
-                    y_pos=self.pad, no_resize=True, no_move=True):
-            add_button('output button')
-            add_input_text('response_text', default_value='',
-                           multiline=True, width=self.widths[.5] - 2*self.pad,
-                           height=300)
-            set_item_label('response_text', '')
+                           height=450)
 
     def build(self):
         self.primary_window()
         # self.menu()
-        self.input_column()
-        self.output_column()
+        self.left_column()
+        self.right_column()
 
     def run(self):
         self.build()
