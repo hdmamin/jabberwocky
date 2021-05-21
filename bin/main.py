@@ -50,7 +50,7 @@ def transcribe_callback(sender, data):
         show_item(id_)
 
     # Manually call this so prompt is updated once we finish recording.
-    task_select_callback('task_lislt',
+    task_select_callback('task_list',
                          data={'task_list_id': 'task_list',
                                'text_source_id': 'transcribed_text'})
 
@@ -108,7 +108,7 @@ def resize_callback(sender):
 
 class App:
 
-    def __init__(self, width=900, height=720, font_scale=1.25, theme='dark',
+    def __init__(self, width=1_200, height=760, font_scale=1.25, theme='dark',
                  width_pcts=(.5, 1.), height_pcts=(.5, 1.), pad=5):
         self.width = width
         self.height = height
@@ -195,7 +195,7 @@ class App:
     def input_column(self):
         with window('input_window', width=self.widths[.5],
                     height=self.heights[.5] - self.pad, x_pos=self.pad,
-                    y_pos=self.pad):
+                    y_pos=self.pad, no_resize=True, no_move=True):
             add_button('record_btn', label='Record',
                        callback_data={'show_during_ids': ['record_msg'],
                                       'target_id': 'transcribed_text',
@@ -225,8 +225,8 @@ class App:
                          'to clean up the text manually.')
 
         with window('options_window', width=self.widths[.5],
-                    height=self.heights[.5] // 2, x_pos=self.pad,
-                    y_pos=self.pad + self.heights[.5]):
+                    height=self.heights[.5] // 2, x_pos=self.pad, no_move=True,
+                    y_pos=self.pad + self.heights[.5], no_resize=True):
             add_button('query_btn', label='Query', callback=query_callback,
                        callback_data={'target_id': 'response_text'})
             add_same_line()
@@ -270,7 +270,7 @@ class App:
         with window('output_window', width=self.widths[.5],
                     height=self.heights[1.],
                     x_pos=self.widths[.5] + 2*self.pad,
-                    y_pos=self.pad):
+                    y_pos=self.pad, no_resize=True, no_move=True):
             add_button('output button')
             add_input_text('response_text', default_value='',
                            multiline=True, width=self.widths[.5] - 2*self.pad,
