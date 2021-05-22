@@ -1,6 +1,7 @@
 from dearpygui.core import *
 from dearpygui.simple import *
 import os
+import pyttsx3
 import speech_recognition as sr
 
 from htools.core import tolist, select, eprint
@@ -20,6 +21,11 @@ NAME2TASK = IndexedDict({
     'Dates (debug)': 'short_dates',
     'Math (debug)': 'shortest'
 })
+
+SPEAKER = pyttsx3.init()
+voices = {v.id.split('.')[-1]: v.id for v in SPEAKER.getProperty('voices')}
+SPEAKER.setProperty('voice', voices['karen'])
+SPEAKER.setProperty('rate', 80)
 
 
 def transcribe_callback(sender, data):
@@ -91,10 +97,22 @@ def query_callback(sender, data):
         - target_id (str: element to display text response in)
     """
     kwargs = app.get_query_kwargs()
+    # Can't pass empty list in for stop parameter.
+    kwargs['stop'] = kwargs['stop'] or None
     eprint(kwargs.items())
     task, text = app.get_prompt_text(do_format=False)
     _, res = MANAGER.query(task=task, text=text, **kwargs)
     set_value(data['target_id'], res)
+    if data['read_checkbox_id']:
+        # TODO: sounds like speaking needs to run in a thread to work with
+        # dearpygui.
+        print('before say')
+        SPEAKER.say(res)
+        print('after say')
+        SPEAKER.runAndWait()
+        print('done')
+        import time
+        time.sleep(10)
 
 
 def resize_callback(sender):
@@ -110,7 +128,8 @@ def resize_callback(sender):
 
 class App:
 
-    def __init__(self, width=1_200, height=760, font_scale=1.25, theme='dark',
+    def __init__(self, width=1_200, height=760, font_size=22,
+                 font_path='data/fonts/OpenSans-Light.ttf', theme='dark',
                  width_pcts=(.5, 1.), height_pcts=(.5, 1.), pad=5):
         self.width = width
         self.height = height
@@ -124,7 +143,7 @@ class App:
         self.query_kwarg_ids = ['mock']
         self.recompute_dimensions(width, height)
         set_main_window_size(self.width, self.height)
-        set_global_font_scale(font_scale)
+        if font_path: add_additional_font(font_path, size=font_size)
         set_theme(theme.title())
         set_resize_callback(resize_callback)
 
@@ -242,9 +261,13 @@ class App:
                     x_pos=self.widths[.5] + 2*self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True):
             add_button('query_btn', label='Query', callback=query_callback,
-                       callback_data={'target_id': 'response_text'})
+                       callback_data={'target_id': 'response_text',
+                                      'read_checkbox_id': 'read_response'})
             add_same_line()
             add_checkbox('mock')
+            add_same_line()
+            add_checkbox('read_response', label='read response',
+                         default_value=True)
             add_listbox('task_list', items=list(NAME2TASK),
                         num_items=len(NAME2TASK),
                         callback=task_select_callback,

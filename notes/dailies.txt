@@ -487,14 +487,23 @@ X -redo layout so options gets full height
 
 5/21/21
 -------
--add new font
-    -adjust font size
+X -add new font
+    X -adjust font size
 -see if there's a way so manually typing input in record box (and then moving focus or something) can trigger options update too. This would also be useful if the user manually cleans up the punctuation after recording.
--add output audio (see old translation file)
+X -add output audio (see old translation file)
+X -fix bug where empty stop param is list when openai expects None
 -add warning from a prompt's config file in options window
 -add warning in case you try to query with empty text for a prompt that needs input
 -consider image task tie-ins
     -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
+
+5/22/21
+-------
+-get voice response working (put in thread?)
+-adjust speaking pace
+-maybe make it so we can choose a voice in the app?
+-see if there's a way so manually typing input in record box (and then moving focus or something) can trigger options update too. This would also be useful if the user manually cleans up the punctuation after recording.
+-add warning in case you try to query with empty text for a prompt that needs input
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -509,6 +518,9 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
+-add warning from a prompt's config file in options window
+-consider image task tie-ins
+    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
 -consider how we might support other (non-gpt3) tasks
     -what tasks might those be? (translation package, huggingface pretrained models (see py_project.txt notes)
     -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
