@@ -8,7 +8,7 @@ class Speaker:
     functionality.
     """
 
-    def __init__(self, voice='karen', rate=125, newline_pause=300):
+    def __init__(self, voice='karen', rate=135, newline_pause=300):
         self.voice = voice
         self.rate = rate
         self.newline_pause = newline_pause

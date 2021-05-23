@@ -57,6 +57,12 @@ def transcribe_callback(sender, data):
                                'text_source_id': 'transcribed_text'})
 
 
+def text_edit_callback(sender, data):
+    task_select_callback('task_list',
+                         data={'task_list_id': 'task_list',
+                               'text_source_id': 'transcribed_text'})
+
+
 def punctuate_callback(sender, data):
     """data keys:
         - source (str: element containing text to punctuate)
@@ -224,6 +230,7 @@ class App:
                            multiline=True, width=self.widths[.5] - 2*self.pad,
                            height=300)
             set_item_label('transcribed_text', '')
+            set_key_press_callback(text_edit_callback)
 
             # Button only appears when there is text to punctuate.
             add_button('punctuate_btn', label='Auto-Punctuate',
@@ -246,8 +253,6 @@ class App:
             set_item_label('response_text', '')
 
     def right_column(self):
-        print(self.widths[.5], self.heights[1.], self.widths[.5] + 2*self.pad,
-              self.pad)
         with window('options_window', width=self.widths[.5],
                     height=self.heights[1.],
                     x_pos=self.widths[.5] + 2*self.pad,

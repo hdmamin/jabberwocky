@@ -33,3 +33,13 @@
     -have gpt3 write a story, then use text descriptions plus clip to find available artifacts online to insert into the scene as illustration
     -img recognition -> text description of your surroundings -> some kind of instructions/feedback?
         -batting/yoga/lifting form feedback
+
+5/23/21
+-------
+-arxiv/semantic scholar integration ideas:
+    -say a topic (linear attention) or a question (how does linformer reduce attention time complexity?), find the most relevant paper using API (or get top n, then use gpt3 doc search to choose 1), then have gpt3 use question answering to provide the answer.
+    -use my Explain ML prompt or the standard tldr prompt to summarize the abstract, the whole paper, or a portion of the paper.
+    -prompt gpt3 to generate abstract from title
+        -or generate paper from abstract, but that's very token intensive
+    -"Expand On" model: input is a term like "instance norm", output is a short passage explaining it. Just manually construct the prompt once, no need for api - gpt3 already contains compressed representations of all this knowledge.
+   -add gui option to paste paper ID/url, then get summary 
