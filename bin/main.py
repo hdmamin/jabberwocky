@@ -1,13 +1,13 @@
 from dearpygui.core import *
 from dearpygui.simple import *
 import os
-import pyttsx3
 import speech_recognition as sr
 
 from htools.core import tolist, select, eprint
 from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, query_gpt3
+from jabberwocky.speech import Speaker
 
 
 os.chdir('../')
@@ -21,11 +21,7 @@ NAME2TASK = IndexedDict({
     'Dates (debug)': 'short_dates',
     'Math (debug)': 'shortest'
 })
-
-SPEAKER = pyttsx3.init()
-voices = {v.id.split('.')[-1]: v.id for v in SPEAKER.getProperty('voices')}
-SPEAKER.setProperty('voice', voices['karen'])
-SPEAKER.setProperty('rate', 80)
+SPEAKER = Speaker()
 
 
 def transcribe_callback(sender, data):
@@ -87,6 +83,10 @@ def task_select_callback(sender, data):
     kwargs = MANAGER.kwargs(task_name)
     kwargs.setdefault('stop', '')
     for k, v in kwargs.items():
+        # Choice of whether to mock calls is more related to the purpose of the
+        # user session than the currently selected prompt.
+        if k == 'mock':
+            continue
         if k == 'stop' and isinstance(v, list):
             v = '\n'.join(v)
         set_value(k, v)
@@ -103,16 +103,8 @@ def query_callback(sender, data):
     task, text = app.get_prompt_text(do_format=False)
     _, res = MANAGER.query(task=task, text=text, **kwargs)
     set_value(data['target_id'], res)
-    if data['read_checkbox_id']:
-        # TODO: sounds like speaking needs to run in a thread to work with
-        # dearpygui.
-        print('before say')
-        SPEAKER.say(res)
-        print('after say')
-        SPEAKER.runAndWait()
-        print('done')
-        import time
-        time.sleep(10)
+    if get_value(data['read_checkbox_id']):
+        SPEAKER.speak(res)
 
 
 def resize_callback(sender):
