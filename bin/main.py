@@ -21,7 +21,7 @@ NAME2TASK = IndexedDict({
     'Dates (debug)': 'short_dates',
     'Math (debug)': 'shortest'
 })
-SPEAKER = Speaker()
+SPEAKER = Speaker(newline_pause=400)
 
 
 def transcribe_callback(sender, data):

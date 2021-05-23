@@ -508,8 +508,8 @@ X -adjust speaking pace
 
 5/23/21
 -------
--see if we can add slight pauses on newlines when reading responses
--consider adjusting pace a little
+X -see if we can add slight pauses on newlines when reading responses
+X -consider adjusting pace a little
 -consider removing auto-punct button since it's already available in prompts? Or remove from prompts menu?
 -maybe make it so we can choose a voice in the app?
 -see if there's a way so manually typing input in record box (and then moving focus or something) can trigger options update too. This would also be useful if the user manually cleans up the punctuation after recording.
