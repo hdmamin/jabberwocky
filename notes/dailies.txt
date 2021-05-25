@@ -517,11 +517,25 @@ X -see if there's a way so manually typing input in record box (and then moving 
 
 5/24/21
 -------
--work on prompt mapping term to ELI5 (or an average high schooler, really) passage
+X -work on prompt mapping term to ELI5 (or an average high schooler, really) passage
+    UPDATE: tried mapping term to metaphor, but haven't been able to get this working well yet. Mapping idea (basically a simplified TLDR from semantic scholar) to abstract works reasonably well, however. Unfortunately, abstracts are usually not technically detailed enough for this to be particularly useful as a brainstorming technique.
+    X -add this option to gui and experiment
 -Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
 -consider removing auto-punct button since it's already available in prompts? Or remove from prompts menu?
 -add warning in case you try to query with empty text for a prompt that needs input
 
+5/25/21
+-------
+-add chatbot prompt
+    -consider how we might enable a more conversational mode, with multiple user input/gpt3 response pairs over time.
+-Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
+-consider removing auto-punct button since it's already available in prompts? Or remove from prompts menu?
+-add warning in case you try to query with empty text for a prompt that needs input
+
+-------------------------------------------------------------------------------
+-Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
+-consider removing auto-punct button since it's already available in prompts? Or remove from prompts menu?
+-add warning in case you try to query with empty text for a prompt that needs input
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 

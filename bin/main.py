@@ -17,6 +17,7 @@ NAME2TASK = IndexedDict({
     'Summarize': 'tldr',
     'Explain Like I\'m 5': 'eli',
     'Explain Machine Learning': 'simplify_ml',
+    'Machine Learning Abstract Writer': 'ml_abstract',
     'How To': 'how_to',
     'Dates (debug)': 'short_dates',
     'Math (debug)': 'shortest'
