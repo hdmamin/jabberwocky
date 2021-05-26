@@ -35,6 +35,15 @@ def load_booste_api_key():
         return f.read().strip()
 
 
+def load_huggingface_api_key():
+    """Load api used when querying Huggingface model APIs. This will be placed
+    in the headers for a post request like
+    {'Authorization': f'Bearer api_{my_api_key}'}.
+    """
+    with open(Path('~/.huggingface').expanduser(), 'r') as f:
+        return f.read().strip()
+
+
 def load_yaml(path, section=None):
     """Load a yaml file. Useful for loading prompts.
 
