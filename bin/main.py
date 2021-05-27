@@ -6,7 +6,7 @@ import speech_recognition as sr
 from htools.core import tolist, select, eprint
 from htools.meta import params
 from htools.structures import IndexedDict
-from jabberwocky.openai_utils import PromptManager, query_gpt3
+from jabberwocky.openai_utils import PromptManager, query_gpt3, query_gpt_neo
 from jabberwocky.speech import Speaker
 
 
@@ -108,7 +108,10 @@ def query_callback(sender, data):
     kwargs['stop'] = kwargs['stop'] or None
     eprint(kwargs.items())
     task, text = app.get_prompt_text(do_format=False)
-    _, res = MANAGER.query(task=task, text=text, **kwargs)
+    # _, res = MANAGER.query(task=task, text=text, **kwargs)
+    # TODO: tmp testing gpt neo for mocked calls.
+    _, res = MANAGER.query(task=task, text=text, mock_func=query_gpt_neo,
+                           **kwargs)
     set_value(data['target_id'], res)
     if get_value(data['read_checkbox_id']):
         SPEAKER.speak(res)

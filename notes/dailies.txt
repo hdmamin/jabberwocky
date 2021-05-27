@@ -533,11 +533,24 @@ X -try huggingface api
 
 5/26/21
 -------
--update query_gpt_neo func
-    -work on different length responses (seems to return slightly different format depending on max_tokens)
-    -make interface more compatible w/ query_gpt_3?
-    -consider interface: should we hide this inside query_gpt3 (basically another mock mode option) or make interfaces identical so we can swap out functions interchangeably?
-        -work on implementing changes
+X -update query_gpt_neo func
+    UPDATE: Found and fixed some bugs. Most importantly, we were passing in parameters wrong which caused them to be ignored.
+    _ -work on different length responses (seems to return slightly different format depending on max_tokens)
+        UPDATE: This should only happen if we pass in a list of input strings, which I don't do with this interface.
+    X -make interface more compatible w/ query_gpt_3?
+        UPDATE: made it work as a mock_func.
+    X -consider interface: should we hide this inside query_gpt3 (basically another mock mode option) or make interfaces identical so we can swap out functions interchangeably?
+        X -work on implementing changes
+~ -add gpt neo option to gui
+    UPDATE: hardcoded for now when user selects mock mode. Eventually, might want to distinguish between a truly mocked call (faster) and neo.
+
+5/27/21
+-------
+-better error handling for query_neo (see error message in pycharm console) 
+-gui options for true mock call vs. neo call.
+-check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
+    -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+-document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

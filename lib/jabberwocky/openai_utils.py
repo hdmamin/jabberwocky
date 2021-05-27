@@ -1,16 +1,18 @@
 """Utility functions for interacting with the gpt3 api."""
 
 from collections.abc import Iterable, Mapping
+import json
 import numpy as np
 import openai
 import os
 from pathlib import Path
+import requests
 import sys
 import warnings
 
-from htools import load, select, bound_args, spacer
+from htools import load, select, bound_args, spacer, valuecheck
 from jabberwocky.config import C
-from jabberwocky.utils import strip, bold, load_yaml
+from jabberwocky.utils import strip, bold, load_yaml, load_huggingface_api_key
 
 
 def load_openai_api_key():
@@ -108,7 +110,10 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
             if stream:
                 raise NotImplementedError('mock_func unavailable when '
                                           'stream=True.')
-            res.choices[0].text = mock_func(prompt)
+            res.choices[0].text = mock_func(
+                prompt, engine_i=engine_i, temperature=temperature,
+                max_tokens=max_tokens, **kwargs
+            )
     else:
         res = openai.Completion.create(
             engine=C.engines[engine_i],
@@ -419,7 +424,8 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True):
     return kwargs
 
 
-def punctuate_mock_func(prompt, random_punct=True, sentence_len=15):
+def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
+                        *args, **kwargs):
     """
     #TODO docs
 
@@ -428,6 +434,8 @@ def punctuate_mock_func(prompt, random_punct=True, sentence_len=15):
     prompt
     random_punct
     sentence_len
+
+    args and kwargs are just included for compatiblity with mock_fn interface.
 
     Returns
     -------
@@ -444,6 +452,51 @@ def punctuate_mock_func(prompt, random_punct=True, sentence_len=15):
             )
         text = ' '.join(new_words)
     return text
+
+
+@valuecheck
+def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
+                  repetition_penalty=None, max_tokens=250, api_key=None,
+                  size:('1.3B', '2.7B')='2.7B',
+                  **kwargs):
+    """
+
+    Parameters
+    ----------
+    prompt
+    top_k
+    top_p
+    temperature
+    repetition_penalty
+    max_tokens
+    api_key
+    size
+    kwargs: any
+        Just for compatibility with mock_fn interface.
+
+    Returns
+    -------
+    str
+    """
+    # Docs say we can return up to 256 tokens but API sometimes throws errors
+    # if we go above 250.
+    headers = {'Authorization':
+               f'Bearer api_{api_key or load_huggingface_api_key()}'}
+    # Notice the names don't always align with parameter names - I wanted
+    # those to be more consistent with query_gpt3() function. Also notice
+    # that types matter: if Huggingface expects a float but gets an int, we'll
+    # get an error.
+    if repetition_penalty is not None:
+        repetition_penalty = float(repetition_penalty)
+    data = {'inputs': prompt,
+            'parameters': {'top_k': top_k, 'top_p': top_p,
+                           'temperature': float(temperature),
+                           'max_new_tokens': max(max_tokens, 250),
+                           'repetition_penalty': repetition_penalty,
+                           'return_full_text': False}}
+    url = 'https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-{}'
+    r = requests.post(url.format(size), headers=headers, data=json.dumps(data))
+    return r.json()[0]['generated_text']
 
 
 # I figure if we're importing these functions, we'll need to authenticate.
