@@ -553,10 +553,27 @@ X -better error handling for query_neo (see error message in pycharm console)
 
 5/28/21
 -------
--create file to track tough google searches and the ultimately helpful piece of information
--gui options for true mock call vs. neo call.
+X -create file to track tough google searches and the ultimately helpful piece of information
+X -gui options for true mock call vs. neo call.
+    UPDATE: collapsed mock checkbox and model options into one radio button list.
+~ -make speech interruptable
+    UPDATE: set default to off for dev purposes. Also started building interruptable decorator in ipython session.
+X -show more graceful error message in gui if response fails for some reason (or maybe w/ my new error handling in query func this is unlikely enough that it basically never hapepns? Assess.)
+X -tweak "how to" prompt params
+    UPDATE: higher model, longer length, new stop_word
 -make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
--show more graceful error message in gui if response fails for some reason (or maybe w/ my new error handling in query func this is unlikely enough that it basically never hapepns? Assess.)
+-check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
+    -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+-document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
+
+5/30/21
+-------
+-interruptable decorator
+    -test with @callback
+        -consider integrating callbacks natively? So use just 1 deco, not 2.
+    -port to htools
+    -integrate into GUI/speaker class to allow speech interrupt
+-make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
 -check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
     -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
 -document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.

@@ -22,6 +22,7 @@ NAME2TASK = IndexedDict({
     'Dates (debug)': 'short_dates',
     'Math (debug)': 'shortest'
 })
+MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M', 'naive']
 SPEAKER = Speaker(newline_pause=400)
 
 
@@ -106,12 +107,19 @@ def query_callback(sender, data):
     kwargs = app.get_query_kwargs()
     # Can't pass empty list in for stop parameter.
     kwargs['stop'] = kwargs['stop'] or None
-    eprint(kwargs.items())
     task, text = app.get_prompt_text(do_format=False)
-    # _, res = MANAGER.query(task=task, text=text, **kwargs)
-    # TODO: tmp testing gpt neo for mocked calls.
-    _, res = MANAGER.query(task=task, text=text, mock_func=query_gpt_neo,
-                           **kwargs)
+    model = MODEL_NAMES[get_value('model')]
+    if 'neo' in model:
+        kwargs.update(mock_func=query_gpt_neo, size=model.split()[-1],
+                      mock=True)
+    elif model == 'naive':
+        kwargs.update(mock=True, mock_func=None)
+    eprint(select(kwargs, drop=['prompt']).items())
+    try:
+        _, res = MANAGER.query(task=task, text=text, **kwargs)
+    except Exception as e:
+        print(e)
+        res = 'Query failed. Please check your settings and try again.'
     set_value(data['target_id'], res)
     if get_value(data['read_checkbox_id']):
         SPEAKER.speak(res)
@@ -142,7 +150,7 @@ class App:
         self.heights = {}
         self.pos = []
         # These are populated in self.left_column().
-        self.query_kwarg_ids = ['mock']
+        self.query_kwarg_ids = []
         self.recompute_dimensions(width, height)
         set_main_window_size(self.width, self.height)
         if font_path: add_additional_font(font_path, size=font_size)
@@ -265,10 +273,9 @@ class App:
                        callback_data={'target_id': 'response_text',
                                       'read_checkbox_id': 'read_response'})
             add_same_line()
-            add_checkbox('mock')
-            add_same_line()
             add_checkbox('read_response', label='read response',
                          default_value=True)
+            add_radio_button('model', items=MODEL_NAMES)
             add_listbox('task_list', items=list(NAME2TASK),
                         num_items=len(NAME2TASK),
                         callback=task_select_callback,

@@ -120,12 +120,15 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
                 raise NotImplementedError('mock_func unavailable when '
                                           'stream=True.')
 
-            # Replace text with results of mocked call if possible.
+            # Replace text with results of mocked call if possible. Mock_funcs
+            # return response as the second item, just like this function, so
+            # we can also use them in place of it instead of specifying a
+            # mock_func parameter.
             try:
                 res.choices[0].text = mock_func(
                     prompt, engine_i=engine_i, temperature=temperature,
                     max_tokens=max_tokens, **kwargs
-                )
+                )[1]
             except MockFunctionException as e:
                 if mock_mode == 'raise':
                     raise e
@@ -443,8 +446,9 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True):
 
 def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
                         *args, **kwargs):
-    """
-    #TODO docs
+    """Mimic punctuate task by splitting a piece of unpunctuated text into
+    chunks of constant length and inserting periods and capitalization in the
+    corresponding places. Pass to query_gpt_3 as mock_func.
 
     Parameters
     ----------
@@ -468,7 +472,7 @@ def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
                 ' '.join(words[idx:idx+sentence_len]).capitalize() + '.'
             )
         text = ' '.join(new_words)
-    return text
+    return prompt, text
 
 
 @valuecheck
@@ -476,7 +480,7 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
                   repetition_penalty=None, max_tokens=250, api_key=None,
                   size:('125M', '1.3B', '2.7B')='2.7B',
                   **kwargs):
-    """
+    """Query gpt-Neo using Huggingface API.
 
     Parameters
     ----------
@@ -493,7 +497,7 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
 
     Returns
     -------
-    str
+    tuple[str]: Prompt, response tuple, just like query_gpt_3().
     """
     # Docs say we can return up to 256 tokens but API sometimes throws errors
     # if we go above 250.
@@ -526,7 +530,8 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
                if idx >= 0]
         stop_idx = min(idx) if idx else None
         res = res[:stop_idx]
-    return res
+    return prompt, res
+
 
 # I figure if we're importing these functions, we'll need to authenticate.
 openai_auth()
