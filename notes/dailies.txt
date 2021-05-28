@@ -546,8 +546,17 @@ X -update query_gpt_neo func
 
 5/27/21
 -------
--better error handling for query_neo (see error message in pycharm console) 
+X -better error handling for query_neo (see error message in pycharm console) 
+    UPDATE: also found and fixed bug w/ max_token len and identified possible cause of api errors (input is too long - tried to test this but then started getting errors about rate limits, which is odd because I'm nowhere near the documented limit).
+~ -experiment with other information seeking task
+    UPDATE: see misc
+
+5/28/21
+-------
+-create file to track tough google searches and the ultimately helpful piece of information
 -gui options for true mock call vs. neo call.
+-make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
+-show more graceful error message in gui if response fails for some reason (or maybe w/ my new error handling in query func this is unlikely enough that it basically never hapepns? Assess.)
 -check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
     -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
 -document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.

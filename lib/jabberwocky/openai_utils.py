@@ -10,9 +10,13 @@ import requests
 import sys
 import warnings
 
-from htools import load, select, bound_args, spacer, valuecheck
+from htools import load, select, bound_args, spacer, valuecheck, tolist
 from jabberwocky.config import C
 from jabberwocky.utils import strip, bold, load_yaml, load_huggingface_api_key
+
+
+class MockFunctionException(Exception):
+    """Allow all mock query functions to return a common exception."""
 
 
 def load_openai_api_key():
@@ -45,6 +49,7 @@ def openai_auth():
 def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
                logprobs=None, stream=False, mock=False, return_full=False,
                strip_output=True, mock_func=None,
+               mock_mode:('raise', 'warn', 'ignore')='raise',
                **kwargs):
     """Convenience function to query gpt3.
 
@@ -89,6 +94,10 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
         want to write a mock_func that extracts the new input portion of the
         prompt (discarding instructions and examples). This option is
         unavailable in stream mode.
+    mock_mode: str
+        Determines what to do if using mock mode and mock_func is not None and
+        it fails. Either 'raise' an error, 'warn' the user and proceed with the
+        saved response, or silently proceed with the saved response.
     kwargs: any
         Additional kwargs to pass to gpt3.
         Ex: presence_penalty, frequency_penalty (both floats in [0, 1]).
@@ -110,10 +119,18 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
             if stream:
                 raise NotImplementedError('mock_func unavailable when '
                                           'stream=True.')
-            res.choices[0].text = mock_func(
-                prompt, engine_i=engine_i, temperature=temperature,
-                max_tokens=max_tokens, **kwargs
-            )
+
+            # Replace text with results of mocked call if possible.
+            try:
+                res.choices[0].text = mock_func(
+                    prompt, engine_i=engine_i, temperature=temperature,
+                    max_tokens=max_tokens, **kwargs
+                )
+            except MockFunctionException as e:
+                if mock_mode == 'raise':
+                    raise e
+                elif mock_mode == 'warn':
+                    warnings.warn(str(e))
     else:
         res = openai.Completion.create(
             engine=C.engines[engine_i],
@@ -457,7 +474,7 @@ def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
 @valuecheck
 def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
                   repetition_penalty=None, max_tokens=250, api_key=None,
-                  size:('1.3B', '2.7B')='2.7B',
+                  size:('125M', '1.3B', '2.7B')='2.7B',
                   **kwargs):
     """
 
@@ -491,13 +508,25 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
     data = {'inputs': prompt,
             'parameters': {'top_k': top_k, 'top_p': top_p,
                            'temperature': float(temperature),
-                           'max_new_tokens': max(max_tokens, 250),
+                           'max_new_tokens': min(max_tokens, 250),
                            'repetition_penalty': repetition_penalty,
                            'return_full_text': False}}
     url = 'https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-{}'
     r = requests.post(url.format(size), headers=headers, data=json.dumps(data))
-    return r.json()[0]['generated_text']
+    try:
+        r.raise_for_status()
+    except requests.HTTPError as e:
+        raise MockFunctionException(str(e)) from None
 
+    # Huggingface doesn't natively provide the `stop` parameter that OpenAI
+    # does so we have to do this manually.
+    res = r.json()[0]['generated_text']
+    if 'stop' in kwargs:
+        idx = [idx for idx in map(res.find, tolist(kwargs['stop']))
+               if idx >= 0]
+        stop_idx = min(idx) if idx else None
+        res = res[:stop_idx]
+    return res
 
 # I figure if we're importing these functions, we'll need to authenticate.
 openai_auth()

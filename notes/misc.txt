@@ -43,3 +43,7 @@
         -or generate paper from abstract, but that's very token intensive
     -"Expand On" model: input is a term like "instance norm", output is a short passage explaining it. Just manually construct the prompt once, no need for api - gpt3 already contains compressed representations of all this knowledge.
    -add gui option to paste paper ID/url, then get summary 
+
+5/28/21
+-------
+Thinking there might be some room to improve google's information retrieval capabilities. Effective googling is definitely still a skill, and it can take multiple query phrasings, clicking on  multiple pages, or reading through long chunks of a page to find the desired answer. I'm thinking we may be able to speed this up with gpt3. I briefly tried to think of a few searches to construct samples manually, but this was a bit tough. I'm thinking it may be better to organically let challenging searches arise and make note of them (and their ultimately useful results) when they do.
