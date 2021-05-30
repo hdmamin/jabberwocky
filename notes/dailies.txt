@@ -568,16 +568,24 @@ X -tweak "how to" prompt params
 
 5/30/21
 -------
--interruptable decorator
-    -test with @callback
-        -consider integrating callbacks natively? So use just 1 deco, not 2.
-    -port to htools
-    -integrate into GUI/speaker class to allow speech interrupt
--make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
+X -interruptable decorator
+    ~ -test with @callback
+        X -consider integrating callbacks natively? So use just 1 deco, not 2.
+    X -port to htools
+    ~ -integrate into GUI/speaker class to allow speech interrupt
+ -make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
 -check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
     -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
 -document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
 
+5/31/21
+-------
+-integrate into GUI/speaker class to allow speech interrupt
+    -troubleshoot threading issues: seems that each callback is run in a separate thread and it's tricky to propagate an exception from one thread to another
+-make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
+-check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
+    -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+-document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 

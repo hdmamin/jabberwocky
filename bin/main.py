@@ -2,6 +2,7 @@ from dearpygui.core import *
 from dearpygui.simple import *
 import os
 import speech_recognition as sr
+import time
 
 from htools.core import tolist, select, eprint
 from htools.meta import params
@@ -103,6 +104,7 @@ def task_select_callback(sender, data):
 def query_callback(sender, data):
     """data keys:
         - target_id (str: element to display text response in)
+        - interrupt_id (str: button to interrupt speaker if enabled)
     """
     kwargs = app.get_query_kwargs()
     # Can't pass empty list in for stop parameter.
@@ -122,8 +124,48 @@ def query_callback(sender, data):
         res = 'Query failed. Please check your settings and try again.'
     set_value(data['target_id'], res)
     if get_value(data['read_checkbox_id']):
-        SPEAKER.speak(res)
+        show_item(data['interrupt_id'])
+        # TODO start
+        from threading import Thread
+        errors = []
+        thread = Thread(target=monitor_interrupt_btn, args=(SPEAKER,))
+        thread.start()
+        # TODO end
+        try:
+            SPEAKER.speak(res)
+        except KeyboardInterrupt:
+            print('interrupted')
+        hide_item(data['interrupt_id'])
+        thread.join() # TODO rm
 
+
+# TODO start
+def monitor_speaker(speaker):
+    start = time.perf_counter()
+    while True:
+        print('speaking: ' + str(speaker.is_speaking))
+        time.sleep(1)
+        if time.perf_counter() - start > 10: break
+
+
+# seeing if we can raise an exception that will affect the speaker. For now
+# we just check an unrelated checkbox (not sure if we can check button status).
+def monitor_interrupt_btn(speaker):
+    while True:
+        if get_value('read_response'):
+            print('read response is checked')
+            raise KeyboardInterrupt
+        time.sleep(1)
+
+
+def interrupt_callback(sender, data):
+    if SPEAKER.is_speaking:
+        print('speaker is speaking')
+    else:
+        print('NOT SPEAKING')
+    # raise KeyboardInterrupt
+
+# TODO end
 
 def resize_callback(sender):
     width, height = get_main_window_size()
@@ -259,6 +301,9 @@ class App:
 
             add_spacing(count=3)
             add_text('Response')
+            add_same_line()
+            add_button('interrupt_btn', label='Interrupt', show=False,
+                       callback=interrupt_callback)
             add_input_text('response_text', default_value='',
                            multiline=True, width=self.widths[.5] - 2*self.pad,
                            height=300)
@@ -271,7 +316,8 @@ class App:
                     y_pos=self.pad, no_resize=True, no_move=True):
             add_button('query_btn', label='Query', callback=query_callback,
                        callback_data={'target_id': 'response_text',
-                                      'read_checkbox_id': 'read_response'})
+                                      'read_checkbox_id': 'read_response',
+                                      'interrupt_id': 'interrupt_btn'})
             add_same_line()
             add_checkbox('read_response', label='read response',
                          default_value=True)

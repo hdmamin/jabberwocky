@@ -1,6 +1,20 @@
 import os
 import shlex
 
+from htools.meta import Callback, handle_interrupt
+
+
+class SpeakingStatusCallback(Callback):
+
+    def setup(self, func):
+        pass
+
+    def on_begin(self, func, inputs, output=None):
+        inputs['self'].is_speaking = True
+
+    def on_end(self, func, inputs, output=None):
+        inputs['self'].is_speaking = False
+
 
 class Speaker:
     """Pyttsx3 package has issues with threads on Mac. Messed around with
@@ -13,7 +27,9 @@ class Speaker:
         self.rate = rate
         self.newline_pause = newline_pause
         self.cmd_prefix = f'say -v {self.voice} -r {self.rate} '
+        self.is_speaking = False
 
+    @handle_interrupt(cbs=SpeakingStatusCallback())
     def speak(self, text):
         os.system(self.cmd_prefix + self._format_text(text))
 
