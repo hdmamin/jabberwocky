@@ -3,8 +3,9 @@ from dearpygui.simple import *
 import os
 import speech_recognition as sr
 import time
+from threading import Thread
 
-from htools.core import tolist, select, eprint
+from htools.core import tolist, select, eprint, flatten, hsplit
 from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, query_gpt3, query_gpt_neo
@@ -123,49 +124,49 @@ def query_callback(sender, data):
         print(e)
         res = 'Query failed. Please check your settings and try again.'
     set_value(data['target_id'], res)
+
+    # Read response if desired. Threads allow us to interrupt speaker if user
+    # checks a checkbox. This was surprisingly difficult - I settled on a
+    # partial solution that can only quit after finishing saying a
+    # sentence/line, so there may be a bit of a delayed response after asking
+    # to interrupt.
     if get_value(data['read_checkbox_id']):
         show_item(data['interrupt_id'])
-        # TODO start
-        from threading import Thread
         errors = []
-        thread = Thread(target=monitor_interrupt_btn, args=(SPEAKER,))
+        thread = Thread(target=monitor_interrupt_btn,
+                        args=(data['interrupt_id'], errors))
         thread.start()
-        # TODO end
-        try:
-            SPEAKER.speak(res)
-        except KeyboardInterrupt:
-            print('interrupted')
+        for chunk in flatten(hsplit(line, '.') for line in res.splitlines()):
+            SPEAKER.speak(chunk)
+            if errors:
+                set_value(data['interrupt_id'], False)
+                break
         hide_item(data['interrupt_id'])
-        thread.join() # TODO rm
+        thread.join()
 
 
 # TODO start
-def monitor_speaker(speaker):
+def monitor_speaker(speaker, name, wait=2, quit_after=15):
     start = time.perf_counter()
     while True:
-        print('speaking: ' + str(speaker.is_speaking))
-        time.sleep(1)
-        if time.perf_counter() - start > 10: break
+        print(f'[{name}] speaking: ' + str(speaker.is_speaking))
+        time.sleep(wait)
+        if time.perf_counter() - start > quit_after:
+            print(f'[{name}]: quitting due to time exceeded')
+            break
 
 
-# seeing if we can raise an exception that will affect the speaker. For now
-# we just check an unrelated checkbox (not sure if we can check button status).
-def monitor_interrupt_btn(speaker):
+def monitor_interrupt_btn(btn_id, errors, quit_after=15):
+    start = time.perf_counter()
     while True:
-        if get_value('read_response'):
-            print('read response is checked')
-            raise KeyboardInterrupt
+        if get_value(btn_id):
+            errors.append(True)
+            break
         time.sleep(1)
+        if time.perf_counter() - start > quit_after:
+            print(f'btn monitor quitting due to time exceeded')
+            break
 
-
-def interrupt_callback(sender, data):
-    if SPEAKER.is_speaking:
-        print('speaker is speaking')
-    else:
-        print('NOT SPEAKING')
-    # raise KeyboardInterrupt
-
-# TODO end
 
 def resize_callback(sender):
     width, height = get_main_window_size()
@@ -302,8 +303,7 @@ class App:
             add_spacing(count=3)
             add_text('Response')
             add_same_line()
-            add_button('interrupt_btn', label='Interrupt', show=False,
-                       callback=interrupt_callback)
+            add_checkbox('interrupt_checkbox', label='Interrupt', show=False)
             add_input_text('response_text', default_value='',
                            multiline=True, width=self.widths[.5] - 2*self.pad,
                            height=300)
@@ -317,7 +317,7 @@ class App:
             add_button('query_btn', label='Query', callback=query_callback,
                        callback_data={'target_id': 'response_text',
                                       'read_checkbox_id': 'read_response',
-                                      'interrupt_id': 'interrupt_btn'})
+                                      'interrupt_id': 'interrupt_checkbox'})
             add_same_line()
             add_checkbox('read_response', label='read response',
                          default_value=True)
@@ -372,5 +372,11 @@ class App:
 
 
 if __name__ == '__main__':
+    MONITOR = Thread(target=monitor_speaker, args=(SPEAKER, 'MAIN_THREAD'))
+    MONITOR.start()
+
     app = App()
     app.run()
+
+    MONITOR.join()
+
