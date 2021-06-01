@@ -107,6 +107,7 @@ def query_callback(sender, data):
         - target_id (str: element to display text response in)
         - interrupt_id (str: button to interrupt speaker if enabled)
     """
+    show_item(data['query_msg_id'])
     kwargs = app.get_query_kwargs()
     # Can't pass empty list in for stop parameter.
     kwargs['stop'] = kwargs['stop'] or None
@@ -124,6 +125,7 @@ def query_callback(sender, data):
         print(e)
         res = 'Query failed. Please check your settings and try again.'
     set_value(data['target_id'], res)
+    hide_item(data['query_msg_id'])
 
     # Read response if desired. Threads allow us to interrupt speaker if user
     # checks a checkbox. This was surprisingly difficult - I settled on a
@@ -133,7 +135,7 @@ def query_callback(sender, data):
     if get_value(data['read_checkbox_id']):
         show_item(data['interrupt_id'])
         errors = []
-        thread = Thread(target=monitor_interrupt_btn,
+        thread = Thread(target=monitor_interrupt_checkbox,
                         args=(data['interrupt_id'], errors))
         thread.start()
         for chunk in flatten(hsplit(line, '.') for line in res.splitlines()):
@@ -145,26 +147,72 @@ def query_callback(sender, data):
         thread.join()
 
 
-# TODO start
-def monitor_speaker(speaker, name, wait=2, quit_after=15):
+def monitor_speaker(speaker, name, wait=1, quit_after=None, debug=False):
+    """Track when speaker is speaking (run this function in a separate thread).
+    Originally this was an attempt to implement speech interruption, but
+    eventually I settled on a method where the interrupt button is only present
+    during speech anyway so this check isn't necessary.
+
+    Parameters
+    ----------
+    speaker: jabberwocky.speech.Speaker
+    name: str
+        Makes it easier to track which monitor is speaking.
+    wait: int
+        How frequently to check if the speaker is speaking.
+    quit_after: int or None
+        Max run time for the monitor. I feel like this shouldn't be necessary
+        but IIRC threads weren't always closing otherwise (reasons unknown?) so
+        I added this in for easier debugging.
+    debug: bool
+        If True, print status updates to console.
+    """
     start = time.perf_counter()
     while True:
-        print(f'[{name}] speaking: ' + str(speaker.is_speaking))
+        if debug: print(f'[{name}] speaking: ' + str(speaker.is_speaking))
         time.sleep(wait)
-        if time.perf_counter() - start > quit_after:
-            print(f'[{name}]: quitting due to time exceeded')
+        if quit_after and time.perf_counter() - start > quit_after:
+            if debug: print(f'[{name}]: quitting due to time exceeded')
             break
 
 
-def monitor_interrupt_btn(btn_id, errors, quit_after=15):
+def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None):
+    """Track when the interrupt option is checked (run this function in a
+    separate thread). Couldn't figure out a way to check this with a button
+    (is_item_clicked seems to check only at that exact instant) so we use a
+    slightly clunkier-looking checkbox.
+
+    Parameters
+    ----------
+    box_id: str
+        Name of dearpygui checkbox to monitor.
+    errors: list
+        List to track errors in main thread. It starts out empty but this
+        function will append True (arbitrarily) if the checkbox of interest is
+        checked. The main thread can then periodically check if the list
+        remains empty. This is a workaround solution to the trickier task of
+        propagating an exception from a thread to the main thread (which I
+        read may not be a good idea anyway).
+    wait: int
+        How frequently to check if the speaker is speaking. A value of 2 means
+        we'd check once every 2 seconds.
+    quit_after: int or None
+        Max run time for the monitor. I feel like this shouldn't be necessary
+        but IIRC threads weren't always closing otherwise (reasons unknown?) so
+        I added this in for easier debugging.
+    """
     start = time.perf_counter()
     while True:
-        if get_value(btn_id):
+        if get_value(box_id):
             errors.append(True)
+            print('Checkbox monitor quitting due to checkbox selection.')
             break
-        time.sleep(1)
-        if time.perf_counter() - start > quit_after:
-            print(f'btn monitor quitting due to time exceeded')
+        time.sleep(wait)
+        if not SPEAKER.is_speaking:
+            print('Checkbox monitor quitting due to end of speech.')
+            break
+        if quit_after and time.perf_counter() - start > quit_after:
+            print(f'Checkbox monitor quitting due to time exceeded.')
             break
 
 
@@ -302,7 +350,9 @@ class App:
 
             add_spacing(count=3)
             add_text('Response')
-            add_same_line()
+            add_text('query_progress_msg',
+                     default_value='Query in progress...', show=False)
+            # add_same_line()
             add_checkbox('interrupt_checkbox', label='Interrupt', show=False)
             add_input_text('response_text', default_value='',
                            multiline=True, width=self.widths[.5] - 2*self.pad,
@@ -317,7 +367,8 @@ class App:
             add_button('query_btn', label='Query', callback=query_callback,
                        callback_data={'target_id': 'response_text',
                                       'read_checkbox_id': 'read_response',
-                                      'interrupt_id': 'interrupt_checkbox'})
+                                      'interrupt_id': 'interrupt_checkbox',
+                                      'query_msg_id': 'query_progress_msg'})
             add_same_line()
             add_checkbox('read_response', label='read response',
                          default_value=True)
@@ -372,11 +423,5 @@ class App:
 
 
 if __name__ == '__main__':
-    MONITOR = Thread(target=monitor_speaker, args=(SPEAKER, 'MAIN_THREAD'))
-    MONITOR.start()
-
     app = App()
     app.run()
-
-    MONITOR.join()
-

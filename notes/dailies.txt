@@ -566,7 +566,7 @@ X -tweak "how to" prompt params
     -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
 -document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
 
-5/30/21
+5/29/21
 -------
 X -interruptable decorator
     ~ -test with @callback
@@ -578,7 +578,7 @@ X -interruptable decorator
     -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
 -document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
 
-5/31/21
+5/30/21
 -------
 X -integrate into GUI/speaker class to allow speech interrupt
     X -troubleshoot threading issues: seems that each callback is run in a separate thread and it's tricky to propagate an exception from one thread to another
@@ -587,14 +587,25 @@ X -integrate into GUI/speaker class to allow speech interrupt
     -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
 -document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
 
-6/1/21
-------
--clean up code a bit after speaker interrupt ordeal
-    -document new funcs
--make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
+5/31/21
+-------
+X -clean up code a bit after speaker interrupt ordeal
+    X -document new funcs
+X -make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
 -check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
     -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
--document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
+X -document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
+~ -start generic monitor class (see ipy session)
+
+6/1/21
+------
+-check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
+    -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+-add chatbot prompt
+-add vanilla gpt3 prompt (no instructions, no specific task, just give it some text and let it talk for a bit)
+-add translation prompt?
+-continue work on more generic Monitor class for htools
+
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
@@ -617,11 +628,8 @@ backlog
 -consider image task tie-ins
     -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
 -consider how we might support other (non-gpt3) tasks
-    -what tasks might those be? (translation package, huggingface pretrained models (see py_project.txt notes)
     -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
-    -could update manager class to support this? Would be a bit messy.
 -add more voice interface features:
-    -read gpt3 output
     -allow voice commands? E.g. say "Task: Summarize. Input: ..."
 -rename windows (would prefer to find way to separate id and label, but I don't think that's available)
 -document session
@@ -638,7 +646,6 @@ backlog
 -re-watch dall-e video
 -add booste config file to paperspace
 -look through and/or download coursera video gan notebook
--review kilcher videos on dall-e, maybe other gans
 -look through instructions/demo for voice cloning app - how much audio do we need? Does it need to be custom or could I plausibly find enough for a famous person?
 -try chronology lib
 -try booste lib

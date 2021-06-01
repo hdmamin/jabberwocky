@@ -484,17 +484,42 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
 
     Parameters
     ----------
-    prompt
-    top_k
-    top_p
-    temperature
+    prompt: str
+    top_k: None or int
+        Kind of like top_p in that smaller values may produce more
+        sensible but less creative responses. While top_p limits options to
+        a cumulative percentage, top_k limits it to a discrete number of
+        top choices.
+    top_p: None or float
+        Value in [0.0, 1.0] if provided. Kind of like temperature in that
+        smaller values may produce more sensible but less creative responses.
+    temperature: float
+        Between 0 and 1. 0-0.4 is good for straightforward informational
+        queries (e.g. reformatting, writing business emails) while 0.7-1 is
+        good for more creative works.
     repetition_penalty
-    max_tokens
+    max_tokens: int
+        Sets max response length. One token is ~.75 words.
     api_key
-    size
+    size: str
+        Determines which Huggingface model API to query. Refers to number of
+        parameters in the model, where bigger models generally product better
+        quality results but may be slower (in addition to the actual inference
+        being slower to produce, the better models are also more popular so the
+        API is hit with more requests).
     kwargs: any
-        Just for compatibility with mock_fn interface.
+        Just lets us absorb extra kwargs when used in place of query_gpt3().
 
+    Returns
+    -------
+    tuple or iterator: When stream=False, we return a tuple where the first
+    item is the prompt (str) and the second is the response text(str). If
+    return_full is True, a third item consisting of the whole response object
+    is returned as well. When stream=True, we return an iterator where each
+    step contains a single token. This will either be the text response alone
+    (str) or a tuple of (text, response) if return_full is True. Unlike in
+    non-streaming mode, we don't return the prompt - that seems less
+    appropriate for many time steps.
     Returns
     -------
     tuple[str]: Prompt, response tuple, just like query_gpt_3().
