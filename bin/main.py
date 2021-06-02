@@ -16,6 +16,7 @@ os.chdir('../')
 MANAGER = PromptManager(verbose=False)
 NAME2TASK = IndexedDict({
     'Punctuate': 'punctuate',
+    'Default': 'default',
     'Summarize': 'tldr',
     'Explain Like I\'m 5': 'eli',
     'Explain Machine Learning': 'simplify_ml',
@@ -48,6 +49,11 @@ def transcribe_callback(sender, data):
     except sr.UnknownValueError:
         text = 'Parsing failed. Please try again.'
 
+    # Don't just use capitalize because this removes existing capitals.
+    # Probably don't have these anyway (transcription seems to usually be
+    # lowercase) but just being safe here.
+    text = text[0].upper() + text[1:]
+
     # Update windows now that transcription is complete.
     set_value(data['target_id'], text)
     for id_ in show_during:
@@ -67,14 +73,6 @@ def text_edit_callback(sender, data):
                                'text_source_id': 'transcribed_text'})
 
 
-def punctuate_callback(sender, data):
-    """data keys:
-        - source (str: element containing text to punctuate)
-    """
-    text = get_value(data['source'])
-    set_value(data['source'], text.swapcase())
-
-
 def task_select_callback(sender, data):
     """data keys:
         - task_list_id (str: element containing selected item. Returns an int.)
@@ -92,6 +90,9 @@ def task_select_callback(sender, data):
     # our prompt manager.
     kwargs = MANAGER.kwargs(task_name)
     kwargs.setdefault('stop', '')
+    # Fixed value for max_tokens doesn't make sense for this task.
+    if task_name == 'punctuate':
+        kwargs['max_tokens'] = int(len(user_text.split()) * 2)
     for k, v in kwargs.items():
         # Choice of whether to mock calls is more related to the purpose of the
         # user session than the currently selected prompt.
@@ -290,6 +291,12 @@ class App:
         """
         task_name = NAME2TASK[get_value(task_list_id)]
         input_text = get_value(text_source_id)
+
+        # Auto-transcription doesn't add colon at end so we do it manually.
+        if task_name == 'how_to' and not input_text.endswith(':'):
+            input_text += ':'
+        set_value(text_source_id, input_text)
+
         if do_format:
             return MANAGER.prompt(task_name, text=input_text)
         return task_name, input_text
@@ -321,9 +328,7 @@ class App:
                     y_pos=self.pad, no_resize=True, no_move=True):
             add_button('record_btn', label='Record',
                        callback_data={'show_during_ids': ['record_msg'],
-                                      'target_id': 'transcribed_text',
-                                      'show_after_ids': ['punctuate_btn',
-                                                         'punctuate_tooltip']},
+                                      'target_id': 'transcribed_text'},
                        callback=transcribe_callback)
             add_text('record_msg', default_value='Recording in progress...',
                      show=False)
@@ -334,20 +339,6 @@ class App:
                            height=300)
             set_item_label('transcribed_text', '')
             set_key_press_callback(text_edit_callback)
-
-            # Button only appears when there is text to punctuate.
-            add_button('punctuate_btn', label='Auto-Punctuate',
-                       show=False,
-                       callback_data={'source': 'transcribed_text',
-                                      'target': 'transcribed_text'},
-                       callback=punctuate_callback)
-
-            # TODO: add_tooltip produces "SystemError: returned a result with
-            # an error set.
-            with tooltip('punctuate_btn', 'punctuate_tooltip', show=False):
-                add_text('Auto-punctuate input with GPT3. You may also choose '
-                         'to clean up the text manually.')
-
             add_spacing(count=3)
             add_text('Response')
             add_text('query_progress_msg',

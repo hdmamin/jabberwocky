@@ -599,11 +599,22 @@ X -document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring
 
 6/1/21
 ------
--check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
-    -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+X -check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
+    X -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+X -consider removing auto-punct button since it's already available in prompts? Or remove from prompts menu?
+    UPDATE: removed. Updated transcribe task and get_query_kwargs method to do some light autoformatting.
+X -add vanilla gpt3 prompt (no instructions, no specific task, just give it some text and let it talk for a bit)
 -add chatbot prompt
--add vanilla gpt3 prompt (no instructions, no specific task, just give it some text and let it talk for a bit)
 -add translation prompt?
+-continue work on more generic Monitor class for htools
+
+6/2/21
+------
+-investigate and fix possible bug where vanilla query seems to replace apostrophes with question marks
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+-add chatbot prompt
+-add steelman prompt
+-add translation prompt
 -continue work on more generic Monitor class for htools
 
 -------------------------------------------------------------------------------
@@ -622,7 +633,6 @@ backlog
 -add chatbot prompt
     -consider how we might enable a more conversational mode, with multiple user input/gpt3 response pairs over time.
 -Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
--consider removing auto-punct button since it's already available in prompts? Or remove from prompts menu?
 -add warning in case you try to query with empty text for a prompt that needs input
 -add warning from a prompt's config file in options window
 -consider image task tie-ins
