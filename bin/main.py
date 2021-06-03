@@ -30,7 +30,9 @@ SPEAKER = Speaker(newline_pause=400)
 
 
 def transcribe_callback(sender, data):
-    """data keys:
+    """Triggered when user hits the Record button.
+
+    data keys:
         - target_id
         - show_during_ids
         - show_after_ids
@@ -68,6 +70,10 @@ def transcribe_callback(sender, data):
 
 
 def text_edit_callback(sender, data):
+    """Triggered when user types in transcription text field. This way user
+    edits update the prompt before making a query (this is often necessary
+    since transcriptions are not always perfect).
+    """
     task_select_callback('task_list',
                          data={'task_list_id': 'task_list',
                                'text_source_id': 'transcribed_text'})
@@ -290,16 +296,16 @@ class App:
         str or tuple: str if do_format=True, tuple otherwise.
         """
         task_name = NAME2TASK[get_value(task_list_id)]
-        input_text = get_value(text_source_id)
+        input_ = get_value(text_source_id)
 
         # Auto-transcription doesn't add colon at end so we do it manually.
-        if task_name == 'how_to' and not input_text.endswith(':'):
-            input_text += ':'
-        set_value(text_source_id, input_text)
+        if task_name == 'how_to' and input_ and not input_.endswith(':'):
+            input_ += ':'
+        set_value(text_source_id, input_)
 
         if do_format:
-            return MANAGER.prompt(task_name, text=input_text)
-        return task_name, input_text
+            return MANAGER.prompt(task_name, text=input_)
+        return task_name, input_
 
     def get_query_kwargs(self):
         # Gets currently selected kwargs from GUI.
@@ -330,6 +336,11 @@ class App:
                        callback_data={'show_during_ids': ['record_msg'],
                                       'target_id': 'transcribed_text'},
                        callback=transcribe_callback)
+            with tooltip('record_btn', 'record_btn_tooltip'):
+                add_text('Press and begin talking.\nSimply stop talking when '
+                         'done and\nthe transcribed text should appear\n'
+                         'within several seconds.')
+
             add_text('record_msg', default_value='Recording in progress...',
                      show=False)
 
@@ -341,9 +352,12 @@ class App:
             set_key_press_callback(text_edit_callback)
             add_spacing(count=3)
             add_text('Response')
+            with tooltip('Response', 'Response_tooltip'):
+                add_text('GPT3\'s response will be shown\nbelow after you hit '
+                         'the\nQuery button.')
+
             add_text('query_progress_msg',
                      default_value='Query in progress...', show=False)
-            # add_same_line()
             add_checkbox('interrupt_checkbox', label='Interrupt', show=False)
             add_input_text('response_text', default_value='',
                            multiline=True, width=self.widths[.5] - 2*self.pad,
@@ -363,12 +377,28 @@ class App:
             add_same_line()
             add_checkbox('read_response', label='read response',
                          default_value=True)
+            with tooltip('read_response', 'read_response_tooltip'):
+                add_text('Check this box if you want GPT3\'s response\n to be '
+                         'read aloud.')
+
             add_radio_button('model', items=MODEL_NAMES)
+            with tooltip('model', 'model_tooltip'):
+                add_text('OpenAI\'s GPT3 produces the best results.\n'
+                         'EleutherAI\'s GPT-Neo models are a solid free '
+                         'alternative.\nNaive is mostly for debugging and '
+                         'will load a saved\nresponse from GPT3 for the Dates '
+                         'task\n(see below).')
+
             add_listbox('task_list', items=list(NAME2TASK),
                         num_items=len(NAME2TASK),
                         callback=task_select_callback,
                         callback_data={'task_list_id': 'task_list',
                                        'text_source_id': 'transcribed_text'})
+            with tooltip('task_list', 'task_list_tooltip'):
+                add_text('Select a task to perform.\nAll of these accept some '
+                         'input\ntext and produce new text,\noften in response '
+                         'to or\nbased on the input. Tasks\nprefixed by '
+                         '"(debug)" are\nunaffected by input.')
 
             # Set default values for no specific task. These will be updated
             # once a task is selected.
@@ -380,27 +410,63 @@ class App:
                 if isinstance(v, float):
                     add_input_float(k, default_value=v, min_value=0.0,
                                     max_value=1.0)
+                    with tooltip(k, f'{k}_tooltip'):
+                        add_text(
+                            'Choose a value in [0.0, 1.0].\nHigher values '
+                            'produce more whimsical\ntext while lower values '
+                            'are more\nstraightforward/businesslike.'
+                        )
                 elif isinstance(v, int):
-                    add_input_int(k, default_value=v,
-                                  min_value=0 if k == 'engine_i' else 1,
-                                  max_value=3 if k == 'engine_i' else 256)
+                    if k == 'engine_i':
+                        min_value, max_value = 0, 3
+                        tooltip_text = 'There are 4 engines, indexed\nfrom ' \
+                                       'zero, where larger numbers\n' \
+                                       'correspond to more powerful models\n' \
+                                       'and better outputs.'
+                    else:
+                        min_value = 1
+                        input_toks = get_value('transcribed_text').split()
+                        # Compute n_tokens conservatively to be safe.
+                        max_value = 2048 - int(1.67 * len(input_toks))
+                        tooltip_text = 'Specifies the max number of\ntokens ' \
+                                       'in the output. GPT3\ncan process a ' \
+                                       'total of 2048\ntokens at once, ' \
+                                       'counting the input.\nGPT-Neo can ' \
+                                       'only produce up\nto 250 token ' \
+                                       'outputs (not counting\ninputs). ' \
+                                       'Note that a word is ~1.33\ntokens ' \
+                                       'on average.'
+                    add_input_int(k, default_value=v, min_value=min_value,
+                                  max_value=max_value)
+                    with tooltip(k, f'{k}_tooltip'):
+                        add_text(tooltip_text)
                 else:
-                    print('NOT DISPLAYED', k, v)
                     continue
                 self.query_kwarg_ids.append(k)
 
             add_spacing(count=2)
             add_input_text('stop', default_value='', hint='TODO: hint',
-                           multiline=True)
+                           multiline=True, height=90)
+            with tooltip('stop', 'stop_tooltip'):
+                add_text('You can enter one or more phrases\nwhich will '
+                         'signal for the model to\nstop generating text if it '
+                         'encounters\nthem. These "stop phrases" will be\n'
+                         'excluded from the final output.\nEach phrase must '
+                         'be on its own line in\nthis text box')
             self.query_kwarg_ids.append('stop')
 
             # I'd like to avoid the horizontal scrollbar but there's no
             # straightforward way to do this in dearpygui at the moment.
-            # add_label_text('test label') # TODO rm
             add_spacing(count=2)
             add_input_text('prompt', default_value=self.get_prompt_text(),
                            multiline=True, width=self.widths[.5] - 2*self.pad,
                            height=450)
+            with tooltip('prompt', 'prompt_tooltip'):
+                add_text('This is the full prompt that will\nbe sent to '
+                         'GPT3. If you haven\'t\nrecorded or typed anything '
+                         'in\nthe input box yet, you may\nsee a pair of curly '
+                         'braces in here:\nthis will be replaced by\nyour '
+                         'input once you provide it.')
 
     def build(self):
         self.primary_window()

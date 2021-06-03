@@ -610,8 +610,14 @@ X -add vanilla gpt3 prompt (no instructions, no specific task, just give it some
 
 6/2/21
 ------
--investigate and fix possible bug where vanilla query seems to replace apostrophes with question marks
+X -add tooltips to everything
+X -fix bug where empty default task resulted in a colon
+-increase max tokens (gpt3 allows up to 2048 between input+output, though neo allows only up to 250 token outputs)
+
+6/3/21
+------
 -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+-investigate and fix possible bug where vanilla query seems to replace apostrophes with question marks
 -add chatbot prompt
 -add steelman prompt
 -add translation prompt
