@@ -17,6 +17,7 @@ MANAGER = PromptManager(verbose=False)
 NAME2TASK = IndexedDict({
     'Punctuate': 'punctuate',
     'Default': 'default',
+    'Debate': 'debate',
     'Summarize': 'tldr',
     'Explain Like I\'m 5': 'eli',
     'Explain Machine Learning': 'simplify_ml',

@@ -618,10 +618,25 @@ X -fix bug where empty default task resulted in a colon
 ------
 -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
 -investigate and fix possible bug where vanilla query seems to replace apostrophes with question marks
--add chatbot prompt
--add steelman prompt
--add translation prompt
+-prototype chatbot prompt
+X -build steelman prompt
+    X -add config and prompt files to data/prompts dir
+    X -integrate into UI
+X -fix bug in speaker where hyphens are still interpreted as CLI flags
+~ -start looking into potential slack app
+-prototype translation prompt
 -continue work on more generic Monitor class for htools
+
+6/4/21
+------
+-consider ways to avoid unwanted pauses after periods in words like U.S.A.
+-prototype "slack replier" prompt
+    -add files to data/prompts dir
+    -integrate into UI
+-prototype translation prompt
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+-investigate and fix possible bug where vanilla query seems to replace apostrophes with question marks
+-see if slack app is a possibility (do I have auth to do in GG workspace?)
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -636,6 +651,7 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
+-continue work on more generic Monitor class for htools
 -add chatbot prompt
     -consider how we might enable a more conversational mode, with multiple user input/gpt3 response pairs over time.
 -Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)

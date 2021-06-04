@@ -34,5 +34,10 @@ class Speaker:
         os.system(self.cmd_prefix + self._format_text(text))
 
     def _format_text(self, text):
+        # For some reason `say` still interprets character following dash as
+        # a flag even after shlex.quote, so we add a backslash as well. I'm not
+        # sure if it actually escapes it or if the say program just ignores it,
+        # but so far it seems to work.
         return shlex.quote(text)\
+                    .replace('-', '\-')\
                     .replace('\n', f'[[slnc {self.newline_pause}]]')
