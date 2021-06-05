@@ -637,13 +637,27 @@ X -investigate and fix possible bug where vanilla query seems to replace apostro
 
 6/5/21
 ------
--prototype "slack replier" prompt
--prototype translation prompt
+~ -prototype "slack replier" prompt
+    UPDATE: tried a bit but realized I blocked slack and it's harder without sample messages. Maybe try again tomorrow.
+X -prototype translation prompt
+    X -update config/prompt files
+    X -add to UI
 -record some mma examples (text? silent gif? video with audio?)
 -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
 -see if slack app is a possibility (do I have auth to do in GG workspace?)
--explore possiblity of scraping pro/con website for t5-like dataset.
+X -explore possiblity of scraping pro/con website for t5-like dataset.
+    UPDATE: No api, but it does look fairly scrapable. Only ~100 issues though, it seems.
 -maybe manually add 1 more example to debate prompt to see if it improves response quality? Does mean queries would be more token-intensive though.
+
+6/6/21
+------
+-prototype "slack replier" prompt
+-prototype cover letter writer from job posting
+-record some mma examples (text? silent gif? video with audio?)
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+-see if slack app is a possibility (do I have auth to do in GG workspace?)
+-maybe manually add 1 more example to debate prompt to see if it improves response quality? Does mean queries would be more token-intensive though.
+
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 

@@ -17,6 +17,7 @@ os.chdir('../')
 MANAGER = PromptManager(verbose=False)
 NAME2TASK = IndexedDict({
     'Punctuate': 'punctuate',
+    'Translate': 'translate',
     'Default': 'default',
     'Debate': 'debate',
     'Summarize': 'tldr',
