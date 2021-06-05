@@ -1,0 +1,16 @@
+nalyze the UFC fight matchup and predict who will win.
+
+Matchup: Charles Oliveira vs. Michael Chandler
+Analysis: Chandler has power in both hands and his speed makes this a near-perfect recipe for Oliveira to get knocked out. But Oliveira's offensive wrestling is very underrated and his striking can give Chandler fits, especially in the clinch. He’s developed his game into becoming one of the more versatile fighters on the entire roster, and while there’s the serious chance he gets hurt early, I trust his finishing instincts and durability more than Chandler's.
+Prediction: Charles Oliveira by TKO
+
+Matchup: Marvin Vettori vs. Kevin Holland
+Analysis: Kevin Holland’s inability to consistently control the action of the fight feels like a real concern against Marvin Vettori. Vettori doesn't have the most varied striking game, but he’s the picture of consistency in the cage. He's an insanely durable pressure fighter with solid striking output and good power from his southpaw stance. He can change things up and wrestle when necessary and is nearly impossible to out-grapple. If Holland can stay outside, use his range and variety to pick at Vettori, he’ll find opportunities to land. But Holland has always been willing to close distance recklessly, and his willingness to give up bad positions could lead to a lot of easy takedowns for Vettori.
+Prediction: Marvin Vettori by decision.
+
+Matchup: Conor McGregor vs. Dustin Poirier
+Analysis: Poirier’s first rounds always tend to be fast paced and a bit hairy. His style is built on volume and crashing exchanges where he can look to dip back out of the pocket and land big strikes while sliding away from opponents at an angle. But in between those exchanges, he’s still awfully hittable. Poirier's cardio advantage could give him an opportunity to win a war of attrition, however. If he survive that dangerous first round and wear McGregor down with low kicks and occasional takedowns or clinch fighting, he might be able to hurt him as the fight goes on.
+Prediction: Dustin Poirier by TKO.
+
+Matchup: {}
+Analysis:

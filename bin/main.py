@@ -1,11 +1,12 @@
 from dearpygui.core import *
 from dearpygui.simple import *
+from nltk.tokenize import sent_tokenize
 import os
 import speech_recognition as sr
 import time
 from threading import Thread
 
-from htools.core import tolist, select, eprint, flatten, hsplit
+from htools.core import tolist, select, eprint
 from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, query_gpt3, query_gpt_neo
@@ -23,6 +24,7 @@ NAME2TASK = IndexedDict({
     'Explain Machine Learning': 'simplify_ml',
     'Machine Learning Abstract Writer': 'ml_abstract',
     'How To': 'how_to',
+    'MMA': 'mma',
     'Dates (debug)': 'short_dates',
     'Math (debug)': 'shortest'
 })
@@ -126,14 +128,18 @@ def query_callback(sender, data):
                       mock=True)
     elif model == 'naive':
         kwargs.update(mock=True, mock_func=None)
-    eprint(select(kwargs, drop=['prompt']).items())
+    # eprint(select(kwargs, drop=['prompt']).items()) # TODO: rm
     try:
         _, res = MANAGER.query(task=task, text=text, **kwargs)
     except Exception as e:
         print(e)
         res = 'Query failed. Please check your settings and try again.'
+
+    # GPT3 seems to like a type of apostrophe that dearpygui can't display.
+    res = res.replace('’', "'")
     set_value(data['target_id'], res)
     hide_item(data['query_msg_id'])
+    print(res)
 
     # Read response if desired. Threads allow us to interrupt speaker if user
     # checks a checkbox. This was surprisingly difficult - I settled on a
@@ -146,7 +152,7 @@ def query_callback(sender, data):
         thread = Thread(target=monitor_interrupt_checkbox,
                         args=(data['interrupt_id'], errors))
         thread.start()
-        for chunk in flatten(hsplit(line, '.') for line in res.splitlines()):
+        for chunk in sent_tokenize(res):
             SPEAKER.speak(chunk)
             if errors:
                 set_value(data['interrupt_id'], False)

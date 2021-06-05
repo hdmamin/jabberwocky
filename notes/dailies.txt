@@ -629,13 +629,18 @@ X -fix bug in speaker where hyphens are still interpreted as CLI flags
 
 6/4/21
 ------
--consider ways to avoid unwanted pauses after periods in words like U.S.A.
+X -consider ways to avoid unwanted pauses after periods in words like U.S.A.
+X -prototype MMA fight predictor prompt
+    X- add files to data/prompts dir
+    X -integrate into UI
+X -investigate and fix possible bug where vanilla query seems to replace apostrophes with question marks
+
+6/5/21
+------
 -prototype "slack replier" prompt
-    -add files to data/prompts dir
-    -integrate into UI
 -prototype translation prompt
+-record some mma examples (text? silent gif? video with audio?)
 -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
--investigate and fix possible bug where vanilla query seems to replace apostrophes with question marks
 -see if slack app is a possibility (do I have auth to do in GG workspace?)
 -explore possiblity of scraping pro/con website for t5-like dataset.
 -maybe manually add 1 more example to debate prompt to see if it improves response quality? Does mean queries would be more token-intensive though.
