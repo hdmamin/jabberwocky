@@ -21,6 +21,7 @@ NAME2TASK = IndexedDict({
     'Default': 'default',
     'Debate': 'debate',
     'Summarize': 'tldr',
+    'Analyze Writing': 'analyze_writing',
     'Explain Like I\'m 5': 'eli',
     'Explain Machine Learning': 'simplify_ml',
     'Machine Learning Abstract Writer': 'ml_abstract',
@@ -140,7 +141,7 @@ def query_callback(sender, data):
     res = res.replace('’', "'")
     set_value(data['target_id'], res)
     hide_item(data['query_msg_id'])
-    print(res)
+    print('res', res)
 
     # Read response if desired. Threads allow us to interrupt speaker if user
     # checks a checkbox. This was surprisingly difficult - I settled on a

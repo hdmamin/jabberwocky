@@ -2,9 +2,13 @@
 
 import pandas as pd
 import warnings
+import wikipediaapi
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
 from htools import DotDict
+
+
+W = wikipediaapi.Wikipedia('en')
 
 
 def text_segment(df, start, end):
@@ -102,5 +106,15 @@ def get_transcripts(url, verbose=True):
         **{k: pd.DataFrame(v.fetch()) if v else v for k, v in res.items()},
         id=id_
     )
+
+
+def wiki_summary(term):
+    page = W.page(term.title().replace(' ', '_'))
+    if not page.exists():
+        raise RuntimeError('Wikipedia page not found. Provide a URL instead.')
+    summary = page.summary.splitlines()[0]
+    if summary.endswith('may refer to:'):
+        raise RuntimeError('Ambiguous search term. Provide a URL instead.')
+    return summary
 
 
