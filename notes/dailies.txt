@@ -670,7 +670,7 @@ X -prototype writing analyzer prompt, add data files, add to UI
 X -make wiki_summary func more robust
     X -handle situation where page not found
     _ -handle situation where wiki page is disambiguation page (idea for both: ask user for optional *tags args. On disambiguation page, look for semantically similar person. E.g. if I search wiki_summary('john smith', 'wrestling') that should let me find an article named something like 'John_Smith_(Collegiate_Wrestler)'. For case where no disambiguation page, we could try googling 'john smith wrestling wikipedia' and see if something comes up)
-        UPDATE: think this isn't necessary with current solution - I'll never intentionally search for a disambiguation page and I skip them in search results.
+        UPDATE: think this isn't necessary with current solution - I'll never intentionally search for a disambiguation page and I skip them in search results. Worked on the google search approach a bit but decided wikipedia api was more reliable and more stable for the future.
     X -add img downloading functionality
 
 6/8/21
