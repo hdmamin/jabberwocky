@@ -667,12 +667,20 @@ X -prototype writing analyzer prompt, add data files, add to UI
 
 6/7/21
 ------
--make wiki_summary func more robust
-    -handle situation where page not found
-    -handle situation where wiki page is disambiguation page (idea for both: ask user for optional *tags args. On disambiguation page, look for semantically similar person. E.g. if I search wiki_summary('john smith', 'wrestling') that should let me find an article named something like 'John_Smith_(Collegiate_Wrestler)'. For case where no disambiguation page, we could try googling 'john smith wrestling wikipedia' and see if something comes up)
+X -make wiki_summary func more robust
+    X -handle situation where page not found
+    _ -handle situation where wiki page is disambiguation page (idea for both: ask user for optional *tags args. On disambiguation page, look for semantically similar person. E.g. if I search wiki_summary('john smith', 'wrestling') that should let me find an article named something like 'John_Smith_(Collegiate_Wrestler)'. For case where no disambiguation page, we could try googling 'john smith wrestling wikipedia' and see if something comes up)
+        UPDATE: think this isn't necessary with current solution - I'll never intentionally search for a disambiguation page and I skip them in search results.
+    X -add img downloading functionality
+
+6/8/21
+------
+-improve text cleanup in wiki summary (name pronunciations don't always parse to the same char; need something more generic to find junk after parenthesis)
+    -port and document
+    -see how to load image in gui
+-figure out how to integrate conversation prompt into gui
+    -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
 -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
--see if slack app is a possibility (do I have auth to do in GG workspace?)
--record some mma examples (text? silent gif? video with audio?)
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -687,6 +695,8 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
+-see if slack app is a possibility (do I have auth to do in GG workspace?)
+-record some mma examples (text? silent gif? video with audio?)
 -prototype cover letter writer from job posting
 -continue work on more generic Monitor class for htools
 -add chatbot prompt

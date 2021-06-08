@@ -10,7 +10,7 @@ from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
 from htools import flatten, ifnone, Args, auto_repr, add_docstring
 from jabberwocky.openai_utils import punctuate_mock_func, PromptManager
-from jabberwocky.youtube import video_id
+from jabberwocky.external_data import video_id
 
 
 def realign_punctuated_text(df, text, skip_1st=0, margin=2):
