@@ -675,11 +675,23 @@ X -make wiki_summary func more robust
 
 6/8/21
 ------
--improve text cleanup in wiki summary (name pronunciations don't always parse to the same char; need something more generic to find junk after parenthesis)
-    -port and document
+X -improve text cleanup in wiki summary (name pronunciations don't always parse to the same char; need something more generic to find junk after parenthesis)
+    X -select best image
+    X -validate page is a reasonable match
+    X -port 
+    -document
     -see how to load image in gui
 -figure out how to integrate conversation prompt into gui
     -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+
+6/9/21
+------
+-document wiki funcs
+-figure out how to make conversation prompt work w/ current setup (may need to add hook func so user to call when loading)
+    -figure out how to integrate conversation prompt into gui
+    -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
+-see how to load image in gui
 -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
 
 -------------------------------------------------------------------------------

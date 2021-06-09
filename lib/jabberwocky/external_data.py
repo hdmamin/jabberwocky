@@ -1,14 +1,16 @@
 """Functionality to fetch and work with YouTube transcripts."""
 
+from fuzzywuzzy import fuzz, process
 import pandas as pd
+from pathlib import Path
+import re
+import requests
 import warnings
-import wikipediaapi
+import wikipedia as wiki
+from wikipedia import PageError
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
-from htools import DotDict
-
-
-W = wikipediaapi.Wikipedia('en')
+from htools import DotDict, tolist, Results
 
 
 def text_segment(df, start, end):
@@ -108,13 +110,92 @@ def get_transcripts(url, verbose=True):
     )
 
 
-def wiki_summary(term):
-    page = W.page(term.title().replace(' ', '_'))
-    if not page.exists():
-        raise RuntimeError('Wikipedia page not found. Provide a URL instead.')
+def _wiki_text_cleanup(text):
+    text = re.sub('\s{2,}', ' ', text)
+    return re.sub('\([^a-zA-Z0-9]+', '(', text)
+
+
+def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,
+              og_name=None):
+    try:
+        page = wiki.page(name, auto_suggest=False)
+        score = fuzz.token_set_ratio((og_name or name).lower(),
+                                     page.title.lower())
+        if score < min_similarity:
+            raise RuntimeError(
+                f'Similarity score of {score} fell short of threshold '
+                f'{min_similarity}. Page title: {page.title}.'
+            ) from None
+        return page
+    except PageError:
+        if not retry:
+            raise ValueError(f'Couldn\'t find wikipedia page for {name}.') \
+                from None
+        warnings.warn('Page not found. Trying to auto-select correct match.')
+
+        terms = ' '.join(name.split() + list(tags))
+        matches = wiki.search(terms)
+        if debug: print('matches:', matches)
+        for match in matches:
+            if '(disambiguation)' in match: continue
+            return wiki_page(match, retry=False, og_name=name)
+
+
+def download_image(url, out_path, verbose=False):
+    """Ported from spellotape. Given a URL, fetch an image and download it to
+    the specified path.
+
+    Parameters
+    ----------
+    url: str
+        Location of image online.
+    out_path: str
+        Path to download the image to.
+    verbose: bool
+        If True, prints a message alerting the user when the image could not
+        be retrieved.
+
+    Returns
+    -------
+    bool: Specifies whether image was successfully retrieved.
+    """
+    try:
+        with requests.get(url, stream=True, timeout=10) as r:
+            if r.status_code != 200:
+                if verbose: print(f'STATUS CODE ERROR: {url}')
+                return False
+
+            # Write bytes to file chunk by chunk.
+            with open(out_path, 'wb') as f:
+                for chunk in r.iter_content(256):
+                    f.write(chunk)
+
+    # Any time url cannot be accessed, don't care about exact error.
+    except Exception as e:
+        if verbose: print(e)
+        return False
+
+    return True
+
+
+def wiki_data(name, tags=(), img_dir='data/tmp', **page_kwargs):
+    page = wiki_page(name, *tolist(tags), **page_kwargs)
     summary = page.summary.splitlines()[0]
-    if summary.endswith('may refer to:'):
-        raise RuntimeError('Ambiguous search term. Provide a URL instead.')
-    return summary
 
-
+    # Download image if possible. Find photo with name closest to the one we
+    # searched for (empirically, this seems to be a decent heuristic to give
+    # us a picture of the person rather than of, for instance, their house).
+    img_url = ''
+    img_path = ''
+    if img_dir and page.images:
+        name2url = {u.rpartition('/')[-1].split('.')[0].lower(): u
+                    for i, u in enumerate(page.images)}
+        name, _ = process.extractOne(name.lower(), name2url.keys())
+        url = name2url[name]
+        path = Path(img_dir) / f'{name}.{url.rpartition(".")[-1]}'.lower()
+        if download_image(url, path):
+            img_url = url
+            img_path = str(path)
+    return Results(summary=_wiki_text_cleanup(summary),
+                   img_url=img_url,
+                   img_path=img_path)
