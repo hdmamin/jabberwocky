@@ -12,6 +12,7 @@ import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist
 from jabberwocky.config import C
+from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, load_huggingface_api_key
 
 
@@ -213,6 +214,9 @@ class PromptManager:
             later.
         """
         self.verbose = verbose
+        # Maps task name to query kwargs. Prompt templates have not yet been
+        # evaluated at this point (i.e. still contain literal '{}' where values
+        # will later be filled in).
         self.prompts = self._load_templates(set(tasks))
 
     def _load_templates(self, tasks):
@@ -363,7 +367,16 @@ class PromptManager:
         str or None: Return None if print_ is True.
         """
         template = self.prompts[task]['prompt']
-        res = template.format(text) if text else template
+        # Handle tasks like "conversation" where we need to do some special
+        # handling to integrate user-provided text into the prompt.
+        if text:
+            formatter = TASK2FORMATTER.get(task)
+            if formatter:
+                res = formatter(template, text)
+            else:
+                res = template.format(text)
+        else:
+            res = template
         if print_:
             print(res)
         else:
@@ -391,7 +404,7 @@ def print_response(prompt, response):
     print(response)
 
 
-def load_prompt(name, prompt='', rstrip=True, verbose=True):
+def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
     """Load a gpt3 prompt from data/prompts. Note that this function went
     through several iterations and early versions of this function didn't
     allow for an input prompt parameter. This worked fine for toy examples
@@ -433,7 +446,11 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True):
     kwargs = load_yaml(dir_/'config.yaml')
     # If no prompt is passed in, we load the template and store it for later.
     if prompt:
-        prompt = prompt_fmt.format(prompt)
+        formatter = TASK2FORMATTER.get(name)
+        if formatter:
+            prompt = formatter(prompt_fmt, prompt, **format_kwargs)
+        else:
+            prompt = prompt_fmt.format(prompt)
     else:
         prompt = prompt_fmt
     # Vim adds trailing newline, which can hurt gpt3 quality.
@@ -557,6 +574,42 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
         res = res[:stop_idx]
     return prompt, res
 
+
+def conversation_formatter(text_fmt, prompt, **kwargs):
+    """Integrate user-provided values into the pre-existing template. This is
+    necessary (rather than a simple str.format call, as the other tasks so far
+    use) because we have multiple input fields (name, message, summary) and we
+    must do some extra work to prepare them (extract name from message,
+    call wikipedia api to obtain summary).
+
+    Parameters
+    ----------
+    text_fmt: str
+        The template loaded from prompt.txt file. This has the fields "name",
+        "summary", and "message" that must be filled in.
+    prompt: str
+        Should have keys "name" (person to converse with) and "message" (your
+        first message to them).
+    kwargs: any
+        Additional kwargs to pass to wiki_data function.
+        Ex: min_similarity, tags.
+
+    Returns
+    -------
+    str: Finalized prompt where user-provided values have been integrated into
+    the pre-existing template.
+    """
+    assert prompt.startswith('Hi '), 'Prompt must start with "Hi ".'
+    name = prompt.split('.')[0].strip('Hi ')
+    # Still trying to think of a good backward-compatible way to pass img_path
+    # on to caller. Thinking it may be simplest to either change logic to
+    # always download to some constant temp filename, or to just make GUI load
+    # the most recently created/changed file in the temp dir.
+    summary, _, img_path = wiki_data(name, **kwargs)
+    return text_fmt.format(name=name, summary=summary, message=prompt)
+
+
+TASK2FORMATTER = {'conversation': conversation_formatter}
 
 # I figure if we're importing these functions, we'll need to authenticate.
 openai_auth()

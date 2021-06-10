@@ -687,10 +687,19 @@ X -improve text cleanup in wiki summary (name pronunciations don't always parse 
 
 6/9/21
 ------
--document wiki funcs
--figure out how to make conversation prompt work w/ current setup (may need to add hook func so user to call when loading)
-    -figure out how to integrate conversation prompt into gui
+~ -document wiki funcs
+X -figure out how to make conversation prompt work w/ current setup (may need to add hook func so user to call when loading)
+    UPDATE: added option to provide custom formatter. Not the most elegant but seems workable so far.
+    ~ -figure out how to integrate conversation prompt into gui
+        UPDATE: Sort of works, but I think we might be calling wiki_data every time the user types a character, horribly gumming up the app. Need to work on this.
     -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
+-see how to load image in gui
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+
+6/10/21
+-------
+-update gui so conversation wiki_summary isn't run repeatedly (remove reliance on promptmanager.kwargs? Or somehow cache results? Or logic to wait several seconds after user stops typing?)
+-consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
 -see how to load image in gui
 -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
 
