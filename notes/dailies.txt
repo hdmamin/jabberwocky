@@ -695,6 +695,7 @@ X -figure out how to make conversation prompt work w/ current setup (may need to
     -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
 -see how to load image in gui
 -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+X -flex task: monitor_time decorator (see ipython session)
 
 6/10/21
 -------
@@ -702,6 +703,8 @@ X -figure out how to make conversation prompt work w/ current setup (may need to
 -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
 -see how to load image in gui
 -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+-port monitor_time deco
+    -document
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
