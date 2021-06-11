@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable, Mapping
 import json
+from nltk.tokenize import sent_tokenize
 import numpy as np
 import openai
 import os
@@ -47,9 +48,9 @@ def openai_auth():
         warnings.warn('openai library has not been imported. API key not set.')
 
 
-def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
-               logprobs=None, stream=False, mock=False, return_full=False,
-               strip_output=True, mock_func=None,
+def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
+               max_tokens=50, logprobs=None, stream=False, mock=False,
+               return_full=False, strip_output=True, mock_func=None,
                mock_mode:('raise', 'warn', 'ignore')='raise',
                **kwargs):
     """Convenience function to query gpt3.
@@ -128,7 +129,8 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
             try:
                 res.choices[0].text = mock_func(
                     prompt, engine_i=engine_i, temperature=temperature,
-                    max_tokens=max_tokens, **kwargs
+                    frequency_penalty=frequency_penalty, max_tokens=max_tokens,
+                    **kwargs
                 )[1]
             except MockFunctionException as e:
                 if mock_mode == 'raise':
@@ -140,6 +142,7 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, max_tokens=50,
             engine=C.engines[engine_i],
             prompt=prompt,
             temperature=temperature,
+            frequency_penalty=frequency_penalty,
             max_tokens=max_tokens,
             logprobs=logprobs,
             stream=stream,
@@ -600,7 +603,7 @@ def conversation_formatter(text_fmt, prompt, **kwargs):
     the pre-existing template.
     """
     assert prompt.startswith('Hi '), 'Prompt must start with "Hi ".'
-    name = prompt.split('.')[0].strip('Hi ')
+    name = sent_tokenize(prompt)[0].strip('Hi ')
     # Still trying to think of a good backward-compatible way to pass img_path
     # on to caller. Thinking it may be simplest to either change logic to
     # always download to some constant temp filename, or to just make GUI load

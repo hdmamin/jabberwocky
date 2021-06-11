@@ -701,10 +701,22 @@ X -flex task: monitor_time decorator (see ipython session)
 -------
 -update gui so conversation wiki_summary isn't run repeatedly (remove reliance on promptmanager.kwargs? Or somehow cache results? Or logic to wait several seconds after user stops typing?)
 -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
--see how to load image in gui
 -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
--port monitor_time deco
-    -document
+X -see how to load image in gui
+X -add frequency_penalty to query_gpt3
+X -add freq penalty to conversation default config
+X -make conversation formatter sentence tokenize more reliably (prev didn't support names like Dr. Seuss or J.K. Rowling).
+X -func to get most recently edited path in dir (workaround for lack of access to downloaded img url)
+X -port monitor_time deco
+    X -document
+
+6/11/21
+-------
+-update img size
+-consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2? Do we need multiple windows/tabs or change window depending on settings?
+-update gui so conversation wiki_summary isn't run repeatedly (remove reliance on promptmanager.kwargs? Or somehow cache results? Or logic to wait several seconds after user stops typing?)
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

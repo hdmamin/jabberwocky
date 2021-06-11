@@ -83,6 +83,28 @@ def getindex(arr, val, default=-1):
     return arr.index(val) if val in arr else default
 
 
+def most_recent_filepath(dir_, mode='m'):
+    """Get path of most recently modified file in a directory.
+
+    Parameters
+    ----------
+    dir_: str or Path
+        Directory to look in.
+    mode: str
+       One of ('m', 'c') corresponding to mtime or ctime. ctime changes when
+       file permissions change while mtime does not, but they're very similar
+       otherwise.
+
+    Returns
+    -------
+
+    """
+    paths = [path for path in Path(dir_).iterdir() if path.is_file()]
+    if not paths:
+        raise RuntimeError(f'No files in directory {dir_}.')
+    return max(paths, key=lambda x: getattr(x.stat(), f'st_{mode}time'))
+
+
 class Partial:
     """More powerful (though also potentially more fragile) version of
     functools.partial that updates the resulting signature to work better with

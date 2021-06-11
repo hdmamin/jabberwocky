@@ -11,6 +11,7 @@ from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, query_gpt3, query_gpt_neo
 from jabberwocky.speech import Speaker
+from jabberwocky.utils import most_recent_filepath
 
 
 os.chdir('../')
@@ -373,6 +374,12 @@ class App:
                            multiline=True, width=self.widths[.5] - 2*self.pad,
                            height=300)
             set_item_label('response_text', '')
+
+            # TODO: tmp testing image. Need to make this conditional, adjust
+            # size, etc.
+            # add_image(str(most_recent_filepath('data/tmp')))
+            add_image('conversation_img',
+                      'data/tmp/douglas_adams_san_francisco.jpg')
 
     def right_column(self):
         with window('options_window', width=self.widths[.5],
