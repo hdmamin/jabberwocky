@@ -11,7 +11,7 @@ from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, query_gpt3, query_gpt_neo
 from jabberwocky.speech import Speaker
-from jabberwocky.utils import most_recent_filepath, img_dims
+from jabberwocky.utils import most_recent_filepath, img_dims, _img_dims
 
 
 os.chdir('../')
@@ -250,6 +250,21 @@ def resize_callback(sender):
         set_item_height(id_, app.heights[1.])
         set_window_pos(id_, *app.pos[0][i])
 
+        # 8 padding lengths seems to eliminate horizontal scrolling. Don't
+        # fully understand why (doesn't quite match my calculations) but just
+        # go with it.
+        change_types = {'InputText', 'Listbox'}
+        for child in get_item_children(id_):
+            if get_item_type(child).split('::')[-1] in change_types:
+                set_item_width(child, app.widths[.5] - 8*app.pad)
+
+    # Images don't show up as children so we have to update them separately.
+    img_size = _img_dims(get_item_width('conversation_img'),
+                         get_item_height('conversation_img'),
+                         width=app.widths[.5] - 8*app.pad)
+    set_item_width('conversation_img', img_size['width'])
+    set_item_height('conversation_img', img_size['height'])
+
 
 class App:
 
@@ -363,7 +378,7 @@ class App:
 
             # Label is displayed next to input unless we manually suppress it.
             add_input_text('transcribed_text', default_value='',
-                           multiline=True, width=self.widths[.5] - 2*self.pad,
+                           multiline=True, width=self.widths[.5] - 8*self.pad,
                            height=300)
             set_item_label('transcribed_text', '')
             set_key_press_callback(text_edit_callback)
@@ -381,10 +396,11 @@ class App:
                            height=300)
             set_item_label('response_text', '')
 
-            # TODO: tmp testing image. Need to make this conditional.
+            # We need to set initial dims before updating in resize_callback
+            # otherwise we'll get a divide by zero error.
             img_path = most_recent_filepath('data/tmp')
             add_image('conversation_img', str(img_path),
-                      **img_dims(img_path, width=self.widths[.5]))
+                      **img_dims(img_path, width=self.widths[.5] - 8*self.pad))
 
     def right_column(self):
         with window('options_window', width=self.widths[.5],
@@ -411,11 +427,13 @@ class App:
                          'will load a saved\nresponse from GPT3 for the Dates '
                          'task\n(see below).')
 
+            add_text('Tasks:')
             add_listbox('task_list', items=list(NAME2TASK),
                         num_items=len(NAME2TASK),
                         callback=task_select_callback,
                         callback_data={'task_list_id': 'task_list',
                                        'text_source_id': 'transcribed_text'})
+            set_item_label('task_list', '')
             with tooltip('task_list', 'task_list_tooltip'):
                 add_text('Select a task to perform.\nAll of these accept some '
                          'input\ntext and produce new text,\noften in response '
@@ -467,8 +485,10 @@ class App:
                 self.query_kwarg_ids.append(k)
 
             add_spacing(count=2)
+            add_text('Stop phrases:')
             add_input_text('stop', default_value='', hint='TODO: hint',
                            multiline=True, height=90)
+            set_item_label('stop', '')
             with tooltip('stop', 'stop_tooltip'):
                 add_text('You can enter one or more phrases\nwhich will '
                          'signal for the model to\nstop generating text if it '
@@ -480,9 +500,11 @@ class App:
             # I'd like to avoid the horizontal scrollbar but there's no
             # straightforward way to do this in dearpygui at the moment.
             add_spacing(count=2)
+            add_text('Prompt:')
             add_input_text('prompt', default_value=self.get_prompt_text(),
                            multiline=True, width=self.widths[.5] - 2*self.pad,
                            height=450)
+            set_item_label('prompt', '')
             with tooltip('prompt', 'prompt_tooltip'):
                 add_text('This is the full prompt that will\nbe sent to '
                          'GPT3. If you haven\'t\nrecorded or typed anything '

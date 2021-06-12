@@ -106,6 +106,15 @@ def most_recent_filepath(dir_, mode='m'):
     return max(paths, key=lambda x: getattr(x.stat(), f'st_{mode}time'))
 
 
+def _img_dims(curr_width, curr_height, width=None, height=None):
+    xor_none(width, height)
+    if width:
+        width, height = width, int(curr_height * width/curr_width)
+    else:
+        height, width = height, int(curr_width * height/curr_height)
+    return dict(width=width, height=height)
+
+
 def img_dims(path, width=None, height=None, verbose=False):
     """Given the path to an image file and 1 desired dimension, compute the
     other dimensions that would maintain its height:width ratio.
@@ -123,14 +132,9 @@ def img_dims(path, width=None, height=None, verbose=False):
     -------
     dict
     """
-    xor_none(width, height)
-    w, h = Image.open(path).size
-    if verbose: print(f'width: {w}, height: {h}')
-    if width:
-        w, h = width, int(h * width/w)
-    else:
-        h, w = height, int(w * height/h)
-    return dict(width=w, height=h)
+    curr_width, curr_height = Image.open(path).size
+    if verbose: print(f'width: {curr_width}, height: {curr_height}')
+    return _img_dims(curr_width, curr_height, width=width, height=height)
 
 
 class Partial:

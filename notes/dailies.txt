@@ -723,8 +723,10 @@ X -investigate possible bug where manually updating a setting sometimes resets o
 
 6/12/21
 -------
--adjust img_size calcs to account for padding
-    -adjust so it updates on window resize
+X -adjust img_size calcs to account for padding
+    X -adjust so it updates on window resize
+X -adjust text input size calculations to avoid horizontal scrolling
+X -change text input label position from right to top to avoid horizontal scrolling
 -research options for adding new tab/window
     -start working on convo tab
     -add URL tab?
@@ -732,7 +734,19 @@ X -investigate possible bug where manually updating a setting sometimes resets o
 -easier:
     -document session
     -document transcript methods
+~ -rewatch yannic siren video
+    UPDATE: watched first half and took notes. Trying method of pausing ever 20% and writing down what I remember from the last chunk to try to force recall.
 
+6/13/21
+-------
+-write wrapper func to make text input w/ label above instead of to the right
+-research options for adding new tab/window
+    -start working on convo tab
+    -add URL tab?
+-start conversationmanager class
+-easier:
+    -document session
+    -document transcript methods
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
