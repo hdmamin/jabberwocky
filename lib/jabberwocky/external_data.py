@@ -178,7 +178,8 @@ def download_image(url, out_path, verbose=False):
     return True
 
 
-def wiki_data(name, tags=(), img_dir='data/tmp', **page_kwargs):
+def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
+              **page_kwargs):
     page = wiki_page(name, *tolist(tags), **page_kwargs)
     summary = page.summary.splitlines()[0]
 
@@ -189,7 +190,7 @@ def wiki_data(name, tags=(), img_dir='data/tmp', **page_kwargs):
     img_path = ''
     if img_dir and page.images:
         name2url = {u.rpartition('/')[-1].split('.')[0].lower(): u
-                    for i, u in enumerate(page.images)}
+                    for u in page.images if u.rpartition('.')[-1] in exts}
         name, _ = process.extractOne(name.lower(), name2url.keys())
         url = name2url[name]
         path = Path(img_dir) / f'{name}.{url.rpartition(".")[-1]}'.lower()

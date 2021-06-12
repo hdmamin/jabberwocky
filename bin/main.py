@@ -11,7 +11,7 @@ from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, query_gpt3, query_gpt_neo
 from jabberwocky.speech import Speaker
-from jabberwocky.utils import most_recent_filepath
+from jabberwocky.utils import most_recent_filepath, img_dims
 
 
 os.chdir('../')
@@ -83,13 +83,18 @@ def text_edit_callback(sender, data):
     """
     task_select_callback('task_list',
                          data={'task_list_id': 'task_list',
-                               'text_source_id': 'transcribed_text'})
+                               'text_source_id': 'transcribed_text',
+                               'update_kwargs': False})
 
 
 def task_select_callback(sender, data):
     """data keys:
         - task_list_id (str: element containing selected item. Returns an int.)
         - text_source_id (str: element containing text for prompt input)
+        - update_kwargs (bool: specifies whether to update query kwargs like
+         max_tokens. We want those to be updated when we change the task but
+             not when we manually call this function from our
+             text_edit_callback.)
     """
     task_name, user_text = app.get_prompt_text(
         task_list_id=data['task_list_id'],
@@ -97,6 +102,7 @@ def task_select_callback(sender, data):
         do_format=False
     )
     set_value('prompt', MANAGER.prompt(task_name, user_text))
+    if not data.get('update_kwargs', True): return
 
     # Can't just use app.get_query_kwargs() because that merely retrieves what
     # the GUI currently shows. We want the default kwargs which are stored by
@@ -375,11 +381,10 @@ class App:
                            height=300)
             set_item_label('response_text', '')
 
-            # TODO: tmp testing image. Need to make this conditional, adjust
-            # size, etc.
-            # add_image(str(most_recent_filepath('data/tmp')))
-            add_image('conversation_img',
-                      'data/tmp/douglas_adams_san_francisco.jpg')
+            # TODO: tmp testing image. Need to make this conditional.
+            img_path = most_recent_filepath('data/tmp')
+            add_image('conversation_img', str(img_path),
+                      **img_dims(img_path, width=self.widths[.5]))
 
     def right_column(self):
         with window('options_window', width=self.widths[.5],

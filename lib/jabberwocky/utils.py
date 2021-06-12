@@ -3,9 +3,10 @@
 from functools import update_wrapper
 from inspect import _empty, Parameter, signature
 from pathlib import Path
+from PIL import Image
 import yaml
 
-from htools import select, bound_args, copy_func
+from htools import select, bound_args, copy_func, xor_none
 from jabberwocky.config import C
 
 
@@ -103,6 +104,33 @@ def most_recent_filepath(dir_, mode='m'):
     if not paths:
         raise RuntimeError(f'No files in directory {dir_}.')
     return max(paths, key=lambda x: getattr(x.stat(), f'st_{mode}time'))
+
+
+def img_dims(path, width=None, height=None, verbose=False):
+    """Given the path to an image file and 1 desired dimension, compute the
+    other dimensions that would maintain its height:width ratio.
+
+    Parameters
+    ----------
+    path: str or Path
+    width: int or None
+        Desired width of output image. Specify either this OR height.
+    height: int or None
+        Desired height of output image. Specify either this OR width.
+    verbose: bool
+
+    Returns
+    -------
+    dict
+    """
+    xor_none(width, height)
+    w, h = Image.open(path).size
+    if verbose: print(f'width: {w}, height: {h}')
+    if width:
+        w, h = width, int(h * width/w)
+    else:
+        h, w = height, int(w * height/h)
+    return dict(width=w, height=h)
 
 
 class Partial:

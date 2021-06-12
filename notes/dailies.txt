@@ -712,10 +712,26 @@ X -port monitor_time deco
 
 6/11/21
 -------
--update img size
--consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2? Do we need multiple windows/tabs or change window depending on settings?
+X -update img size
+X -fix bug in name (period was attached to end)
+~ -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2? Do we need multiple windows/tabs or change window depending on settings?
+    UPDATE: Decision: I think we need a separate conversation mode. Everything now is geared towards 1 format (1 input -> 1 output). I could imagine a whole class of tasks that are more conversational, and trying to wedge them into the current setup could get ugly(er). Can plan more tomorrow, but might need a new ConversationManager class (the convo equivalent of PromptManager) and a new gui window/tab.
 -update gui so conversation wiki_summary isn't run repeatedly (remove reliance on promptmanager.kwargs? Or somehow cache results? Or logic to wait several seconds after user stops typing?)
--investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+    UPDATE: on hold. Wait til we figure out a Conversation setup since this might naturally remove the problem.
+X -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+    UPDATE: my text_update callback seems to have triggered it. Added an option to only update the text.
+
+6/12/21
+-------
+-adjust img_size calcs to account for padding
+    -adjust so it updates on window resize
+-research options for adding new tab/window
+    -start working on convo tab
+    -add URL tab?
+-start conversationmanager class
+-easier:
+    -document session
+    -document transcript methods
 
 
 -------------------------------------------------------------------------------
@@ -735,8 +751,6 @@ backlog
 -record some mma examples (text? silent gif? video with audio?)
 -prototype cover letter writer from job posting
 -continue work on more generic Monitor class for htools
--add chatbot prompt
-    -consider how we might enable a more conversational mode, with multiple user input/gpt3 response pairs over time.
 -Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
 -add warning in case you try to query with empty text for a prompt that needs input
 -add warning from a prompt's config file in options window
@@ -747,8 +761,6 @@ backlog
 -add more voice interface features:
     -allow voice commands? E.g. say "Task: Summarize. Input: ..."
 -rename windows (would prefer to find way to separate id and label, but I don't think that's available)
--document session
--document transcript methods
 -code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
 -try out eleuther ai model (is it a viable alternative, at least to engine_i=0? Is it too big to load in a reasonable period of time? Are there existing apis hosting it?)
     -same for big gpt2 model? I think that does have free apis hosting it but doesn't really have the same prompt response functionailty.

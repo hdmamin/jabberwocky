@@ -603,7 +603,7 @@ def conversation_formatter(text_fmt, prompt, **kwargs):
     the pre-existing template.
     """
     assert prompt.startswith('Hi '), 'Prompt must start with "Hi ".'
-    name = sent_tokenize(prompt)[0].strip('Hi ')
+    name = sent_tokenize(prompt)[0].replace('Hi ', '').rstrip('.')
     # Still trying to think of a good backward-compatible way to pass img_path
     # on to caller. Thinking it may be simplest to either change logic to
     # always download to some constant temp filename, or to just make GUI load
