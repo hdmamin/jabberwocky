@@ -739,7 +739,12 @@ X -change text input label position from right to top to avoid horizontal scroll
 
 6/13/21
 -------
--write wrapper func to make text input w/ label above instead of to the right
+X -write wrapper func to make text input w/ label above instead of to the right
+    UPDATE: turned out to be shockingly difficult. Ended up accomplishing with context manager, though still not thrilled with implementation.
+
+6/14/21
+-------
+-update other cases that could benefit from new label_above ctx_manager
 -research options for adding new tab/window
     -start working on convo tab
     -add URL tab?

@@ -1,3 +1,4 @@
+from contextlib import contextmanager as ctx_manager
 from dearpygui.core import *
 from dearpygui.simple import *
 from nltk.tokenize import sent_tokenize
@@ -34,6 +35,15 @@ NAME2TASK = IndexedDict({
 })
 MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M', 'naive']
 SPEAKER = Speaker(newline_pause=400)
+
+
+@ctx_manager
+def label_above(name, visible_name=None):
+    if visible_name: add_text(visible_name)
+    try:
+        yield
+    finally:
+        set_item_label(name, '')
 
 
 def transcribe_callback(sender, data):
@@ -427,13 +437,13 @@ class App:
                          'will load a saved\nresponse from GPT3 for the Dates '
                          'task\n(see below).')
 
-            add_text('Tasks:')
-            add_listbox('task_list', items=list(NAME2TASK),
-                        num_items=len(NAME2TASK),
-                        callback=task_select_callback,
-                        callback_data={'task_list_id': 'task_list',
-                                       'text_source_id': 'transcribed_text'})
-            set_item_label('task_list', '')
+            with label_above('task_list', 'Tasks:'):
+                add_listbox('task_list', items=list(NAME2TASK),
+                            num_items=len(NAME2TASK),
+                            callback=task_select_callback,
+                            callback_data={'task_list_id': 'task_list',
+                                           'text_source_id': 'transcribed_text'})
+
             with tooltip('task_list', 'task_list_tooltip'):
                 add_text('Select a task to perform.\nAll of these accept some '
                          'input\ntext and produce new text,\noften in response '
@@ -485,10 +495,9 @@ class App:
                 self.query_kwarg_ids.append(k)
 
             add_spacing(count=2)
-            add_text('Stop phrases:')
-            add_input_text('stop', default_value='', hint='TODO: hint',
-                           multiline=True, height=90)
-            set_item_label('stop', '')
+            with label_above('stop', 'Stop phrases:'):
+                add_input_text('stop', default_value='', hint='TODO: hint',
+                               multiline=True, height=90)
             with tooltip('stop', 'stop_tooltip'):
                 add_text('You can enter one or more phrases\nwhich will '
                          'signal for the model to\nstop generating text if it '
@@ -500,11 +509,10 @@ class App:
             # I'd like to avoid the horizontal scrollbar but there's no
             # straightforward way to do this in dearpygui at the moment.
             add_spacing(count=2)
-            add_text('Prompt:')
-            add_input_text('prompt', default_value=self.get_prompt_text(),
-                           multiline=True, width=self.widths[.5] - 2*self.pad,
-                           height=450)
-            set_item_label('prompt', '')
+            with label_above('prompt', 'Prompt:'):
+                add_input_text('prompt', default_value=self.get_prompt_text(),
+                               multiline=True, width=self.widths[.5] - 2*self.pad,
+                               height=450)
             with tooltip('prompt', 'prompt_tooltip'):
                 add_text('This is the full prompt that will\nbe sent to '
                          'GPT3. If you haven\'t\nrecorded or typed anything '
