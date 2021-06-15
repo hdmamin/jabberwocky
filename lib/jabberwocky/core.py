@@ -8,9 +8,48 @@ from string import punctuation
 import warnings
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
-from htools import flatten, ifnone, Args, auto_repr, add_docstring
+from htools import flatten, ifnone, Args, auto_repr, add_docstring, fallback
 from jabberwocky.openai_utils import punctuate_mock_func, PromptManager
 from jabberwocky.external_data import video_id
+
+
+class GuiTextChunker:
+
+    def __init__(self, max_chars=79):
+        self.raw = {}
+        self.chunked = {}
+        self.max_chars = max_chars
+
+    @fallback(keep=['max_chars'])
+    def add(self, key, text, return_chunked=True, **kwargs):
+        chunked = self._chunk_lines(text, max_chars)
+        self.raw[key] = text
+        self.chunked[key] = chunked
+        if return_chunked: return chunked
+
+    def get(self, key, chunked):
+        if chunked:
+            return self.chunked[key]
+        return self.raw[key]
+
+    def _chunk_lines(self, text, max_chars):
+        words = text.split(' ')
+        lines, line = [], []
+        curr_len = 0
+        for word in words:
+            length = len(word) + 1
+            if curr_len + length > max_chars:
+                lines.append(line)
+                line = []
+                curr_len = 0
+            line.append(word)
+            curr_len += length
+        if line: lines.append(line)
+        return '\n'.join(' '.join(line) for line in lines)
+
+    def clear(self):
+        self.raw.clear()
+        self.chunked.clear()
 
 
 def realign_punctuated_text(df, text, skip_1st=0, margin=2):

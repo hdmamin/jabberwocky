@@ -13,6 +13,7 @@ from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, query_gpt3, query_gpt_neo
 from jabberwocky.speech import Speaker
+from jabberwocky.core import GuiTextChunker
 from jabberwocky.utils import most_recent_filepath, img_dims, _img_dims
 
 
@@ -36,7 +37,7 @@ NAME2TASK = IndexedDict({
 })
 MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M', 'naive']
 SPEAKER = Speaker(newline_pause=400)
-
+CHUNKER = GuiTextChunker()
 
 @ctx_manager
 def label_above(name, visible_name=None):
@@ -69,22 +70,34 @@ def transcribe_callback(sender, data):
     except sr.UnknownValueError:
         text = 'Parsing failed. Please try again.'
 
-    # Don't just use capitalize because this removes existing capitals.
-    # Probably don't have these anyway (transcription seems to usually be
-    # lowercase) but just being safe here.
-    text = text[0].upper() + text[1:]
-
     # Update windows now that transcription is complete.
-    set_value(data['target_id'], text)
+    # set_value(data['target_id'], text)
     for id_ in show_during:
         hide_item(id_)
     for id_ in data.get('show_after_ids', []):
         show_item(id_)
 
+    # Don't just use capitalize because this removes existing capitals.
+    # Probably don't have these anyway (transcription seems to usually be
+    # lowercase) but just being safe here.
+    # text = text[0].upper() + text[1:]
+    set_value(data['target_id'], text[0].upper() + text[1:])
+
     # Manually call this so prompt is updated once we finish recording.
     task_select_callback('task_list',
                          data={'task_list_id': 'task_list',
                                'text_source_id': 'transcribed_text'})
+
+
+def format_text_callback(sender, data):
+    """
+    data keys:
+        - text_source_id
+        - key (str: name CHUNKER will use to map raw text to chunked text.)
+    """
+    text = get_value(data['text_source_id'])
+    chunked = CHUNKER.add(data['key'], text)
+    set_value(data['text_source_id'], chunked)
 
 
 def text_edit_callback(sender, data):
@@ -379,6 +392,10 @@ class App:
                        callback_data={'show_during_ids': ['record_msg'],
                                       'target_id': 'transcribed_text'},
                        callback=transcribe_callback)
+            add_button('autoformat_btn', label='Auto-Format',
+                       callback=format_text_callback,
+                       callback_data={'text_source_id': 'transcribed_text',
+                                      'key': 'transcribed'})
             with tooltip('record_btn', 'record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
                          'done and\nthe transcribed text should appear\n'
