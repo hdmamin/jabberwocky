@@ -1,3 +1,4 @@
+# I think dearpygui imports a different contextmanager so we rename this one.
 from contextlib import contextmanager as ctx_manager
 from dearpygui.core import *
 from dearpygui.simple import *
@@ -387,10 +388,10 @@ class App:
                      show=False)
 
             # Label is displayed next to input unless we manually suppress it.
-            add_input_text('transcribed_text', default_value='',
-                           multiline=True, width=self.widths[.5] - 8*self.pad,
-                           height=300)
-            set_item_label('transcribed_text', '')
+            with label_above('transcribed_text'):
+                add_input_text('transcribed_text', default_value='',
+                               multiline=True,
+                               width=self.widths[.5] - 8*self.pad, height=300)
             set_key_press_callback(text_edit_callback)
             add_spacing(count=3)
             add_text('Response')
@@ -401,10 +402,10 @@ class App:
             add_text('query_progress_msg',
                      default_value='Query in progress...', show=False)
             add_checkbox('interrupt_checkbox', label='Interrupt', show=False)
-            add_input_text('response_text', default_value='',
-                           multiline=True, width=self.widths[.5] - 2*self.pad,
-                           height=300)
-            set_item_label('response_text', '')
+            with label_above('response_text'):
+                add_input_text('response_text', default_value='',
+                               multiline=True,
+                               width=self.widths[.5] - 2*self.pad, height=300)
 
             # We need to set initial dims before updating in resize_callback
             # otherwise we'll get a divide by zero error.
@@ -438,11 +439,12 @@ class App:
                          'task\n(see below).')
 
             with label_above('task_list', 'Tasks:'):
-                add_listbox('task_list', items=list(NAME2TASK),
-                            num_items=len(NAME2TASK),
-                            callback=task_select_callback,
-                            callback_data={'task_list_id': 'task_list',
-                                           'text_source_id': 'transcribed_text'})
+                add_listbox(
+                    'task_list', items=list(NAME2TASK),
+                    num_items=len(NAME2TASK), callback=task_select_callback,
+                    callback_data={'task_list_id': 'task_list',
+                                   'text_source_id': 'transcribed_text'}
+                )
 
             with tooltip('task_list', 'task_list_tooltip'):
                 add_text('Select a task to perform.\nAll of these accept some '
@@ -496,7 +498,11 @@ class App:
 
             add_spacing(count=2)
             with label_above('stop', 'Stop phrases:'):
-                add_input_text('stop', default_value='', hint='TODO: hint',
+                add_input_text('stop', default_value='',
+                               hint='GPT3 will stop producing text if it '
+                                    'encounters any of these words/phrases, '
+                                    'and they will be automatically excluded '
+                                    'from the response.',
                                multiline=True, height=90)
             with tooltip('stop', 'stop_tooltip'):
                 add_text('You can enter one or more phrases\nwhich will '
@@ -511,8 +517,8 @@ class App:
             add_spacing(count=2)
             with label_above('prompt', 'Prompt:'):
                 add_input_text('prompt', default_value=self.get_prompt_text(),
-                               multiline=True, width=self.widths[.5] - 2*self.pad,
-                               height=450)
+                               multiline=True,
+                               width=self.widths[.5] - 2*self.pad, height=450)
             with tooltip('prompt', 'prompt_tooltip'):
                 add_text('This is the full prompt that will\nbe sent to '
                          'GPT3. If you haven\'t\nrecorded or typed anything '
