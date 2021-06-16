@@ -51,6 +51,20 @@ class GuiTextChunker:
         self.raw.clear()
         self.chunked.clear()
 
+    def __contains__(self, key):
+        in_raw, in_chunked = key in self.raw, key in self.chunked
+        if in_raw and in_chunked:
+            return True
+        elif in_raw or in_chunked:
+            raise KeyError(
+                f'Key {key} was found in '
+                f'{"self.raw" if in_raw else "self.chunked"}. Should be in '
+                'neither or both. It may be wise to call the clear() method '
+                'and re-add your key.'
+            )
+        else:
+            return False
+
 
 def realign_punctuated_text(df, text, skip_1st=0, margin=2):
     """Realign gpt3's punctuated version of a youtube transcript with the

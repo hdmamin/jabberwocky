@@ -37,7 +37,7 @@ NAME2TASK = IndexedDict({
 })
 MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M', 'naive']
 SPEAKER = Speaker(newline_pause=400)
-CHUNKER = GuiTextChunker()
+CHUNKER = GuiTextChunker(max_chars=70)
 
 @ctx_manager
 def label_above(name, visible_name=None):
@@ -70,18 +70,12 @@ def transcribe_callback(sender, data):
     except sr.UnknownValueError:
         text = 'Parsing failed. Please try again.'
 
-    # Update windows now that transcription is complete.
-    # set_value(data['target_id'], text)
+    # Update text and various components now that transcription is complete.
+    set_value(data['target_id'], text[0].upper() + text[1:])
     for id_ in show_during:
         hide_item(id_)
     for id_ in data.get('show_after_ids', []):
         show_item(id_)
-
-    # Don't just use capitalize because this removes existing capitals.
-    # Probably don't have these anyway (transcription seems to usually be
-    # lowercase) but just being safe here.
-    # text = text[0].upper() + text[1:]
-    set_value(data['target_id'], text[0].upper() + text[1:])
 
     # Manually call this so prompt is updated once we finish recording.
     task_select_callback('task_list',
@@ -94,10 +88,29 @@ def format_text_callback(sender, data):
     data keys:
         - text_source_id
         - key (str: name CHUNKER will use to map raw text to chunked text.)
+        - task_list_id
     """
+    task_name = NAME2TASK[get_value(data['task_list_id'])]
     text = get_value(data['text_source_id'])
+    # Avoid re-chunking already chunked text, as this adds extra newlines.
+    if data['key'] in CHUNKER and CHUNKER.get(data['key'], True) == text:
+        return
+
+    # Don't just use capitalize because this removes existing capitals.
+    # Probably don't have these anyway (transcription seems to usually be
+    # lowercase) but just being safe here.
+    text = text[0].upper() + text[1:]
+
+    # Auto-transcription doesn't add colon at end so we do it manually.
+    if task_name == 'how_to' and text and not text.endswith(':'):
+        text += ':'
     chunked = CHUNKER.add(data['key'], text)
     set_value(data['text_source_id'], chunked)
+
+    task_select_callback('task_list',
+                         data={'task_list_id': data['task_list_id'],
+                               'text_source_id': data['text_source_id'],
+                               'update_kwargs': False})
 
 
 def text_edit_callback(sender, data):
@@ -125,7 +138,10 @@ def task_select_callback(sender, data):
         text_source_id=data['text_source_id'],
         do_format=False
     )
-    set_value('prompt', MANAGER.prompt(task_name, user_text))
+    # set_value('prompt', MANAGER.prompt(task_name, user_text))
+    updated_prompt = MANAGER.prompt(task_name, user_text)
+    chunked_prompt = CHUNKER.add('prompt', updated_prompt)
+    set_value('prompt', chunked_prompt)
     if not data.get('update_kwargs', True): return
 
     # Can't just use app.get_query_kwargs() because that merely retrieves what
@@ -152,28 +168,36 @@ def query_callback(sender, data):
         - interrupt_id (str: button to interrupt speaker if enabled)
     """
     show_item(data['query_msg_id'])
-    kwargs = app.get_query_kwargs()
     # Can't pass empty list in for stop parameter.
+    kwargs = app.get_query_kwargs()
     kwargs['stop'] = kwargs['stop'] or None
+
+    # Want to send gpt3 the version of text without extra newlines inserted.
     task, text = app.get_prompt_text(do_format=False)
+    text = CHUNKER.get('transcribed', chunked=False)
+
     model = MODEL_NAMES[get_value('model')]
     if 'neo' in model:
         kwargs.update(mock_func=query_gpt_neo, size=model.split()[-1],
                       mock=True)
     elif model == 'naive':
         kwargs.update(mock=True, mock_func=None)
-    # eprint(select(kwargs, drop=['prompt']).items()) # TODO: rm
+
     try:
         _, res = MANAGER.query(task=task, text=text, **kwargs)
     except Exception as e:
         print(e)
         res = 'Query failed. Please check your settings and try again.'
 
-    # GPT3 seems to like a type of apostrophe that dearpygui can't display.
+    # GPT3 seems to like a type of apostrophe that dearpygui can't display. We
+    # also insert newlines to display the text more nicely in the GUI, but
+    # avoid overwriting the raw response because the newlines add pauses when
+    # speech mode is enable.
     res = res.replace('’', "'")
-    set_value(data['target_id'], res)
+    chunked = CHUNKER.add('response', res)
+    set_value(data['target_id'], chunked)
     hide_item(data['query_msg_id'])
-    print('res', res)
+    print('res', chunked)
 
     # Read response if desired. Threads allow us to interrupt speaker if user
     # checks a checkbox. This was surprisingly difficult - I settled on a
@@ -353,12 +377,6 @@ class App:
         """
         task_name = NAME2TASK[get_value(task_list_id)]
         input_ = get_value(text_source_id)
-
-        # Auto-transcription doesn't add colon at end so we do it manually.
-        if task_name == 'how_to' and input_ and not input_.endswith(':'):
-            input_ += ':'
-        set_value(text_source_id, input_)
-
         if do_format:
             return MANAGER.prompt(task_name, text=input_)
         return task_name, input_
@@ -395,7 +413,8 @@ class App:
             add_button('autoformat_btn', label='Auto-Format',
                        callback=format_text_callback,
                        callback_data={'text_source_id': 'transcribed_text',
-                                      'key': 'transcribed'})
+                                      'key': 'transcribed',
+                                      'task_list_id': 'task_list'})
             with tooltip('record_btn', 'record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
                          'done and\nthe transcribed text should appear\n'

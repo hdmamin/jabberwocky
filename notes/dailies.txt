@@ -751,8 +751,15 @@ X -build class to go back and forth between raw text and text with newlines inse
 
 6/15/21
 -------
--update prompt textbox to undo chunking transform
-    -update response textbox to do the chunking transform
+X -update prompt textbox (under query kwargs) to undo chunking transform
+    X -update response textbox to do the chunking transform
+    X -update query_callback to get unchunked text rather than what's shown in transcribed window
+-add __contains__ method to chunker
+
+6/16/21
+-------
+-check for bugs in yesterday's formatting updates (does transcribed text insert newlines as expected? Does resolved prompt (under kwargs) update as expected? Does the right prompt get sent in query? Does response get displayed correctly?)
+-investigate bug (?) where adding text repeatedly to chunker gradually makes lines shorter and shorter.
 -research options for adding new tab/window
     -start working on convo tab
     -add URL tab?
@@ -761,6 +768,7 @@ X -build class to go back and forth between raw text and text with newlines inse
     -document session
     -document transcript methods
     -document textchunking class
+    -port htools stuff in pc ipy session
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
