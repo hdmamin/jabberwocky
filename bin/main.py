@@ -93,8 +93,7 @@ def format_text_callback(sender, data):
     task_name = NAME2TASK[get_value(data['task_list_id'])]
     text = get_value(data['text_source_id'])
     # Avoid re-chunking already chunked text, as this adds extra newlines.
-    if data['key'] in CHUNKER and CHUNKER.get(data['key'], True) == text:
-        return
+    if not text or CHUNKER._previously_added(data['key'], text): return
 
     # Don't just use capitalize because this removes existing capitals.
     # Probably don't have these anyway (transcription seems to usually be
@@ -138,6 +137,8 @@ def task_select_callback(sender, data):
         text_source_id=data['text_source_id'],
         do_format=False
     )
+    if CHUNKER._previously_added('transcribed', user_text):
+        user_text = CHUNKER.get('transcribed', chunked=False)
     # set_value('prompt', MANAGER.prompt(task_name, user_text))
     updated_prompt = MANAGER.prompt(task_name, user_text)
     chunked_prompt = CHUNKER.add('prompt', updated_prompt)
@@ -175,6 +176,7 @@ def query_callback(sender, data):
     # Want to send gpt3 the version of text without extra newlines inserted.
     task, text = app.get_prompt_text(do_format=False)
     text = CHUNKER.get('transcribed', chunked=False)
+    print('input prompt:\n' + text)
 
     model = MODEL_NAMES[get_value('model')]
     if 'neo' in model:
@@ -197,7 +199,7 @@ def query_callback(sender, data):
     chunked = CHUNKER.add('response', res)
     set_value(data['target_id'], chunked)
     hide_item(data['query_msg_id'])
-    print('res', chunked)
+    print('\nres:\n' + chunked)
 
     # Read response if desired. Threads allow us to interrupt speaker if user
     # checks a checkbox. This was surprisingly difficult - I settled on a

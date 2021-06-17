@@ -758,8 +758,16 @@ X -update prompt textbox (under query kwargs) to undo chunking transform
 
 6/16/21
 -------
--check for bugs in yesterday's formatting updates (does transcribed text insert newlines as expected? Does resolved prompt (under kwargs) update as expected? Does the right prompt get sent in query? Does response get displayed correctly?)
--investigate bug (?) where adding text repeatedly to chunker gradually makes lines shorter and shorter.
+X -check for bugs in yesterday's formatting updates (does transcribed text insert newlines as expected? Does resolved prompt (under kwargs) update as expected? Does the right prompt get sent in query? Does response get displayed correctly?)
+X -investigate bug (?) where adding text repeatedly to chunker gradually makes lines shorter and shorter.
+X -updates to textchunker: method to check if previously added, split on \n\r as well as spaces
+X -port lazy decorator to htools
+
+6/17/21
+-------
+-look into bug w/ "?" chars in prompt textbox for analyze_writing
+    -look into possible bug w/ extra newlines still being added to prompt text box sometimes?
+    -consider how to handle autoformat button: auto press it (in which case we need some magic (threaded?) to help in typing case because dearpygui callback can't edit the input box it's monitoring), add instructions to press it and just don't support the other case, or update query_func and other places to be able to get the raw version if it hasn't been added to chunker
 -research options for adding new tab/window
     -start working on convo tab
     -add URL tab?
@@ -768,7 +776,10 @@ X -update prompt textbox (under query kwargs) to undo chunking transform
     -document session
     -document transcript methods
     -document textchunking class
-    -port htools stuff in pc ipy session
+    -port htools as_df
+        -venumerate
+        -trange
+        -owneraccess
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

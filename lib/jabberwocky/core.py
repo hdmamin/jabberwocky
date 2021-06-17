@@ -22,6 +22,10 @@ class GuiTextChunker:
 
     @fallback(keep=['max_chars'])
     def add(self, key, text, return_chunked=True, **kwargs):
+        if self._previously_added(key, text):
+            if return_chunked:
+                return self.get(key, chunked=True)
+            return
         chunked = self._chunk_lines(text, max_chars)
         self.raw[key] = text
         self.chunked[key] = chunked
@@ -33,7 +37,14 @@ class GuiTextChunker:
         return self.raw[key]
 
     def _chunk_lines(self, text, max_chars):
-        words = text.split(' ')
+        # Transcriber and gpt3 generally don't insert \n\r so this is a decent
+        # way to recover where I inserted splits. Otherwise, we risk
+        # accumulating more and more newlines when calling this repeatedly.
+        # Still feel like the check for previously added text in self.add()
+        # should avoid this but sometimes the prompt in GUI still shows
+        # text with what appear to be extra newlines.
+        words = [word for row in text.split('\n\r')
+                 for word in row.split(' ')]
         lines, line = [], []
         curr_len = 0
         for word in words:
@@ -45,7 +56,16 @@ class GuiTextChunker:
             line.append(word)
             curr_len += length
         if line: lines.append(line)
-        return '\n'.join(' '.join(line) for line in lines)
+        return '\r\n'.join(' '.join(line) for line in lines)
+
+    def _previously_added(self, key, text):
+        try:
+            raw = self.get(key, chunked=False)
+            chunked = self.get(key, chunked=True)
+            assert text in (raw, chunked)
+            return True
+        except (KeyError, AssertionError):
+            return False
 
     def clear(self):
         self.raw.clear()
