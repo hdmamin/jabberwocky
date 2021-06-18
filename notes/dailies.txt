@@ -765,9 +765,15 @@ X -port lazy decorator to htools
 
 6/17/21
 -------
--look into bug w/ "?" chars in prompt textbox for analyze_writing
-    -look into possible bug w/ extra newlines still being added to prompt text box sometimes?
-    -consider how to handle autoformat button: auto press it (in which case we need some magic (threaded?) to help in typing case because dearpygui callback can't edit the input box it's monitoring), add instructions to press it and just don't support the other case, or update query_func and other places to be able to get the raw version if it hasn't been added to chunker
+X -look into bug w/ "?" chars in prompt textbox for analyze_writing
+    UPDATE: book used weird dash, replaced it with a more common one.
+    ~ -look into possible bug w/ extra newlines still being added to prompt text box sometimes?
+        UPDATE: found, fixed, and maybe introduced many bugs here. I THINK this is (hopefully) almost working now, with the exception that double newlines now seem to be single. Investigate tomorrow. Brain fried.
+
+6/18/21
+-------
+-investigate double newline bug in textchunker (see yesterday's notes)
+-consider how to handle autoformat button: auto press it (in which case we need some magic (threaded?) to help in typing case because dearpygui callback can't edit the input box it's monitoring), add instructions to press it and just don't support the other case, or update query_func and other places to be able to get the raw version if it hasn't been added to chunker
 -research options for adding new tab/window
     -start working on convo tab
     -add URL tab?

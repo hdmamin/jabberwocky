@@ -49,10 +49,14 @@ class GuiTextChunker:
             return self.chunked[key]
         return self.raw[key]
 
+    @staticmethod
+    def sticky_split(text, sep):
+        return [tok + sep for tok in text.split(sep) if tok]
+
     def _chunk_lines(self, text, max_chars):
         print('CHUNKING LINES', self.newline_tmp in text)
         text = text.replace('\n', self.newline_tmp)
-        words = [word for row in hsplit(text, self.newline_tmp)
+        words = [word for row in self.sticky_split(text, self.newline_tmp)
                  for word in row.split(' ')]
 
         lines, line = [], []
@@ -70,8 +74,10 @@ class GuiTextChunker:
                 curr_len = 0
             line.append(word)
             curr_len += length
-            print(word, line)
-        if line: lines.append(line)
+            # print(word, line)
+        if line:
+            lines.append([word.replace(self.newline_tmp, '\n')
+                          for word in line])
         return ''.join(' '.join(line) for line in lines)
 
     def to_raw(self, text):
