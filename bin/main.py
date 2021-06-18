@@ -142,6 +142,7 @@ def task_select_callback(sender, data):
     # set_value('prompt', MANAGER.prompt(task_name, user_text))
     updated_prompt = MANAGER.prompt(task_name, user_text)
     chunked_prompt = CHUNKER.add('prompt', updated_prompt)
+    print(repr(chunked_prompt))
     set_value('prompt', chunked_prompt)
     if not data.get('update_kwargs', True): return
 
