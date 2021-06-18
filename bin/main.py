@@ -78,9 +78,11 @@ def transcribe_callback(sender, data):
         show_item(id_)
 
     # Manually call this so prompt is updated once we finish recording.
-    task_select_callback('task_list',
-                         data={'task_list_id': 'task_list',
-                               'text_source_id': 'transcribed_text'})
+    format_text_callback('task_list',
+                         data={'text_source_id': data['target_id'],
+                               'task_list_id': 'task_list',
+                               'update_kwargs': True,
+                               'key': 'transcribed'})
 
 
 def format_text_callback(sender, data):
@@ -89,6 +91,7 @@ def format_text_callback(sender, data):
         - text_source_id
         - key (str: name CHUNKER will use to map raw text to chunked text.)
         - task_list_id
+        - update_kwargs (bool)
     """
     task_name = NAME2TASK[get_value(data['task_list_id'])]
     text = get_value(data['text_source_id'])
@@ -106,10 +109,11 @@ def format_text_callback(sender, data):
     chunked = CHUNKER.add(data['key'], text)
     set_value(data['text_source_id'], chunked)
 
-    task_select_callback('task_list',
-                         data={'task_list_id': data['task_list_id'],
-                               'text_source_id': data['text_source_id'],
-                               'update_kwargs': False})
+    task_select_callback(
+        'task_list',
+        data={'task_list_id': data['task_list_id'],
+              'text_source_id': data['text_source_id'],
+              'update_kwargs': data.get('update_kwargs', False)})
 
 
 def text_edit_callback(sender, data):
@@ -139,10 +143,8 @@ def task_select_callback(sender, data):
     )
     if CHUNKER._previously_added('transcribed', user_text):
         user_text = CHUNKER.get('transcribed', chunked=False)
-    # set_value('prompt', MANAGER.prompt(task_name, user_text))
     updated_prompt = MANAGER.prompt(task_name, user_text)
     chunked_prompt = CHUNKER.add('prompt', updated_prompt)
-    print(repr(chunked_prompt))
     set_value('prompt', chunked_prompt)
     if not data.get('update_kwargs', True): return
 
@@ -413,15 +415,31 @@ class App:
                        callback_data={'show_during_ids': ['record_msg'],
                                       'target_id': 'transcribed_text'},
                        callback=transcribe_callback)
+            with tooltip('record_btn', 'record_btn_tooltip'):
+                add_text('Press and begin talking.\nSimply stop talking when '
+                         'done and\nthe transcribed text should appear\n'
+                         'within several seconds.')
+            add_same_line()
+
             add_button('autoformat_btn', label='Auto-Format',
                        callback=format_text_callback,
                        callback_data={'text_source_id': 'transcribed_text',
                                       'key': 'transcribed',
                                       'task_list_id': 'task_list'})
-            with tooltip('record_btn', 'record_btn_tooltip'):
-                add_text('Press and begin talking.\nSimply stop talking when '
-                         'done and\nthe transcribed text should appear\n'
-                         'within several seconds.')
+            with tooltip('autoformat_btn', 'autoformat_btn_tooltip'):
+                add_text(
+                    'This mostly inserts newlines so your text is all \n'
+                    'visible without horizontal scrolling. Newlines that\n'
+                    'you manually type will be considered a part of the\n'
+                    'prompt and will be included in the text sent to GPT3,\n'
+                    'so use that with intention. Just type your text as you\n'
+                    'want the model to see it and use this Auto-Format\n'
+                    'button for changes where the target viewer is you or\n'
+                    'another human. This is done automatically for you when\n'
+                    'using voice transcription, but if you type the input\n'
+                    'or manually edit the transcription, you will need to\n'
+                    'manually press the button.'
+                )
 
             add_text('record_msg', default_value='Recording in progress...',
                      show=False)

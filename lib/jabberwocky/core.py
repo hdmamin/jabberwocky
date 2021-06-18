@@ -28,7 +28,6 @@ class GuiTextChunker:
         # should avoid this but sometimes the prompt in GUI still shows
         # text with what appear to be extra newlines.x
         self.newline = '\r\n'
-        self.newline_tmp = '\n\r'
         self.newline_tmp = '<NEWLINE>'
 
     @fallback(keep=['max_chars'])
@@ -51,11 +50,23 @@ class GuiTextChunker:
 
     @staticmethod
     def sticky_split(text, sep):
-        return [tok + sep for tok in text.split(sep) if tok]
+        """Basically a functioning version of htools.hsplit with group=True and
+        attach=True. Realized that doesn't work when sep contains special
+        characters.
+        """
+        res = []
+        toks = text.split(sep)
+        max_idx = len(toks) - 1
+        for i, tok in enumerate(toks):
+            if tok:
+                if i < max_idx: tok += sep
+                res.append(tok)
+            elif res and i < max_idx:
+                res[-1] += sep
+        return res
 
     def _chunk_lines(self, text, max_chars):
-        print('CHUNKING LINES', self.newline_tmp in text)
-        text = text.replace('\n', self.newline_tmp)
+        text = text.replace('\n', self.newline_tmp).rstrip(self.newline_tmp)
         words = [word for row in self.sticky_split(text, self.newline_tmp)
                  for word in row.split(' ')]
 
@@ -74,7 +85,6 @@ class GuiTextChunker:
                 curr_len = 0
             line.append(word)
             curr_len += length
-            # print(word, line)
         if line:
             lines.append([word.replace(self.newline_tmp, '\n')
                           for word in line])

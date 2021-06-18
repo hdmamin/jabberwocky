@@ -772,8 +772,17 @@ X -look into bug w/ "?" chars in prompt textbox for analyze_writing
 
 6/18/21
 -------
--investigate double newline bug in textchunker (see yesterday's notes)
--consider how to handle autoformat button: auto press it (in which case we need some magic (threaded?) to help in typing case because dearpygui callback can't edit the input box it's monitoring), add instructions to press it and just don't support the other case, or update query_func and other places to be able to get the raw version if it hasn't been added to chunker
+X -investigate double newline bug in textchunker (see yesterday's notes)
+    UPDATE: wrote better hsplit alternative to fix this. Maybe port at some point to replace regex method which is apparently a bit shaky logic?
+X -consider how to handle autoformat button: auto press it (in which case we need some magic (threaded?) to help in typing case because dearpygui callback can't edit the input box it's monitoring), add instructions to press it and just don't support the other case, or update query_func and other places to be able to get the raw version if it hasn't been added to chunker
+    UPDATE: added tooltip encouraging user to do it and explaining repercussions. It's really mostly for human convenience as most text does not have many newlines (except in specific cases where it's important for formatting)). Also made this automatic for voice transcription mode.
+X -port new sticky split to htools as hsplit subcase (with slight tweak to allow leading sep(s))
+-rm newlines from analyze_writing prompts
+    UPDATE: Done, but it looks like we'd really need more examples for this to work well. Right now, we only have 1 for casual/funny, 1 for analytical/scientific, etc. So gpt3 often selects from the exact bullet point descriptions rather than generating novel ones.
+
+6/19/21
+-------
+-add logging functionality to save most recent prompt/kwargs used (either in promptmanager or in file). This way after making any changes (such as adding the newline insertion in various places), we can check to make sure that what we ultimately send to gpt3 is what's intended.
 -research options for adding new tab/window
     -start working on convo tab
     -add URL tab?
