@@ -8,7 +8,7 @@ import speech_recognition as sr
 import time
 from threading import Thread
 
-from htools.core import tolist, select, eprint
+from htools.core import tolist, select, load, eprint
 from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, query_gpt3, query_gpt_neo
@@ -95,8 +95,6 @@ def format_text_callback(sender, data):
     """
     task_name = NAME2TASK[get_value(data['task_list_id'])]
     text = get_value(data['text_source_id'])
-    # Avoid re-chunking already chunked text, as this adds extra newlines.
-    if not text or CHUNKER._previously_added(data['key'], text): return
 
     # Don't just use capitalize because this removes existing capitals.
     # Probably don't have these anyway (transcription seems to usually be
@@ -121,6 +119,11 @@ def text_edit_callback(sender, data):
     edits update the prompt before making a query (this is often necessary
     since transcriptions are not always perfect).
     """
+    # This way even if user doesn't hit Auto-Format, query_callback() can
+    # retrieve input from chunker. Otherwise we'd have to keep track of when to
+    # retrieve it from text input box vs. from chunker which could get messy.
+    CHUNKER.add('transcribed', get_value('transcribed_text'),
+                return_chunked=False)
     task_select_callback('task_list',
                          data={'task_list_id': 'task_list',
                                'text_source_id': 'transcribed_text',
@@ -175,24 +178,32 @@ def query_callback(sender, data):
     # Can't pass empty list in for stop parameter.
     kwargs = app.get_query_kwargs()
     kwargs['stop'] = kwargs['stop'] or None
+    # In this case we don't want the resolved prompt. These kwargs will be
+    # passed to our query manager and the version returned by get_query_kwargs
+    # uses the chunked text.
+    del kwargs['prompt']
 
     # Want to send gpt3 the version of text without extra newlines inserted.
     task, text = app.get_prompt_text(do_format=False)
-    text = CHUNKER.get('transcribed', chunked=False)
-    print('input prompt:\n' + text)
+    if not text:
+        res = 'Please record or type something in the text input box before ' \
+              'making a query.'
+    else:
+        text = CHUNKER.get('transcribed', chunked=False)
 
-    model = MODEL_NAMES[get_value('model')]
-    if 'neo' in model:
-        kwargs.update(mock_func=query_gpt_neo, size=model.split()[-1],
-                      mock=True)
-    elif model == 'naive':
-        kwargs.update(mock=True, mock_func=None)
+        model = MODEL_NAMES[get_value('model')]
+        if 'neo' in model:
+            kwargs.update(mock_func=query_gpt_neo, size=model.split()[-1],
+                          mock=True)
+        elif model == 'naive':
+            kwargs.update(mock=True, mock_func=None)
 
-    try:
-        _, res = MANAGER.query(task=task, text=text, **kwargs)
-    except Exception as e:
-        print(e)
-        res = 'Query failed. Please check your settings and try again.'
+        try:
+            print('input prompt:\n' + text)
+            _, res = MANAGER.query(task=task, text=text, **kwargs)
+        except Exception as e:
+            print(e)
+            res = 'Query failed. Please check your settings and try again.'
 
     # GPT3 seems to like a type of apostrophe that dearpygui can't display. We
     # also insert newlines to display the text more nicely in the GUI, but

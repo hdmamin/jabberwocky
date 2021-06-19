@@ -11,7 +11,7 @@ import requests
 import sys
 import warnings
 
-from htools import load, select, bound_args, spacer, valuecheck, tolist
+from htools import load, select, bound_args, spacer, valuecheck, tolist, save
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, load_huggingface_api_key
@@ -202,7 +202,7 @@ class PromptManager:
     performing tasks on a video Transcript object.
     """
 
-    def __init__(self, *tasks, verbose=True):
+    def __init__(self, *tasks, verbose=True, log_dir='data/logs'):
         """
         Parameters
         ----------
@@ -221,6 +221,11 @@ class PromptManager:
         # evaluated at this point (i.e. still contain literal '{}' where values
         # will later be filled in).
         self.prompts = self._load_templates(set(tasks))
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+            self.log_path = Path(log_dir)/'query_kwargs.json'
+        else:
+            self.log_path = None
 
     def _load_templates(self, tasks):
         """Load template and default hyperparameters for each prompt.
@@ -295,6 +300,7 @@ class PromptManager:
             print('fully resolved kwargs:\n',
                   dict(bound_args(query_gpt3, [], kwargs)))
             return
+        if self.log_path: save({'prompt': prompt, **kwargs}, self.log_path)
         return query_gpt3(prompt, **kwargs)
 
     def kwargs(self, task, fully_resolved=True, return_prompt=False,
@@ -332,6 +338,10 @@ class PromptManager:
         -------
         dict
         """
+        if 'prompt' in kwargs:
+            raise RuntimeError('Arg "prompt" should not be in query kwargs. '
+                               'It will be constructed within this method and '
+                               'passing it in will override the new version.')
         kwargs = {**self.prompts[task], **kwargs}
         for k, v in (extra_kwargs or {}).items():
             v_cls = type(v)
