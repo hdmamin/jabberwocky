@@ -1,6 +1,7 @@
 """Functionality to fetch and work with YouTube transcripts."""
 
 from fuzzywuzzy import fuzz, process
+import os
 import pandas as pd
 from pathlib import Path
 import re
@@ -179,7 +180,7 @@ def download_image(url, out_path, verbose=False):
 
 
 def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
-              **page_kwargs):
+              fname=None, **page_kwargs):
     page = wiki_page(name, *tolist(tags), **page_kwargs)
     summary = page.summary.splitlines()[0]
 
@@ -193,7 +194,9 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
                     for u in page.images if u.rpartition('.')[-1] in exts}
         name, _ = process.extractOne(name.lower(), name2url.keys())
         url = name2url[name]
-        path = Path(img_dir) / f'{name}.{url.rpartition(".")[-1]}'.lower()
+        suff = url.rpartition(".")[-1]
+        path = Path(img_dir)/f'{fname or name}.{suff}'.lower()
+        os.makedirs(img_dir, exist_ok=True)
         if download_image(url, path):
             img_url = url
             img_path = str(path)

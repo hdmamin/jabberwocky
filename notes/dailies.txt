@@ -795,7 +795,19 @@ X -fleshed out, ported, and documented sleepy_range to htools
 -research options for adding new tab/window
     -start working on convo tab
     -add URL tab?
--start conversationmanager class
+X -start conversationmanager class
+    UPDATE: got pretty far but still need to do some testing, flesh out query/kwargs/prompt behavior, etc.
+
+6/21/21
+-------
+-test adding new personas to ConversationManager
+    -add kwargs method/attr?
+    -add prompt method/attr?
+    -write query func (figure out how to update running conv - maybe another attr needed)
+    -clean up old tmp dir of downloaded photos?
+-research options for adding new tab/window
+    -start working on convo tab
+    -add URL tab?
 -easier:
     -document session
     -document transcript methods

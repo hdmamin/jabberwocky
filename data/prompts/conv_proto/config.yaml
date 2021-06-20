@@ -1,0 +1,8 @@
+engine_i: 3
+temperature: .5
+max_tokens: 250
+frequency_penalty: 0.1
+stop: 
+- "Me:"
+- "This is a conversation with"
+reminder: "Your message must start with 'Hi {name}.'. Might want to try tweaking frequency penalty."

@@ -221,6 +221,7 @@ class PromptManager:
         # evaluated at this point (i.e. still contain literal '{}' where values
         # will later be filled in).
         self.prompts = self._load_templates(set(tasks))
+        self.log_dir = log_dir
         if log_dir:
             os.makedirs(log_dir, exist_ok=True)
             self.log_path = Path(log_dir)/'query_kwargs.json'
@@ -291,7 +292,7 @@ class PromptManager:
         kwargs = self.kwargs(task=task, fully_resolved=False,
                              return_prompt=True, extra_kwargs=extra_kwargs,
                              **kwargs)
-        prompt = kwargs.pop('prompt').format(text)
+        prompt = self.format_prompt(task, kwargs.pop('prompt'), text=text)
         if debug:
             print('prompt:\n' + prompt)
             print(spacer())
@@ -380,6 +381,13 @@ class PromptManager:
         str or None: Return None if print_ is True.
         """
         template = self.prompts[task]['prompt']
+        res = self.format_prompt(task, template, text)
+        if print_:
+            print(res)
+        else:
+            return res
+
+    def format_prompt(self, task, template, text=''):
         # Handle tasks like "conversation" where we need to do some special
         # handling to integrate user-provided text into the prompt.
         if text:
@@ -390,10 +398,7 @@ class PromptManager:
                 res = template.format(text)
         else:
             res = template
-        if print_:
-            print(res)
-        else:
-            return res
+        return res
 
     def __repr__(self):
         return f'{type(self).__name__}({", ".join(map(repr, self.prompts))})'
