@@ -797,6 +797,7 @@ X -fleshed out, ported, and documented sleepy_range to htools
     -add URL tab?
 X -start conversationmanager class
     UPDATE: got pretty far but still need to do some testing, flesh out query/kwargs/prompt behavior, etc.
+X -fleshed out, documented, and ported venumerate to htools
 
 6/21/21
 -------
@@ -813,7 +814,6 @@ X -start conversationmanager class
     -document transcript methods
     -document textchunking class
     -port htools as_df
-        -venumerate
         -owneraccess
 
 -------------------------------------------------------------------------------
