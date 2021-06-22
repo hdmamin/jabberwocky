@@ -112,8 +112,34 @@ def get_transcripts(url, verbose=True):
 
 
 def _wiki_text_cleanup(text):
-    text = re.sub('\s{2,}', ' ', text)
-    return re.sub('\([^a-zA-Z0-9]+', '(', text)
+    """Clean up first paragraph of wikipedia summary.
+    Steps:
+    1. Remove inline citations, e.g. '[1]'.
+    2. Remove noisy pronunciation-related text that often follows name, e.g.
+    'bə-RAHK hoo-SAYN oh-BAH-mə;' in the below example:
+    'Barack Hussein Obama II (bə-RAHK hoo-SAYN oh-BAH-mə; born August 4, 1961)'
+    3. Remove repeated spaces (seem common in the wikipedia py package I'm
+    using).
+
+    Parameters
+    ----------
+    text: str
+        First paragraph of wikipedia summary about a person. Only tested on
+        real people - for a fictional person without a birthdate, this might
+        not work as well.
+
+    Returns
+    -------
+    str
+    """
+    text = re.sub('\[\d*\]', '', text)
+    match = re.search('\(.*\)', text)
+    if match:
+        match = match.group()
+        match_parts = [x for x in match.partition(';') if x]
+        if len(match_parts) > 1:
+            text = text.replace(match, '(' + match_parts[-1].strip())
+    return re.sub('\s{2,}', ' ', text)
 
 
 def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,

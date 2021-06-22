@@ -801,10 +801,19 @@ X -fleshed out, documented, and ported venumerate to htools
 
 6/21/21
 -------
--test adding new personas to ConversationManager
+X -test adding new personas to ConversationManager
+X -improve func that cleans wiki summary
+    UPDATE: removes more junk now.
+X -flesh out OwnerAccess metaclass
+    UPDATE: added option for subset of attrs or all
+
+6/22/21
+-------
+-add more methods to conversationmanager:
     -add kwargs method/attr?
     -add prompt method/attr?
     -write query func (figure out how to update running conv - maybe another attr needed)
+    -can we remove name2summary or name2base? Pretty redundant.
     -clean up old tmp dir of downloaded photos?
 -research options for adding new tab/window
     -start working on convo tab
@@ -814,7 +823,7 @@ X -fleshed out, documented, and ported venumerate to htools
     -document transcript methods
     -document textchunking class
     -port htools as_df
-        -owneraccess
+        -flesh out owneraccess more
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
