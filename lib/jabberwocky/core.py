@@ -8,119 +8,9 @@ from string import punctuation
 import warnings
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
-from htools import flatten, ifnone, Args, auto_repr, add_docstring, fallback, \
-    hsplit
+from htools import flatten, ifnone, Args, auto_repr, add_docstring, fallback
 from jabberwocky.openai_utils import punctuate_mock_func, PromptManager
 from jabberwocky.external_data import video_id
-
-
-class GuiTextChunker:
-
-    def __init__(self, max_chars=79):
-        self.raw = {}
-        self.chunked = {}
-        self.max_chars = max_chars
-
-        # Transcriber and gpt3 generally don't insert \n\r or \r\n so this is
-        # a decent # way to recover where I inserted splits. Otherwise, we risk
-        # accumulating more and more newlines when calling this repeatedly.
-        # Still feel like the check for previously added text in self.add()
-        # should avoid this but sometimes the prompt in GUI still shows
-        # text with what appear to be extra newlines.x
-        self.newline = '\r\n'
-        self.newline_tmp = '<NEWLINE>'
-
-    @fallback(keep=['max_chars'])
-    def add(self, key, text, return_chunked=True, **kwargs):
-        if self._previously_added(key, text):
-            if return_chunked:
-                return self.get(key, chunked=True)
-            return
-        # Want to be extra sure we don't re-chunk as this can cause bugs.
-        text = self.to_raw(text)
-        chunked = self._chunk_lines(text, max_chars)
-        self.raw[key] = text
-        self.chunked[key] = chunked
-        if return_chunked: return chunked
-
-    def get(self, key, chunked):
-        if chunked:
-            return self.chunked[key]
-        return self.raw[key]
-
-    @staticmethod
-    def sticky_split(text, sep):
-        """Basically a functioning version of htools.hsplit with group=True and
-        attach=True. Realized that doesn't work when sep contains special
-        characters.
-        """
-        res = []
-        toks = text.split(sep)
-        max_idx = len(toks) - 1
-        for i, tok in enumerate(toks):
-            if tok:
-                if i < max_idx: tok += sep
-                res.append(tok)
-            elif res and i < max_idx:
-                res[-1] += sep
-        return res
-
-    def _chunk_lines(self, text, max_chars):
-        text = text.replace('\n', self.newline_tmp).rstrip(self.newline_tmp)
-        words = [word for row in self.sticky_split(text, self.newline_tmp)
-                 for word in row.split(' ')]
-
-        lines, line = [], []
-        curr_len = 0
-        for word in words:
-            length = len(word) + 1
-            prev_has_newline = line and self.newline_tmp in line[-1]
-            if (curr_len + length > max_chars) or prev_has_newline:
-                if not prev_has_newline:
-                    line[-1] = line[-1] + self.newline
-                else:
-                    line[-1] = line[-1].replace(self.newline_tmp, '\n')
-                lines.append(line)
-                line = []
-                curr_len = 0
-            line.append(word)
-            curr_len += length
-        if line:
-            lines.append([word.replace(self.newline_tmp, '\n')
-                          for word in line])
-        return ''.join(' '.join(line) for line in lines)
-
-    def to_raw(self, text):
-        return text .replace(self.newline, ' ')\
-                   .replace(self.newline_tmp, '\n')\
-                   .rstrip('\n')
-
-    def _previously_added(self, key, text):
-        try:
-            raw = self.get(key, chunked=False)
-            assert self.to_raw(text) == self.to_raw(raw)
-            return True
-        except (KeyError, AssertionError) as e:
-            print(e)
-            return False
-
-    def clear(self):
-        self.raw.clear()
-        self.chunked.clear()
-
-    def __contains__(self, key):
-        in_raw, in_chunked = key in self.raw, key in self.chunked
-        if in_raw and in_chunked:
-            return True
-        elif in_raw or in_chunked:
-            raise KeyError(
-                f'Key {key} was found in '
-                f'{"self.raw" if in_raw else "self.chunked"}. Should be in '
-                'neither or both. It may be wise to call the clear() method '
-                'and re-add your key.'
-            )
-        else:
-            return False
 
 
 def realign_punctuated_text(df, text, skip_1st=0, margin=2):
@@ -578,3 +468,112 @@ class Session:
                               in self.transcripts.items())
         arg_strs = sep.join(repr(p) for p in self.manager.prompts)
         return f'{name}({arg_strs}{sep}{kwarg_strs})'
+
+
+class GuiTextChunker:
+
+    def __init__(self, max_chars=79):
+        self.raw = {}
+        self.chunked = {}
+        self.max_chars = max_chars
+
+        # Transcriber and gpt3 generally don't insert \n\r or \r\n so this is
+        # a decent # way to recover where I inserted splits. Otherwise, we risk
+        # accumulating more and more newlines when calling this repeatedly.
+        # Still feel like the check for previously added text in self.add()
+        # should avoid this but sometimes the prompt in GUI still shows
+        # text with what appear to be extra newlines.x
+        self.newline = '\r\n'
+        self.newline_tmp = '<NEWLINE>'
+
+    @fallback(keep=['max_chars'])
+    def add(self, key, text, return_chunked=True, **kwargs):
+        if self._previously_added(key, text):
+            if return_chunked:
+                return self.get(key, chunked=True)
+            return
+        # Want to be extra sure we don't re-chunk as this can cause bugs.
+        text = self.to_raw(text)
+        chunked = self._chunk_lines(text, max_chars)
+        self.raw[key] = text
+        self.chunked[key] = chunked
+        if return_chunked: return chunked
+
+    def get(self, key, chunked):
+        if chunked:
+            return self.chunked[key]
+        return self.raw[key]
+
+    @staticmethod
+    def sticky_split(text, sep):
+        """Basically a functioning version of htools.hsplit with group=True and
+        attach=True. Realized that doesn't work when sep contains special
+        characters.
+        """
+        res = []
+        toks = text.split(sep)
+        max_idx = len(toks) - 1
+        for i, tok in enumerate(toks):
+            if tok:
+                if i < max_idx: tok += sep
+                res.append(tok)
+            elif res and i < max_idx:
+                res[-1] += sep
+        return res
+
+    def _chunk_lines(self, text, max_chars):
+        text = text.replace('\n', self.newline_tmp).rstrip(self.newline_tmp)
+        words = [word for row in self.sticky_split(text, self.newline_tmp)
+                 for word in row.split(' ')]
+
+        lines, line = [], []
+        curr_len = 0
+        for word in words:
+            length = len(word) + 1
+            prev_has_newline = line and self.newline_tmp in line[-1]
+            if (curr_len + length > max_chars) or prev_has_newline:
+                if not prev_has_newline:
+                    line[-1] = line[-1] + self.newline
+                else:
+                    line[-1] = line[-1].replace(self.newline_tmp, '\n')
+                lines.append(line)
+                line = []
+                curr_len = 0
+            line.append(word)
+            curr_len += length
+        if line:
+            lines.append([word.replace(self.newline_tmp, '\n')
+                          for word in line])
+        return ''.join(' '.join(line) for line in lines)
+
+    def to_raw(self, text):
+        return text .replace(self.newline, ' ') \
+            .replace(self.newline_tmp, '\n') \
+            .rstrip('\n')
+
+    def _previously_added(self, key, text):
+        try:
+            raw = self.get(key, chunked=False)
+            assert self.to_raw(text) == self.to_raw(raw)
+            return True
+        except (KeyError, AssertionError) as e:
+            print(e)
+            return False
+
+    def clear(self):
+        self.raw.clear()
+        self.chunked.clear()
+
+    def __contains__(self, key):
+        in_raw, in_chunked = key in self.raw, key in self.chunked
+        if in_raw and in_chunked:
+            return True
+        elif in_raw or in_chunked:
+            raise KeyError(
+                f'Key {key} was found in '
+                f'{"self.raw" if in_raw else "self.chunked"}. Should be in '
+                'neither or both. It may be wise to call the clear() method '
+                'and re-add your key.'
+            )
+        else:
+            return False

@@ -810,10 +810,13 @@ X -flesh out OwnerAccess metaclass
 6/22/21
 -------
 -add more methods to conversationmanager:
-    -add kwargs method/attr?
-    -add prompt method/attr?
-    -write query func (figure out how to update running conv - maybe another attr needed)
-    -can we remove name2summary or name2base? Pretty redundant.
+    X -add kwargs method/attr?
+    _ -add prompt method/attr?
+        UPDATE: promptmanager doesn't actually use this anywhere, just a convenience method for the user which isn't that helpful here bc there's only 1 task.
+    ~ -write query func (figure out how to update running conv - maybe another attr needed)
+        UPDATE: got 1 query working. Still need to adjust it to handle ongoing conversations (distinguish between first call and subsequent calls).
+    ~ -can we remove name2summary or name2base? Pretty redundant.
+        UPDATE: prob eventually rm name2summary but keep for a couple more days while the class develops, just in case.
     -clean up old tmp dir of downloaded photos?
 -research options for adding new tab/window
     -start working on convo tab
@@ -823,7 +826,15 @@ X -flesh out OwnerAccess metaclass
     -document transcript methods
     -document textchunking class
     -port htools as_df
-        -flesh out owneraccess more
+    ~ -flesh out owneraccess more
+        UPDATE: started rebuilding metaclass as cls decorator and so far it seems to work.
+
+6/23/21
+-------
+-continue fleshing out conversationmanager
+    -update query_func to work w/ ongoing convos. Need to distinguish between first call and subsequent calls.
+    -clean up old tmp dir of downloaded photos?
+-flesh out owneraccess decorator
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -834,10 +845,19 @@ easy tasks for low energy days
     -parent stack system
     -callbacks
     -value storage system
+-document session
+-document transcript methods
+-document textchunking class
+-port htools as_df
 
 -------------------------------------------------------------------------------
 backlog
 
+-add prompt method/attr to conv manager?
+-can we remove name2summary or name2base from conv manager?
+-research options for adding new tab/window
+    -start working on convo tab
+    -add URL tab?
 -see if slack app is a possibility (do I have auth to do in GG workspace?)
 -record some mma examples (text? silent gif? video with audio?)
 -prototype cover letter writer from job posting
