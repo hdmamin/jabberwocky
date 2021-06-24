@@ -831,9 +831,22 @@ X -flesh out OwnerAccess metaclass
 
 6/23/21
 -------
--continue fleshing out conversationmanager
-    -update query_func to work w/ ongoing convos. Need to distinguish between first call and subsequent calls.
+X -continue fleshing out conversationmanager
+    X -update query_func to work w/ ongoing convos. Need to distinguish between first call and subsequent calls.
+    X -rm name2summary
+    X -add conversation saving option
+    X -add contextmanager option
+    X -test out functionality
     -clean up old tmp dir of downloaded photos?
+-flesh out owneraccess decorator
+
+6/24/21
+-------
+-add method for prettier formatting of ongoing conversation (auto bold all user-provided text?)
+-maybe update converse contextmanager to have input baked in
+-port conversationmanager to lib
+-document conversationmanager methods
+-add new window/tab to dearpygui
 -flesh out owneraccess decorator
 
 -------------------------------------------------------------------------------
@@ -853,6 +866,8 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
+-refactor main.py (maybe a callbacks.py? Dearpygui OOP example also did things a bit differently (class for each element rather than a method for each), could try to change but probably too big of an overhaul given the small-ish payoff.)
+-experiment w/ prompt to summarize past conversation? (just in gpt3 ui for now. May be a bit tricky to get this working right.)
 -add prompt method/attr to conv manager?
 -can we remove name2summary or name2base from conv manager?
 -research options for adding new tab/window
@@ -887,3 +902,18 @@ backlog
 -look through instructions/demo for voice cloning app - how much audio do we need? Does it need to be custom or could I plausibly find enough for a famous person?
 -try chronology lib
 -try booste lib
+
+-------------------------------------------------------------------------------
+easy tasks for low energy days
+
+- artbreeder tutorial
+- lots of waiting docs in core.py
+- dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
+    -parent stack system
+    -callbacks
+    -value storage system
+-document session
+-document transcript methods
+-document textchunking class
+-port htools as_df
+
