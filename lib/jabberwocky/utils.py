@@ -80,6 +80,20 @@ def bold(text):
     return C.bold_start + text + C.bold_end
 
 
+def underline(text):
+    """Make text underlined when printed.
+
+    Parameters
+    ----------
+    text: str
+
+    Returns
+    -------
+    str
+    """
+    return C.underline_start + text + C.bold_end
+
+
 def getindex(arr, val, default=-1):
     return arr.index(val) if val in arr else default
 

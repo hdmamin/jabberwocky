@@ -2,8 +2,9 @@ from htools.structures import IndexedDict
 
 
 class C:
-    # Formatting
+    # Formatting (note: later realized bold_end actually also ends colors too.)
     bold_start = '\033[1m'
+    underline_start = '\033[4m'
     bold_end = '\033[0m'
 
     # OpenAI constants

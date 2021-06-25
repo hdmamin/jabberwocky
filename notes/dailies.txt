@@ -842,7 +842,18 @@ X -continue fleshing out conversationmanager
 
 6/24/21
 -------
--add method for prettier formatting of ongoing conversation (auto bold all user-provided text?)
+~ -add method for prettier formatting of ongoing conversation (auto bold all user-provided text?)
+    UPDATE: wrote func to do this but haven't added to class yet.
+X -underline func
+    UPDATE: tried italicize first but that didn't work.
+
+6/25/21
+-------
+-add format_conversation function to class? Could also be staticmethod or standalone function.
+-maybe update converse contextmanager to have input baked in
+-port conversationmanager to lib
+-document conversationmanager methods
+-add new window/tab to dearpygui
 -maybe update converse contextmanager to have input baked in
 -port conversationmanager to lib
 -document conversationmanager methods
