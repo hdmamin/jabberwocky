@@ -1,5 +1,6 @@
 """General purpose utilities."""
 
+from colorama import Fore
 from functools import update_wrapper
 from inspect import _empty, Parameter, signature
 from pathlib import Path
@@ -92,6 +93,24 @@ def underline(text):
     str
     """
     return C.underline_start + text + C.bold_end
+
+
+def colored(text, color):
+    """Update string so it will show up in a different color when printed. Note
+    that the raw string itself will now have special characters added to the
+    beginning and end, so the repr will look a bit odd.
+
+    Parameters
+    ----------
+    text: str
+    color: str
+        Must be a color provided by colorama.Fore.
+
+    Returns
+    -------
+    str
+    """
+    return getattr(Fore, color.upper()) + text + Fore.RESET
 
 
 def getindex(arr, val, default=-1):

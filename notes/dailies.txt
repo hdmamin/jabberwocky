@@ -849,15 +849,19 @@ X -underline func
 
 6/25/21
 -------
--add format_conversation function to class? Could also be staticmethod or standalone function.
+X -add format_conversation function to class? Could also be staticmethod or standalone function.
+X -port conversationmanager to lib
+X -document conversationmanager methods
+X -add new window/tab to dearpygui
 -maybe update converse contextmanager to have input baked in
--port conversationmanager to lib
--document conversationmanager methods
--add new window/tab to dearpygui
--maybe update converse contextmanager to have input baked in
--port conversationmanager to lib
--document conversationmanager methods
--add new window/tab to dearpygui
+-flesh out owneraccess decorator
+
+6/26/21
+-------
+-continue fleshing out conversationmanager window
+    -figure out better way to select which window is shown (menu bar at top? Currently just have a checkbox in main window for testing purposes but that's definitely not a long term solution)
+    -do we need a different kwargs window or can we figure out a way to adjust the existing one?
+        -in fact, might we be able to keep a single interface and obscure any differences between conversation mode and single response mode from user? Not sure yet if that's even desirable.
 -flesh out owneraccess decorator
 
 -------------------------------------------------------------------------------
@@ -877,6 +881,7 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
+-maybe update converse contextmanager to have input baked in
 -refactor main.py (maybe a callbacks.py? Dearpygui OOP example also did things a bit differently (class for each element rather than a method for each), could try to change but probably too big of an overhaul given the small-ish payoff.)
 -experiment w/ prompt to summarize past conversation? (just in gpt3 ui for now. May be a bit tricky to get this working right.)
 -add prompt method/attr to conv manager?

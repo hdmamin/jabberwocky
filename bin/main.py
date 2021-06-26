@@ -11,14 +11,16 @@ from threading import Thread
 from htools.core import tolist, select, load, eprint
 from htools.meta import params
 from htools.structures import IndexedDict
-from jabberwocky.openai_utils import PromptManager, query_gpt3, query_gpt_neo
+from jabberwocky.openai_utils import PromptManager, ConversationManager,\
+    query_gpt3, query_gpt_neo
 from jabberwocky.speech import Speaker
 from jabberwocky.core import GuiTextChunker
 from jabberwocky.utils import most_recent_filepath, img_dims, _img_dims
 
 
 os.chdir('../')
-MANAGER = PromptManager(verbose=False)
+MANAGER = PromptManager(verbose=False, skip_tasks=['conv_proto'])
+CONV_MANAGER = ConversationManager(verbose=False)
 NAME2TASK = IndexedDict({
     'Punctuate': 'punctuate',
     'Conversation': 'conversation',
@@ -475,11 +477,28 @@ class App:
                                multiline=True,
                                width=self.widths[.5] - 2*self.pad, height=300)
 
+            # TODO: rm
+            add_checkbox('tmp_testing',
+                         callback=lambda x: show_item('conv_window')
+                                            if get_value(x) else None)
+
+        #######################################################################
+        with window('conv_window', width=self.widths[.5],
+                    height=self.heights[1.] - self.pad, x_pos=self.pad,
+                    y_pos=self.pad, no_resize=True, no_move=True, show=False):
+            CONV_MANAGER.start_conversation('Barack Obama')
+
+            # Label is displayed next to input unless we manually suppress it.
+            with label_above('conv_text'):
+                add_input_text('conv_text', default_value='', multiline=True,
+                               width=self.widths[.5] - 8*self.pad, height=600)
+            # set_key_press_callback(text_edit_callback)
+
             # We need to set initial dims before updating in resize_callback
             # otherwise we'll get a divide by zero error.
-            img_path = most_recent_filepath('data/tmp')
-            add_image('conversation_img', str(img_path),
-                      **img_dims(img_path, width=self.widths[.5] - 8*self.pad))
+            add_image('conversation_img', str(CONV_MANAGER.current_img_path),
+                      **img_dims(CONV_MANAGER.current_img_path,
+                                 width=self.widths[.5] - 8*self.pad))
 
     def right_column(self):
         with window('options_window', width=self.widths[.5],
@@ -596,7 +615,7 @@ class App:
 
     def build(self):
         self.primary_window()
-        # self.menu()
+        self.menu()
         self.left_column()
         self.right_column()
 

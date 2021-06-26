@@ -1,6 +1,8 @@
 """Utility functions for interacting with the gpt3 api."""
 
 from collections.abc import Iterable, Mapping
+from collections import Counter
+from contextlib import contextmanager
 import json
 from nltk.tokenize import sent_tokenize
 import numpy as np
@@ -11,10 +13,12 @@ import requests
 import sys
 import warnings
 
-from htools import load, select, bound_args, spacer, valuecheck, tolist, save
+from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
+    listlike
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
-from jabberwocky.utils import strip, bold, load_yaml, load_huggingface_api_key
+from jabberwocky.utils import strip, bold, load_yaml, colored, \
+    load_huggingface_api_key
 
 
 class MockFunctionException(Exception):
@@ -202,7 +206,8 @@ class PromptManager:
     performing tasks on a video Transcript object.
     """
 
-    def __init__(self, *tasks, verbose=True, log_dir='data/logs'):
+    def __init__(self, *tasks, verbose=True, log_dir='data/logs',
+                 skip_tasks=()):
         """
         Parameters
         ----------
@@ -220,7 +225,7 @@ class PromptManager:
         # Maps task name to query kwargs. Prompt templates have not yet been
         # evaluated at this point (i.e. still contain literal '{}' where values
         # will later be filled in).
-        self.prompts = self._load_templates(set(tasks))
+        self.prompts = self._load_templates(set(tasks) - set(skip_tasks))
         self.log_dir = log_dir
         if log_dir:
             os.makedirs(log_dir, exist_ok=True)
@@ -244,7 +249,7 @@ class PromptManager:
         """
         name2kwargs = {}
         dir_ = Path('data/prompts')
-        paths = (dir_ / p for p in tasks) if tasks else dir_.iterdir()
+        paths = (dir_/p for p in tasks) if tasks else dir_.iterdir()
         for path in paths:
             if not path.is_dir():
                 if tasks: warnings.warn(f'{path} is not a directory.')
@@ -406,6 +411,327 @@ class PromptManager:
     def __iter__(self):
         """Iterates over prompt names (strings)."""
         return iter(self.prompts)
+
+
+class ConversationManager:
+    """Similar to PromptManager but designed for ongoing conversations. This
+    currently references just a single prompt: conv_proto.
+    """
+
+    img_exts = {'.jpg', '.jpeg', '.png'}
+
+    def __init__(self, verbose=True, data_dir='./data'):
+        # Set directories for data storage, logging, etc.
+        self.verbose = verbose
+        self.data_dir = Path(data_dir)
+        self.persona_dir = self.data_dir/'conversation_personas'
+        self.conversation_dir = self.data_dir/'conversations'
+        self.log_dir = self.data_dir/'logs'
+        self.log_path = Path(self.log_dir)/'conversation_query_kwargs.json'
+
+        # These attributes will be updated when we load a persona and cleared
+        # when we end a conversation. current_persona is the processed name
+        # (i.e. lowercase w/ underscores).
+        self.current_persona = ''
+        self.current_img_path = ''
+        self.running_prompt = ''
+
+        # Load prompt, default query kwargs, and existing personas.
+        self._kwargs = load_prompt('conv_proto')
+        self._base_prompt = self._kwargs.pop('prompt')
+        name2summary, self.name2img_path = self._load_personas()
+        self.name2base = {}
+        self.name2wiki_name = {}
+        for k, v in name2summary.items():
+            self.update_persona_dicts(k, v, self.name2img_path[k])
+
+    def _load_personas(self):
+        """Load any stored summaries and image paths of existing personas."""
+        name2summary = {}
+        name2img_path = {}
+        for path in self.persona_dir.iterdir():
+            if not path.is_dir(): continue
+            name2summary[path.stem] = load(path/'summary.txt')
+            name2img_path[path.stem] = [p for p in path.iterdir()
+                                        if p.suffix in self.img_exts][0]
+        return name2summary, name2img_path
+
+    def start_conversation(self, name, download_if_necessary=False):
+        """Prepare for a conversation with a specified persona. We need to
+        track several variables during the conversation.
+
+        Parameters
+        ----------
+        name: str
+            The persona you wish to converse with. This should be a
+            pretty-formatted name (no underscores).
+        download_if_necessary: bool
+            If True and the requested persona doesn't exist, this will download
+            the necessary materials and add that persona to their "rolodex".
+
+        Returns
+        -------
+        tuple: Processed name (str; with underscores), running prompt
+        (str; basically just the persona's summary at this point), and path to
+        the persona's image (Path).
+        """
+        if name not in self:
+            if not download_if_necessary:
+                raise KeyError(f'{name} persona not available. You can set '
+                               'download_if_necessary=True if you wish to '
+                               'construct a new persona.')
+            _ = self.add_persona(name, return_data=True)
+        self.end_conversation()
+        processed_name = self.process_name(name)
+        self.current_persona = processed_name
+        self.current_img_path = self.name2img_path[processed_name]
+        self.running_prompt = self.name2base[processed_name]
+        return (self.current_persona,
+                self.running_prompt,
+                self.current_img_path)
+
+    def end_conversation(self, fname=''):
+        """Resets several variables when a conversation is over. This is also
+        called automatically at the beginning of start_conversation in case you
+        forgot to close the previous conversation.
+
+        Parameters
+        ----------
+        fname: str
+            If non-empty, the transcript of this conversation will be saved to
+            a text file by this name. This should not be a full path - it will
+            automatically be saved in the manager's conversation_dir.
+        """
+        if fname:
+            save(self.running_prompt, self.conversation_dir/fname)
+        self.running_prompt = ''
+        self.current_persona = ''
+        self.current_img_path = ''
+
+    def add_persona(self, name, return_data=False, strict=True):
+        """Download materials for a new persona. This saves their wikipedia
+        summary and profile photo in a directory with their name inside the
+        persona_dir.
+        """
+        processed_name = self.process_name(name)
+        summary, _, img_path = wiki_data(
+            name, img_dir=self.persona_dir/processed_name, fname='profile'
+        )
+        if strict and '(born' not in summary:
+            raise ValueError('Expected summary to contain "(born". Summary '
+                             f'may be malformed: {summary}')
+        save(summary, self.persona_dir/processed_name/'summary.txt')
+        self.update_persona_dicts(processed_name, summary, img_path)
+        if return_data: return summary, img_path
+
+    def update_persona_dicts(self, processed_name, summary, img_path):
+        """Helper to update our various name2{something} dicts."""
+        self.name2wiki_name[processed_name] = self._name_from_summary(summary)
+        self.name2img_path[processed_name] = img_path
+        self.name2base[processed_name] = self._base_prompt.format(
+            name=self.name2wiki_name[processed_name],
+            summary=summary
+        )
+
+    def _name_from_summary(self, summary):
+        """Extract (pretty) name from a wikipedia summary. Logic is a little
+        fragile - probably doesn't work for fictional characters."""
+        return summary.partition('(born')[0].strip()
+
+    def process_name(self, name, inverse=False):
+        """Convert a name to pretty format (title case, no underscores) and
+        back.
+
+        Parameters
+        ----------
+        name: str
+        inverse: bool
+            If True, perform the inverse operation, converting a
+            pretty-formatted str to lowercase and replacing spaces with
+            underscores.
+        """
+        if inverse:
+            return name.replace('_', ' ').title()
+        return name.lower().replace(' ', '_')
+
+    def personas(self, pretty=True):
+        """Quick way to see a list of all available personas.
+
+        Returns
+        -------
+        list[str]
+        """
+        names = list(self.name2base)
+        if pretty: return [self.process_name(name, True) for name in names]
+        return names
+
+    def kwargs(self, name='', fully_resolved=True, return_prompt=False,
+               extra_kwargs=None, **kwargs):
+        # Name param should be pretty version, i.e. no underscores. Only
+        # needed when return_prompt is True.
+        if 'prompt' in kwargs:
+            raise RuntimeError(
+                'Arg "prompt" should not be in query kwargs. It will be '
+                'constructed within this method and passing it in will '
+                'override the new version.'
+            )
+        kwargs = {**self._kwargs, **kwargs}
+        for k, v in (extra_kwargs or {}).items():
+            v_cls = type(v)
+            # Make a new object instead of just using get() or setdefault
+            # since the latter two methods both mutate our default kwargs.
+            curr_val = v_cls(kwargs.get(k, v_cls()))
+            if isinstance(v, Iterable):
+                curr_val.extend(v)
+            elif isinstance(v, Mapping):
+                curr_val.update(v)
+            else:
+                raise TypeError(f'Key {k} has unrecognized type {v_cls} in '
+                                '`extra_kwargs`.')
+            kwargs[k] = curr_val
+
+        if fully_resolved: kwargs = dict(bound_args(query_gpt3, [], kwargs))
+        if name and return_prompt:
+            kwargs['prompt'] = self.name2base[self.process_name(name)]
+        return kwargs
+
+    def query(self, text, debug=False, extra_kwargs=None, **kwargs):
+        """
+
+        Parameters
+        ----------
+        text: str
+            The thing you'd like to say next. This should not start with
+            "Me: " - that will be inserted automatically. This should also not
+            include the wikipedia summary.
+
+            See ConversationManager for other kwargs.
+        Returns
+        -------
+        tuple[str]: Tuple of (prompt, response), just like all gpt3 queries.
+        """
+        if not self.current_persona:
+            raise RuntimeError('You must call the `start_conversation` '
+                               'method before making a query.')
+
+        kwargs = self.kwargs(fully_resolved=False, return_prompt=False,
+                             extra_kwargs=extra_kwargs, **kwargs)
+        prompt = self.format_prompt(user_text=text)
+        if debug:
+            print('prompt:\n' + prompt)
+            print(spacer())
+            print('kwargs:\n', kwargs)
+            print(spacer())
+            print('fully resolved kwargs:\n',
+                  dict(bound_args(query_gpt3, [], kwargs)))
+            return
+        save({'prompt': prompt, **kwargs}, self.log_path, verbose=False)
+        prompt, resp = query_gpt3(prompt, **kwargs)
+        # GPT3 prefers prompts that don't end with spaces and query_gpt3()
+        # strips output, but we want a space after the colon.
+        self.running_prompt = prompt + ' ' + resp
+        return prompt, resp
+
+    def format_prompt(self, user_text):
+        """Use the running prompt
+
+        Parameters
+        ----------
+        user_text
+
+        Returns
+        -------
+        str
+        """
+        if not self.running_prompt:
+            raise RuntimeError(
+                'Running prompt is empty during a format_prompt() call. Have '
+                'you started a conversation?'
+            )
+        return (self.running_prompt +
+                f'\n\nMe: {user_text.strip()}\n\n'
+                f'{self.process_name(self.current_persona, inverse=True)}:')
+
+    @contextmanager
+    def converse(self, name, fname='', download_if_necessary=False):
+        """Wanted to provide context manager even though we can't easily use it
+        in GUI.
+
+        Parameters
+        ----------
+        name: str
+            Pretty-formatted name of persona to talk to.
+        fname: str
+            If not empty, this will be where manager will save the full
+            transcript when done. This should just be the file name, not the
+            full path.
+        download_if_necessary: bool
+        """
+        try:
+            _ = self.start_conversation(name, download_if_necessary)
+            yield
+        finally:
+            self.end_conversation(fname=fname)
+
+    @staticmethod
+    def format_conversation(text, gpt_color='black'):
+        """Add some string formatting to a conversation: display names and
+        initial summary in bold and optionally change the color of
+        gpt3-generated responses. This doesn't print anything - it just
+        returns an updated string.
+
+        Parameters
+        ----------
+        text: str or tuple[str]
+            Conversation consisting of an initial summary followed by
+            exchanges between "Me" and `name`. You can pass in a single string
+            or the (prompt, response) tuple returned by self.query().
+        name: str
+            Pretty formatted version of the conversation persona's name
+            (title-case, no underscores).
+        gpt_color: str
+            Control the color of your gpt3 conversational partner's lines.
+            Default is the same as the user, but you can change it if you want
+            more distinct outputs.
+
+        Returns
+        -------
+        str
+        """
+
+        def _format(line, color='black'):
+            if not line: return line
+            name, _, line = line.partition(':')
+            # Bold's stop character also resets color so we need to color the
+            # chunks separately.
+            return colored(bold(name + ':'), color) + colored(line, color)
+
+        if listlike(text): text = ' '.join(text)
+        summary, *lines = text.splitlines()
+        name = [name for name, n in
+                Counter(line.split(':')[0]
+                        for line in lines if ':' in line).most_common(2)
+                if name != 'Me'][0]
+        formatted_lines = [bold(summary)]
+        prev_is_me = True
+        for line in lines:
+            if line.startswith(name + ':'):
+                line = _format(line, gpt_color)
+                prev_is_me = False
+            elif line.startswith('Me: ') or prev_is_me:
+                line = _format(line)
+                prev_is_me = True
+            formatted_lines.append(line)
+        return '\n'.join(formatted_lines)
+
+    def __contains__(self, name):
+        """
+        Parameters
+        ----------
+        name: str
+            Pretty-formatted version (no underscores).
+        """
+        return self.process_name(name) in self.name2base
 
 
 def print_response(prompt, response):
