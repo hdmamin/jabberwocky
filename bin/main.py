@@ -176,9 +176,12 @@ def persona_select_callback(sender, data):
     CONV_MANAGER.start_conversation(name, download_if_necessary=False)
     delete_item('conversation_img')
     add_image('conversation_img', str(CONV_MANAGER.current_img_path),
-              parent='conv_options_window',
+              parent='conv_options_window', before='summary_text',
               **img_dims(CONV_MANAGER.current_img_path,
-                         height=app.height[.5] - 8*app.pad))
+                         height=app.heights[.5] - 8*app.pad))
+    add_same_line(parent='conv_options_window', before='summary_text')
+    CHUNKER.add('summary', CONV_MANAGER.current_summary)
+    set_value('summary_text', CHUNKER.get('summary', chunked=True))
 
 
 def query_callback(sender, data):
@@ -685,9 +688,14 @@ class App:
                             callback=persona_select_callback, callback_data={})
 
             add_spacing(count=2)
+            # add_table('persona_table')
             add_image('conversation_img', str(CONV_MANAGER.current_img_path),
                       **img_dims(CONV_MANAGER.current_img_path,
                                  height=self.heights[.5] - 8*self.pad))
+            add_same_line()
+            CHUNKER.add('summary', CONV_MANAGER.current_summary, max_chars=38)
+            add_text('summary_text',
+                     default_value=CHUNKER.get('summary', chunked=True))
 
     def build(self):
         self.primary_window()

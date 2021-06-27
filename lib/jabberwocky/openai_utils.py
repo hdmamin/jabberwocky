@@ -433,6 +433,7 @@ class ConversationManager:
         # when we end a conversation. current_persona is the processed name
         # (i.e. lowercase w/ underscores).
         self.current_persona = ''
+        self.current_summary = ''
         self.current_img_path = ''
         self.running_prompt = ''
 
@@ -486,9 +487,17 @@ class ConversationManager:
         self.current_persona = processed_name
         self.current_img_path = self.name2img_path[processed_name]
         self.running_prompt = self.name2base[processed_name]
+        # This one is not returned. Info would be a bit repetitive.
+        self.current_summary = self._name2summary(processed_name)
         return (self.current_persona,
                 self.running_prompt,
                 self.current_img_path)
+
+    def _name2summary(self, name):
+        if '_' not in name: name = self.process_name(name)
+        base = self.name2base[name]
+        intro = sent_tokenize(base)[0]
+        return base.replace(intro, '').strip()
 
     def end_conversation(self, fname=''):
         """Resets several variables when a conversation is over. This is also
@@ -505,6 +514,7 @@ class ConversationManager:
         if fname:
             save(self.running_prompt, self.conversation_dir/fname)
         self.running_prompt = ''
+        self.current_summary = ''
         self.current_persona = ''
         self.current_img_path = ''
 

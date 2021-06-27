@@ -873,10 +873,26 @@ X -dynamically update image based on selected persona
 6/27/21
 -------
 X -adjust window size computations to better account for menu
+X -add current_summary prop in conv_manager
+~ -allow adding new persona
+    UPDATE: added button and textbox, no functionality yet though.
+X -make image smaller
+X -add bio next to image
+    X -update when persona changes
+X -move query and read widgets to left window
+    UPDATE: done, but considering moving back now that I made image much smaller. Consistent UI would be nice.
 -adjust name formatting to better pretty-format initials (e.g. TJ, JK, AJ)
 -start trying to get conversation query button to work
--look through new windows for old names/callback_data params that need to be updated
--allow adding new persona
+~ -look through new windows for old names/callback_data params that need to be updated
+    UPDATE: cleaned up a few old unnecessary lines
+-flesh out owneraccess decorator
+
+6/28/21
+-------
+-debug: why is image width not staying constant for different personas?
+    -tune text max_chars for bio (fix after image issue since it's affected by that)
+-adjust name formatting to better handle initials (TJ, JK)
+-start trying to get conversation query button to work
 -flesh out owneraccess decorator
 
 -------------------------------------------------------------------------------
