@@ -178,7 +178,7 @@ def persona_select_callback(sender, data):
     add_image('conversation_img', str(CONV_MANAGER.current_img_path),
               parent='conv_options_window',
               **img_dims(CONV_MANAGER.current_img_path,
-                         width=app.widths[.5] - 8*app.pad))
+                         height=app.height[.5] - 8*app.pad))
 
 
 def query_callback(sender, data):
@@ -317,9 +317,8 @@ def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None):
 
 
 def resize_callback(sender):
+    # Resize callback is one of the few to not accept data.
     width, height = get_main_window_size()
-    # Resize callback is one of the few to not accept data. We have to find app
-    # var in the global scope.
     app.recompute_dimensions(width, height)
     windows = ['conv_window', 'default_window', 'default_options_window',
                'conv_options_window']
@@ -339,7 +338,7 @@ def resize_callback(sender):
     # Images don't show up as children so we have to update them separately.
     img_size = _img_dims(get_item_width('conversation_img'),
                          get_item_height('conversation_img'),
-                         width=app.widths[.5] - 8*app.pad)
+                         height=app.heights[.5] - 8*app.pad)
     set_item_width('conversation_img', img_size['width'])
     set_item_height('conversation_img', img_size['height'])
 
@@ -388,11 +387,30 @@ class App:
         pcts = getattr(self, f'{mode}_pcts')
         # Relies on us using a quadrant grid layout. Left/top items need to
         # allow for 3 padding occurrences while right/bottom items only need to
-        # account for 2.
-        return {p: int((dim - ((3-i)*self.pad)) * p)
-                for i, p in enumerate(pcts)}
+        # account for 2. Height computations are slightly different due to
+        # global menu bar.
+        # pct2size = {p: int((dim - ((3-i)*self.pad)) * p)
+        #             for i, p in enumerate(pcts)}
+        # if mode == 'height':
+        #     pct2size = {k: v - self.menu_height for k, v in pct2size.items()}
+        # return pct2size
+
+        pct2size = {}
+        is_height = mode == 'height'
+        for i, p in enumerate(pcts):
+            size = dim - ((3-i)*self.pad) - self.menu_height*is_height
+            pct2size[p] = int(size * p)
+        return pct2size
 
     def recompute_dimensions(self, width, height):
+        """
+        Parameters
+        ----------
+        width: int
+            Global window width.
+        height: int
+            Global window height.
+        """
         self.widths = self._recompute_dimensions(width, mode='width')
         self.heights = self._recompute_dimensions(height, mode='height')
         self.pos = self._recompute_positions()
@@ -451,7 +469,7 @@ class App:
 
     def left_column(self):
         with window('default_window', width=self.widths[.5],
-                    height=self.heights[1.] - self.pad, x_pos=self.pad,
+                    height=self.heights[1.], x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True):
             ###################################################################
             # Default window (1 time queries)
@@ -513,19 +531,25 @@ class App:
         # Conversation Window
         #######################################################################
         with window('conv_window', width=self.widths[.5],
-                    height=self.heights[1.] - self.pad, x_pos=self.pad,
+                    height=self.heights[1.], x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
             CONV_MANAGER.start_conversation('Barack Obama')
+            add_button('conv_query_btn', label='Query',
+                       callback=query_callback,
+                       callback_data={'target_id': 'response_text',
+                                      'read_checkbox_id': 'read_response',
+                                      'interrupt_id': 'interrupt_checkbox',
+                                      'query_msg_id': 'query_progress_msg'})
+            add_same_line()
+            add_checkbox('conv_read_response', label='read response',
+                         default_value=True)
 
-            with label_above('conv_text'):
-                add_input_text('conv_text', default_value='', multiline=True,
-                               width=self.widths[.5] - 8*self.pad,
-                               height=self.heights[1])
-            # set_key_press_callback(text_edit_callback)
-
-            # set_key_press_callback(text_edit_callback)
-            # We need to set initial dims before updating in resize_callback
-            # otherwise we'll get a divide by zero error.
+            # Just tweaked height until it seemed to do what I want (no
+            # vertical scroll w/ default window size). Not sure how to
+            # calculate precisely what I want (unknown height of query button).
+            add_input_text('conv_text', label='', default_value='',
+                           multiline=True, width=self.widths[.5] - 8*self.pad,
+                           height=self.heights[1] - 16*self.pad)
 
     def right_column(self):
         with window('default_options_window', width=self.widths[.5],
@@ -651,28 +675,19 @@ class App:
                     height=self.heights[1.],
                     x_pos=self.widths[.5] + 2*self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
-            add_button('conv_query_btn', label='Query',
-                       callback=query_callback,
-                       callback_data={'target_id': 'response_text',
-                                      'read_checkbox_id': 'read_response',
-                                      'interrupt_id': 'interrupt_checkbox',
-                                      'query_msg_id': 'query_progress_msg'})
-            add_same_line()
-            add_checkbox('conv_read_response', label='read response',
-                         default_value=True)
 
-            with label_above('persona_list', 'Personas:'):
-                add_listbox(
-                    'persona_list', items=CONV_MANAGER.personas(),
-                    num_items=len(CONV_MANAGER.personas()),
-                    callback=persona_select_callback,
-                    callback_data={}
-                )
+            add_button('add_persona_btn', label='Add Persona')
+            add_input_text('add_persona_text', label='')
+            with label_above('persona_list', 'Existing Personas'):
+                add_listbox('persona_list',
+                            items=CONV_MANAGER.personas(),
+                            num_items=len(CONV_MANAGER.personas()),
+                            callback=persona_select_callback, callback_data={})
 
             add_spacing(count=2)
             add_image('conversation_img', str(CONV_MANAGER.current_img_path),
                       **img_dims(CONV_MANAGER.current_img_path,
-                                 width=self.widths[.5] - 8*self.pad))
+                                 height=self.heights[.5] - 8*self.pad))
 
     def build(self):
         self.primary_window()

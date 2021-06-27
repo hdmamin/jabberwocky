@@ -872,7 +872,7 @@ X -dynamically update image based on selected persona
 
 6/27/21
 -------
--adjust window size computations to better account for menu
+X -adjust window size computations to better account for menu
 -adjust name formatting to better pretty-format initials (e.g. TJ, JK, AJ)
 -start trying to get conversation query button to work
 -look through new windows for old names/callback_data params that need to be updated
