@@ -415,7 +415,7 @@ class PromptManager:
 
 class ConversationManager:
     """Similar to PromptManager but designed for ongoing conversations. This
-    currently references just a single prompt: conv_proto.
+    currently references just a single prompt: conversation.
     """
 
     img_exts = {'.jpg', '.jpeg', '.png'}
@@ -437,7 +437,7 @@ class ConversationManager:
         self.running_prompt = ''
 
         # Load prompt, default query kwargs, and existing personas.
-        self._kwargs = load_prompt('conv_proto')
+        self._kwargs = load_prompt('conversation')
         self._base_prompt = self._kwargs.pop('prompt')
         name2summary, self.name2img_path = self._load_personas()
         self.name2base = {}

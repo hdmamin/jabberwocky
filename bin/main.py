@@ -23,7 +23,6 @@ MANAGER = PromptManager(verbose=False, skip_tasks=['conv_proto'])
 CONV_MANAGER = ConversationManager(verbose=False)
 NAME2TASK = IndexedDict({
     'Punctuate': 'punctuate',
-    'Conversation': 'conversation',
     'Translate': 'translate',
     'Default': 'default',
     'Debate': 'debate',
@@ -40,6 +39,7 @@ NAME2TASK = IndexedDict({
 MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M', 'naive']
 SPEAKER = Speaker(newline_pause=400)
 CHUNKER = GuiTextChunker(max_chars=70)
+
 
 @ctx_manager
 def label_above(name, visible_name=None):
@@ -169,6 +169,16 @@ def task_select_callback(sender, data):
         if k == 'stop' and isinstance(v, list):
             v = '\n'.join(v)
         set_value(k, v)
+
+
+def persona_select_callback(sender, data):
+    name = CONV_MANAGER.personas()[get_value(sender)]
+    CONV_MANAGER.start_conversation(name, download_if_necessary=False)
+    delete_item('conversation_img')
+    add_image('conversation_img', str(CONV_MANAGER.current_img_path),
+              parent='conv_options_window',
+              **img_dims(CONV_MANAGER.current_img_path,
+                         width=app.widths[.5] - 8*app.pad))
 
 
 def query_callback(sender, data):
@@ -311,7 +321,9 @@ def resize_callback(sender):
     # Resize callback is one of the few to not accept data. We have to find app
     # var in the global scope.
     app.recompute_dimensions(width, height)
-    for i, id_ in enumerate(['input_window', 'options_window']):
+    windows = ['conv_window', 'default_window', 'default_options_window',
+               'conv_options_window']
+    for i, id_ in zip([0, 0, 1, 1], windows):
         set_item_width(id_, app.widths[.5])
         set_item_height(id_, app.heights[1.])
         set_window_pos(id_, *app.pos[0][i])
@@ -332,6 +344,24 @@ def resize_callback(sender):
     set_item_height('conversation_img', img_size['height'])
 
 
+def menu_conversation_callback(sender, data):
+    show_item('conv_window')
+    show_item('conv_options_window')
+    hide_item('default_window')
+    hide_item('default_options_window')
+    set_item_label('conv_menu_choice', 'Conversation\t[x]')
+    set_item_label('default_menu_choice', 'Default')
+
+
+def menu_default_callback(sender, data):
+    show_item('default_window')
+    show_item('default_options_window')
+    hide_item('conv_window')
+    hide_item('conv_options_window')
+    set_item_label('default_menu_choice', 'Default\t[x]')
+    set_item_label('conv_menu_choice', 'Conversation')
+
+
 class App:
 
     def __init__(self, width=1_200, height=760, font_size=22,
@@ -345,6 +375,7 @@ class App:
         self.widths = {}
         self.heights = {}
         self.pos = []
+        self.menu_height = 25
         # These are populated in self.left_column().
         self.query_kwarg_ids = []
         self.recompute_dimensions(width, height)
@@ -367,10 +398,9 @@ class App:
         self.pos = self._recompute_positions()
 
     def _recompute_positions(self):
-        # [0][0] is top left, [0][1] is top right, etc.
         pos = [
-            [(self.pad, self.pad),
-             (self.widths[.5] + 2*self.pad, self.pad)],
+            [(self.pad, self.pad + self.menu_height),
+             (self.widths[.5] + 2*self.pad, self.pad + self.menu_height)],
             [(self.pad, self.heights[.5] + 2*self.pad),
              (self.widths[.5] + 2*self.pad, self.heights[.5] + 2*self.pad)]
         ]
@@ -406,24 +436,26 @@ class App:
         kwargs['prompt'] = self.get_prompt_text()
         return kwargs
 
-    def menu(self):
-        with window('menu_window'):
-            with menu_bar('menu_bar'):
-                with menu('Main'):
-                    add_menu_item('Save')
-                with menu('Settings'):
-                    add_menu_item('Preferences')
-
     def primary_window(self):
         # Just here to suppress the default background and its un-settable
         # color. Do not delete.
         with window('primary_window'):
-            pass
+            with menu_bar('menu_bar'):
+                with menu('Settings'):
+                    with menu('Mode'):
+                        add_menu_item('default_menu_choice',
+                                      label='Default\t[x]',
+                                      callback=menu_default_callback)
+                        add_menu_item('conv_menu_choice', label='Conversation',
+                                      callback=menu_conversation_callback)
 
     def left_column(self):
-        with window('input_window', width=self.widths[.5],
+        with window('default_window', width=self.widths[.5],
                     height=self.heights[1.] - self.pad, x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True):
+            ###################################################################
+            # Default window (1 time queries)
+            ###################################################################
             add_button('record_btn', label='Record',
                        callback_data={'show_during_ids': ['record_msg'],
                                       'target_id': 'transcribed_text'},
@@ -463,7 +495,7 @@ class App:
                                multiline=True,
                                width=self.widths[.5] - 8*self.pad, height=300)
             set_key_press_callback(text_edit_callback)
-            add_spacing(count=3)
+            add_spacing(count=2)
             add_text('Response')
             with tooltip('Response', 'Response_tooltip'):
                 add_text('GPT3\'s response will be shown\nbelow after you hit '
@@ -477,34 +509,33 @@ class App:
                                multiline=True,
                                width=self.widths[.5] - 2*self.pad, height=300)
 
-            # TODO: rm
-            add_checkbox('tmp_testing',
-                         callback=lambda x: show_item('conv_window')
-                                            if get_value(x) else None)
-
+        #######################################################################
+        # Conversation Window
         #######################################################################
         with window('conv_window', width=self.widths[.5],
                     height=self.heights[1.] - self.pad, x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
             CONV_MANAGER.start_conversation('Barack Obama')
 
-            # Label is displayed next to input unless we manually suppress it.
             with label_above('conv_text'):
                 add_input_text('conv_text', default_value='', multiline=True,
-                               width=self.widths[.5] - 8*self.pad, height=600)
+                               width=self.widths[.5] - 8*self.pad,
+                               height=self.heights[1])
             # set_key_press_callback(text_edit_callback)
 
+            # set_key_press_callback(text_edit_callback)
             # We need to set initial dims before updating in resize_callback
             # otherwise we'll get a divide by zero error.
-            add_image('conversation_img', str(CONV_MANAGER.current_img_path),
-                      **img_dims(CONV_MANAGER.current_img_path,
-                                 width=self.widths[.5] - 8*self.pad))
 
     def right_column(self):
-        with window('options_window', width=self.widths[.5],
+        with window('default_options_window', width=self.widths[.5],
                     height=self.heights[1.],
                     x_pos=self.widths[.5] + 2*self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True):
+
+            ###################################################################
+            # Default Options Window
+            ###################################################################
             add_button('query_btn', label='Query', callback=query_callback,
                        callback_data={'target_id': 'response_text',
                                       'read_checkbox_id': 'read_response',
@@ -535,9 +566,9 @@ class App:
 
             with tooltip('task_list', 'task_list_tooltip'):
                 add_text('Select a task to perform.\nAll of these accept some '
-                         'input\ntext and produce new text,\noften in response '
-                         'to or\nbased on the input. Tasks\nprefixed by '
-                         '"(debug)" are\nunaffected by input.')
+                         'input\ntext and produce new text,\noften in '
+                         'response to or\nbased on the input. Tasks\nprefixed '
+                         'by "(debug)" are\nunaffected by input.')
 
             # Set default values for no specific task. These will be updated
             # once a task is selected.
@@ -613,9 +644,38 @@ class App:
                          'braces in here:\nthis will be replaced by\nyour '
                          'input once you provide it.')
 
+        #######################################################################
+        # Conversation Options Window
+        #######################################################################
+        with window('conv_options_window', width=self.widths[.5],
+                    height=self.heights[1.],
+                    x_pos=self.widths[.5] + 2*self.pad,
+                    y_pos=self.pad, no_resize=True, no_move=True, show=False):
+            add_button('conv_query_btn', label='Query',
+                       callback=query_callback,
+                       callback_data={'target_id': 'response_text',
+                                      'read_checkbox_id': 'read_response',
+                                      'interrupt_id': 'interrupt_checkbox',
+                                      'query_msg_id': 'query_progress_msg'})
+            add_same_line()
+            add_checkbox('conv_read_response', label='read response',
+                         default_value=True)
+
+            with label_above('persona_list', 'Personas:'):
+                add_listbox(
+                    'persona_list', items=CONV_MANAGER.personas(),
+                    num_items=len(CONV_MANAGER.personas()),
+                    callback=persona_select_callback,
+                    callback_data={}
+                )
+
+            add_spacing(count=2)
+            add_image('conversation_img', str(CONV_MANAGER.current_img_path),
+                      **img_dims(CONV_MANAGER.current_img_path,
+                                 width=self.widths[.5] - 8*self.pad))
+
     def build(self):
         self.primary_window()
-        self.menu()
         self.left_column()
         self.right_column()
 

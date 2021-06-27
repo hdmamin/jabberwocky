@@ -858,10 +858,24 @@ X -add new window/tab to dearpygui
 
 6/26/21
 -------
--continue fleshing out conversationmanager window
-    -figure out better way to select which window is shown (menu bar at top? Currently just have a checkbox in main window for testing purposes but that's definitely not a long term solution)
-    -do we need a different kwargs window or can we figure out a way to adjust the existing one?
-        -in fact, might we be able to keep a single interface and obscure any differences between conversation mode and single response mode from user? Not sure yet if that's even desirable.
+~ -continue fleshing out conversationmanager window
+    UPDATE: built out basics of new conv window AND new options window (don't worry about code duplication for now, just get something working)
+    X -figure out better way to select which window is shown (menu bar at top? Currently just have a checkbox in main window for testing purposes but that's definitely not a long term solution)
+        UPDATE: Added menu bar that lets us select different modes.
+    ~ -do we need a different kwargs window or can we figure out a way to adjust the existing one?
+        ~ -in fact, might we be able to keep a single interface and obscure any differences between conversation mode and single response mode from user? Not sure yet if that's even desirable.
+        UPDATE: for now, just focus on building new functionality that works. Maybe later we can refactor to be more elegant, but let's get something working first.
+X -delete old conv prompt and rename new one
+X -add persona selection menu
+X -dynamically update image based on selected persona
+-flesh out owneraccess decorator
+
+6/27/21
+-------
+-adjust window size computations to better account for menu
+-adjust name formatting to better pretty-format initials (e.g. TJ, JK, AJ)
+-start trying to get conversation query button to work
+-look through new windows for old names/callback_data params that need to be updated
 -flesh out owneraccess decorator
 
 -------------------------------------------------------------------------------
