@@ -876,6 +876,7 @@ X -dynamically update image based on selected persona
 -adjust name formatting to better pretty-format initials (e.g. TJ, JK, AJ)
 -start trying to get conversation query button to work
 -look through new windows for old names/callback_data params that need to be updated
+-allow adding new persona
 -flesh out owneraccess decorator
 
 -------------------------------------------------------------------------------
