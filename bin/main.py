@@ -172,16 +172,52 @@ def task_select_callback(sender, data):
 
 
 def persona_select_callback(sender, data):
+    """Basically the same as update_persona_info() except this also starts a
+    conversation in the ConversationManager. That step doesn't need to be done
+    every time we resize the page, but the other steps do.
+    """
     name = CONV_MANAGER.personas()[get_value(sender)]
     CONV_MANAGER.start_conversation(name, download_if_necessary=False)
-    delete_item('conversation_img')
-    add_image('conversation_img', str(CONV_MANAGER.current_img_path),
-              parent='conv_options_window', before='summary_text',
-              **img_dims(CONV_MANAGER.current_img_path,
-                         height=app.heights[.5] - 8*app.pad))
-    add_same_line(parent='conv_options_window', before='summary_text')
-    CHUNKER.add('summary', CONV_MANAGER.current_summary)
-    set_value('summary_text', CHUNKER.get('summary', chunked=True))
+    update_persona_info()
+
+
+def update_persona_info(img_name='conversation_img',
+                        parent='conv_options_window', text_name='summary_text',
+                        text_key='summary'):
+    """Update and resize persona bio and summary (characters per line changes
+    for the latter). This operates in the conv_options_window.
+
+    Parameters
+    ----------
+    img_name
+    parent
+    text_name
+    text_key
+
+    Returns
+    -------
+
+    """
+    delete_item(img_name)
+    dims = img_dims(CONV_MANAGER.current_img_path,
+                    width=(app.widths[.5] - app.pad) // 2)
+    add_image(img_name, str(CONV_MANAGER.current_img_path), parent=parent,
+              before=text_name, **dims)
+    add_same_line(parent=parent, before=text_name)
+    chunked = CHUNKER.add(text_key, CONV_MANAGER.current_summary,
+                          max_chars=dims['width'] // 9)
+    set_value(text_name, chunked)
+
+
+def add_persona_callback(sender, data):
+    """
+    data keys:
+        source_id (str: name of text input where user enters a new name)
+        target_id (str: name of listbox to update after downloading new data)
+    """
+    name = get_value(data['source_id'])
+    CONV_MANAGER.add_persona(name)
+    configure_item(data['target_id'], items=CONV_MANAGER.personas())
 
 
 def query_callback(sender, data):
@@ -339,11 +375,13 @@ def resize_callback(sender):
                 set_item_width(child, app.widths[.5] - 8*app.pad)
 
     # Images don't show up as children so we have to update them separately.
-    img_size = _img_dims(get_item_width('conversation_img'),
-                         get_item_height('conversation_img'),
-                         height=app.heights[.5] - 8*app.pad)
-    set_item_width('conversation_img', img_size['width'])
-    set_item_height('conversation_img', img_size['height'])
+    if is_item_visible('conv_options_window'):
+        update_persona_info()
+    # img_size = _img_dims(get_item_width('conversation_img'),
+    #                      get_item_height('conversation_img'),
+    #                      height=app.heights[.5] - 8*app.pad)
+    # set_item_width('conversation_img', img_size['width'])
+    # set_item_height('conversation_img', img_size['height'])
 
 
 def menu_conversation_callback(sender, data):
@@ -679,23 +717,23 @@ class App:
                     x_pos=self.widths[.5] + 2*self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
 
-            add_button('add_persona_btn', label='Add Persona')
+            add_button('add_persona_btn', label='Add Persona',
+                       callback=add_persona_callback,
+                       callback_data={'source_id': 'add_persona_text',
+                                      'target_id': 'persona_list'})
             add_input_text('add_persona_text', label='')
             with label_above('persona_list', 'Existing Personas'):
                 add_listbox('persona_list',
                             items=CONV_MANAGER.personas(),
                             num_items=len(CONV_MANAGER.personas()),
-                            callback=persona_select_callback, callback_data={})
+                            callback=persona_select_callback)
 
             add_spacing(count=2)
-            # add_table('persona_table')
             add_image('conversation_img', str(CONV_MANAGER.current_img_path),
                       **img_dims(CONV_MANAGER.current_img_path,
-                                 height=self.heights[.5] - 8*self.pad))
-            add_same_line()
-            CHUNKER.add('summary', CONV_MANAGER.current_summary, max_chars=38)
-            add_text('summary_text',
-                     default_value=CHUNKER.get('summary', chunked=True))
+                                 width=(self.widths[.5] - self.pad) // 2))
+            add_text('summary_text', default_value='')
+            update_persona_info()
 
     def build(self):
         self.primary_window()

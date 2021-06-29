@@ -889,11 +889,26 @@ X -move query and read widgets to left window
 
 6/28/21
 -------
--debug: why is image width not staying constant for different personas?
-    -tune text max_chars for bio (fix after image issue since it's affected by that)
+X -debug: why is image width not staying constant for different personas?
+    UPDATE: refactored into helper function to take care of this.
+    X -tune text max_chars for bio (fix after image issue since it's affected by that)
+        UPDATE: Also recomputed chunked line length on resize.
+X -add_persona button
+    UPDATE: also made it update the listbox.
 -adjust name formatting to better handle initials (TJ, JK)
 -start trying to get conversation query button to work
 -flesh out owneraccess decorator
+
+6/29/21
+-------
+-update convmanager to handle pages w/out "born" in summary (realized that's more common than I thought - maybe all dead and fictional people?)
+-add progress message/widget when downloading new persona
+-maybe move query/read response widgets back to options panel now that image isn't as tall?
+    -maybe move summary under photo and make it twice as wide? Gets pretty long sometimes with how narrow it is.
+-adjust name formatting to better handle initials (TJ, JK); maybe remember user capitalization (ex: Neil deGrasse Tyson middle name has unusual casing)
+-start trying to get conversation query button to work
+-flesh out owneraccess decorator
+
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
