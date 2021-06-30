@@ -203,9 +203,8 @@ def update_persona_info(img_name='conversation_img',
                     width=(app.widths[.5] - app.pad) // 2)
     add_image(img_name, str(CONV_MANAGER.current_img_path), parent=parent,
               before=text_name, **dims)
-    add_same_line(parent=parent, before=text_name)
     chunked = CHUNKER.add(text_key, CONV_MANAGER.current_summary,
-                          max_chars=dims['width'] // 9)
+                          max_chars=dims['width'] // 4.5)
     set_value(text_name, chunked)
 
 
@@ -215,9 +214,13 @@ def add_persona_callback(sender, data):
         source_id (str: name of text input where user enters a new name)
         target_id (str: name of listbox to update after downloading new data)
     """
+    for id_ in data.get('show_during_ids', []):
+        show_item(id_)
     name = get_value(data['source_id'])
     CONV_MANAGER.add_persona(name)
     configure_item(data['target_id'], items=CONV_MANAGER.personas())
+    for id_ in data.get('show_during_ids', []):
+        hide_item(id_)
 
 
 def query_callback(sender, data):
@@ -574,16 +577,9 @@ class App:
         with window('conv_window', width=self.widths[.5],
                     height=self.heights[1.], x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
-            CONV_MANAGER.start_conversation('Barack Obama')
-            add_button('conv_query_btn', label='Query',
-                       callback=query_callback,
-                       callback_data={'target_id': 'response_text',
-                                      'read_checkbox_id': 'read_response',
-                                      'interrupt_id': 'interrupt_checkbox',
-                                      'query_msg_id': 'query_progress_msg'})
-            add_same_line()
-            add_checkbox('conv_read_response', label='read response',
-                         default_value=True)
+            if len(CONV_MANAGER) == 0:
+                CONV_MANAGER.add_persona('Barack Obama')
+            CONV_MANAGER.start_conversation(CONV_MANAGER.personas()[0])
 
             # Just tweaked height until it seemed to do what I want (no
             # vertical scroll w/ default window size). Not sure how to
@@ -717,10 +713,27 @@ class App:
                     x_pos=self.widths[.5] + 2*self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
 
+            # Make query.
+            add_button('conv_query_btn', label='Query',
+                       callback=query_callback,
+                       callback_data={'target_id': 'response_text',
+                                      'read_checkbox_id': 'read_response',
+                                      'interrupt_id': 'interrupt_checkbox',
+                                      'query_msg_id': 'query_progress_msg'})
+            add_same_line()
+            add_checkbox('conv_read_response', label='read response',
+                         default_value=True)
+
+            # Select a persona.
             add_button('add_persona_btn', label='Add Persona',
                        callback=add_persona_callback,
                        callback_data={'source_id': 'add_persona_text',
-                                      'target_id': 'persona_list'})
+                                      'target_id': 'persona_list',
+                                      'show_during_ids': ['add_persona_msg']})
+            add_same_line()
+            add_text('add_persona_msg',
+                     default_value='Generating new persona...', show=False)
+            add_spacing(count=2)
             add_input_text('add_persona_text', label='')
             with label_above('persona_list', 'Existing Personas'):
                 add_listbox('persona_list',

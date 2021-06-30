@@ -428,6 +428,8 @@ class ConversationManager:
         self.conversation_dir = self.data_dir/'conversations'
         self.log_dir = self.data_dir/'logs'
         self.log_path = Path(self.log_dir)/'conversation_query_kwargs.json'
+        for dir_ in (self.persona_dir, self.conversation_dir, self.log_dir):
+            os.makedirs(dir_, exist_ok=True)
 
         # These attributes will be updated when we load a persona and cleared
         # when we end a conversation. current_persona is the processed name
@@ -442,7 +444,6 @@ class ConversationManager:
         self._base_prompt = self._kwargs.pop('prompt')
         name2summary, self.name2img_path = self._load_personas()
         self.name2base = {}
-        self.name2wiki_name = {}
         for k, v in name2summary.items():
             self.update_persona_dicts(k, v, self.name2img_path[k])
 
@@ -518,7 +519,7 @@ class ConversationManager:
         self.current_persona = ''
         self.current_img_path = ''
 
-    def add_persona(self, name, return_data=False, strict=True):
+    def add_persona(self, name, return_data=False):
         """Download materials for a new persona. This saves their wikipedia
         summary and profile photo in a directory with their name inside the
         persona_dir.
@@ -527,26 +528,17 @@ class ConversationManager:
         summary, _, img_path = wiki_data(
             name, img_dir=self.persona_dir/processed_name, fname='profile'
         )
-        if strict and '(born' not in summary:
-            raise ValueError('Expected summary to contain "(born". Summary '
-                             f'may be malformed: {summary}')
         save(summary, self.persona_dir/processed_name/'summary.txt')
         self.update_persona_dicts(processed_name, summary, img_path)
         if return_data: return summary, img_path
 
     def update_persona_dicts(self, processed_name, summary, img_path):
         """Helper to update our various name2{something} dicts."""
-        self.name2wiki_name[processed_name] = self._name_from_summary(summary)
         self.name2img_path[processed_name] = img_path
         self.name2base[processed_name] = self._base_prompt.format(
-            name=self.name2wiki_name[processed_name],
+            name=self.process_name(processed_name, inverse=True),
             summary=summary
         )
-
-    def _name_from_summary(self, summary):
-        """Extract (pretty) name from a wikipedia summary. Logic is a little
-        fragile - probably doesn't work for fictional characters."""
-        return summary.partition('(born')[0].strip()
 
     def process_name(self, name, inverse=False):
         """Convert a name to pretty format (title case, no underscores) and
@@ -564,7 +556,7 @@ class ConversationManager:
             return name.replace('_', ' ').title()
         return name.lower().replace(' ', '_')
 
-    def personas(self, pretty=True):
+    def personas(self, pretty=True, sort=True):
         """Quick way to see a list of all available personas.
 
         Returns
@@ -572,7 +564,8 @@ class ConversationManager:
         list[str]
         """
         names = list(self.name2base)
-        if pretty: return [self.process_name(name, True) for name in names]
+        if pretty: names = [self.process_name(name, True) for name in names]
+        if sort: names = sorted(names)
         return names
 
     def kwargs(self, name='', fully_resolved=True, return_prompt=False,
@@ -742,6 +735,9 @@ class ConversationManager:
             Pretty-formatted version (no underscores).
         """
         return self.process_name(name) in self.name2base
+
+    def __len__(self):
+        return len(self.name2base)
 
 
 def print_response(prompt, response):

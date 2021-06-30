@@ -901,11 +901,25 @@ X -add_persona button
 
 6/29/21
 -------
--update convmanager to handle pages w/out "born" in summary (realized that's more common than I thought - maybe all dead and fictional people?)
--add progress message/widget when downloading new persona
--maybe move query/read response widgets back to options panel now that image isn't as tall?
-    -maybe move summary under photo and make it twice as wide? Gets pretty long sometimes with how narrow it is.
+X -update convmanager to handle pages w/out "born" in summary (realized that's more common than I thought - maybe all dead and fictional people?)
+X -add progress message/widget when downloading new persona
+X -maybe move query/read response widgets back to options panel now that image isn't as tall?
+    X -maybe move summary under photo and make it twice as wide? Gets pretty long sometimes with how narrow it is.
+X -handle case where there are no existing personas
+    UPDATE: Made it easier to check by implementing __len__, then if 0 make gui download a default persona (Obama).
 -adjust name formatting to better handle initials (TJ, JK); maybe remember user capitalization (ex: Neil deGrasse Tyson middle name has unusual casing)
+-start trying to get conversation query button to work
+-flesh out owneraccess decorator
+
+6/30/21
+-------
+-look more into how (if?) we can center align image (could make it full width but then height would be giant in many cases). add_dummy() may be the closest we can get.
+-deal w/ listbox height issues (seems frozen at whatever the initial height is, which is undesirable when we add many. And if we start w/ many there's no scrolling which is annoying.)
+    -see if we can change height
+    -try radio buttons instead?
+    -try menu instead?
+-test on fictional character (should be possible now that I've removed references to "born" in summary)
+-adjust name formatting to better handle initials (TJ, JK); maybe remember user capitalization (ex: Neil deGrasse Tyson middle name has unusual casing). Also noticed Dr Seuss worked when I first downloaded it but on subsequent gui runs it was loaded simply as "Dr"
 -start trying to get conversation query button to work
 -flesh out owneraccess decorator
 
