@@ -20,7 +20,11 @@ from jabberwocky.utils import most_recent_filepath, img_dims, _img_dims
 
 os.chdir('../')
 MANAGER = PromptManager(verbose=False, skip_tasks=['conv_proto'])
-CONV_MANAGER = ConversationManager(verbose=False)
+# TODO: eventually make all personas available but loading is faster this way
+# which is nice during dev. Use > 1 to allow testing switching between
+# personas.
+CONV_MANAGER = ConversationManager('Barack Obama', 'Brandon Sanderson',
+                                   verbose=False)
 NAME2TASK = IndexedDict({
     'Punctuate': 'punctuate',
     'Translate': 'translate',
@@ -183,7 +187,7 @@ def persona_select_callback(sender, data):
 
 def update_persona_info(img_name='conversation_img',
                         parent='conv_options_window', text_name='summary_text',
-                        text_key='summary'):
+                        text_key='summary', dummy_name='img_dummy_spacer'):
     """Update and resize persona bio and summary (characters per line changes
     for the latter). This operates in the conv_options_window.
 
@@ -198,13 +202,17 @@ def update_persona_info(img_name='conversation_img',
     -------
 
     """
-    delete_item(img_name)
     dims = img_dims(CONV_MANAGER.current_img_path,
-                    width=(app.widths[.5] - app.pad) // 2)
+                    width=(app.widths[.5] - 2*app.pad) // 2)
+    set_item_width(dummy_name, app.widths[.5] // 4 - 4*app.pad)
+    add_same_line(parent=parent, before=img_name)
+    # Must delete image after previous updates.
+    # if does_item_exist(img_name):
+    delete_item(img_name)
     add_image(img_name, str(CONV_MANAGER.current_img_path), parent=parent,
               before=text_name, **dims)
     chunked = CHUNKER.add(text_key, CONV_MANAGER.current_summary,
-                          max_chars=dims['width'] // 4.5)
+                          max_chars=dims['width'] // 4)
     set_value(text_name, chunked)
 
 
@@ -377,14 +385,9 @@ def resize_callback(sender):
             if get_item_type(child).split('::')[-1] in change_types:
                 set_item_width(child, app.widths[.5] - 8*app.pad)
 
-    # Images don't show up as children so we have to update them separately.
+    # Images don't show up as children so we resize them separately.
     if is_item_visible('conv_options_window'):
         update_persona_info()
-    # img_size = _img_dims(get_item_width('conversation_img'),
-    #                      get_item_height('conversation_img'),
-    #                      height=app.heights[.5] - 8*app.pad)
-    # set_item_width('conversation_img', img_size['width'])
-    # set_item_height('conversation_img', img_size['height'])
 
 
 def menu_conversation_callback(sender, data):
@@ -736,15 +739,26 @@ class App:
             add_spacing(count=2)
             add_input_text('add_persona_text', label='')
             with label_above('persona_list', 'Existing Personas'):
+                # Num_items ensures height stays constant even if we add more
+                # personas. This does not need to be the current number of
+                # available personas.
                 add_listbox('persona_list',
                             items=CONV_MANAGER.personas(),
-                            num_items=len(CONV_MANAGER.personas()),
+                            num_items=5,
                             callback=persona_select_callback)
 
+            # Section info related to the active persona. We use a dummy
+            # element to effectively center the image, which doesn't seem to be
+            # natively supported (?).
             add_spacing(count=2)
-            add_image('conversation_img', str(CONV_MANAGER.current_img_path),
-                      **img_dims(CONV_MANAGER.current_img_path,
-                                 width=(self.widths[.5] - self.pad) // 2))
+            add_dummy(width=self.widths[.5] // 4, height=200,
+                      name='img_dummy_spacer')
+            # Don't worry about image or text kwargs much here - these are set
+            # in update_persona_info(). Oddly, adding spacing between image and
+            # text seems to break my dummy-powered centering method. Not a big
+            # deal, but don't try to add that here unless you plan on a more
+            # involved debugging session.
+            add_image('conversation_img', str(CONV_MANAGER.current_img_path))
             add_text('summary_text', default_value='')
             update_persona_info()
 

@@ -420,7 +420,19 @@ class ConversationManager:
 
     img_exts = {'.jpg', '.jpeg', '.png'}
 
-    def __init__(self, verbose=True, data_dir='./data'):
+    def __init__(self, *names, verbose=True, data_dir='./data'):
+        """
+        Parameters
+        ----------
+        names: str
+            Optionally specify 1 or more personas to load. These should be
+            pretty-formatted, e.g. "Barack Obama" rather than "barack_obama".
+            If None are provided, all available personas will be loaded.
+            Do not include periods (e.g. "TJ Dillashaw" rather than
+            "T.J. Dillashaw").
+        verbose
+        data_dir
+        """
         # Set directories for data storage, logging, etc.
         self.verbose = verbose
         self.data_dir = Path(data_dir)
@@ -442,17 +454,19 @@ class ConversationManager:
         # Load prompt, default query kwargs, and existing personas.
         self._kwargs = load_prompt('conversation')
         self._base_prompt = self._kwargs.pop('prompt')
-        name2summary, self.name2img_path = self._load_personas()
+        name2summary, self.name2img_path = self._load_personas(names)
         self.name2base = {}
         for k, v in name2summary.items():
             self.update_persona_dicts(k, v, self.name2img_path[k])
 
-    def _load_personas(self):
+    def _load_personas(self, names):
         """Load any stored summaries and image paths of existing personas."""
+        names = set(self.process_name(name) for name in names)
         name2summary = {}
         name2img_path = {}
         for path in self.persona_dir.iterdir():
-            if not path.is_dir(): continue
+            if not path.is_dir() or (names and path.stem not in names):
+                continue
             name2summary[path.stem] = load(path/'summary.txt')
             name2img_path[path.stem] = [p for p in path.iterdir()
                                         if p.suffix in self.img_exts][0]
@@ -542,7 +556,10 @@ class ConversationManager:
 
     def process_name(self, name, inverse=False):
         """Convert a name to pretty format (title case, no underscores) and
-        back.
+        back. The non-inverse method also removes periods (technically, you
+        shouldn't be including these to begin with, but it's not a serious
+        enough violation to throw an error) but note that inverse will NOT
+        re-insert periods.
 
         Parameters
         ----------
@@ -553,7 +570,7 @@ class ConversationManager:
             underscores.
         """
         if inverse:
-            return name.replace('_', ' ').title()
+            return name.replace('_', ' ').replace('.', '').title()
         return name.lower().replace(' ', '_')
 
     def personas(self, pretty=True, sort=True):

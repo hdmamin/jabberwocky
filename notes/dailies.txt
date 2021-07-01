@@ -913,17 +913,87 @@ X -handle case where there are no existing personas
 
 6/30/21
 -------
--look more into how (if?) we can center align image (could make it full width but then height would be giant in many cases). add_dummy() may be the closest we can get.
--deal w/ listbox height issues (seems frozen at whatever the initial height is, which is undesirable when we add many. And if we start w/ many there's no scrolling which is annoying.)
-    -see if we can change height
-    -try radio buttons instead?
-    -try menu instead?
--test on fictional character (should be possible now that I've removed references to "born" in summary)
--adjust name formatting to better handle initials (TJ, JK); maybe remember user capitalization (ex: Neil deGrasse Tyson middle name has unusual casing). Also noticed Dr Seuss worked when I first downloaded it but on subsequent gui runs it was loaded simply as "Dr"
+X -look more into how (if?) we can center align image (could make it full width but then height would be giant in many cases). add_dummy() may be the closest we can get.
+    UPDATE: yeah, add_dummy works.
+X -deal w/ listbox height issues (seems frozen at whatever the initial height is, which is undesirable when we add many. And if we start w/ many there's no scrolling which is annoying.)
+    X -see if we can change height
+    _ -try radio buttons instead?
+    _ -try menu instead?
+    UPDATE: fixed by setting num_items in listbox.
+X -test on fictional character (should be possible now that I've removed references to "born" in summary)
+    UPDATE: so far so good.
+X -allow ConvManager to pass in names at the start, like specifying tasks in PromptManager.
+~ -adjust name formatting to better handle initials (TJ, JK); maybe remember user capitalization (ex: Neil deGrasse Tyson middle name has unusual casing). 
+    UPDATE: inverse transform won't reinsert them but we can handle user-input names w/ periods. However, noticed downloading dillashaw only retrieved a summary, no photo. This happens too if we use wiki_data() directly so I don't think it's related but should investigate more.
+    X -Also noticed Dr Seuss worked when I first downloaded it but on subsequent gui runs it was loaded simply as "Dr". Check if that works now.
+        UPDATE: yes.
+X -add payment info to gpt3 api
+    UPDATE: 😬
 -start trying to get conversation query button to work
 -flesh out owneraccess decorator
 
+7/1/21
+------
+-investigate dillashaw photo download issue (does wiki page have no images? Were none of the names a close enough match?)
+    -if applicable, maybe adjust logic to choose a fallback if there's not a close enough match?
+    -or diff func to search for that person's face outside of wiki? Might be more reliable anyway.
+-start trying to get conversation query button to work
+-flesh out owneraccess decorator
 
+-------------------------------------------------------------------------------
+easy tasks for low energy days
+
+- artbreeder tutorial
+- lots of waiting docs in core.py
+- dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
+    -parent stack system
+    -callbacks
+    -value storage system
+-document session
+-document transcript methods
+-document textchunking class
+-port htools as_df
+
+-------------------------------------------------------------------------------
+backlog
+
+-maybe update converse contextmanager to have input baked in
+-refactor main.py (maybe a callbacks.py? Dearpygui OOP example also did things a bit differently (class for each element rather than a method for each), could try to change but probably too big of an overhaul given the small-ish payoff.)
+-experiment w/ prompt to summarize past conversation? (just in gpt3 ui for now. May be a bit tricky to get this working right.)
+-add prompt method/attr to conv manager?
+-can we remove name2summary or name2base from conv manager?
+-research options for adding new tab/window
+    -start working on convo tab
+    -add URL tab?
+-see if slack app is a possibility (do I have auth to do in GG workspace?)
+-record some mma examples (text? silent gif? video with audio?)
+-prototype cover letter writer from job posting
+-continue work on more generic Monitor class for htools
+-Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
+-add warning in case you try to query with empty text for a prompt that needs input
+-add warning from a prompt's config file in options window
+-consider image task tie-ins
+    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
+-consider how we might support other (non-gpt3) tasks
+    -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
+-add more voice interface features:
+    -allow voice commands? E.g. say "Task: Summarize. Input: ..."
+-rename windows (would prefer to find way to separate id and label, but I don't think that's available)
+-code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
+-try out eleuther ai model (is it a viable alternative, at least to engine_i=0? Is it too big to load in a reasonable period of time? Are there existing apis hosting it?)
+    -same for big gpt2 model? I think that does have free apis hosting it but doesn't really have the same prompt response functionailty.
+-watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
+-start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
+-try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
+-try out other tasks and add to prompts dir:
+    -key point extraction
+    -question generation
+-re-watch dall-e video
+-add booste config file to paperspace
+-look through and/or download coursera video gan notebook
+-look through instructions/demo for voice cloning app - how much audio do we need? Does it need to be custom or could I plausibly find enough for a famous person?
+-start trying to get conversation query button to work
+-flesh out owneraccess decorator
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
