@@ -61,6 +61,7 @@ def transcribe_callback(sender, data):
         - target_id
         - show_during_ids
         - show_after_ids
+        - is_default
     """
     set_value(data['target_id'], '')
     show_during = data.get('show_during_ids', [])
@@ -75,20 +76,27 @@ def transcribe_callback(sender, data):
         text = recognizer.recognize_google(audio)
     except sr.UnknownValueError:
         text = 'Parsing failed. Please try again.'
+    text = text[0].upper() + text[1:]
 
     # Update text and various components now that transcription is complete.
-    set_value(data['target_id'], text[0].upper() + text[1:])
     for id_ in show_during:
         hide_item(id_)
     for id_ in data.get('show_after_ids', []):
         show_item(id_)
 
-    # Manually call this so prompt is updated once we finish recording.
-    format_text_callback('task_list',
-                         data={'text_source_id': data['target_id'],
-                               'task_list_id': 'task_list',
-                               'update_kwargs': True,
-                               'key': 'transcribed'})
+    if data['is_default']:
+        set_value(data['target_id'], text)
+        # If not in conversation mode, manually call this so prompt is updated
+        # once we finish recording.
+        format_text_callback('task_list',
+                             data={'text_source_id': data['target_id'],
+                                   'task_list_id': 'task_list',
+                                   'update_kwargs': True,
+                                   'key': 'transcribed'})
+    else:
+        text = CONV_MANAGER.format_prompt(text)
+        chunked = CHUNKER.add('conv_transcribed', text)
+        set_value(data['target_id'], chunked)
 
 
 def format_text_callback(sender, data):
@@ -295,6 +303,17 @@ def query_callback(sender, data):
                 break
         hide_item(data['interrupt_id'])
         thread.join()
+
+
+def conv_query_callback(sender, data):
+    """
+    data keys:
+        - target_id (str: text input element, used to display both input and
+        output)
+    """
+    full_text = CHUNKER.get('conv_transcribed', chunked=False)
+    fake_resp = full_text + ' Fake response hard-coded by me.'
+    set_value(data['target_id'], CHUNKER.add('conv_response', fake_resp))
 
 
 def monitor_speaker(speaker, name, wait=1, quit_after=None, debug=False):
@@ -523,7 +542,8 @@ class App:
             ###################################################################
             add_button('record_btn', label='Record',
                        callback_data={'show_during_ids': ['record_msg'],
-                                      'target_id': 'transcribed_text'},
+                                      'target_id': 'transcribed_text',
+                                      'is_default': True},
                        callback=transcribe_callback)
             with tooltip('record_btn', 'record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
@@ -583,6 +603,26 @@ class App:
             if len(CONV_MANAGER) == 0:
                 CONV_MANAGER.add_persona('Barack Obama')
             CONV_MANAGER.start_conversation(CONV_MANAGER.personas()[0])
+
+            # Same as in default window but with different names/callback_data.
+            add_button('conv_record_btn', label='Record',
+                       callback_data={'show_during_ids': ['conv_record_msg'],
+                                      'target_id': 'conv_text',
+                                      'is_default': False},
+                       callback=transcribe_callback)
+            with tooltip('conv_record_btn', 'conv_record_btn_tooltip'):
+                add_text('Press and begin talking.\nSimply stop talking when '
+                         'done and\nthe transcribed text should appear\n'
+                         'within several seconds.')
+            add_text('conv_record_msg',
+                     default_value='Recording in progress...',
+                     show=False)
+
+            # Visible when querying and speaking, respectively.
+            add_text('conv_query_progress_msg',
+                     default_value='Query in progress...', show=False)
+            add_checkbox('conv_interrupt_checkbox', label='Interrupt',
+                         show=False)
 
             # Just tweaked height until it seemed to do what I want (no
             # vertical scroll w/ default window size). Not sure how to
@@ -717,12 +757,13 @@ class App:
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
 
             # Make query.
-            add_button('conv_query_btn', label='Query',
-                       callback=query_callback,
-                       callback_data={'target_id': 'response_text',
-                                      'read_checkbox_id': 'read_response',
-                                      'interrupt_id': 'interrupt_checkbox',
-                                      'query_msg_id': 'query_progress_msg'})
+            add_button(
+                'conv_query_btn', label='Query',
+                callback=conv_query_callback,
+                callback_data={'target_id': 'conv_text',
+                               'read_checkbox_id': 'conv_read_response',
+                               'interrupt_id': 'conv_interrupt_checkbox',
+                               'query_msg_id': 'conv_query_progress_msg'})
             add_same_line()
             add_checkbox('conv_read_response', label='read response',
                          default_value=True)

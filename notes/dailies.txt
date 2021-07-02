@@ -934,11 +934,26 @@ X -add payment info to gpt3 api
 
 7/1/21
 ------
--investigate dillashaw photo download issue (does wiki page have no images? Were none of the names a close enough match?)
+X -investigate dillashaw photo download issue (does wiki page have no images? Were none of the names a close enough match?)
+    UPDATE: convmanager logic to remove periods was mistakenly placed in the inverse transform case.
     -if applicable, maybe adjust logic to choose a fallback if there's not a close enough match?
     -or diff func to search for that person's face outside of wiki? Might be more reliable anyway.
--start trying to get conversation query button to work
+X -set usage limits on gpt3 api account
+X -add transcription to conv mode
+~ -start trying to get conversation query button to work
+    X -build dummy query w/ chunking
 -flesh out owneraccess decorator
+
+7/2/21
+------
+-get real query working in place of dummy query (conv mode)
+    -how to extract last user text? Cache in transcription callback or extract from full summary?
+    -get voice mode working for post-query
+    -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
+-text edit callback for conv mode: atm, if we edit text the chunker still only has the pre-edited version
+-other options:
+    -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
+    -start planning out blog about page and intro
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -957,6 +972,7 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 backlog
 
+-flesh out owneraccess decorator
 -maybe update converse contextmanager to have input baked in
 -refactor main.py (maybe a callbacks.py? Dearpygui OOP example also did things a bit differently (class for each element rather than a method for each), could try to change but probably too big of an overhaul given the small-ish payoff.)
 -experiment w/ prompt to summarize past conversation? (just in gpt3 ui for now. May be a bit tricky to get this working right.)

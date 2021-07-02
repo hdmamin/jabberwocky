@@ -570,8 +570,8 @@ class ConversationManager:
             underscores.
         """
         if inverse:
-            return name.replace('_', ' ').replace('.', '').title()
-        return name.lower().replace(' ', '_')
+            return name.replace('_', ' ').title()
+        return name.lower().replace(' ', '_').replace('.', '')
 
     def personas(self, pretty=True, sort=True):
         """Quick way to see a list of all available personas.
@@ -668,8 +668,7 @@ class ConversationManager:
                 'Running prompt is empty during a format_prompt() call. Have '
                 'you started a conversation?'
             )
-        return (self.running_prompt +
-                f'\n\nMe: {user_text.strip()}\n\n'
+        return (f'{self.running_prompt}\n\nMe: {user_text.strip()}\n\n'
                 f'{self.process_name(self.current_persona, inverse=True)}:')
 
     @contextmanager
