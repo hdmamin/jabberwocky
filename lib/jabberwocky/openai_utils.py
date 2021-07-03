@@ -454,7 +454,7 @@ class ConversationManager:
         # Load prompt, default query kwargs, and existing personas.
         self._kwargs = load_prompt('conversation')
         self._base_prompt = self._kwargs.pop('prompt')
-        name2summary, self.name2img_path = self._load_personas(names)
+        name2summary, self.name2img_path = self._load_personas(list(names))
         self.name2base = {}
         for k, v in name2summary.items():
             self.update_persona_dicts(k, v, self.name2img_path[k])
@@ -467,9 +467,25 @@ class ConversationManager:
         for path in self.persona_dir.iterdir():
             if not path.is_dir() or (names and path.stem not in names):
                 continue
+            fnames = set(p.stem for p in path.iterdir())
+            # Intentionally process this whether we find the necessary files or
+            # not. At the end we want to warn about personas where the entire
+            # dir is missing.
+            names.discard(path.stem)
+            if 'summary' not in fnames or 'profile' not in fnames:
+                warnings.warn('Could not find necessary files for '
+                              f'{self.process_name(path.stem, inverse=True)} '
+                              'persona.')
+                continue
+
             name2summary[path.stem] = load(path/'summary.txt')
             name2img_path[path.stem] = [p for p in path.iterdir()
                                         if p.suffix in self.img_exts][0]
+        if names:
+            names_str = ", ".join(self.process_name(name, inverse=True)
+                                  for name in names)
+            warnings.warn('Could not find any directory for the following '
+                          f'personas: {names_str}')
         return name2summary, name2img_path
 
     def start_conversation(self, name, download_if_necessary=False):
@@ -514,7 +530,7 @@ class ConversationManager:
         intro = sent_tokenize(base)[0]
         return base.replace(intro, '').strip()
 
-    def end_conversation(self, fname=''):
+    def end_conversation(self, fname=None):
         """Resets several variables when a conversation is over. This is also
         called automatically at the beginning of start_conversation in case you
         forgot to close the previous conversation.
@@ -526,12 +542,16 @@ class ConversationManager:
             a text file by this name. This should not be a full path - it will
             automatically be saved in the manager's conversation_dir.
         """
-        if fname:
-            save(self.running_prompt, self.conversation_dir/fname)
+        if fname: self.save_conversation(fname)
         self.running_prompt = ''
         self.current_summary = ''
         self.current_persona = ''
         self.current_img_path = ''
+
+    def save_conversation(self, fname):
+        if not self.running_prompt:
+            raise RuntimeError('No conversation to save.')
+        save(self.running_prompt, self.conversation_dir/fname)
 
     def add_persona(self, name, return_data=False):
         """Download materials for a new persona. This saves their wikipedia

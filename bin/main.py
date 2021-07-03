@@ -1,5 +1,6 @@
 # I think dearpygui imports a different contextmanager so we rename this one.
 from contextlib import contextmanager as ctx_manager
+from datetime import datetime as dt
 from dearpygui.core import *
 from dearpygui.simple import *
 from nltk.tokenize import sent_tokenize
@@ -19,12 +20,15 @@ from jabberwocky.utils import most_recent_filepath, img_dims, _img_dims
 
 
 os.chdir('../')
+SPEAKER = Speaker(newline_pause=400)
+CHUNKER = GuiTextChunker(max_chars=70)
 MANAGER = PromptManager(verbose=False, skip_tasks=['conv_proto'])
 # TODO: eventually make all personas available but loading is faster this way
 # which is nice during dev. Use > 1 to allow testing switching between
 # personas.
 CONV_MANAGER = ConversationManager('Barack Obama', 'Brandon Sanderson',
                                    verbose=False)
+
 NAME2TASK = IndexedDict({
     'Punctuate': 'punctuate',
     'Translate': 'translate',
@@ -41,8 +45,6 @@ NAME2TASK = IndexedDict({
     'Math (debug)': 'shortest'
 })
 MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M', 'naive']
-SPEAKER = Speaker(newline_pause=400)
-CHUNKER = GuiTextChunker(max_chars=70)
 
 
 @ctx_manager
@@ -210,6 +212,7 @@ def update_persona_info(img_name='conversation_img',
     -------
 
     """
+    print('current img path:', CONV_MANAGER.current_img_path)
     dims = img_dims(CONV_MANAGER.current_img_path,
                     width=(app.widths[.5] - 2*app.pad) // 2)
     set_item_width(dummy_name, app.widths[.5] // 4 - 4*app.pad)
@@ -237,6 +240,16 @@ def add_persona_callback(sender, data):
     configure_item(data['target_id'], items=CONV_MANAGER.personas())
     for id_ in data.get('show_during_ids', []):
         hide_item(id_)
+
+
+def save_conversation_callback(sender, data):
+    try:
+        date = dt.today().strftime('%Y-%m-%d')
+        CONV_MANAGER.save_conversation(
+            f'{CONV_MANAGER.current_persona}_{date}.txt'
+        )
+    except RuntimeError as e:
+        pass
 
 
 def query_callback(sender, data):
@@ -600,9 +613,7 @@ class App:
         with window('conv_window', width=self.widths[.5],
                     height=self.heights[1.], x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
-            if len(CONV_MANAGER) == 0:
-                CONV_MANAGER.add_persona('Barack Obama')
-            CONV_MANAGER.start_conversation(CONV_MANAGER.personas()[0])
+            CONV_MANAGER.start_conversation(CONV_MANAGER.personas()[0], True)
 
             # Same as in default window but with different names/callback_data.
             add_button('conv_record_btn', label='Record',
@@ -614,6 +625,9 @@ class App:
                 add_text('Press and begin talking.\nSimply stop talking when '
                          'done and\nthe transcribed text should appear\n'
                          'within several seconds.')
+            add_same_line()
+            add_button('conv_save_btn', label='Save',
+                       callback=save_conversation_callback)
             add_text('conv_record_msg',
                      default_value='Recording in progress...',
                      show=False)

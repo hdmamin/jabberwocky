@@ -1,6 +1,7 @@
 """Functionality to fetch and work with YouTube transcripts."""
 
 from fuzzywuzzy import fuzz, process
+from nltk.tokenize import sent_tokenize
 import os
 import pandas as pd
 from pathlib import Path
@@ -12,6 +13,9 @@ from wikipedia import PageError
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
 from htools import DotDict, tolist, Results
+
+
+WIKI_HEADERS = {'User-Agent': 'http://www.github.com/hdmamin/jabberwocky'}
 
 
 def text_segment(df, start, end):
@@ -168,7 +172,7 @@ def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,
             return wiki_page(match, retry=False, og_name=name)
 
 
-def download_image(url, out_path, verbose=False):
+def download_image(url, out_path, verbose=False, **request_kwargs):
     """Ported from spellotape. Given a URL, fetch an image and download it to
     the specified path.
 
@@ -187,7 +191,7 @@ def download_image(url, out_path, verbose=False):
     bool: Specifies whether image was successfully retrieved.
     """
     try:
-        with requests.get(url, stream=True, timeout=10) as r:
+        with requests.get(url, stream=True, timeout=10, **request_kwargs) as r:
             if r.status_code != 200:
                 if verbose: print(f'STATUS CODE ERROR: {url}')
                 return False
@@ -206,9 +210,12 @@ def download_image(url, out_path, verbose=False):
 
 
 def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
-              fname=None, **page_kwargs):
+              fname=None, truncate_summary_lines=2, verbose=True,
+              **page_kwargs):
     page = wiki_page(name, *tolist(tags), **page_kwargs)
     summary = page.summary.splitlines()[0]
+    if truncate_summary_lines:
+        summary = ' '.join(sent_tokenize(summary)[:truncate_summary_lines])
 
     # Download image if possible. Find photo with name closest to the one we
     # searched for (empirically, this seems to be a decent heuristic to give
@@ -223,7 +230,7 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
         suff = url.rpartition(".")[-1]
         path = Path(img_dir)/f'{fname or name}.{suff}'.lower()
         os.makedirs(img_dir, exist_ok=True)
-        if download_image(url, path):
+        if download_image(url, path, verbose=verbose, headers=WIKI_HEADERS):
             img_url = url
             img_path = str(path)
     return Results(summary=_wiki_text_cleanup(summary),
