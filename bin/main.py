@@ -9,7 +9,7 @@ import speech_recognition as sr
 import time
 from threading import Thread
 
-from htools.core import tolist, select, load, eprint
+from htools.core import tolist, select, load, eprint, save
 from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, ConversationManager,\
@@ -65,7 +65,8 @@ def transcribe_callback(sender, data):
         - show_after_ids
         - is_default
     """
-    set_value(data['target_id'], '')
+    if data['is_default']:
+        set_value(data['target_id'], '')
     show_during = data.get('show_during_ids', [])
     for id_ in show_during:
         show_item(id_)
@@ -78,6 +79,10 @@ def transcribe_callback(sender, data):
         text = recognizer.recognize_google(audio)
     except sr.UnknownValueError:
         text = 'Parsing failed. Please try again.'
+
+    # Don't just use capitalize because this removes existing capitals.
+    # Probably don't have these anyway (transcription seems to usually be
+    # lowercase) but just being safe here.
     text = text[0].upper() + text[1:]
 
     # Update text and various components now that transcription is complete.
@@ -112,11 +117,6 @@ def format_text_callback(sender, data):
     task_name = NAME2TASK[get_value(data['task_list_id'])]
     text = get_value(data['text_source_id'])
 
-    # Don't just use capitalize because this removes existing capitals.
-    # Probably don't have these anyway (transcription seems to usually be
-    # lowercase) but just being safe here.
-    text = text[0].upper() + text[1:]
-
     # Auto-transcription doesn't add colon at end so we do it manually.
     if task_name == 'how_to' and text and not text.endswith(':'):
         text += ':'
@@ -134,16 +134,23 @@ def text_edit_callback(sender, data):
     """Triggered when user types in transcription text field. This way user
     edits update the prompt before making a query (this is often necessary
     since transcriptions are not always perfect).
+
+    Note: set_key_press_callback() is undocumented but it can't pass in a dict
+    as data (it's an int of unknown meaning).
     """
     # This way even if user doesn't hit Auto-Format, query_callback() can
     # retrieve input from chunker. Otherwise we'd have to keep track of when to
     # retrieve it from text input box vs. from chunker which could get messy.
-    CHUNKER.add('transcribed', get_value('transcribed_text'),
-                return_chunked=False)
-    task_select_callback('task_list',
-                         data={'task_list_id': 'task_list',
-                               'text_source_id': 'transcribed_text',
-                               'update_kwargs': False})
+    if is_item_visible('default_window'):
+        CHUNKER.add('transcribed', get_value('transcribed_text'),
+                    return_chunked=False)
+        task_select_callback('task_list',
+                             data={'task_list_id': 'task_list',
+                                   'text_source_id': 'transcribed_text',
+                                   'update_kwargs': False})
+    else:
+        CHUNKER.add('conv_transcribed', get_value('conv_text'),
+                    retur_chunked=False)
 
 
 def task_select_callback(sender, data):
@@ -233,9 +240,10 @@ def add_persona_callback(sender, data):
         source_id (str: name of text input where user enters a new name)
         target_id (str: name of listbox to update after downloading new data)
     """
+    name = get_value(data['source_id'])
+    if not name: return
     for id_ in data.get('show_during_ids', []):
         show_item(id_)
-    name = get_value(data['source_id'])
     CONV_MANAGER.add_persona(name)
     configure_item(data['target_id'], items=CONV_MANAGER.personas())
     for id_ in data.get('show_during_ids', []):
@@ -243,11 +251,16 @@ def add_persona_callback(sender, data):
 
 
 def save_conversation_callback(sender, data):
+    # Don't use ConversationManager's built-in save functionality because the
+    # running prompt is only updated with the user's last response when a query
+    # is made. If the user is the last one to comment, that line would be
+    # excluded from the saved conversation.
     try:
         date = dt.today().strftime('%Y-%m-%d')
-        CONV_MANAGER.save_conversation(
-            f'{CONV_MANAGER.current_persona}_{date}.txt'
-        )
+        fname = f'{CONV_MANAGER.current_persona}_{date}.txt'
+        full_conv = CHUNKER.get('conv_transcribed', chunked=False)
+        save(full_conv, CONV_MANAGER.conversation_dir/fname)
+        set_value(data['source_text_id'], '')
     except RuntimeError as e:
         pass
 
@@ -324,9 +337,15 @@ def conv_query_callback(sender, data):
         - target_id (str: text input element, used to display both input and
         output)
     """
-    full_text = CHUNKER.get('conv_transcribed', chunked=False)
-    fake_resp = full_text + ' Fake response hard-coded by me.'
-    set_value(data['target_id'], CHUNKER.add('conv_response', fake_resp))
+    # Notice we track our chunked conversation with a single key here unlike
+    # default mode, where we require 1 for transcribed inputs and 1 for
+    # GPT3-generated outputs.
+    full_prompt = CHUNKER.get('conv_transcribed', chunked=False).strip()
+     # TODO: rm engine=0 after testing
+    _ = CONV_MANAGER.query(prompt=full_prompt, engine_i=0)
+    full_conv = CHUNKER.add('conv_transcribed',
+                            CONV_MANAGER.running_prompt.replace('’', "'"))
+    set_value(data['target_id'], full_conv)
 
 
 def monitor_speaker(speaker, name, wait=1, quit_after=None, debug=False):
@@ -614,6 +633,7 @@ class App:
                     height=self.heights[1.], x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
             CONV_MANAGER.start_conversation(CONV_MANAGER.personas()[0], True)
+            set_key_press_callback(text_edit_callback)
 
             # Same as in default window but with different names/callback_data.
             add_button('conv_record_btn', label='Record',
@@ -627,7 +647,8 @@ class App:
                          'within several seconds.')
             add_same_line()
             add_button('conv_save_btn', label='Save',
-                       callback=save_conversation_callback)
+                       callback=save_conversation_callback,
+                       callback_data={'source_text_id': 'conv_text'})
             add_text('conv_record_msg',
                      default_value='Recording in progress...',
                      show=False)

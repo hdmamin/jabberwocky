@@ -15,4 +15,3 @@ class C:
     mock_stream_paths = {True: 'data/misc/sample_stream_response.pkl',
                          False: 'data/misc/sample_response.pkl'}
 
-

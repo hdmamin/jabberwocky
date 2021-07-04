@@ -14,7 +14,7 @@ import sys
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
-    listlike
+    listlike, xor_none
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
@@ -635,7 +635,8 @@ class ConversationManager:
             kwargs['prompt'] = self.name2base[self.process_name(name)]
         return kwargs
 
-    def query(self, text, debug=False, extra_kwargs=None, **kwargs):
+    def query(self, text=None, prompt=None, debug=False, extra_kwargs=None,
+              **kwargs):
         """
 
         Parameters
@@ -653,10 +654,10 @@ class ConversationManager:
         if not self.current_persona:
             raise RuntimeError('You must call the `start_conversation` '
                                'method before making a query.')
-
+        xor_none(text, prompt)
         kwargs = self.kwargs(fully_resolved=False, return_prompt=False,
                              extra_kwargs=extra_kwargs, **kwargs)
-        prompt = self.format_prompt(user_text=text)
+        prompt = prompt or self.format_prompt(user_text=text)
         if debug:
             print('prompt:\n' + prompt)
             print(spacer())
