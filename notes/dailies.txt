@@ -961,7 +961,8 @@ X -get real query working in place of dummy query (conv mode)
         UPDATE: instead, allowed query method to pass in a fully-resolved prompt instead of single new line. Seemed less hacky that re-extracting the last user comment from a full prompt.
     -get voice mode working for post-query
     -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
--stop conv text from disappearing during recording
+~ -stop conv text from disappearing during recording
+    UPDATE: added functionality but haven't tried it yet.
 ~ -save button improvements: currently doesn't get last line if user spoke last
     UPDATE: added functionality but haven't tried it yet.
     -show message saying where file saved to
@@ -971,18 +972,48 @@ X -text edit callback for conv mode: atm, if we edit text the chunker still only
 -other options:
     -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
     -start planning out blog about page and intro
+    X -start writing fight predictor blog post
 
 7/4/21
 ------
--stop conv text from disappearing during recording
--test that save button includes last line when it's by the user (built but haven't tried)
+X -test new functionality: conv text shouldn't disappearing during recording
+    UPDATE: works
+~ -test that save button includes last line when it's by the user (built but haven't tried)
+    UPDATE: yes, but we should delete the start of a line below containing "{current_persona}:".
+    ~ -update saving logic to end a conversation 
+        UPDATE: Otherwise, saving temporarily deletes the text but maintains a memory of it internally, so if we speak again without selecting a new persona, it will continue the ghost of our past conversation.) But now that it's done I'm thinking that might be desirable (save as we go along, like saving a doc we're working on in case something crashes). Consider.
     -show message saying where file saved to
--check if switching personas resets conversation text.
+X -further cleanup to wiki_summary
+    X -replace en dash
+    X -see if we can remove more junk that appears in Einstein summary?
+X -fix bug in _load_personas where all personas are loaded even if we specified a list of names
+    UPDATE: found this bug early in today's session. Because I remove a name every time we process it, if the excluded name is last, the names cache is empty, mimicking a scenario where we didn't specify any names. Created boolean var upfront to address this.
+X -add default image when wiki fails to download one
+X -update add_persona to check if we have files locally first?
+    X -update gui to auto switch to a persona after we add it
+        UPDATE: done, though a little hacky. Can't find a way to actually change the selected item in dearpygui so we override it with the callback's data parameter, meaning the name technically isn't selected. Thought this might cause problemes w/ resizing but it doesn't seem to. Updated logic so re-selecting the current name doesn't erase a conversation.
+X -allow deletion of item from CHUNKER
+X -check if switching personas resets conversation text.
+    UPDATE: No. Updated select_persona_callback.
 -get voice mode working for post-query
     -check if we can refactor to combine query and conv_query callbacks
 -other options:
     -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
     -start planning out blog about page and intro
+    -work more on gpt3 blog post
+
+7/5/21
+------
+-update save button to trim off partial last line when user talks last (or maybe adjust this in text updating so it only shows up after a query? Would feel more like a natural conversation maybe.)
+    -show message saying where file saved to
+-think more about desired saving functionality. Differentiate between saving+ending vs. saving+continuing a conversation vs. ending without saving? Which of these should we support?
+-get voice mode working for post-query
+    -check if we can refactor to combine query and conv_query callbacks
+-other options:
+    -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
+    -start planning out blog about page and intro
+    -work more on gpt3 blog post
+
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

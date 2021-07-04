@@ -10,6 +10,7 @@ import openai
 import os
 from pathlib import Path
 import requests
+import shutil
 import sys
 import warnings
 
@@ -420,7 +421,8 @@ class ConversationManager:
 
     img_exts = {'.jpg', '.jpeg', '.png'}
 
-    def __init__(self, *names, verbose=True, data_dir='./data'):
+    def __init__(self, *names, verbose=True, data_dir='./data',
+                 backup_image='data/misc/unknown_person.png'):
         """
         Parameters
         ----------
@@ -435,6 +437,7 @@ class ConversationManager:
         """
         # Set directories for data storage, logging, etc.
         self.verbose = verbose
+        self.backup_image = Path(backup_image)
         self.data_dir = Path(data_dir)
         self.persona_dir = self.data_dir/'conversation_personas'
         self.conversation_dir = self.data_dir/'conversations'
@@ -462,10 +465,11 @@ class ConversationManager:
     def _load_personas(self, names):
         """Load any stored summaries and image paths of existing personas."""
         names = set(self.process_name(name) for name in names)
+        limit_names = bool(names)
         name2summary = {}
         name2img_path = {}
         for path in self.persona_dir.iterdir():
-            if not path.is_dir() or (names and path.stem not in names):
+            if not path.is_dir() or (limit_names and path.stem not in names):
                 continue
             fnames = set(p.stem for p in path.iterdir())
             # Intentionally process this whether we find the necessary files or
@@ -559,10 +563,22 @@ class ConversationManager:
         persona_dir.
         """
         processed_name = self.process_name(name)
-        summary, _, img_path = wiki_data(
-            name, img_dir=self.persona_dir/processed_name, fname='profile'
-        )
-        save(summary, self.persona_dir/processed_name/'summary.txt')
+        if processed_name in (p.stem for p in self.persona_dir.iterdir()
+                              if p.is_dir()):
+            summary = load(self.persona_dir/processed_name/'summary.txt')
+            img_path = [p for p in (self.persona_dir/processed_name).iterdir()
+                        if p.stem == 'profile'][0]
+        else:
+            summary, _, img_path = wiki_data(
+                name, img_dir=self.persona_dir/processed_name, fname='profile'
+            )
+            save(summary, self.persona_dir/processed_name/'summary.txt')
+
+        # Otherwise it's an empty string if we fail to download an image.
+        if not img_path:
+            img_path = (self.persona_dir/processed_name/
+                        f'profile{self.backup_image.suffix}')
+            shutil.copy2(self.backup_image, img_path)
         self.update_persona_dicts(processed_name, summary, img_path)
         if return_data: return summary, img_path
 

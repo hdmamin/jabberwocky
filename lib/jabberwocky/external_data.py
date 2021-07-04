@@ -117,7 +117,7 @@ def get_transcripts(url, verbose=True):
 
 def _wiki_text_cleanup(text):
     """Clean up first paragraph of wikipedia summary.
-    Steps:
+    Main Steps:
     1. Remove inline citations, e.g. '[1]'.
     2. Remove noisy pronunciation-related text that often follows name, e.g.
     'bə-RAHK hoo-SAYN oh-BAH-mə;' in the below example:
@@ -136,11 +136,13 @@ def _wiki_text_cleanup(text):
     -------
     str
     """
-    text = re.sub('\[\d*\]', '', text)
+    # Remove inline citations. We also replace an en dash with a more standard
+    # dash because dearpygui can't render the former.
+    text = re.sub('\[\d*\]', '', text.replace('–', '-'))
     match = re.search('\(.*\)', text)
     if match:
         match = match.group()
-        match_parts = [x for x in match.partition(';') if x]
+        match_parts = [x for x in match.split(';') if x]
         if len(match_parts) > 1:
             text = text.replace(match, '(' + match_parts[-1].strip())
     return re.sub('\s{2,}', ' ', text)

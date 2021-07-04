@@ -197,9 +197,15 @@ def persona_select_callback(sender, data):
     conversation in the ConversationManager. That step doesn't need to be done
     every time we resize the page, but the other steps do.
     """
-    name = CONV_MANAGER.personas()[get_value(sender)]
+    if data:
+        name = data['name']
+    else:
+        name = CONV_MANAGER.personas()[get_value(sender)]
+    if CONV_MANAGER.process_name(name) == CONV_MANAGER.current_persona:
+        return
     CONV_MANAGER.start_conversation(name, download_if_necessary=False)
     update_persona_info()
+    set_value('conv_text', '')
 
 
 def update_persona_info(img_name='conversation_img',
@@ -214,6 +220,7 @@ def update_persona_info(img_name='conversation_img',
     parent
     text_name
     text_key
+    dummy_name
 
     Returns
     -------
@@ -245,9 +252,11 @@ def add_persona_callback(sender, data):
     for id_ in data.get('show_during_ids', []):
         show_item(id_)
     CONV_MANAGER.add_persona(name)
-    configure_item(data['target_id'], items=CONV_MANAGER.personas())
+    personas = CONV_MANAGER.personas()
+    configure_item(data['target_id'], items=personas)
     for id_ in data.get('show_during_ids', []):
         hide_item(id_)
+    persona_select_callback(-1, {'name': name}) # TODO: how to set selected item in listbox?
 
 
 def save_conversation_callback(sender, data):
@@ -261,6 +270,8 @@ def save_conversation_callback(sender, data):
         full_conv = CHUNKER.get('conv_transcribed', chunked=False)
         save(full_conv, CONV_MANAGER.conversation_dir/fname)
         set_value(data['source_text_id'], '')
+        CHUNKER.delete('conv_transcribed')
+        CONV_MANAGER.start_conversation(CONV_MANAGER.current_persona)
     except RuntimeError as e:
         pass
 

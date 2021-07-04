@@ -504,6 +504,10 @@ class GuiTextChunker:
             return self.chunked[key]
         return self.raw[key]
 
+    def delete(self, key):
+        del self.raw[key]
+        del self.chunked[key]
+
     @staticmethod
     def sticky_split(text, sep):
         """Basically a functioning version of htools.hsplit with group=True and
