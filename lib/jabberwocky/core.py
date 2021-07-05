@@ -487,7 +487,9 @@ class GuiTextChunker:
         self.newline_tmp = '<NEWLINE>'
 
     @fallback(keep=['max_chars'])
-    def add(self, key, text, return_chunked=True, **kwargs):
+    def add(self, key, text, return_chunked=True, sanitize_for_gui=True,
+            **kwargs):
+        if sanitize_for_gui: text = self.gui_sanitize(text)
         if self._previously_added(key, text):
             if return_chunked:
                 return self.get(key, chunked=True)
@@ -555,9 +557,14 @@ class GuiTextChunker:
             .replace(self.newline_tmp, '\n') \
             .rstrip('\n')
 
-    def _previously_added(self, key, text):
+    def _previously_added(self, key, text, sanitize_for_gui=True):
         try:
             raw = self.get(key, chunked=False)
+            # A bit redundant since this is mostly used in add() which already
+            # does this, but want to protect against case where someone uses
+            # this method by itself (which I've already done - maybe a sign
+            # that is shouldn't be internal).
+            if sanitize_for_gui: text = self.gui_sanitize(text)
             assert self.to_raw(text) == self.to_raw(raw)
             return True
         except (KeyError, AssertionError) as e:
@@ -569,8 +576,11 @@ class GuiTextChunker:
         self.chunked.clear()
 
     def gui_sanitize(self, text):
+        """Replace characters that gpt3 often uses but dearpygui can't render.
+        """
         return text.replace('‘', "'").replace('’', "'")\
-                   .replace('“', '"').replace('”', '"')
+                   .replace('“', '"').replace('”', '"')\
+                   .replace('–', '-')
 
     def __contains__(self, key):
         in_raw, in_chunked = key in self.raw, key in self.chunked

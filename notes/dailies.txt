@@ -1001,13 +1001,16 @@ X -check if switching personas resets conversation text.
     -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
     -start planning out blog about page and intro
     -work more on gpt3 blog post
+    X -start bookdown repo
 
 7/5/21
 ------
 X -update save button to trim off partial last line when user talks last (or maybe adjust this in text updating so it only shows up after a query? Would feel more like a natural conversation maybe.)
     UPDATE: changed this in convmanager.format_prompt() instead so we only see the person's name pop up after they respond.
--update convmanager/chunker so that gpt3 curly quotes are replaced with more standard ones for dearpygui's sake
--show message saying where file saved to
+X -update convmanager/chunker so that gpt3 curly quotes are replaced with more standard ones for dearpygui's sake
+    UPDATE: chunker now (by default) handles both single and double curly quotes and en dashes. This seems to work well except for if I manually type the curly quotes in (the prompt ends up correct but the input text isn't changed).
+X -show message saying where file saved to
+    UPDATE: Found that I can mimic most of file dialogue functionality with a popup() item. Basic functionality works but still fleshing out some error handling.
 -think more about desired saving functionality. Differentiate between saving+ending vs. saving+continuing a conversation vs. ending without saving? Which of these should we support?
 -get voice mode working for post-query
     -check if we can refactor to combine query and conv_query callbacks
@@ -1016,6 +1019,18 @@ X -update save button to trim off partial last line when user talks last (or may
     -start planning out blog about page and intro
     -work more on gpt3 blog post
 
+7/6/21
+------
+-widen save popup (path is overflowing atm)
+    -reset default values for dir and file name after first save? Right now they persist, not sure why.
+    -Allow user to override both errors? They're really more like warnings.
+-think more about desired saving functionality. Differentiate between saving+ending vs. saving+continuing a conversation vs. ending without saving? Which of these should we support?
+-get voice mode working for post-query
+    -check if we can refactor to combine query and conv_query callbacks
+-other options:
+    -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
+    -start planning out blog about page and intro
+    -work more on gpt3 blog post
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

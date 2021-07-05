@@ -167,6 +167,8 @@ def task_select_callback(sender, data):
         text_source_id=data['text_source_id'],
         do_format=False
     )
+    # TODO: Is this necessary? Can't remember and it looks repetitive, but I
+    # vaguely recall adding this to fix some bug.
     if CHUNKER._previously_added('transcribed', user_text):
         user_text = CHUNKER.get('transcribed', chunked=False)
     updated_prompt = MANAGER.prompt(task_name, user_text)
@@ -266,21 +268,31 @@ def add_persona_callback(sender, data):
     persona_select_callback(-1, {'name': name}) # TODO: how to set selected item in listbox?
 
 
+def cancel_save_conversation_callback(sender, data):
+    close_popup(data['popup_id'])
+
+
 def save_conversation_callback(sender, data):
     # Don't use ConversationManager's built-in save functionality because the
     # running prompt is only updated with the user's last response when a query
     # is made. If the user is the last one to comment, that line would be
     # excluded from the saved conversation.
-    try:
-        date = dt.today().strftime('%Y-%m-%d')
-        fname = f'{CONV_MANAGER.current_persona}_{date}.txt'
-        full_conv = CHUNKER.get('conv_transcribed', chunked=False)
-        save(full_conv, CONV_MANAGER.conversation_dir/fname)
-        set_value(data['source_text_id'], '')
-        CHUNKER.delete('conv_transcribed')
-        CONV_MANAGER.start_conversation(CONV_MANAGER.current_persona)
-    except RuntimeError as e:
-        pass
+    path = os.path.join(get_value(data['dir_id']), get_value(data['file_id']))
+    if os.path.exists(path):
+        set_value(data['error_msg_id'], 'File already exists.')
+        show_item(data['error_msg_id'])
+        return
+    full_conv = CHUNKER.get('conv_transcribed', chunked=False)
+    if not full_conv:
+        set_value(data['error_msg_id'], 'There is no conversation yet.')
+        show_item(data['error_msg_id'])
+        return
+    save(full_conv + '\n', path)
+    hide_item(data['error_msg_id'])
+    close_popup(data['popup_id'])
+    set_value(data['source_text_id'], '')
+    CHUNKER.delete('conv_transcribed')
+    CONV_MANAGER.start_conversation(CONV_MANAGER.current_persona)
 
 
 def query_callback(sender, data):
@@ -664,12 +676,34 @@ class App:
                          'done and\nthe transcribed text should appear\n'
                          'within several seconds.')
             add_same_line()
-            add_button('conv_save_btn', label='Save',
-                       callback=save_conversation_callback,
-                       callback_data={'source_text_id': 'conv_text'})
+            add_button('conv_saveas_btn', label='Save As')
             add_text('conv_record_msg',
                      default_value='Recording in progress...',
                      show=False)
+            with popup('conv_saveas_btn', 'Save Conversation', modal=True,
+                       mousebutton=mvMouseButton_Left):
+                add_input_text(
+                    'save_dir_text', label='Directory',
+                    default_value=str(CONV_MANAGER.conversation_dir.absolute())
+                )
+                add_input_text(
+                    'save_file_text', label='File Name',
+                    default_value=f"{CONV_MANAGER.current_persona}_{dt.today().strftime('%Y-%m-%d')}.txt"
+                )
+                add_button('conv_save_btn', label='Save',
+                           callback=save_conversation_callback,
+                           callback_data={'source_text_id': 'conv_text',
+                                          'popup_id': 'Save Conversation',
+                                          'error_msg_id': 'save_error_msg',
+                                          'dir_id': 'save_dir_text',
+                                          'file_id': 'save_file_text'})
+                add_same_line()
+                add_button('conv_cancel_save_btn', label='Cancel',
+                           callback=cancel_save_conversation_callback,
+                           callback_data={'popup_id': 'Save Conversation'})
+                add_same_line()
+                add_text('save_error_msg',
+                         default_value='Failed to save file.', show=False)
 
             # Visible when querying and speaking, respectively.
             add_text('conv_query_progress_msg',
