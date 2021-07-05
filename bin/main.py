@@ -195,7 +195,14 @@ def task_select_callback(sender, data):
 def persona_select_callback(sender, data):
     """Basically the same as update_persona_info() except this also starts a
     conversation in the ConversationManager. That step doesn't need to be done
-    every time we resize the page, but the other steps do.
+    every time we resize the page, but the other steps in update_persona_info()
+    do.
+
+    Sender is normally the persona listbox, but when adding a new persona we
+    want to load it automatically but can't change the selected listbox item.
+    We allow for this by passing in a `data` dict with the key "name" (the
+    pretty-formatted name to load). Otherwise, I believe this arg is None or
+    an empty dict - forget which but not important right now).
     """
     if data:
         name = data['name']
