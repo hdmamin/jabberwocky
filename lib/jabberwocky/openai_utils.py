@@ -673,7 +673,12 @@ class ConversationManager:
         xor_none(text, prompt)
         kwargs = self.kwargs(fully_resolved=False, return_prompt=False,
                              extra_kwargs=extra_kwargs, **kwargs)
-        prompt = prompt or self.format_prompt(user_text=text)
+        if prompt:
+            trailing = f'\n\n{self.process_name(self.current_persona, True)}:'
+            prompt = prompt.strip()
+            if not prompt.endswith(trailing): prompt += trailing
+        else:
+            prompt = self.format_prompt(user_text=text)
         if debug:
             print('prompt:\n' + prompt)
             print(spacer())
@@ -689,7 +694,7 @@ class ConversationManager:
         self.running_prompt = prompt + ' ' + resp
         return prompt, resp
 
-    def format_prompt(self, user_text):
+    def format_prompt(self, user_text, exclude_trailing_name=False):
         """Use the running prompt
 
         Parameters
@@ -705,8 +710,9 @@ class ConversationManager:
                 'Running prompt is empty during a format_prompt() call. Have '
                 'you started a conversation?'
             )
-        return (f'{self.running_prompt}\n\nMe: {user_text.strip()}\n\n'
-                f'{self.process_name(self.current_persona, inverse=True)}:')
+        prompt = f'{self.running_prompt}\n\nMe: {user_text.strip()}'
+        if exclude_trailing_name: return prompt
+        return f'{prompt}\n\n{self.process_name(self.current_persona, True)}:'
 
     @contextmanager
     def converse(self, name, fname='', download_if_necessary=False):

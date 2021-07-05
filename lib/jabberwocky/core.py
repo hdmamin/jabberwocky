@@ -568,6 +568,10 @@ class GuiTextChunker:
         self.raw.clear()
         self.chunked.clear()
 
+    def gui_sanitize(self, text):
+        return text.replace('‘', "'").replace('’', "'")\
+                   .replace('“', '"').replace('”', '"')
+
     def __contains__(self, key):
         in_raw, in_chunked = key in self.raw, key in self.chunked
         if in_raw and in_chunked:

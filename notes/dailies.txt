@@ -1004,8 +1004,10 @@ X -check if switching personas resets conversation text.
 
 7/5/21
 ------
--update save button to trim off partial last line when user talks last (or maybe adjust this in text updating so it only shows up after a query? Would feel more like a natural conversation maybe.)
-    -show message saying where file saved to
+X -update save button to trim off partial last line when user talks last (or maybe adjust this in text updating so it only shows up after a query? Would feel more like a natural conversation maybe.)
+    UPDATE: changed this in convmanager.format_prompt() instead so we only see the person's name pop up after they respond.
+-update convmanager/chunker so that gpt3 curly quotes are replaced with more standard ones for dearpygui's sake
+-show message saying where file saved to
 -think more about desired saving functionality. Differentiate between saving+ending vs. saving+continuing a conversation vs. ending without saving? Which of these should we support?
 -get voice mode working for post-query
     -check if we can refactor to combine query and conv_query callbacks

@@ -101,7 +101,7 @@ def transcribe_callback(sender, data):
                                    'update_kwargs': True,
                                    'key': 'transcribed'})
     else:
-        text = CONV_MANAGER.format_prompt(text)
+        text = CONV_MANAGER.format_prompt(text, exclude_trailing_name=True)
         chunked = CHUNKER.add('conv_transcribed', text)
         set_value(data['target_id'], chunked)
 
