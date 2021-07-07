@@ -1021,12 +1021,21 @@ X -show message saying where file saved to
 
 7/6/21
 ------
--widen save popup (path is overflowing atm)
-    -reset default values for dir and file name after first save? Right now they persist, not sure why.
-    -Allow user to override both errors? They're really more like warnings.
--think more about desired saving functionality. Differentiate between saving+ending vs. saving+continuing a conversation vs. ending without saving? Which of these should we support?
+X -widen save popup (path is overflowing atm)
+    X -reset default values for dir and file name after first save? Right now they persist, not sure why.
+    X -reset error message
+    X -Allow user to override both errors? They're really more like warnings.
+        UPDATE: achieved via hidden checkbox that becomes visible on error.
+X -think more about desired saving functionality. Differentiate between saving+ending vs. saving+continuing a conversation vs. ending without saving? Which of these should we support?
+    UPDATE: added option to not end conversation.
+
+7/7/21
+------
 -get voice mode working for post-query
     -check if we can refactor to combine query and conv_query callbacks
+-add options for more voices (at least 1 male 1 female)
+    -for conv mode, auto-select voice based on prediction of male or female name? Or maybe we can extract pronoun from wiki summary - e.g. space split and lowercase summary and check if he or she is more frequent, and return an extra value from wiki_data(). Remember to udpate convmanager's usage of it if we take this route).
+-add save modal to non-conv mode
 -other options:
     -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
     -start planning out blog about page and intro

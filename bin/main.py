@@ -269,6 +269,12 @@ def add_persona_callback(sender, data):
 
 
 def cancel_save_conversation_callback(sender, data):
+    # Reset checkbox, dir name, and file name to defaults.
+    hide_item(data['error_msg_id'])
+    set_value(data['force_save_id'], False)
+    set_value(data['dir_id'], str(CONV_MANAGER.conversation_dir.absolute()))
+    date = dt.today().strftime('%Y-%m-%d')
+    set_value(data['file_id'], f"{CONV_MANAGER.current_persona}_{date}.txt")
     close_popup(data['popup_id'])
 
 
@@ -278,21 +284,30 @@ def save_conversation_callback(sender, data):
     # is made. If the user is the last one to comment, that line would be
     # excluded from the saved conversation.
     path = os.path.join(get_value(data['dir_id']), get_value(data['file_id']))
-    if os.path.exists(path):
+    if os.path.exists(path) and not get_value(data['force_save_id']):
         set_value(data['error_msg_id'], 'File already exists.')
         show_item(data['error_msg_id'])
         return
-    full_conv = CHUNKER.get('conv_transcribed', chunked=False)
-    if not full_conv:
+
+    # In case user tries to save an empty conversation.
+    try:
+        full_conv = CHUNKER.get('conv_transcribed', chunked=False)
+    except KeyError:
+        full_conv = ''
+    if not full_conv and not get_value(data['force_save_id']):
         set_value(data['error_msg_id'], 'There is no conversation yet.')
         show_item(data['error_msg_id'])
         return
     save(full_conv + '\n', path)
-    hide_item(data['error_msg_id'])
-    close_popup(data['popup_id'])
-    set_value(data['source_text_id'], '')
-    CHUNKER.delete('conv_transcribed')
-    CONV_MANAGER.start_conversation(CONV_MANAGER.current_persona)
+
+    # Reset text box, text chunker, and conversation manager. These should NOT
+    # be done if we cancel the save operation. If user saved empty text, delete
+    # call would throw an error without if clause.
+    if get_value(data['end_conv_id']):
+        if full_conv: CHUNKER.delete('conv_transcribed')
+        set_value(data['source_text_id'], '')
+        CONV_MANAGER.start_conversation(CONV_MANAGER.current_persona)
+    cancel_save_conversation_callback('save_callback', data)
 
 
 def query_callback(sender, data):
@@ -681,26 +696,41 @@ class App:
                      default_value='Recording in progress...',
                      show=False)
             with popup('conv_saveas_btn', 'Save Conversation', modal=True,
-                       mousebutton=mvMouseButton_Left):
+                       width=450, mousebutton=mvMouseButton_Left):
                 add_input_text(
                     'save_dir_text', label='Directory',
                     default_value=str(CONV_MANAGER.conversation_dir.absolute())
                 )
+                date = dt.today().strftime('%Y-%m-%d')
                 add_input_text(
                     'save_file_text', label='File Name',
-                    default_value=f"{CONV_MANAGER.current_persona}_{dt.today().strftime('%Y-%m-%d')}.txt"
+                    default_value=f"{CONV_MANAGER.current_persona}_{date}.txt"
                 )
+                add_checkbox('end_conv_box',
+                             label='End Conversation', default_value=True)
+                add_same_line()
+                add_checkbox('force_save_box', label='Force Save',
+                             default_value=False)
                 add_button('conv_save_btn', label='Save',
                            callback=save_conversation_callback,
                            callback_data={'source_text_id': 'conv_text',
                                           'popup_id': 'Save Conversation',
                                           'error_msg_id': 'save_error_msg',
                                           'dir_id': 'save_dir_text',
-                                          'file_id': 'save_file_text'})
+                                          'file_id': 'save_file_text',
+                                          'force_save_id': 'force_save_box',
+                                          'end_conv_id': 'end_conv_box'})
                 add_same_line()
                 add_button('conv_cancel_save_btn', label='Cancel',
                            callback=cancel_save_conversation_callback,
-                           callback_data={'popup_id': 'Save Conversation'})
+                           callback_data={'popup_id': 'Save Conversation',
+                                          'source_text_id': 'conv_text',
+                                          'popup_id': 'Save Conversation',
+                                          'error_msg_id': 'save_error_msg',
+                                          'dir_id': 'save_dir_text',
+                                          'file_id': 'save_file_text',
+                                          'force_save_id': 'force_save_box',
+                                          'end_conv_id': 'end_conv_box'})
                 add_same_line()
                 add_text('save_error_msg',
                          default_value='Failed to save file.', show=False)
