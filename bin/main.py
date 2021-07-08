@@ -16,7 +16,7 @@ from jabberwocky.openai_utils import PromptManager, ConversationManager,\
     query_gpt3, query_gpt_neo
 from jabberwocky.speech import Speaker
 from jabberwocky.core import GuiTextChunker
-from jabberwocky.utils import most_recent_filepath, img_dims, _img_dims
+from jabberwocky.utils import img_dims
 
 
 os.chdir('../')
@@ -269,13 +269,18 @@ def add_persona_callback(sender, data):
 
 
 def cancel_save_conversation_callback(sender, data):
-    # Reset checkbox, dir name, and file name to defaults.
+    # Reset checkbox and error message to defaults before closing modal. Don't
+    # need to reset dir name and file name here because that happens in Save As
+    # callback.
     hide_item(data['error_msg_id'])
     set_value(data['force_save_id'], False)
+    close_popup(data['popup_id'])
+
+
+def saveas_conversation_callback(sender, data):
     set_value(data['dir_id'], str(CONV_MANAGER.conversation_dir.absolute()))
     date = dt.today().strftime('%Y-%m-%d')
-    set_value(data['file_id'], f"{CONV_MANAGER.current_persona}_{date}.txt")
-    close_popup(data['popup_id'])
+    set_value(data['file_id'], f'{CONV_MANAGER.current_persona}_{date}.txt')
 
 
 def save_conversation_callback(sender, data):
@@ -350,7 +355,6 @@ def query_callback(sender, data):
     # also insert newlines to display the text more nicely in the GUI, but
     # avoid overwriting the raw response because the newlines add pauses when
     # speech mode is enable.
-    res = res.replace('’', "'")
     chunked = CHUNKER.add('response', res)
     set_value(data['target_id'], chunked)
     hide_item(data['query_msg_id'])
@@ -362,18 +366,28 @@ def query_callback(sender, data):
     # sentence/line, so there may be a bit of a delayed response after asking
     # to interrupt.
     if get_value(data['read_checkbox_id']):
-        show_item(data['interrupt_id'])
-        errors = []
-        thread = Thread(target=monitor_interrupt_checkbox,
-                        args=(data['interrupt_id'], errors))
-        thread.start()
-        for chunk in sent_tokenize(res):
-            SPEAKER.speak(chunk)
-            if errors:
-                set_value(data['interrupt_id'], False)
-                break
-        hide_item(data['interrupt_id'])
-        thread.join()
+        read_response(res, data)
+
+
+def read_response(response, data):
+    # Read response if desired. Threads allow us to interrupt speaker if user
+    # checks a checkbox. This was surprisingly difficult - I settled on a
+    # partial solution that can only quit after finishing saying a
+    # sentence/line, so there may be a bit of a delayed response after asking
+    # to interrupt.
+    show_item(data['interrupt_id'])
+    errors = []
+    thread = Thread(target=monitor_interrupt_checkbox,
+                    args=(data['interrupt_id'], errors))
+    thread.start()
+    for chunk in sent_tokenize(response):
+        print('\n' + chunk)
+        SPEAKER.speak(chunk)
+        if errors:
+            set_value(data['interrupt_id'], False)
+            break
+    hide_item(data['interrupt_id'])
+    thread.join()
 
 
 def conv_query_callback(sender, data):
@@ -391,6 +405,10 @@ def conv_query_callback(sender, data):
     full_conv = CHUNKER.add('conv_transcribed',
                             CONV_MANAGER.running_prompt.replace('’', "'"))
     set_value(data['target_id'], full_conv)
+    if get_value(data['read_checkbox_id']):
+        pretty_name = CONV_MANAGER.process_name(CONV_MANAGER.current_persona,
+                                                inverse=True)
+        read_response(full_conv.rpartition(f'\n\n{pretty_name}:')[-1], data)
 
 
 def monitor_speaker(speaker, name, wait=1, quit_after=None, debug=False):
@@ -691,20 +709,24 @@ class App:
                          'done and\nthe transcribed text should appear\n'
                          'within several seconds.')
             add_same_line()
-            add_button('conv_saveas_btn', label='Save As')
+            add_button('conv_saveas_btn', label='Save As',
+                       callback=saveas_conversation_callback,
+                       callback_data={'dir_id': 'save_dir_text',
+                                      'file_id': 'save_file_text'})
             add_text('conv_record_msg',
                      default_value='Recording in progress...',
                      show=False)
             with popup('conv_saveas_btn', 'Save Conversation', modal=True,
                        width=450, mousebutton=mvMouseButton_Left):
+                # Input dir and file names both get updated in save as callback
+                # so the values here don't really matter.
                 add_input_text(
                     'save_dir_text', label='Directory',
                     default_value=str(CONV_MANAGER.conversation_dir.absolute())
                 )
-                date = dt.today().strftime('%Y-%m-%d')
                 add_input_text(
                     'save_file_text', label='File Name',
-                    default_value=f"{CONV_MANAGER.current_persona}_{date}.txt"
+                    default_value=f'{CONV_MANAGER.current_persona()}.txt'
                 )
                 add_checkbox('end_conv_box',
                              label='End Conversation', default_value=True)

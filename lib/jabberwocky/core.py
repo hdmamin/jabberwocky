@@ -577,10 +577,11 @@ class GuiTextChunker:
 
     def gui_sanitize(self, text):
         """Replace characters that gpt3 often uses but dearpygui can't render.
+        First dash we replace is en dash, second is em dash.
         """
         return text.replace('‘', "'").replace('’', "'")\
                    .replace('“', '"').replace('”', '"')\
-                   .replace('–', '-')
+                   .replace('–', '-').replace('—', '-')
 
     def __contains__(self, key):
         in_raw, in_chunked = key in self.raw, key in self.chunked

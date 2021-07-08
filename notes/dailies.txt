@@ -1015,7 +1015,7 @@ X -show message saying where file saved to
 -get voice mode working for post-query
     -check if we can refactor to combine query and conv_query callbacks
 -other options:
-    -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
+    X -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
     -start planning out blog about page and intro
     -work more on gpt3 blog post
 
@@ -1031,10 +1031,89 @@ X -think more about desired saving functionality. Differentiate between saving+e
 
 7/7/21
 ------
--get voice mode working for post-query
+X -get voice mode working for post-query
     -check if we can refactor to combine query and conv_query callbacks
+X -add em dash replacement to chunker
+X -troubleshoot issue where default save filename always seems to be obama (assuming whoever the default persona is when we load the app?)
+    UPDATE: added callback for saveas button.
 -add options for more voices (at least 1 male 1 female)
-    -for conv mode, auto-select voice based on prediction of male or female name? Or maybe we can extract pronoun from wiki summary - e.g. space split and lowercase summary and check if he or she is more frequent, and return an extra value from wiki_data(). Remember to udpate convmanager's usage of it if we take this route).
+    X -try out diff mac voices
+        UPDATE: Daniel seems like a reasonable choice for men.
+    X -for conv mode, auto-select voice based on prediction of male or female name? Or maybe we can extract pronoun from wiki summary - e.g. space split and lowercase summary and check if he or she is more frequent, and return an extra value from wiki_data(). 
+        UPDATE: wrote, ported, and documented func to do this. Use wiki summary pronoun method and worked well on a sample of ~10 names I chose, roughly split between men and women + 1 fictional character.
+        -update wiki_data func
+        -update convmanager's usage of it
+
+7/8/21
+------
+-update wiki_data w/ inferred gender
+    -update convmanage to account for this new returned value
+    -update conv gui to auto select based on inferred gender
+-other options:
+    -work more on gpt3 blog post
+    -start planning out blog about page and intro
+    -play around w/ mma prompt variations ("this brilliant analyst", "this casual mma fan", etc.)
+    -record conversation w/ joe rogan asking for prediction?
+
+-------------------------------------------------------------------------------
+easy tasks for low energy days
+
+- artbreeder tutorial
+- lots of waiting docs in core.py
+- dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
+    -parent stack system
+    -callbacks
+    -value storage system
+-document session
+-document transcript methods
+-document textchunking class
+-port htools as_df
+
+-------------------------------------------------------------------------------
+backlog
+
+-add save modal to non-conv mode
+-flesh out owneraccess decorator
+-maybe update converse contextmanager to have input baked in
+-refactor main.py (maybe a callbacks.py? Dearpygui OOP example also did things a bit differently (class for each element rather than a method for each), could try to change but probably too big of an overhaul given the small-ish payoff.)
+-experiment w/ prompt to summarize past conversation? (just in gpt3 ui for now. May be a bit tricky to get this working right.)
+-add prompt method/attr to conv manager?
+-can we remove name2summary or name2base from conv manager?
+-research options for adding new tab/window
+    -start working on convo tab
+    -add URL tab?
+-see if slack app is a possibility (do I have auth to do in GG workspace?)
+-record some mma examples (text? silent gif? video with audio?)
+-prototype cover letter writer from job posting
+-continue work on more generic Monitor class for htools
+-Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
+-add warning in case you try to query with empty text for a prompt that needs input
+-add warning from a prompt's config file in options window
+-consider image task tie-ins
+    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
+-consider how we might support other (non-gpt3) tasks
+    -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
+-add more voice interface features:
+    -allow voice commands? E.g. say "Task: Summarize. Input: ..."
+-rename windows (would prefer to find way to separate id and label, but I don't think that's available)
+-code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
+-try out eleuther ai model (is it a viable alternative, at least to engine_i=0? Is it too big to load in a reasonable period of time? Are there existing apis hosting it?)
+    -same for big gpt2 model? I think that does have free apis hosting it but doesn't really have the same prompt response functionailty.
+-watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
+-start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
+-get real query working in place of dummy query (conv mode)
+    -how to extract last user text? Cache in transcription callback or extract from full summary?
+    -get voice mode working for post-query
+    -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
+-text edit callback for conv mode: atm, if we edit text the chunker still only has the pre-edited version
+-other options:
+    -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
+    -start planning out blog about page and intro
+
+-------------------------------------------------------------------------------
+easy tasks for low energy days
+
+- artbreeder tutorial
 -add save modal to non-conv mode
 -other options:
     -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)

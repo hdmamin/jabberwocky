@@ -2,6 +2,7 @@
 
 from fuzzywuzzy import fuzz, process
 from nltk.tokenize import sent_tokenize
+import numpy as np
 import os
 import pandas as pd
 from pathlib import Path
@@ -146,6 +147,39 @@ def _wiki_text_cleanup(text):
         if len(match_parts) > 1:
             text = text.replace(match, '(' + match_parts[-1].strip())
     return re.sub('\s{2,}', ' ', text)
+
+
+def _infer_gender(text, eps=1e-6):
+    """Infer gender from a piece of text by counting pronouns, intended to be a
+    person's wikipedia summary. I'm sure there are better ways to do this but
+    this is a nice quick method that seems to work pretty well.
+
+    Parameters
+    ----------
+    text: str
+        Usually the summary attribute of a Page object returned by wiki_page().
+    eps: float
+        Used for smoothing to avoid dividing by zero. This means our returned
+        probability will top out at something like .999 rather than 1.0.
+
+    Returns
+    -------
+    tuple[str, float]: First item is a str in ('M', 'F') corresponding to a
+    prediction of male or female. Second item is a smoothed probability
+    quantifying our confidence in the first item.
+    """
+    toks = text.lower().split(' ')
+    male_counts = dict.fromkeys(['he', 'him', 'his'], 0)
+    female_counts = dict.fromkeys(['she', 'her', 'hers'], 0)
+    for tok in toks:
+        if tok in male_counts:
+            male_counts[tok] += 1
+        elif tok in female_counts:
+            female_counts[tok] += 1
+    counts = [sum(male_counts.values()), sum(female_counts.values())]
+    genders = ['M', 'F']
+    idx = np.argmax(counts)
+    return genders[idx], (counts[idx]+eps) / (sum(counts) + 2*eps)
 
 
 def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,
