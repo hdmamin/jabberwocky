@@ -1046,9 +1046,17 @@ X -troubleshoot issue where default save filename always seems to be obama (assu
 
 7/8/21
 ------
--update wiki_data w/ inferred gender
-    -update convmanage to account for this new returned value
-    -update conv gui to auto select based on inferred gender
+X -update wiki_data w/ inferred gender
+    X -update convmanage to account for this new returned value
+    X -update conv gui to auto select based on inferred gender
+        UPDATE: Also found bug where attempting to query w/ no conv throws unhandled error. Also still seems like speaker is chunking sentences on newlines and maybe commas, which I don't think I asked for.
+    X -manually update voice after first starting app because we can't call persona_select_callback until right col has been rendered.
+X -update speaker to allow setting voice without breaking cmd_prefix
+
+7/9/21
+------
+-look into possible tokenization bug (pausing on commas and newlines in addition to sentences, I think. Need to figure out intended behavior that works with various prompt types - How To, for example, often doesn't have periods. Could use diff rule for conv vs default mode, I suppose.)
+-start planning how to deal with long convs (e.g. summarize past conv, delete it and just use the past couple responses, etc. Realizing my current implementation may present a problem because I pass in the full conv blob to query so we'd have to do some less than ideal surgery to extract the new bits.)
 -other options:
     -work more on gpt3 blog post
     -start planning out blog about page and intro

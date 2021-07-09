@@ -15,7 +15,7 @@ import sys
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
-    listlike, xor_none
+    listlike, xor_none, Results
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
@@ -452,45 +452,29 @@ class ConversationManager:
         self.current_persona = ''
         self.current_summary = ''
         self.current_img_path = ''
+        self.current_gender = ''
         self.running_prompt = ''
 
         # Load prompt, default query kwargs, and existing personas.
         self._kwargs = load_prompt('conversation')
         self._base_prompt = self._kwargs.pop('prompt')
-        name2summary, self.name2img_path = self._load_personas(list(names))
+
+        # Populated by _load_personas().
+        self.name2img_path = {}
         self.name2base = {}
-        for k, v in name2summary.items():
-            self.update_persona_dicts(k, v, self.name2img_path[k])
+        self.name2gender = {}
+        self._load_personas(names)
 
     def _load_personas(self, names):
         """Load any stored summaries and image paths of existing personas."""
-        names = set(self.process_name(name) for name in names)
-        limit_names = bool(names)
-        name2summary = {}
-        name2img_path = {}
-        for path in self.persona_dir.iterdir():
-            if not path.is_dir() or (limit_names and path.stem not in names):
-                continue
-            fnames = set(p.stem for p in path.iterdir())
-            # Intentionally process this whether we find the necessary files or
-            # not. At the end we want to warn about personas where the entire
-            # dir is missing.
-            names.discard(path.stem)
-            if 'summary' not in fnames or 'profile' not in fnames:
-                warnings.warn('Could not find necessary files for '
-                              f'{self.process_name(path.stem, inverse=True)} '
-                              'persona.')
-                continue
-
-            name2summary[path.stem] = load(path/'summary.txt')
-            name2img_path[path.stem] = [p for p in path.iterdir()
-                                        if p.suffix in self.img_exts][0]
-        if names:
-            names_str = ", ".join(self.process_name(name, inverse=True)
-                                  for name in names)
-            warnings.warn('Could not find any directory for the following '
-                          f'personas: {names_str}')
-        return name2summary, name2img_path
+        names = names or [path.stem for path in self.persona_dir.iterdir()]
+        for name in names:
+            print(name)
+            try:
+                self.update_persona_dicts(self.process_name(name))
+            except:
+                print('exc')
+                warnings.warn(f'Could not load files for {name}.')
 
     def start_conversation(self, name, download_if_necessary=False):
         """Prepare for a conversation with a specified persona. We need to
@@ -518,15 +502,18 @@ class ConversationManager:
                                'construct a new persona.')
             _ = self.add_persona(name, return_data=True)
         self.end_conversation()
+
         processed_name = self.process_name(name)
         self.current_persona = processed_name
-        self.current_img_path = self.name2img_path[processed_name]
         self.running_prompt = self.name2base[processed_name]
+        self.current_img_path = self.name2img_path[processed_name]
+        self.current_gender = self.name2gender[processed_name]
         # This one is not returned. Info would be a bit repetitive.
         self.current_summary = self._name2summary(processed_name)
         return (self.current_persona,
                 self.running_prompt,
-                self.current_img_path)
+                self.current_img_path,
+                self.current_gender)
 
     def _name2summary(self, name):
         if '_' not in name: name = self.process_name(name)
@@ -551,6 +538,7 @@ class ConversationManager:
         self.current_summary = ''
         self.current_persona = ''
         self.current_img_path = ''
+        self.current_gender = ''
 
     def save_conversation(self, fname):
         if not self.running_prompt:
@@ -563,32 +551,40 @@ class ConversationManager:
         persona_dir.
         """
         processed_name = self.process_name(name)
-        if processed_name in (p.stem for p in self.persona_dir.iterdir()
-                              if p.is_dir()):
-            summary = load(self.persona_dir/processed_name/'summary.txt')
-            img_path = [p for p in (self.persona_dir/processed_name).iterdir()
-                        if p.stem == 'profile'][0]
+        dir_ = self.persona_dir/processed_name
+        if dir_.exists():
+            summary, img_path, gender = self.update_persona_dicts(
+                processed_name, return_values=True
+            )
         else:
-            summary, _, img_path = wiki_data(
+            summary, _, img_path, gender = wiki_data(
                 name, img_dir=self.persona_dir/processed_name, fname='profile'
             )
-            save(summary, self.persona_dir/processed_name/'summary.txt')
+            save(summary, dir_/'summary.txt')
+            save(gender, dir_/'gender.json')
 
-        # Otherwise it's an empty string if we fail to download an image.
-        if not img_path:
-            img_path = (self.persona_dir/processed_name/
-                        f'profile{self.backup_image.suffix}')
-            shutil.copy2(self.backup_image, img_path)
-        self.update_persona_dicts(processed_name, summary, img_path)
-        if return_data: return summary, img_path
+            # Otherwise it's an empty string if we fail to download an image.
+            if not img_path:
+                img_path = dir_/f'profile{self.backup_image.suffix}'
+                shutil.copy2(self.backup_image, img_path)
+            self.update_persona_dicts(processed_name)
+        if return_data: return summary, img_path, gender
 
-    def update_persona_dicts(self, processed_name, summary, img_path):
+    def update_persona_dicts(self, processed_name, return_values=False):
         """Helper to update our various name2{something} dicts."""
-        self.name2img_path[processed_name] = img_path
+        dir_ = self.persona_dir/processed_name
+        summary = load(dir_/'summary.txt')
+        self.name2gender[processed_name] = load(dir_/'gender.json')
+        self.name2img_path[processed_name] = [p for p in dir_.iterdir()
+                                              if p.stem == 'profile'][0]
         self.name2base[processed_name] = self._base_prompt.format(
             name=self.process_name(processed_name, inverse=True),
             summary=summary
         )
+        if return_values:
+            return Results(summary=summary,
+                           img_path=self.name2img_path[processed_name],
+                           gender=self.name2gender[processed_name])
 
     def process_name(self, name, inverse=False):
         """Convert a name to pretty format (title case, no underscores) and
@@ -1014,7 +1010,7 @@ def conversation_formatter(text_fmt, prompt, **kwargs):
     # on to caller. Thinking it may be simplest to either change logic to
     # always download to some constant temp filename, or to just make GUI load
     # the most recently created/changed file in the temp dir.
-    summary, _, img_path = wiki_data(name, **kwargs)
+    summary, *_ = wiki_data(name, **kwargs)
     return text_fmt.format(name=name, summary=summary, message=prompt)
 
 

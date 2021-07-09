@@ -26,8 +26,20 @@ class Speaker:
         self.voice = voice
         self.rate = rate
         self.newline_pause = newline_pause
-        self.cmd_prefix = f'say -v {self.voice} -r {self.rate} '
         self.is_speaking = False
+
+    @property
+    def cmd_prefix(self):
+        """Must recompute in case user changes voice."""
+        return f'say -v {self.voice} -r {self.rate} '
+
+    @cmd_prefix.deleter
+    def cmd_prefix(self):
+        raise RuntimeError('cmd_prefix cannot be deleted.')
+
+    @cmd_prefix.setter
+    def cmd_prefix(self, voice):
+        raise RuntimeError('cmd_prefix is read only.')
 
     @handle_interrupt(cbs=SpeakingStatusCallback())
     def speak(self, text):

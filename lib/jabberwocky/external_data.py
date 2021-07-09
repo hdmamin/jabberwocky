@@ -249,6 +249,7 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
               fname=None, truncate_summary_lines=2, verbose=True,
               **page_kwargs):
     page = wiki_page(name, *tolist(tags), **page_kwargs)
+    gender = _infer_gender(page.summary)[0]
     summary = page.summary.splitlines()[0]
     if truncate_summary_lines:
         summary = ' '.join(sent_tokenize(summary)[:truncate_summary_lines])
@@ -271,4 +272,5 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
             img_path = str(path)
     return Results(summary=_wiki_text_cleanup(summary),
                    img_url=img_url,
-                   img_path=img_path)
+                   img_path=img_path,
+                   gender=gender)

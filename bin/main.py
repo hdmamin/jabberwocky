@@ -45,6 +45,8 @@ NAME2TASK = IndexedDict({
     'Math (debug)': 'shortest'
 })
 MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M', 'naive']
+GENDER2VOICE = {'F': 'karen',
+                'M': 'daniel'}
 
 
 @ctx_manager
@@ -210,11 +212,15 @@ def persona_select_callback(sender, data):
         name = data['name']
     else:
         name = CONV_MANAGER.personas()[get_value(sender)]
+    # Avoid resetting vars in the middle of a conversation.
     if CONV_MANAGER.process_name(name) == CONV_MANAGER.current_persona:
         return
+
     CONV_MANAGER.start_conversation(name, download_if_necessary=False)
     update_persona_info()
     set_value('conv_text', '')
+    # Must happen after we start conversation.
+    SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current_gender]
 
 
 def update_persona_info(img_name='conversation_img',
@@ -235,7 +241,6 @@ def update_persona_info(img_name='conversation_img',
     -------
 
     """
-    print('current img path:', CONV_MANAGER.current_img_path)
     dims = img_dims(CONV_MANAGER.current_img_path,
                     width=(app.widths[.5] - 2*app.pad) // 2)
     set_item_width(dummy_name, app.widths[.5] // 4 - 4*app.pad)
@@ -695,7 +700,12 @@ class App:
         with window('conv_window', width=self.widths[.5],
                     height=self.heights[1.], x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
-            CONV_MANAGER.start_conversation(CONV_MANAGER.personas()[0], True)
+            # Can't use persona_select_callback to do this because it calls
+            # update_persona_info() which uses items that aren't defined until
+            # we render right-hand window, and dearpygui complains.
+            name = CONV_MANAGER.personas()[0]
+            CONV_MANAGER.start_conversation(name, True)
+            SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current_gender]
             set_key_press_callback(text_edit_callback)
 
             # Same as in default window but with different names/callback_data.
@@ -726,7 +736,7 @@ class App:
                 )
                 add_input_text(
                     'save_file_text', label='File Name',
-                    default_value=f'{CONV_MANAGER.current_persona()}.txt'
+                    default_value=f'{CONV_MANAGER.current_persona}.txt'
                 )
                 add_checkbox('end_conv_box',
                              label='End Conversation', default_value=True)
