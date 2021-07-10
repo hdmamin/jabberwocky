@@ -196,6 +196,16 @@ def task_select_callback(sender, data):
         set_value(k, v)
 
 
+def end_conversation_callback(sender, data):
+    name = CONV_MANAGER.current_persona
+    CONV_MANAGER.end_conversation()
+    try:
+        CHUNKER.delete('conv_transcribed')
+    except KeyError:
+        pass
+    persona_select_callback(-1, data={'name': name})
+
+
 def persona_select_callback(sender, data):
     """Basically the same as update_persona_info() except this also starts a
     conversation in the ConversationManager. That step doesn't need to be done
@@ -283,6 +293,9 @@ def cancel_save_conversation_callback(sender, data):
 
 
 def saveas_conversation_callback(sender, data):
+    # This executes when the user first clicks Save As.
+    # save_conversation_callback will then execute if the user proceeds to hit
+    # save from the newly visible modal.
     set_value(data['dir_id'], str(CONV_MANAGER.conversation_dir.absolute()))
     date = dt.today().strftime('%Y-%m-%d')
     set_value(data['file_id'], f'{CONV_MANAGER.current_persona}_{date}.txt')
@@ -385,12 +398,13 @@ def read_response(response, data):
     thread = Thread(target=monitor_interrupt_checkbox,
                     args=(data['interrupt_id'], errors))
     thread.start()
-    for chunk in sent_tokenize(response):
-        print('\n' + chunk)
-        SPEAKER.speak(chunk)
-        if errors:
-            set_value(data['interrupt_id'], False)
-            break
+    eprint(sent_tokenize(response))
+    for sent in sent_tokenize(response):
+        for chunk in sent.split('\n\n'):
+            SPEAKER.speak(chunk)
+            if errors:
+                set_value(data['interrupt_id'], False)
+                break
     hide_item(data['interrupt_id'])
     thread.join()
 
@@ -401,19 +415,21 @@ def conv_query_callback(sender, data):
         - target_id (str: text input element, used to display both input and
         output)
     """
+    show_item(data['query_msg_id'])
     # Notice we track our chunked conversation with a single key here unlike
     # default mode, where we require 1 for transcribed inputs and 1 for
     # GPT3-generated outputs.
     full_prompt = CHUNKER.get('conv_transcribed', chunked=False).strip()
-     # TODO: rm engine=0 after testing
-    _ = CONV_MANAGER.query(prompt=full_prompt, engine_i=0)
-    full_conv = CHUNKER.add('conv_transcribed',
-                            CONV_MANAGER.running_prompt.replace('’', "'"))
+    # Grab response to use when reading lines, otherwise we have to perform
+    # "surgery" on full conv.
+    # TODO: rm engine=0 after testing
+    _, response = CONV_MANAGER.query(prompt=full_prompt, engine_i=0)
+    hide_item(data['query_msg_id'])
+    # _, response = CONV_MANAGER.query(prompt=full_prompt)
+    full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.running_prompt)
     set_value(data['target_id'], full_conv)
     if get_value(data['read_checkbox_id']):
-        pretty_name = CONV_MANAGER.process_name(CONV_MANAGER.current_persona,
-                                                inverse=True)
-        read_response(full_conv.rpartition(f'\n\n{pretty_name}:')[-1], data)
+        read_response(response, data)
 
 
 def monitor_speaker(speaker, name, wait=1, quit_after=None, debug=False):
@@ -723,9 +739,6 @@ class App:
                        callback=saveas_conversation_callback,
                        callback_data={'dir_id': 'save_dir_text',
                                       'file_id': 'save_file_text'})
-            add_text('conv_record_msg',
-                     default_value='Recording in progress...',
-                     show=False)
             with popup('conv_saveas_btn', 'Save Conversation', modal=True,
                        width=450, mousebutton=mvMouseButton_Left):
                 # Input dir and file names both get updated in save as callback
@@ -766,6 +779,12 @@ class App:
                 add_same_line()
                 add_text('save_error_msg',
                          default_value='Failed to save file.', show=False)
+            add_same_line()
+            add_button('end_conversation_btn', label='End Conversation',
+                       callback=end_conversation_callback)
+            add_text('conv_record_msg',
+                     default_value='Recording in progress...',
+                     show=False)
 
             # Visible when querying and speaking, respectively.
             add_text('conv_query_progress_msg',

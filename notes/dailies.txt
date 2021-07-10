@@ -1055,13 +1055,28 @@ X -update speaker to allow setting voice without breaking cmd_prefix
 
 7/9/21
 ------
--look into possible tokenization bug (pausing on commas and newlines in addition to sentences, I think. Need to figure out intended behavior that works with various prompt types - How To, for example, often doesn't have periods. Could use diff rule for conv vs default mode, I suppose.)
+X -look into possible tokenization bug (pausing on commas and newlines in addition to sentences, I think. Need to figure out intended behavior that works with various prompt types - How To, for example, often doesn't have periods. Could use diff rule for conv vs default mode, I suppose.)
+    UPDATE: seems to just split on sentences as intended. Added behavior where it splits on double newlines as well. Conv model seems to often return short responses anyway.
+-possible bug: how to prompt no longer adds colon at end?
+X -end conversation w/out saving option
 -start planning how to deal with long convs (e.g. summarize past conv, delete it and just use the past couple responses, etc. Realizing my current implementation may present a problem because I pass in the full conv blob to query so we'd have to do some less than ideal surgery to extract the new bits.)
+X -try recording a couple conversations with engine_i=3.
+X -thought there was a message shown during conv query but I'm not seeing it show up?
+    UPDATE: there was but I never added logic to display in in conv_query_callback. Did that now.
 -other options:
     -work more on gpt3 blog post
     -start planning out blog about page and intro
     -play around w/ mma prompt variations ("this brilliant analyst", "this casual mma fan", etc.)
     -record conversation w/ joe rogan asking for prediction?
+
+7/10/21
+-------
+-finish blog post?
+-minor bug: os say cmd read "No" as "number"
+-error handling when we fail to download a wiki persona
+-start planning how to deal with long convs (e.g. summarize past conv, delete it and just use the past couple responses, etc. Realizing my current implementation may present a problem because I pass in the full conv blob to query so we'd have to do some less than ideal surgery to extract the new bits.)
+-other options:
+    -start planning out blog about page and intro
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
