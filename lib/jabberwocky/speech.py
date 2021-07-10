@@ -46,10 +46,19 @@ class Speaker:
         os.system(self.cmd_prefix + self._format_text(text))
 
     def _format_text(self, text):
-        # For some reason `say` still interprets character following dash as
-        # a flag even after shlex.quote, so we add a backslash as well. I'm not
-        # sure if it actually escapes it or if the say program just ignores it,
-        # but so far it seems to work.
+        """For some reason `say` still interprets character following dash as
+        a flag even after shlex.quote, so we add a backslash as well. I'm not
+        sure if it actually escapes it or if the say program just ignores it,
+        but so far it seems to work.
+
+        Some speakers (e.g. "daniel") read "no." (either case) as "number".
+        Speaker treats commas similarly to periods. If changing this logic,
+        be mindful of spaces: we wouldn't want to change "This is a piano." to
+        "This is a pia no." (ignore commas vs. periods: point is we don't
+        want to insert a pause in the middle of the word "piano").
+        """
         return shlex.quote(text)\
                     .replace('-', '\-')\
-                    .replace('\n', f'[[slnc {self.newline_pause}]]')
+                    .replace('\n', f'[[slnc {self.newline_pause}]]')\
+                    .replace('No.', 'No,')\
+                    .replace(' no.', ' no,')

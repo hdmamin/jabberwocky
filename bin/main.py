@@ -150,9 +150,21 @@ def text_edit_callback(sender, data):
                              data={'task_list_id': 'task_list',
                                    'text_source_id': 'transcribed_text',
                                    'update_kwargs': False})
+    # Case: in conversation mode and user edits the add_persona text.
+    elif sender == 'conv_options_window':
+        # Can't pass data dict to this type of callback (seems to be a
+        # character code for the last typed character instead) so we have to
+        # hardcode this. This ensures that if we previously failed to add a
+        # persona and started typing a new name in that box, the error message
+        # will go away.
+        hide_item('add_persona_error_msg')
+    # Case: in conversation mode and user edits the main conversation text box.
+    # Not sure if this is really effective though because the conv manager
+    # maintains its own conversation history and I think it only uses CHUNKER
+    # to get the new prompt.
     else:
         CHUNKER.add('conv_transcribed', get_value('conv_text'),
-                    retur_chunked=False)
+                    return_chunked=False)
 
 
 def task_select_callback(sender, data):
@@ -203,7 +215,7 @@ def end_conversation_callback(sender, data):
         CHUNKER.delete('conv_transcribed')
     except KeyError:
         pass
-    persona_select_callback(-1, data={'name': name})
+    persona_select_callback('end_conversation_callback', data={'name': name})
 
 
 def persona_select_callback(sender, data):
@@ -216,8 +228,13 @@ def persona_select_callback(sender, data):
     want to load it automatically but can't change the selected listbox item.
     We allow for this by passing in a `data` dict with the key "name" (the
     pretty-formatted name to load). Otherwise, I believe this arg is None or
-    an empty dict - forget which but not important right now).
+    an empty dict - forget which but not important right now). The
+    end_conversation_callback also uses this strategy to reset the
+    conversation and accompanying metadata.
     """
+    # Don't love hard-coding this but there's no data arg when triggered by
+    # listbox selection.
+    hide_item('add_persona_error_msg')
     if data:
         name = data['name']
     else:
@@ -273,14 +290,22 @@ def add_persona_callback(sender, data):
     """
     name = get_value(data['source_id'])
     if not name: return
-    for id_ in data.get('show_during_ids', []):
-        show_item(id_)
-    CONV_MANAGER.add_persona(name)
-    personas = CONV_MANAGER.personas()
-    configure_item(data['target_id'], items=personas)
-    for id_ in data.get('show_during_ids', []):
-        hide_item(id_)
-    persona_select_callback(-1, {'name': name}) # TODO: how to set selected item in listbox?
+    show_item(data['show_during_id'])
+    try:
+        CONV_MANAGER.add_persona(name)
+    except RuntimeError as e:
+        # This will be hidden again when the user selects another persona or
+        # types in the add_persona text input.
+        show_item(data['error_msg_id'])
+        return
+    else:
+        personas = CONV_MANAGER.personas()
+        configure_item(data['target_id'], items=personas)
+        # Make new persona the active one. Dearpygui doesn't seem to let us
+        # change the selected listbox item so we have to do this a bit hackily.
+        persona_select_callback('add_persona_callback', {'name': name})
+    finally:
+        hide_item(data['show_during_id'])
 
 
 def cancel_save_conversation_callback(sender, data):
@@ -377,12 +402,6 @@ def query_callback(sender, data):
     set_value(data['target_id'], chunked)
     hide_item(data['query_msg_id'])
     print('\nres:\n' + chunked)
-
-    # Read response if desired. Threads allow us to interrupt speaker if user
-    # checks a checkbox. This was surprisingly difficult - I settled on a
-    # partial solution that can only quit after finishing saying a
-    # sentence/line, so there may be a bit of a delayed response after asking
-    # to interrupt.
     if get_value(data['read_checkbox_id']):
         read_response(res, data)
 
@@ -941,10 +960,15 @@ class App:
                        callback=add_persona_callback,
                        callback_data={'source_id': 'add_persona_text',
                                       'target_id': 'persona_list',
-                                      'show_during_ids': ['add_persona_msg']})
+                                      'show_during_id': 'add_persona_msg',
+                                      'error_msg_id': 'add_persona_error_msg'})
             add_same_line()
             add_text('add_persona_msg',
                      default_value='Generating new persona...', show=False)
+            add_same_line()
+            add_text('add_persona_error_msg',
+                     default_value='Failed to generate that persona. Try a '
+                                   'different name.', show=False)
             add_spacing(count=2)
             add_input_text('add_persona_text', label='')
             with label_above('persona_list', 'Existing Personas'):

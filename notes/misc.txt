@@ -47,3 +47,23 @@
 5/28/21
 -------
 Thinking there might be some room to improve google's information retrieval capabilities. Effective googling is definitely still a skill, and it can take multiple query phrasings, clicking on  multiple pages, or reading through long chunks of a page to find the desired answer. I'm thinking we may be able to speed this up with gpt3. I briefly tried to think of a few searches to construct samples manually, but this was a bit tough. I'm thinking it may be better to organically let challenging searches arise and make note of them (and their ultimately useful results) when they do.
+
+7/10/21
+-------
+I asked GPT3, a massive machine learning model built by OpenAI, to analyze a few of tonights matchups and predict who will win. 
+It's not flawless but I've certainly seen worse takes (in the examples below, I typed the lines starting with "Matchup"; the rest is the model):
+
+> **Matchup:** Gilbert Burns vs. Stephen Thompson  
+**Analysis:** It's been a long time since we've seen Thompson fight, and it's fair to wonder if he'll still have the same pop on his counters or ability to end a fight in the blink of an eye. He's a very safe fighter, however, and his kicks, volume and power give him a clear edge in this matchup. It's possible that Burns will be able to get in his face or put him in the clinch, but that's not Thompson's game. He'll pick Burns apart with his low kicks and eventually turn this into a kickboxing match.  
+**Prediction:** Stephen Thompson by TKO.
+
+***
+
+> **Matchup:** Dustin Poirier vs. Conor McGregor 3  
+**Analysis:** McGregor's takedown defense has been steadily improving, and he has the speed and movement to strike with Poirier and avoid exchanges he can't win. Poirier doesn't have the best boxing, but he can crack with power and has a solid wrestling base. He can also scramble up quickly from the bottom, but getting there is a risky proposition against McGregor. McGregor's pressure and pace can create opportunities to land big strikes that time well, and his physical gifts are tough to match. He can finish whenever he wants and Poirier is still an underrated wrestler, but I think McGregor gets off more strikes and forces more action.  
+**Prediction:** Conor McGregor by KO.
+
+A few more notes for anyone interested:
+-GPT3 basically tries to generate responses that sound plausible but that doesn't guarantee they'll be particularly accurate or insightful. Its training data likely contains far more dumb MMA twitter takes than quality fight articles so we end up with something in between. Carefully phrasing our prompts can lead to very different results (e.g. we could ask for one set of predictions from a casual fan, one from a brilliant fight analyst, etc.). I didn't put a ton of time into engineering the prompts that generated these responses so we could likely get better quality analysis with some effort.
+-GPT3 was released over a year ago and I haven't been able to confirm whether OpenAI does any kind of fine-tuning over time. If not, the model's knowledge of these fighters may be a bit outdated.
+-GPT3 can also imitate specific people (it's much easier if they're reasonably well-known). As far as mma goes, imagine chatting with Rogan about tonight's fights or asking McGregor how it feels to walk out to a title fight. Pretty cool. I built myself a simple audio interface which adds to the effect, though I haven't added any custom voices yet so Rogan's words are still delivered in a humorless British accent.

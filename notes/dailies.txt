@@ -1072,11 +1072,16 @@ X -thought there was a message shown during conv query but I'm not seeing it sho
 7/10/21
 -------
 -finish blog post?
--minor bug: os say cmd read "No" as "number"
--error handling when we fail to download a wiki persona
+X -minor bug: os say cmd read "No" as "number"
+    UPDATE: quirk in Daniel voice's functionality. Used some careful string replacements in speech module to eliminate this.
+X -error handling when we fail to download a wiki persona
 -start planning how to deal with long convs (e.g. summarize past conv, delete it and just use the past couple responses, etc. Realizing my current implementation may present a problem because I pass in the full conv blob to query so we'd have to do some less than ideal surgery to extract the new bits.)
 -other options:
     -start planning out blog about page and intro
+
+7/11/21
+-------
+-start planning how to deal with long convs (e.g. summarize past conv, delete it and just use the past couple responses, etc. Realizing my current implementation may present a problem because I pass in the full conv blob to query so we'd have to do some less than ideal surgery to extract the new bits.)
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

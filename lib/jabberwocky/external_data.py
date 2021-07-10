@@ -195,8 +195,8 @@ def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,
             ) from None
         return page
     except PageError:
-        if not retry:
-            raise ValueError(f'Couldn\'t find wikipedia page for {name}.') \
+        if not retry or not tags:
+            raise RuntimeError(f'Couldn\'t find wikipedia page for {name}.') \
                 from None
         warnings.warn('Page not found. Trying to auto-select correct match.')
 
@@ -248,7 +248,10 @@ def download_image(url, out_path, verbose=False, **request_kwargs):
 def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
               fname=None, truncate_summary_lines=2, verbose=True,
               **page_kwargs):
-    page = wiki_page(name, *tolist(tags), **page_kwargs)
+    try:
+        page = wiki_page(name, *tolist(tags), **page_kwargs)
+    except RuntimeError as e:
+        raise e
     gender = _infer_gender(page.summary)[0]
     summary = page.summary.splitlines()[0]
     if truncate_summary_lines:
