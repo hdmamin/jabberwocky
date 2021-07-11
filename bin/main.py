@@ -9,8 +9,8 @@ import speech_recognition as sr
 import time
 from threading import Thread
 
-from htools.core import tolist, select, load, eprint, save
-from htools.meta import params
+from htools.core import tolist, select, save
+from htools.meta import params, debug, decorate_functions
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, ConversationManager,\
     query_gpt3, query_gpt_neo
@@ -417,7 +417,6 @@ def read_response(response, data):
     thread = Thread(target=monitor_interrupt_checkbox,
                     args=(data['interrupt_id'], errors))
     thread.start()
-    eprint(sent_tokenize(response))
     for sent in sent_tokenize(response):
         for chunk in sent.split('\n\n'):
             SPEAKER.speak(chunk)
@@ -685,7 +684,6 @@ class App:
                          'done and\nthe transcribed text should appear\n'
                          'within several seconds.')
             add_same_line()
-
             add_button('autoformat_btn', label='Auto-Format',
                        callback=format_text_callback,
                        callback_data={'text_source_id': 'transcribed_text',
@@ -705,6 +703,8 @@ class App:
                     'or manually edit the transcription, you will need to\n'
                     'manually press the button.'
                 )
+            add_same_line()
+            add_button('default_saveas_btn', label='Save As')
 
             add_text('record_msg', default_value='Recording in progress...',
                      show=False)
