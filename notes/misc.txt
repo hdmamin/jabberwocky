@@ -67,3 +67,12 @@ A few more notes for anyone interested:
 -GPT3 basically tries to generate responses that sound plausible but that doesn't guarantee they'll be particularly accurate or insightful. Its training data likely contains far more dumb MMA twitter takes than quality fight articles so we end up with something in between. Carefully phrasing our prompts can lead to very different results (e.g. we could ask for one set of predictions from a casual fan, one from a brilliant fight analyst, etc.). I didn't put a ton of time into engineering the prompts that generated these responses so we could likely get better quality analysis with some effort.
 -GPT3 was released over a year ago and I haven't been able to confirm whether OpenAI does any kind of fine-tuning over time. If not, the model's knowledge of these fighters may be a bit outdated.
 -GPT3 can also imitate specific people (it's much easier if they're reasonably well-known). As far as mma goes, imagine chatting with Rogan about tonight's fights or asking McGregor how it feels to walk out to a title fight. Pretty cool. I built myself a simple audio interface which adds to the effect, though I haven't added any custom voices yet so Rogan's words are still delivered in a humorless British accent.
+
+7/12/21
+-------
+Problem: want to be able to hold longer conversations without prompts growing infeasibly long (aside from cost, gpt3 can only handle a limited number of tokens at a time). Current implementation makes that difficult because we pass in a FULL PROMPT each time (we'd need to re-extract the last response). Also, query() gets full text from manager's RUNNING_PROMPT, though I think that can be changed more easily.
+
+Thoughts: 
+-maybe we should store a list of user inputs and gpt3 responses so it's easy to choose how many to pass in each time (imagine a param response_window=2, for example).
+-running_prompt should not be used by GUI: keep that fully internal. Provide a separate conversation_history var (basically what running_prompt currently refers to).
+-maybe should provide method to "query_later". Or this could be an opportunity for my @lazy decorator!
