@@ -1,7 +1,15 @@
 # jabberwocky
 
 # Project Description
-Art generation with gpt3 and generative adversarial networks.
+A GUI providing an audio interface to GPT3. We support conversations with most public figures (basically anyone with a Wikipedia page) and provide a number of other modes including:
+- Summarization
+- Explain like I'm 5
+- Translation
+- How To (step by step instructions for performing everyday tasks)
+- Writing Style Analysis
+- MMA Fight Analysis and Prediction
+- Explain machine learning concepts in simple language
+    - Generate ML paper abstracts
 
 ### Project Members
 * Harrison Mamin

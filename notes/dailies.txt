@@ -1089,8 +1089,15 @@ X -add save as button to default mode
 
 7/12/21
 -------
--map out how convmanager prompt is updated and its interactions with CHUNKER, app, etc. (e.g. does it get input from chunker or text box? Does it use that to replace its running prompt or does it just lop off the last new line? Trying to figure out how we might deal with longer convs and I have a vague intuition that the current setup doesn't allow for this easily, but I need a more concrete understanding of why that is.)
-    -start planning potential approaches (summarize past conv, include only last 1 message, only last n messages, etc.)
+X -map out how convmanager prompt is updated and its interactions with CHUNKER, app, etc. (e.g. does it get input from chunker or text box? Does it use that to replace its running prompt or does it just lop off the last new line? Trying to figure out how we might deal with longer convs and I have a vague intuition that the current setup doesn't allow for this easily, but I need a more concrete understanding of why that is.)
+    X -start planning potential approaches (summarize past conv, include only last 1 message, only last n messages, etc.)
+        UPDATE: summarizing past feels a bit excessive for now. Let's try to get a "last n messages" approach working. If that turns out to not be sufficient we can revisit that decision.
+~ -start rebuilding convmanager
+    UPDATE: maintain list of user turns and gpt3 turns (as in your turn in a conversation). Then for each query, grab the last n and reconstruct a prompt. Don't allow user to pass in full prompt, just a single text input. Allow them to do this with query_later() as well (lazy isn't appropriate after all because it will return an object that needs to be called, whereas we want it to use the cached value the next time we call the method. I'm sure we could build a decorator like that without too much trouble but this solution is probably simpler).
+
+7/13/21
+-------
+-try ProtoConvManager to see what is/isn't working about new system
 -add popup modal on click save btn (default mode)
     -write save callback
     -write cancel callback

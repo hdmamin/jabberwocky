@@ -653,12 +653,17 @@ class ConversationManager:
 
         Parameters
         ----------
-        text: str
+        text: None or str
             The thing you'd like to say next. This should not start with
             "Me: " - that will be inserted automatically. This should also not
             include the wikipedia summary.
+        prompt: None or str
+            Instead of `text`, you have the option to provide the full prompt
+            including all past responses, the wikipedia summary, etc. This
+            should include all the "Me:" and "{Persona}:" prefixes.
 
-            See ConversationManager for other kwargs.
+            See PromptManager for other kwargs.
+
         Returns
         -------
         tuple[str]: Tuple of (prompt, response), just like all gpt3 queries.

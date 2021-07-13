@@ -21,7 +21,8 @@ setuptools.setup(name='jabberwocky',
                  version=version(),
                  author='Harrison Mamin',
                  author_email='harrisonmamin@gmail.com',
-                 description='Art generation with gpt3 and generative adversarial networks.',
+                 description='Core library powering a GUI providing an audio '
+                             'interface to GPT3.',
                  install_requires=requirements(),
                  packages=setuptools.find_packages())
 
