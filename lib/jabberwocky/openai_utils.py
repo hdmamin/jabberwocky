@@ -800,7 +800,7 @@ class ConversationManager:
         return len(self.name2base)
 
 
-def print_response(prompt, response):
+def print_response(prompt, response, sep=' '):
     """Print gpt3 prompt and response. Prompt is in bold to make it easier to
     distinguish between them.
 
@@ -809,8 +809,11 @@ def print_response(prompt, response):
     prompt: str
     response: str
         The text returned by gpt3.
+    sep: str
+        Placed between prompt and response. Defaults to a space because we
+        often apply str.strip to prompt and response automatically.
     """
-    print(bold(prompt), end='')
+    print(bold(prompt), end=sep)
     print(response)
 
 
