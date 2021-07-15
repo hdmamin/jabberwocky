@@ -442,8 +442,8 @@ def conv_query_callback(sender, data):
     # "surgery" on full conv.
     # TODO: rm engine=0 after testing
     _, response = CONV_MANAGER.query(prompt=full_prompt, engine_i=0)
-    hide_item(data['query_msg_id'])
     # _, response = CONV_MANAGER.query(prompt=full_prompt)
+    hide_item(data['query_msg_id'])
     full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.running_prompt)
     set_value(data['target_id'], full_conv)
     if get_value(data['read_checkbox_id']):
