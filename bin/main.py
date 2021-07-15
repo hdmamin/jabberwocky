@@ -437,14 +437,15 @@ def conv_query_callback(sender, data):
     # Notice we track our chunked conversation with a single key here unlike
     # default mode, where we require 1 for transcribed inputs and 1 for
     # GPT3-generated outputs.
-    full_prompt = CHUNKER.get('conv_transcribed', chunked=False).strip()
+    # full_prompt = CHUNKER.get('conv_transcribed', chunked=False).strip()
     # Grab response to use when reading lines, otherwise we have to perform
     # "surgery" on full conv.
     # TODO: rm engine=0 after testing
-    _, response = CONV_MANAGER.query(prompt=full_prompt, engine_i=0)
-    # _, response = CONV_MANAGER.query(prompt=full_prompt)
+    # _, response = CONV_MANAGER.query(prompt=full_prompt, engine_i=0)
+    assert CONV_MANAGER.cached_query, 'Should have pre-cached query by now.' # TODO rm
+    _, response = CONV_MANAGER.query(engine_i=0)
     hide_item(data['query_msg_id'])
-    full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.running_prompt)
+    full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.full_conversation)
     set_value(data['target_id'], full_conv)
     if get_value(data['read_checkbox_id']):
         read_response(response, data)

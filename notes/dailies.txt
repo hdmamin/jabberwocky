@@ -1108,8 +1108,15 @@ X -draft full_conversation property to replace full_conv
 X -test format_prompt
     X -test full_conversation property
     X -once troubleshooting done, remove refs to full_conv and update (not just text replace: can no longer delete property unless I make some tweaks but I don't think that's necessary)
--port new convmanager
-    -integrate into GUI
+X -port new convmanager
+    X -update gui refs to running_prompt
+
+7/15/21
+-------
+-update gui to work w/ new turn-limited conv process
+    -check notes: where does conv_query get text from? what conv-related keys does chunker maintain? Where do we need to cache new turn (presumably both in transcribe callback and text edit callback?)
+    -check that saving w/ no conv still produces warning. Might need to adjust full_conversation property to return empty str when no turns.
+    -implement changes
 -add popup modal on click save btn (default mode)
     -write save callback
     -write cancel callback
