@@ -26,8 +26,7 @@ MANAGER = PromptManager(verbose=False, skip_tasks=['conv_proto'])
 # TODO: eventually make all personas available but loading is faster this way
 # which is nice during dev. Use > 1 to allow testing switching between
 # personas.
-CONV_MANAGER = ConversationManager('Barack Obama', 'Brandon Sanderson',
-                                   verbose=False)
+CONV_MANAGER = ConversationManager('Barack Obama', 'Brandon Sanderson')
 
 NAME2TASK = IndexedDict({
     'Punctuate': 'punctuate',
@@ -103,6 +102,7 @@ def transcribe_callback(sender, data):
                                    'update_kwargs': True,
                                    'key': 'transcribed'})
     else:
+        CONV_MANAGER.query_later(text)
         text = CONV_MANAGER.format_prompt(text, exclude_trailing_name=True)
         chunked = CHUNKER.add('conv_transcribed', text)
         set_value(data['target_id'], chunked)
@@ -163,8 +163,22 @@ def text_edit_callback(sender, data):
     # maintains its own conversation history and I think it only uses CHUNKER
     # to get the new prompt.
     else:
-        CHUNKER.add('conv_transcribed', get_value('conv_text'),
-                    return_chunked=False)
+        edited = get_value('conv_text')
+        CHUNKER.add('conv_transcribed', edited, return_chunked=False)
+        # Can't figure out a way to get around this: have to do some surgery
+        # to extract the last user turn. You can't edit gpt3 speech or your
+        # turns that have already been sent to the model. Editing your most
+        # recently transcribed turn BEFORE querying is the only accepted edit
+        # type.
+        last_turn = edited.rpartition('\n\nMe: ')[-1].strip()
+        pretty_name = CONV_MANAGER.process_name(CONV_MANAGER.current_persona,
+                                                inverse=True)
+        if f'\n\n{pretty_name}: ' not in last_turn:
+            CONV_MANAGER.query_later(last_turn)
+        else:
+            show_item('edit_warning_msg')
+            time.sleep(2)
+            hide_item('edit_warning_msg')
 
 
 def task_select_callback(sender, data):
@@ -437,12 +451,9 @@ def conv_query_callback(sender, data):
     # Notice we track our chunked conversation with a single key here unlike
     # default mode, where we require 1 for transcribed inputs and 1 for
     # GPT3-generated outputs.
-    # full_prompt = CHUNKER.get('conv_transcribed', chunked=False).strip()
     # Grab response to use when reading lines, otherwise we have to perform
     # "surgery" on full conv.
     # TODO: rm engine=0 after testing
-    # _, response = CONV_MANAGER.query(prompt=full_prompt, engine_i=0)
-    assert CONV_MANAGER.cached_query, 'Should have pre-cached query by now.' # TODO rm
     _, response = CONV_MANAGER.query(engine_i=0)
     hide_item(data['query_msg_id'])
     full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.full_conversation)
@@ -811,6 +822,9 @@ class App:
                      default_value='Query in progress...', show=False)
             add_checkbox('conv_interrupt_checkbox', label='Interrupt',
                          show=False)
+            add_text('edit_warning_msg', show=False,
+                     default_value='You can only edit your most recent '
+                                   'speaking turn.')
 
             # Just tweaked height until it seemed to do what I want (no
             # vertical scroll w/ default window size). Not sure how to

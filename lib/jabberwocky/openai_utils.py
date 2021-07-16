@@ -703,6 +703,10 @@ class ConversationManager:
         # In the same spirit as our handling of kwargs here, passing in a text
         # arg will override a cached query if one exists.
         text = text or self.cached_query
+        if not text:
+            raise ValueError('You must pass in an argument for text when no '
+                             'query has been previously cached.')
+
         kwargs = self.kwargs(fully_resolved=False, return_prompt=False,
                              extra_kwargs=extra_kwargs, **kwargs)
         prompt = self.format_prompt(user_text=text)

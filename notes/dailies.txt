@@ -1113,16 +1113,26 @@ X -port new convmanager
 
 7/15/21
 -------
--update gui to work w/ new turn-limited conv process
-    -check notes: where does conv_query get text from? what conv-related keys does chunker maintain? Where do we need to cache new turn (presumably both in transcribe callback and text edit callback?)
-    -check that saving w/ no conv still produces warning. Might need to adjust full_conversation property to return empty str when no turns.
-    -implement changes
+X -update gui to work w/ new turn-limited conv process
+    X -check notes: where does conv_query get text from? what conv-related keys does chunker maintain? Where do we need to cache new turn (presumably both in transcribe callback and text edit callback?)
+    X -check that saving w/ no conv still produces warning. Might need to adjust full_conversation property to return empty str when no turns.
+        UPDATE: gets text from chunker anyway so recent changes didn't affect this.
+    X -implement changes
+X -show error msg when user tries to edit an old turn
+    UPDATE: would have liked popup the user has to close but that seems to need to be tied to a button (i.e. appears on click, not from callback. Newer dearpygui versions supposedly have this but I tried updating and it looks like the api changed significantly and would break all my code so I should stick with 0.6.415.)
+X -text edit callback for conv mode: atm, if we edit text the chunker still only has the pre-edited version [should do mapping task (1st bullet point) first]
+X -start looking into pyinstaller
+    UPDATE: tried running even though not quite done yet just to see what the process looks like and how difficult it might be. Quite slow to run, not sure if this will work yet.
+
+7/16/21
+-------
 -add popup modal on click save btn (default mode)
     -write save callback
     -write cancel callback
     -are we able to refactor to combine w/ existing funcs? Or need to keep separate?
 -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
--text edit callback for conv mode: atm, if we edit text the chunker still only has the pre-edited version [should do mapping task (1st bullet point) first]
+-start considering how we might refactor giant mess of giant gui file
+-try 
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
