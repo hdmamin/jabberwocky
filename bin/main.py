@@ -10,8 +10,8 @@ import speech_recognition as sr
 import time
 from threading import Thread
 
-from htools.core import tolist, select, save, load
-from htools.meta import params, debug, decorate_functions
+from htools.core import tolist, select, save
+from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, ConversationManager,\
     query_gpt3, query_gpt_neo
