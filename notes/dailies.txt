@@ -1126,13 +1126,14 @@ X -start looking into pyinstaller
 
 7/16/21
 -------
+X -follow up on pyinstaller - did it work?
+    UPDATE: sort of - pyinstaller completed but we get an error when trying to run the app. See misc.txt.
 -add popup modal on click save btn (default mode)
     -write save callback
     -write cancel callback
     -are we able to refactor to combine w/ existing funcs? Or need to keep separate?
 -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
 -start considering how we might refactor giant mess of giant gui file
--try 
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

@@ -6,4 +6,7 @@ data/*
 !data/prompts
 *egg-info*
 *.swp
+bin/dist
+bin/build
+bin/main.spec
 

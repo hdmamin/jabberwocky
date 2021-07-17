@@ -76,3 +76,10 @@ Thoughts:
 -maybe we should store a list of user inputs and gpt3 responses so it's easy to choose how many to pass in each time (imagine a param response_window=2, for example).
 -running_prompt should not be used by GUI: keep that fully internal. Provide a separate conversation_history var (basically what running_prompt currently refers to).
 -maybe should provide method to "query_later". Or this could be an opportunity for my @lazy decorator!
+
+7/16/21
+-------
+pyinstaller error when trying to run result (file bin/dist/main/main.exe, exe not visible though):
+
+https://stackoverflow.com/questions/35478526/pyinstaller-numpy-intel-mkl-fatal-error-cannot-load-mkl-intel-thread-dll
+Looks like we need to write some hook for pyinstaller. I'm guessing this will be just one of many pyinstaller errors so I'll hold off until I'm pretty sure I'm done.
