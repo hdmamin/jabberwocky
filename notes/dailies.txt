@@ -1138,9 +1138,23 @@ X -add popup modal on click save btn (default mode)
 
 7/17/21
 -------
--update default save mode to combine output w/ PROMPT, not just input in top text box. Maybe can use logged json file or could cache this in CHUNKER.
+X -update default save mode to combine output w/ PROMPT, not just input in top text box. Maybe can use logged json file or could cache this in CHUNKER.
+    UPDATE: realized I don't want prompt either (that often includes lots of examples), more like a specific subset of it. Performed some surgery to reconstruct the relevant portion. Logic is not bulletproof but it seems to work okay for most of my prompts.
 -investigate possible interruption checkbox bug (seems to auto-uncheck at end of sentence and keep going. So far only tried in default mode)
--clean up callback_data for default mode saving. Have some unused kwargs and some missing ones (currently hardcoded chunker keys, for example)
+    UPDATE: Didn't get to this today but did notice another issue: if we click save as while the speaker is speaking, file names aren't populated and we can't save or cancel until speaking is done. I think this is because callbacks are blocking and the popup's appearance is somehow triggered another way by dearpygui.
+X -clean up callback_data for default mode saving. Have some unused kwargs and some missing ones (currently hardcoded chunker keys, for example)
+    UPDATE: decided hardcoded keys are okay but deleted some other keys.
+X -rm conversation (prev referenced old name conv_proto), shortest, and short_dates from default mode. Testing w/ engine_i =0 is almost free and we're mostly done with testing this mode anyway.
+-consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
+-start considering how we might refactor giant mess of giant gui file
+-document callbacks and other stuff in main.py (large backlog here)
+
+7/18/21
+-------
+-investigate possible interruption checkbox bug (seems to auto-uncheck at end of sentence and keep going. So far only tried in default mode)
+-revisit project requirements to see if anything is missing
+-revisit project backlog to see if there's anything I should get to
+-consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
 -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
 -start considering how we might refactor giant mess of giant gui file
 -document callbacks and other stuff in main.py (large backlog here)

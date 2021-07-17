@@ -10,7 +10,7 @@ import speech_recognition as sr
 import time
 from threading import Thread
 
-from htools.core import tolist, select, save
+from htools.core import tolist, select, save, load
 from htools.meta import params, debug, decorate_functions
 from htools.structures import IndexedDict
 from jabberwocky.openai_utils import PromptManager, ConversationManager,\
@@ -23,7 +23,8 @@ from jabberwocky.utils import img_dims
 os.chdir('../')
 SPEAKER = Speaker(newline_pause=400)
 CHUNKER = GuiTextChunker(max_chars=70)
-MANAGER = PromptManager(verbose=False, skip_tasks=['conv_proto'])
+MANAGER = PromptManager(verbose=False,
+                        skip_tasks=['conversation', 'shortest', 'short_dates'])
 # TODO: eventually make all personas available but loading is faster this way
 # which is nice during dev. Use > 1 to allow testing switching between
 # personas.
@@ -348,6 +349,7 @@ def saveas_callback(sender, data):
         file = f'{CONV_MANAGER.current_persona}_{date}.txt'
     else:
         task_name = NAME2TASK[get_value(data['task_list_id'])]
+
         dir_ = str(Path(f'data/completions/{task_name}').absolute())
         file = f'{date}.txt'
     set_value(data['dir_id'], dir_)
@@ -355,6 +357,24 @@ def saveas_callback(sender, data):
 
 
 def save_callback(sender, data):
+    """
+    source_text_id (str: The text fields containing the content being saved. If
+        in conversation mode, these will be cleared after saving. Default mode
+        doesn't really need to specify them since they're unused in that case.
+    end_conv_id (str: ID of checkbox in conv mode specifying whether to end
+        the conversation. This isn't always true - we might want to save as we
+        go along, just like any time you're writing a long document. Only
+        necessary in conv mode.)
+    popup_id (str: ID of the popup opened by the saveas button. This will be
+        passed to cancel_save_conversation_callback to close the modal.)
+    error_msg_id: (str: ID of error message to display if we need to warn user
+        that the file name already exists or that there's nothing to save)
+    dir_id: (str: ID of text input box where user types directory
+        name)
+    file_id: (str: ID of text input box where user types file name)
+    force_save_id (str: ID of dearpygui checkbox to force save despite any
+        warnings that may have been surfaced)
+    """
     # Don't use ConversationManager's built-in save functionality because the
     # running prompt is only updated with the user's last response when a query
     # is made. If the user is the last one to comment, that line would be
@@ -370,7 +390,20 @@ def save_callback(sender, data):
         if is_item_visible('conv_window'):
             full_conv = CHUNKER.get('conv_transcribed', chunked=False)
         else:
-            full_conv = (CHUNKER.get('transcribed', chunked=False) + ' '
+            # Some surgery required: don't want full prompt with all examples
+            # but do want to include any relevant context included in the
+            # prompt. For example, the mma prediction prompt includes the word
+            # "Analysis:" at the end.
+            task_name = NAME2TASK[get_value(data['task_list_id'])]
+            prompt_template = MANAGER.prompts[task_name]['prompt']
+            # Seems like rpartition provides 3 items even if sep isn't found,
+            # while rsplit would only return 1 item in that case.
+            examples, _, partial_response = prompt_template.rpartition('{}')
+            partial_input = examples.split('\n\n')[-1]
+            full_conv = (partial_input
+                         + CHUNKER.get('transcribed', chunked=False)
+                         + partial_response
+                         + ' '
                          + CHUNKER.get('response', chunked=False))
     except KeyError:
         full_conv = ''
@@ -382,7 +415,8 @@ def save_callback(sender, data):
 
     # Reset text box, text chunker, and conversation manager. These should NOT
     # be done if we cancel the save operation. If user saved empty text, delete
-    # call would throw an error without if clause.
+    # call would throw an error without if clause. We also don't do this for
+    # default mode in case we want to reuse a prompt for multiple tasks.
     if is_item_visible('conv_window') and get_value(data['end_conv_id']):
         if full_conv: CHUNKER.delete('conv_transcribed')
         set_value(data['source_text_id'], '')
@@ -751,13 +785,15 @@ class App:
                 add_same_line()
                 add_checkbox('default_force_save_box', label='Force Save',
                              default_value=False)
+                # Notice this can skip a few of the keys we need to provide in
+                # conv mode.
                 save_callback_data = {
-                    'source_text_id': ['transcribed_text', 'response_text'],
                     'popup_id': 'Save Completion',
                     'error_msg_id': 'default_save_error_msg',
                     'dir_id': 'default_save_dir_text',
                     'file_id': 'default_save_file_text',
-                    'force_save_id': 'default_force_save_box'
+                    'force_save_id': 'default_force_save_box',
+                    'task_list_id': 'task_list'
                 }
                 add_button('default_save_btn', label='Save',
                            callback=save_callback,
@@ -853,7 +889,6 @@ class App:
                            callback=cancel_save_conversation_callback,
                            callback_data={'popup_id': 'Save Conversation',
                                           'source_text_id': 'conv_text',
-                                          'popup_id': 'Save Conversation',
                                           'error_msg_id': 'save_error_msg',
                                           'dir_id': 'save_dir_text',
                                           'file_id': 'save_file_text',
