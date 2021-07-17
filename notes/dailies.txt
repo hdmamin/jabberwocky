@@ -1128,12 +1128,26 @@ X -start looking into pyinstaller
 -------
 X -follow up on pyinstaller - did it work?
     UPDATE: sort of - pyinstaller completed but we get an error when trying to run the app. See misc.txt.
--add popup modal on click save btn (default mode)
-    -write save callback
-    -write cancel callback
-    -are we able to refactor to combine w/ existing funcs? Or need to keep separate?
+X -add popup modal on click save btn (default mode)
+    X -write save callback
+    X -write cancel callback
+    X -are we able to refactor to combine w/ existing funcs? Or need to keep separate?
+        UPDATE: ended up editing existing funcs for these rather than writing new ones.
 -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
 -start considering how we might refactor giant mess of giant gui file
+
+7/17/21
+-------
+-update default save mode to combine output w/ PROMPT, not just input in top text box. Maybe can use logged json file or could cache this in CHUNKER.
+-investigate possible interruption checkbox bug (seems to auto-uncheck at end of sentence and keep going. So far only tried in default mode)
+-clean up callback_data for default mode saving. Have some unused kwargs and some missing ones (currently hardcoded chunker keys, for example)
+-consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
+-start considering how we might refactor giant mess of giant gui file
+-document callbacks and other stuff in main.py (large backlog here)
+
+-------------------------------------------------------------------------------
+easy tasks for low energy days
+
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

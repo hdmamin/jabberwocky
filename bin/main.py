@@ -5,6 +5,7 @@ from dearpygui.core import *
 from dearpygui.simple import *
 from nltk.tokenize import sent_tokenize
 import os
+from pathlib import Path
 import speech_recognition as sr
 import time
 from threading import Thread
@@ -331,16 +332,29 @@ def cancel_save_conversation_callback(sender, data):
     close_popup(data['popup_id'])
 
 
-def saveas_conversation_callback(sender, data):
+def saveas_callback(sender, data):
+    """data keys:
+        - dir_id (str: identifies dearpygui text input field for dir name)
+        - file_id (str: identifies dearpygui text input field for file name)
+        - task_list_id (str: DEFAULT MODE ONLY. Identifies dearpygui listbox
+            item so we can retrieve the current task.)
+    """
     # This executes when the user first clicks Save As.
-    # save_conversation_callback will then execute if the user proceeds to hit
+    # save_callback will then execute if the user proceeds to hit
     # save from the newly visible modal.
-    set_value(data['dir_id'], str(CONV_MANAGER.conversation_dir.absolute()))
     date = dt.today().strftime('%Y-%m-%d')
-    set_value(data['file_id'], f'{CONV_MANAGER.current_persona}_{date}.txt')
+    if is_item_visible('conv_window'):
+        dir_ = str(CONV_MANAGER.conversation_dir.absolute())
+        file = f'{CONV_MANAGER.current_persona}_{date}.txt'
+    else:
+        task_name = NAME2TASK[get_value(data['task_list_id'])]
+        dir_ = str(Path(f'data/completions/{task_name}').absolute())
+        file = f'{date}.txt'
+    set_value(data['dir_id'], dir_)
+    set_value(data['file_id'], file)
 
 
-def save_conversation_callback(sender, data):
+def save_callback(sender, data):
     # Don't use ConversationManager's built-in save functionality because the
     # running prompt is only updated with the user's last response when a query
     # is made. If the user is the last one to comment, that line would be
@@ -353,7 +367,11 @@ def save_conversation_callback(sender, data):
 
     # In case user tries to save an empty conversation.
     try:
-        full_conv = CHUNKER.get('conv_transcribed', chunked=False)
+        if is_item_visible('conv_window'):
+            full_conv = CHUNKER.get('conv_transcribed', chunked=False)
+        else:
+            full_conv = (CHUNKER.get('transcribed', chunked=False) + ' '
+                         + CHUNKER.get('response', chunked=False))
     except KeyError:
         full_conv = ''
     if not full_conv and not get_value(data['force_save_id']):
@@ -365,7 +383,7 @@ def save_conversation_callback(sender, data):
     # Reset text box, text chunker, and conversation manager. These should NOT
     # be done if we cancel the save operation. If user saved empty text, delete
     # call would throw an error without if clause.
-    if get_value(data['end_conv_id']):
+    if is_item_visible('conv_window') and get_value(data['end_conv_id']):
         if full_conv: CHUNKER.delete('conv_transcribed')
         set_value(data['source_text_id'], '')
         CONV_MANAGER.start_conversation(CONV_MANAGER.current_persona)
@@ -716,7 +734,41 @@ class App:
                     'manually press the button.'
                 )
             add_same_line()
-            add_button('default_saveas_btn', label='Save As')
+            add_button('default_saveas_btn', label='Save As',
+                       callback=saveas_callback,
+                       callback_data={'dir_id': 'default_save_dir_text',
+                                      'file_id': 'default_save_file_text',
+                                      'task_list_id': 'task_list'})
+
+            with popup('default_saveas_btn', 'Save Completion', modal=True,
+                       width=450, mousebutton=mvMouseButton_Left):
+                # Input dir and file names both get updated in save as callback
+                # so the values here don't really matter.
+                add_input_text('default_save_dir_text', label='Directory',
+                               default_value='')
+                add_input_text('default_save_file_text', label='File Name',
+                               default_value='')
+                add_same_line()
+                add_checkbox('default_force_save_box', label='Force Save',
+                             default_value=False)
+                save_callback_data = {
+                    'source_text_id': ['transcribed_text', 'response_text'],
+                    'popup_id': 'Save Completion',
+                    'error_msg_id': 'default_save_error_msg',
+                    'dir_id': 'default_save_dir_text',
+                    'file_id': 'default_save_file_text',
+                    'force_save_id': 'default_force_save_box'
+                }
+                add_button('default_save_btn', label='Save',
+                           callback=save_callback,
+                           callback_data=save_callback_data)
+                add_same_line()
+                add_button('default_cancel_save_btn', label='Cancel',
+                           callback=cancel_save_conversation_callback,
+                           callback_data=save_callback_data)
+                add_same_line()
+                add_text('default_save_error_msg',
+                         default_value='Failed to save file.', show=False)
 
             add_text('record_msg', default_value='Recording in progress...',
                      show=False)
@@ -767,7 +819,7 @@ class App:
                          'within several seconds.')
             add_same_line()
             add_button('conv_saveas_btn', label='Save As',
-                       callback=saveas_conversation_callback,
+                       callback=saveas_callback,
                        callback_data={'dir_id': 'save_dir_text',
                                       'file_id': 'save_file_text'})
             with popup('conv_saveas_btn', 'Save Conversation', modal=True,
@@ -788,7 +840,7 @@ class App:
                 add_checkbox('force_save_box', label='Force Save',
                              default_value=False)
                 add_button('conv_save_btn', label='Save',
-                           callback=save_conversation_callback,
+                           callback=save_callback,
                            callback_data={'source_text_id': 'conv_text',
                                           'popup_id': 'Save Conversation',
                                           'error_msg_id': 'save_error_msg',
@@ -811,6 +863,8 @@ class App:
                 add_text('save_error_msg',
                          default_value='Failed to save file.', show=False)
             add_same_line()
+
+            # Other non-save-related buttons.
             add_button('end_conversation_btn', label='End Conversation',
                        callback=end_conversation_callback)
             add_text('conv_record_msg',
