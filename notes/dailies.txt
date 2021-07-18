@@ -1151,13 +1151,19 @@ X -rm conversation (prev referenced old name conv_proto), shortest, and short_da
 
 7/18/21
 -------
--investigate possible interruption checkbox bug (seems to auto-uncheck at end of sentence and keep going. So far only tried in default mode)
--revisit project requirements to see if anything is missing
+X -investigate possible interruption checkbox bug (seems to auto-uncheck at end of sentence and keep going. So far only tried in default mode)
+    UPDATE: nested for loop issue. Changed checkbox monitor to append an exception object to error list and have the speech function raise that inside a try/except block rather than deal with for/else weirdness.
+X -add tooltips warning user about end_conversation button and about using save_as during speaking.
+X -revisit project requirements to see if anything is missing
+	UPDATE: reviewed and ended up filling out the postmortem (except for end date) - slightly cheating but I found I'm at a point where I can address most of the issues laid out there.
+
+7/19/21
+-------
+-document callbacks and other stuff in main.py (large backlog here)
+-start considering how we might refactor giant mess of giant gui file
 -revisit project backlog to see if there's anything I should get to
 -consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
 -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
--start considering how we might refactor giant mess of giant gui file
--document callbacks and other stuff in main.py (large backlog here)
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days

@@ -483,12 +483,21 @@ def read_response(response, data):
     thread = Thread(target=monitor_interrupt_checkbox,
                     args=(data['interrupt_id'], errors))
     thread.start()
-    for sent in sent_tokenize(response):
-        for chunk in sent.split('\n\n'):
-            SPEAKER.speak(chunk)
-            if errors:
-                set_value(data['interrupt_id'], False)
-                break
+    try:
+        for sent in sent_tokenize(response):
+            for chunk in sent.split('\n\n'):
+                print(errors, chunk)
+                SPEAKER.speak(chunk)
+                if errors:
+                    set_value(data['interrupt_id'], False)
+                    raise errors[0]
+    except RuntimeError:
+        # Checkbox monitor raises this type of error if the user asks to
+        # interrupt. Would need to use multiple break statements and an else
+        # clause in the inner for loop otherwise (without it, a chunk of text
+        # containing a double newline but no period would only break out of the
+        # inner loop when an exception is raised).
+        pass
     hide_item(data['interrupt_id'])
     thread.join()
 
@@ -543,7 +552,8 @@ def monitor_speaker(speaker, name, wait=1, quit_after=None, debug=False):
             break
 
 
-def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None):
+def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None,
+                               error_type=RuntimeError):
     """Track when the interrupt option is checked (run this function in a
     separate thread). Couldn't figure out a way to check this with a button
     (is_item_clicked seems to check only at that exact instant) so we use a
@@ -567,11 +577,15 @@ def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None):
         Max run time for the monitor. I feel like this shouldn't be necessary
         but IIRC threads weren't always closing otherwise (reasons unknown?) so
         I added this in for easier debugging.
+    error_type: type
+        Exception class. This determines the type of error that will be
+        appended to the list of errors if the user wants to interrupt the
+        speech.
     """
     start = time.perf_counter()
     while True:
         if get_value(box_id):
-            errors.append(True)
+            errors.append(error_type('User interrupted speaking session.'))
             print('Checkbox monitor quitting due to checkbox selection.')
             break
         time.sleep(wait)
@@ -773,6 +787,8 @@ class App:
                        callback_data={'dir_id': 'default_save_dir_text',
                                       'file_id': 'default_save_file_text',
                                       'task_list_id': 'task_list'})
+            with tooltip('default_saveas_btn', 'default_saveas_btn_tooltip'):
+                add_text('Do not save while speaking is in progress.')
 
             with popup('default_saveas_btn', 'Save Completion', modal=True,
                        width=450, mousebutton=mvMouseButton_Left):
@@ -858,6 +874,8 @@ class App:
                        callback=saveas_callback,
                        callback_data={'dir_id': 'save_dir_text',
                                       'file_id': 'save_file_text'})
+            with tooltip('conv_saveas_btn', 'conv_saveas_btn_tooltip'):
+                add_text('Do not save while speaking is in progress.')
             with popup('conv_saveas_btn', 'Save Conversation', modal=True,
                        width=450, mousebutton=mvMouseButton_Left):
                 # Input dir and file names both get updated in save as callback
@@ -900,8 +918,11 @@ class App:
             add_same_line()
 
             # Other non-save-related buttons.
-            add_button('end_conversation_btn', label='End Conversation',
+            add_button('end_conv_btn', label='End Conversation',
                        callback=end_conversation_callback)
+            with tooltip('end_conv_btn', 'end_conv_btn_callback'):
+                add_text('This will delete the current conversation. \nYou '
+                         'will no longer be able to save a transcript.')
             add_text('conv_record_msg',
                      default_value='Recording in progress...',
                      show=False)
