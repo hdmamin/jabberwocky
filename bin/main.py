@@ -25,10 +25,7 @@ SPEAKER = Speaker(newline_pause=400)
 CHUNKER = GuiTextChunker(max_chars=70)
 MANAGER = PromptManager(verbose=False,
                         skip_tasks=['conversation', 'shortest', 'short_dates'])
-# TODO: eventually make all personas available but loading is faster this way
-# which is nice during dev. Use > 1 to allow testing switching between
-# personas.
-CONV_MANAGER = ConversationManager('Barack Obama', 'Brandon Sanderson')
+CONV_MANAGER = ConversationManager()
 
 NAME2TASK = IndexedDict({
     'Punctuate': 'punctuate',
@@ -197,8 +194,6 @@ def task_select_callback(sender, data):
         text_source_id=data['text_source_id'],
         do_format=False
     )
-    # TODO: Is this necessary? Can't remember and it looks repetitive, but I
-    # vaguely recall adding this to fix some bug.
     if CHUNKER._previously_added('transcribed', user_text):
         user_text = CHUNKER.get('transcribed', chunked=False)
     updated_prompt = MANAGER.prompt(task_name, user_text)
@@ -514,8 +509,7 @@ def conv_query_callback(sender, data):
     # GPT3-generated outputs.
     # Grab response to use when reading lines, otherwise we have to perform
     # "surgery" on full conv.
-    # TODO: rm engine=0 after testing
-    _, response = CONV_MANAGER.query(engine_i=0)
+    _, response = CONV_MANAGER.query(engine_i=2)
     hide_item(data['query_msg_id'])
     full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.full_conversation)
     set_value(data['target_id'], full_conv)

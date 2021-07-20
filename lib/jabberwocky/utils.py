@@ -5,6 +5,7 @@ from functools import update_wrapper
 from inspect import _empty, Parameter, signature
 from pathlib import Path
 from PIL import Image
+import sys
 import yaml
 
 from htools import select, bound_args, copy_func, xor_none
@@ -168,6 +169,19 @@ def img_dims(path, width=None, height=None, verbose=False):
     curr_width, curr_height = Image.open(path).size
     if verbose: print(f'width: {curr_width}, height: {curr_height}')
     return _img_dims(curr_width, curr_height, width=width, height=height)
+
+
+def set_module_global(module, key, value):
+    """Create global variable in an imported module. This is a slightly hacky
+    workaround that solves some types of circular imports.
+
+    Parameters
+    ----------
+    module: str
+    key: str
+    value: any
+    """
+    setattr(sys.modules[module], key, value)
 
 
 class Partial:
