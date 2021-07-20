@@ -1159,8 +1159,13 @@ X -revisit project requirements to see if anything is missing
 
 7/19/21
 -------
--document callbacks and other stuff in main.py (large backlog here)
--start considering how we might refactor giant mess of giant gui file
+X -start considering how we might refactor giant mess of giant gui file
+	UPDATE: managed to separate out callbacks and utils to separate files but it took some minor hackery w/ setting globals in imported modules. 😬
+
+7/20/21
+-------
+-document callbacks and other stuff in bin (large backlog here)
+-give pyinstaller another shot (I think I may have saved some notes on the error msg I got last time)
 -revisit project backlog to see if there's anything I should get to
 -consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
 -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)

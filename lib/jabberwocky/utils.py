@@ -184,6 +184,11 @@ def set_module_global(module, key, value):
     setattr(sys.modules[module], key, value)
 
 
+def set_module_globals(module, **kwargs):
+    for k, v in kwargs.items():
+        set_module_global(module, k, v)
+
+
 class Partial:
     """More powerful (though also potentially more fragile) version of
     functools.partial that updates the resulting signature to work better with
