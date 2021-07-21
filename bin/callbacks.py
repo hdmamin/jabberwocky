@@ -1,3 +1,18 @@
+"""Callbacks for our dearpygui app. Note that this module relies on a number of
+global variables which are defined after import in main.py:
+-APP
+-SPEAKER
+-CHUNKER
+-CONV_MANAGER
+-MANAGER
+-GENDER2VOICE
+-MODEL_NAMES
+-NAME2TASK
+
+Pycharm highlights these as errors since they appear to be undefined when
+looking at this module in isolation.
+"""
+
 from datetime import datetime as dt
 from dearpygui.core import *
 from dearpygui.simple import *
@@ -14,15 +29,17 @@ from utils import read_response
 
 
 def transcribe_callback(sender, data):
-    """Triggered when user hits the Record button.
+    """Triggered when user hits the Record button. Used in both default mode
+    and conv mode.
 
     data keys:
-        - target_id
-        - show_during_ids
-        - show_after_ids
-        - is_default
+        - target_id (str: dearpygui text input box to display transcribed text
+            in)
+        - show_during_ids (Iterable[str]: dearpygui items to display during
+            transcription. Usually just a text element saying transcription is
+            in progress.)
     """
-    if data['is_default']:
+    if is_item_visible('default_window'):
         set_value(data['target_id'], '')
     show_during = data.get('show_during_ids', [])
     for id_ in show_during:
@@ -45,10 +62,8 @@ def transcribe_callback(sender, data):
     # Update text and various components now that transcription is complete.
     for id_ in show_during:
         hide_item(id_)
-    for id_ in data.get('show_after_ids', []):
-        show_item(id_)
 
-    if data['is_default']:
+    if is_item_visible('default_window'):
         set_value(data['target_id'], text)
         # If not in conversation mode, manually call this so prompt is updated
         # once we finish recording.
@@ -65,12 +80,17 @@ def transcribe_callback(sender, data):
 
 
 def format_text_callback(sender, data):
-    """
+    """Used in conv mode when user hits auto-format button. Mostly just chunks
+    text since dearpygui doesn't wrap lines automatically. Also adds a colon
+    at the end of text if task is "how to".
+
     data keys:
-        - text_source_id
-        - key (str: name CHUNKER will use to map raw text to chunked text.)
-        - task_list_id
-        - update_kwargs (bool)
+        - text_source_id (str: name of element to get text from)
+        - key (str: name CHUNKER will use to map raw text to chunked text)
+        - task_list_id (str: dearpygui listbox to get current task from)
+        - update_kwargs (bool: Whether to update kwargs in
+            task_select_callback. False by default but True when this is
+            called by transcribe_callback)
     """
     task_name = NAME2TASK[get_value(data['task_list_id'])]
     text = get_value(data['text_source_id'])
@@ -138,7 +158,9 @@ def text_edit_callback(sender, data):
 
 
 def task_select_callback(sender, data):
-    """data keys:
+    """Triggered when user selects a task (e.g. Summary) in default mode.
+
+    data keys:
         - task_list_id (str: element containing selected item. Returns an int.)
         - text_source_id (str: element containing text for prompt input)
         - update_kwargs (bool: specifies whether to update query kwargs like
@@ -177,6 +199,10 @@ def task_select_callback(sender, data):
 
 
 def end_conversation_callback(sender, data):
+    """Triggered when user clicks the end conversation button in conv mode.
+    Also tries to delete a stored conversation from CHUNKER if one exists.
+
+    """
     name = CONV_MANAGER.current_persona
     CONV_MANAGER.end_conversation()
     try:
@@ -199,6 +225,13 @@ def persona_select_callback(sender, data):
     an empty dict - forget which but not important right now). The
     end_conversation_callback also uses this strategy to reset the
     conversation and accompanying metadata.
+
+    data keys:
+        - name (str: OPTIONAL. Usually this is determined by the selected item
+            in our persona listbox, but when loading a new persona we want to
+            force change the current person. However, dearpygui seemingly won't
+            let us change the selected listbox item so I pass in the name
+            manually).
     """
     # Don't love hard-coding this but there's no data arg when triggered by
     # listbox selection.
@@ -219,10 +252,16 @@ def persona_select_callback(sender, data):
 
 
 def add_persona_callback(sender, data):
-    """
+    """Triggered in conv mode when user clicks the Add Persona button. This
+    usually requires internet access since we try to download a quick bio from
+    Wikipedia if we haven't already.
+
     data keys:
         source_id (str: name of text input where user enters a new name)
         target_id (str: name of listbox to update after downloading new data)
+        show_during_id (str: item to show while this executes. Usually a
+            message explaining that downloading is occurring since it can take
+            a few seconds)
     """
     name = get_value(data['source_id'])
     if not name: return
@@ -245,16 +284,35 @@ def add_persona_callback(sender, data):
 
 
 def cancel_save_conversation_callback(sender, data):
-    # Reset checkbox and error message to defaults before closing modal. Don't
-    # need to reset dir name and file name here because that happens in Save As
-    # callback.
+    """This is executed when the user hits cancel in the Save file popup. It's
+    also manually called at the end of save_callback since it's a convenient
+    way to reset several items at once.
+
+    data keys:
+        - error_msg_id (str: text element containing a message displayed when
+            a save error occurs. This will be hidden since we don't want it to
+            show by default on our next save attempt.)
+        - force_save_id (bool: checkbox element asking user whether they want
+            to force save despite possible error (e.g. empty conversation or
+            overwriting existing file name). This will also be reset.)
+        - popup_id (str: the dearpygui popup item containing all save options.
+            This is what finally closes the modal.)
+    """
+    # Resets checkbox and error message to defaults before closing modal.
+    # Don't need to reset dir name and file name here because that happens in
+    # Save As callback.
     hide_item(data['error_msg_id'])
     set_value(data['force_save_id'], False)
     close_popup(data['popup_id'])
 
 
 def saveas_callback(sender, data):
-    """data keys:
+    """Triggered when user hits Save As button in either default or conv mode.
+    Note that saving will not actually occur until the user hits the save
+    button in the popup that appears because we still need to confirm the file
+    name, directory, etc.
+
+    data keys:
         - dir_id (str: identifies dearpygui text input field for dir name)
         - file_id (str: identifies dearpygui text input field for file name)
         - task_list_id (str: DEFAULT MODE ONLY. Identifies dearpygui listbox
@@ -277,23 +335,25 @@ def saveas_callback(sender, data):
 
 
 def save_callback(sender, data):
-    """
-    source_text_id (str: The text fields containing the content being saved. If
-        in conversation mode, these will be cleared after saving. Default mode
-        doesn't really need to specify them since they're unused in that case.
-    end_conv_id (str: ID of checkbox in conv mode specifying whether to end
-        the conversation. This isn't always true - we might want to save as we
-        go along, just like any time you're writing a long document. Only
-        necessary in conv mode.)
-    popup_id (str: ID of the popup opened by the saveas button. This will be
-        passed to cancel_save_conversation_callback to close the modal.)
-    error_msg_id: (str: ID of error message to display if we need to warn user
-        that the file name already exists or that there's nothing to save)
-    dir_id: (str: ID of text input box where user types directory
-        name)
-    file_id: (str: ID of text input box where user types file name)
-    force_save_id (str: ID of dearpygui checkbox to force save despite any
-        warnings that may have been surfaced)
+    """Triggered when user hits save button inside the popup that appears after
+    hitting the Save As button.
+
+    data_keys:
+        - source_text_id (str: The text fields containing the content being
+        saved. If in conversation mode, these will be cleared after saving.
+        Default mode doesn't really need to specify them since they're unused
+        in that case. end_conv_id (str: ID of checkbox in conv mode specifying
+        whether to end the conversation. This isn't always true - we might want
+        to save as we go along, just like any time you're writing a long
+        document. Only necessary in conv mode.)
+        - popup_id (str: ID of the popup opened by the saveas button. This will
+        be passed to cancel_save_conversation_callback to close the modal.)
+        - error_msg_id: (str: ID of error message to display if we need to warn
+        user that the file name already exists or that there's nothing to save)
+        - dir_id: (str: ID of text input box where user types directory name)
+        - file_id: (str: ID of text input box where user types file name)
+        - force_save_id (str: ID of dearpygui checkbox to force save despite
+        any warnings that may have been surfaced)
     """
     # Don't use ConversationManager's built-in save functionality because the
     # running prompt is only updated with the user's last response when a query
@@ -345,9 +405,15 @@ def save_callback(sender, data):
 
 
 def query_callback(sender, data):
-    """data keys:
+    """Triggered when user hits query button in default mode. Conv query is
+    separate because the process is quite different: that's why we have a
+    separate prompt manager for regular tasks and for conversation.
+
+    data keys:
         - target_id (str: element to display text response in)
         - interrupt_id (str: button to interrupt speaker if enabled)
+        - query_msg_id (str: name of text element to display during query since
+            this takes a few seconds)
     """
     show_item(data['query_msg_id'])
     # Can't pass empty list in for stop parameter.
@@ -393,7 +459,8 @@ def query_callback(sender, data):
 
 
 def conv_query_callback(sender, data):
-    """
+    """Triggered when user hits query button in conv mode.
+
     data keys:
         - target_id (str: text input element, used to display both input and
         output)
@@ -413,7 +480,9 @@ def conv_query_callback(sender, data):
 
 
 def resize_callback(sender):
-    # Resize callback is one of the few to not accept data.
+    """Triggered when the GUI main window is resized. It's one of the few
+    callbacks that doesn't accept a `data` argument.
+    """
     width, height = get_main_window_size()
     APP.recompute_dimensions(width, height)
     windows = ['conv_window', 'default_window', 'default_options_window',
@@ -437,6 +506,9 @@ def resize_callback(sender):
 
 
 def menu_conversation_callback(sender, data):
+    """Triggered when user selects Conversation mode from the main menu.
+    Controls which windows are displayed.
+    """
     show_item('conv_window')
     show_item('conv_options_window')
     hide_item('default_window')
@@ -446,6 +518,9 @@ def menu_conversation_callback(sender, data):
 
 
 def menu_default_callback(sender, data):
+    """Triggered when user selects default mode from the main menu.
+    Controls which windows are displayed.
+    """
     show_item('default_window')
     show_item('default_options_window')
     hide_item('conv_window')
@@ -462,15 +537,16 @@ def update_persona_info(img_name='conversation_img',
 
     Parameters
     ----------
-    img_name
-    parent
-    text_name
-    text_key
-    dummy_name
-
-    Returns
-    -------
-
+    img_name: str
+        Name of dearpygui image element displaying current persona's photo.
+    parent: str
+        Parent dearpygui element (window) housing the summary.
+    text_name: str
+        Name of element displaying current persona summary.
+    text_key: str
+        The name to use when placing the summary in CHUNKER.
+    dummy_name: str
+        Name of dummy spacer element. It's size is set here.
     """
     dims = img_dims(CONV_MANAGER.current_img_path,
                     width=(APP.widths[.5] - 2*APP.pad) // 2)

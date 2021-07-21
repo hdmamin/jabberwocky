@@ -1,3 +1,10 @@
+"""Launches a GUI providing an audio interface to GPT3.
+
+Example usage:
+--------------
+python bin/main.py
+"""
+
 # I think dearpygui imports a different contextmanager so we rename this one.
 from dearpygui.core import *
 from dearpygui.simple import *
@@ -43,10 +50,42 @@ GENDER2VOICE = {'F': 'karen',
 
 
 class App:
+    """Dearpygui app. Was trying to organize things instead of having 1 giant
+    glob of context managers but I'm not sure this ended up any clearer. OOP
+    examples were sparse for dearpygui since the library doesn't formally
+    provide an API for that yet but I think I saw one sample that defined a
+    new class for each window rather than a method for each window like I did,
+    so that might be a better option in the future.
+    """
 
     def __init__(self, width=1_200, height=760, font_size=22,
                  font_path='data/fonts/OpenSans-Light.ttf', theme='dark',
                  width_pcts=(.5, 1.), height_pcts=(.5, 1.), pad=5):
+        """
+        Parameters
+        ----------
+        width: int
+            App main window size.
+        height: int
+            App main window height.
+        font_size: int
+            Font size of all text in app.
+        font_path: str or Path
+            Used to locate a local tff file defining a custom font.
+        theme: str
+            Defines dearpygui color scheme.
+        width_pcts: Iterable[float]
+            Defines possible column widths we might use: 0.5 means a column
+            taking up half of the total width. Safest just to leave as defaults
+            here.
+        height_pcts: Iterable[float]
+            Defines possible column widths we might use: 0.5 means a row takes
+            up half the total height. Safest just to leave as defaults here.
+        pad: int
+            Size of padding to use between windows. Used to space out other
+            elements too. I found dearpygui's formatting a bit confusing to
+            control so this is probably also best left as default value.
+        """
         self.width = width
         self.height = height
         self.pad = pad
@@ -65,6 +104,7 @@ class App:
         set_resize_callback(resize_callback)
 
     def _recompute_dimensions(self, dim, mode='width') -> dict:
+        """Helper when computing new dimensions when app window is resized."""
         pcts = getattr(self, f'{mode}_pcts')
         # Relies on us using a quadrant grid layout. Left/top items need to
         # allow for 3 padding occurrences while right/bottom items only need to
@@ -78,7 +118,9 @@ class App:
         return pct2size
 
     def recompute_dimensions(self, width, height):
-        """
+        """Recompute new dimensions and positions of app elements when window
+        is resized.
+
         Parameters
         ----------
         width: int
@@ -91,6 +133,15 @@ class App:
         self.pos = self._recompute_positions()
 
     def _recompute_positions(self):
+        """Recompute new x,y positions for each column in our layout when the
+        main window is resized.
+
+        Returns
+        -------
+        list[list[tuple]]: Each tuple is a pair of (x, y) coordinates.
+        pos[0][0] is top left, pos[0][1] is top right, pos[1][0] is bottom
+        left, and pos[1][1] is bottom right.
+        """
         pos = [
             [(self.pad, self.pad + self.menu_height),
              (self.widths[.5] + 2*self.pad, self.pad + self.menu_height)],
@@ -101,7 +152,8 @@ class App:
 
     def get_prompt_text(self, task_list_id='task_list',
                         text_source_id='transcribed_text', do_format=True):
-        """
+        """In default mode, get the current prompt. This can either be fully
+        resolved or not, depending on your choice of do_format.
 
         Parameters
         ----------
@@ -122,7 +174,11 @@ class App:
             return MANAGER.prompt(task_name, text=input_)
         return task_name, input_
 
-    def get_query_kwargs(self):
+    def get_query_kwargs(self) -> dict:
+        """Gets currently selected kwargs from GUI when in default mode. The
+        user can set these via various widgets and we need to access them to
+        make queries with the appropriate kwargs.
+        """
         # Gets currently selected kwargs from GUI.
         kwargs = {name: get_value(name) for name in self.query_kwarg_ids}
         kwargs['stop'] = kwargs['stop'].splitlines()
@@ -130,6 +186,11 @@ class App:
         return kwargs
 
     def primary_window(self):
+        """Defines the main window which hours both column windows. This lets
+        us override the default background color which can't be changed
+        otherwise. This method also defines the menu bar which lets us switch
+        between default and conv modes.
+        """
         # Just here to suppress the default background and its un-settable
         # color. Do not delete.
         with window('primary_window'):
@@ -143,6 +204,12 @@ class App:
                                       callback=menu_conversation_callback)
 
     def left_column(self):
+        """Defines the dearpygui elements in the left column of the app.
+        Notice this includes both the default window and the conv window, only
+        one of which is visible at a time. I believe I tried to separate them
+        but encountered issues since dearpygui does some black magic with the
+        current stack when defining windows.
+        """
         with window('default_window', width=self.widths[.5],
                     height=self.heights[1.], x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True):
@@ -151,8 +218,7 @@ class App:
             ###################################################################
             add_button('record_btn', label='Record',
                        callback_data={'show_during_ids': ['record_msg'],
-                                      'target_id': 'transcribed_text',
-                                      'is_default': True},
+                                      'target_id': 'transcribed_text'},
                        callback=transcribe_callback)
             with tooltip('record_btn', 'record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
@@ -259,8 +325,7 @@ class App:
             # Same as in default window but with different names/callback_data.
             add_button('conv_record_btn', label='Record',
                        callback_data={'show_during_ids': ['conv_record_msg'],
-                                      'target_id': 'conv_text',
-                                      'is_default': False},
+                                      'target_id': 'conv_text'},
                        callback=transcribe_callback)
             with tooltip('conv_record_btn', 'conv_record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
@@ -341,6 +406,12 @@ class App:
                            height=self.heights[1] - 16*self.pad)
 
     def right_column(self):
+        """Defines the dearpygui elements in the right column of the app.
+        Notice this includes both the default window and the conv window, only
+        one of which is visible at a time. I believe I tried to separate them
+        but encountered issues since dearpygui does some black magic with the
+        current stack when defining windows.
+        """
         with window('default_options_window', width=self.widths[.5],
                     height=self.heights[1.],
                     x_pos=self.widths[.5] + 2*self.pad,
@@ -518,11 +589,13 @@ class App:
             update_persona_info()
 
     def build(self):
+        """Create dearpygui windows and the elements they contain."""
         self.primary_window()
         self.left_column()
         self.right_column()
 
     def run(self):
+        """Builds and runs dearpygui app."""
         self.build()
         start_dearpygui(primary_window='primary_window')
 

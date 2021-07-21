@@ -1164,9 +1164,17 @@ X -start considering how we might refactor giant mess of giant gui file
 
 7/20/21
 -------
--document callbacks and other stuff in bin (large backlog here)
+X -document bin/utils functions
+X -document bin/callbacks functions (large backlog here)
+X -document bin/app functions/methods
+X -revisit project backlog to see if there's anything I should get to
+	UPDATE: nothing too major I really need to do.
+
+7/21/21
+-------
+-check punctuate task kwargs: do we update max_len dynamically? I don't think so but it would be nice.
+-see how hard it would be to add a warning in app based on task's config file message.
 -give pyinstaller another shot (I think I may have saved some notes on the error msg I got last time)
--revisit project backlog to see if there's anything I should get to
 -consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
 -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
 
@@ -1177,7 +1185,6 @@ easy tasks for low energy days
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
-- lots of waiting docs in core.py
 - dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
     -parent stack system
     -callbacks
@@ -1185,25 +1192,23 @@ easy tasks for low energy days
 -document session
 -document transcript methods
 -document textchunking class
--port htools as_df
 
 -------------------------------------------------------------------------------
 backlog
 
--flesh out owneraccess decorator
+-add warning from a prompt's config file in options window
+- lots of waiting docs in core.py
+- htools things:
+	-flesh out owneraccess decorator
+	-port htools as_df
+-watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
 -maybe update converse contextmanager to have input baked in
--refactor main.py (maybe a callbacks.py? Dearpygui OOP example also did things a bit differently (class for each element rather than a method for each), could try to change but probably too big of an overhaul given the small-ish payoff.)
--experiment w/ prompt to summarize past conversation? (just in gpt3 ui for now. May be a bit tricky to get this working right.)
--add prompt method/attr to conv manager?
--can we remove name2summary or name2base from conv manager?
 -see if slack app is a possibility (do I have auth to do in GG workspace?)
 -prototype cover letter writer from job posting
 -continue work on more generic Monitor class for htools
--add warning from a prompt's config file in options window
 -consider image task tie-ins
     -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
 -rename windows (would prefer to find way to separate id and label, but I don't think that's available)
--watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 

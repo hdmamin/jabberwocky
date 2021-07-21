@@ -185,6 +185,7 @@ def set_module_global(module, key, value):
 
 
 def set_module_globals(module, **kwargs):
+    """Set multiple global variables in an imported module."""
     for k, v in kwargs.items():
         set_module_global(module, k, v)
 

@@ -1,3 +1,9 @@
+"""General utilities used in our GUI that aren't callbacks. Note: this relies
+on the SPEAKER variable defined in main.py (main.py makes this variable
+available after importing utils - just making note of it here since pycharm
+will show errors since SPEAKER is undefined at definition time).
+"""
+
 from contextlib import contextmanager as ctx_manager
 from dearpygui.core import *
 from dearpygui.simple import *
@@ -8,6 +14,18 @@ import time
 
 @ctx_manager
 def label_above(name, visible_name=None):
+    """Create a dearpygui item with a label above it instead of to the right.
+
+    Parameters
+    ----------
+    name: str
+        The dearpygui name of the item in question.
+    visible_name: str or None
+        If provided, this should be the string you want to be displayed in the
+        GUI as a label. If None, your item will have no label (i.e. this is a
+        way to suppress the appearance of the default label on the right of the
+        element.)
+    """
     if visible_name: add_text(visible_name)
     try:
         yield
@@ -16,11 +34,21 @@ def label_above(name, visible_name=None):
 
 
 def read_response(response, data):
-    # Read response if desired. Threads allow us to interrupt speaker if user
-    # checks a checkbox. This was surprisingly difficult - I settled on a
-    # partial solution that can only quit after finishing saying a
-    # sentence/line, so there may be a bit of a delayed response after asking
-    # to interrupt.
+    """Read response if desired. Threads allow us to interrupt speaker if user
+    checks a checkbox. This was surprisingly difficult - I settled on a
+    partial solution that can only quit after finishing saying a
+    sentence/line, so there may be a bit of a delayed response after asking
+    to interrupt.
+
+    Parameters
+    ----------
+    response: str
+        Text to read.
+    data: dict
+        Forwarded from callback. Must contain key 'interrupt_id' which tells
+        us the dearpygui name of the checkbox to monitor in case the user asks
+        to interrupt speech.
+    """
     show_item(data['interrupt_id'])
     errors = []
     thread = Thread(target=monitor_interrupt_checkbox,
