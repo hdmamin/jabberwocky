@@ -5,6 +5,7 @@ __pycache__/
 data/*
 !data/prompts
 *egg-info*
+lib/dist
 *.swp
 bin/dist
 bin/build
