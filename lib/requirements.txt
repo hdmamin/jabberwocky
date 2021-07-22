@@ -1,4 +1,12 @@
-htools
-incendio
-openai
-pyyaml==5.2.*
+colorama==0.4.4
+fuzzywuzzy==0.18.0
+htools==6.1.27
+nltk==3.4.4
+numpy==1.19.2
+openai==0.6.2
+pandas==0.25.3
+pillow==8.1.0
+pyyaml==5.2
+requests==2.22.0
+wikipedia==1.4.0
+youtube_transcript_api==0.4.1

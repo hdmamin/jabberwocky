@@ -1174,31 +1174,30 @@ X -revisit project backlog to see if there's anything I should get to
 -------
 X -check punctuate task kwargs: do we update max_len dynamically? I don't think so but it would be nice.
 	UPDATE: max_tokens updates only when we click Punctuate task. Updated it so it updates when typing while still ensuring other kwargs don't update.
--see how hard it would be to add a warning in app based on task's config file message.
--give pyinstaller another shot (I think I may have saved some notes on the error msg I got last time)
+~ -see how hard it would be to add a warning in app based on task's config file message.
+	UPDATE: this would require changing load_prompt, prompt_manager, and gui (at a minimum). Don't think it's worth it given the low payoff here. Warnings aren't anything too crucial.
+X -make requirements for jabberwocky and upload to pypi
+	UPDATE: fixed cli bug where sorting can be messed up after sklearn->scikit-learn type conversions, added a couple more of those cases, generated requirements, and uploaded v1.
+X -add pyinstaller import hook from stackoverflow to try to resolve numpy error
+~ -give pyinstaller another shot (I think I may have saved some notes on the error msg I got last time)
+	UPDATE: currently building. We'll see - I'm guessing this will still take a lot of head bashing before success but I'll check back in later.
+X -clean up dailies a bit (many copies of backlog and easy task had appeared at bottom, some from accidental vim duplication and maybe some from me forgetting I had an existing section for that)
+X -fix bug where dummy prompts were still showing up in gui
+	UPDATE: realized my skip_tasks logic in PromptManager wasn't right. Fixed this and updated gui accordingly.
 -consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
 -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
 
--------------------------------------------------------------------------------
-easy tasks for low energy days
+7/22/21
+-------
+-check on pyinstaller results
+	-troubleshoot if necessary (lol)
+-consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
+-consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
 
 
 -------------------------------------------------------------------------------
-easy tasks for low energy days
+backlog (optional)
 
-- dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
-    -parent stack system
-    -callbacks
-    -value storage system
--document session
--document transcript methods
--document textchunking class
-
--------------------------------------------------------------------------------
-backlog
-
--add warning from a prompt's config file in options window
-- lots of waiting docs in core.py
 - htools things:
 	-flesh out owneraccess decorator
 	-port htools as_df
@@ -1210,20 +1209,10 @@ backlog
 -consider image task tie-ins
     -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
 -rename windows (would prefer to find way to separate id and label, but I don't think that's available)
--------------------------------------------------------------------------------
-easy tasks for low energy days
-
-- artbreeder tutorial
--add save modal to non-conv mode
--other options:
-    -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
-    -start planning out blog about page and intro
-    -work more on gpt3 blog post
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
 
-- artbreeder tutorial
 - lots of waiting docs in core.py
 - dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
     -parent stack system
@@ -1231,170 +1220,3 @@ easy tasks for low energy days
     -value storage system
 -document session
 -document transcript methods
--document textchunking class
--port htools as_df
-
--------------------------------------------------------------------------------
-backlog
-
--flesh out owneraccess decorator
--maybe update converse contextmanager to have input baked in
--refactor main.py (maybe a callbacks.py? Dearpygui OOP example also did things a bit differently (class for each element rather than a method for each), could try to change but probably too big of an overhaul given the small-ish payoff.)
--experiment w/ prompt to summarize past conversation? (just in gpt3 ui for now. May be a bit tricky to get this working right.)
--add prompt method/attr to conv manager?
--can we remove name2summary or name2base from conv manager?
--research options for adding new tab/window
-    -start working on convo tab
-    -add URL tab?
--see if slack app is a possibility (do I have auth to do in GG workspace?)
--record some mma examples (text? silent gif? video with audio?)
--prototype cover letter writer from job posting
--continue work on more generic Monitor class for htools
--Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
--add warning in case you try to query with empty text for a prompt that needs input
--add warning from a prompt's config file in options window
--consider image task tie-ins
-    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
--consider how we might support other (non-gpt3) tasks
-    -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
--add more voice interface features:
-    -allow voice commands? E.g. say "Task: Summarize. Input: ..."
--rename windows (would prefer to find way to separate id and label, but I don't think that's available)
--code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
--try out eleuther ai model (is it a viable alternative, at least to engine_i=0? Is it too big to load in a reasonable period of time? Are there existing apis hosting it?)
-    -same for big gpt2 model? I think that does have free apis hosting it but doesn't really have the same prompt response functionailty.
--watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
--start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
--get real query working in place of dummy query (conv mode)
-    -how to extract last user text? Cache in transcription callback or extract from full summary?
-    -get voice mode working for post-query
-    -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
--text edit callback for conv mode: atm, if we edit text the chunker still only has the pre-edited version
--other options:
-    -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
-    -start planning out blog about page and intro
-
--------------------------------------------------------------------------------
-easy tasks for low energy days
-
-- artbreeder tutorial
-- lots of waiting docs in core.py
-- dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
-    -parent stack system
-    -callbacks
-    -value storage system
--document session
--document transcript methods
--document textchunking class
--port htools as_df
-
--------------------------------------------------------------------------------
-backlog
-
--flesh out owneraccess decorator
--maybe update converse contextmanager to have input baked in
--refactor main.py (maybe a callbacks.py? Dearpygui OOP example also did things a bit differently (class for each element rather than a method for each), could try to change but probably too big of an overhaul given the small-ish payoff.)
--experiment w/ prompt to summarize past conversation? (just in gpt3 ui for now. May be a bit tricky to get this working right.)
--add prompt method/attr to conv manager?
--can we remove name2summary or name2base from conv manager?
--research options for adding new tab/window
-    -start working on convo tab
-    -add URL tab?
--see if slack app is a possibility (do I have auth to do in GG workspace?)
--record some mma examples (text? silent gif? video with audio?)
--prototype cover letter writer from job posting
--continue work on more generic Monitor class for htools
--Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
--add warning in case you try to query with empty text for a prompt that needs input
--add warning from a prompt's config file in options window
--consider image task tie-ins
-    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
--consider how we might support other (non-gpt3) tasks
-    -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
--add more voice interface features:
-    -allow voice commands? E.g. say "Task: Summarize. Input: ..."
--rename windows (would prefer to find way to separate id and label, but I don't think that's available)
--code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
--try out eleuther ai model (is it a viable alternative, at least to engine_i=0? Is it too big to load in a reasonable period of time? Are there existing apis hosting it?)
-    -same for big gpt2 model? I think that does have free apis hosting it but doesn't really have the same prompt response functionailty.
--watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
--start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
--try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
--try out other tasks and add to prompts dir:
-    -key point extraction
-    -question generation
--re-watch dall-e video
--add booste config file to paperspace
--look through and/or download coursera video gan notebook
--look through instructions/demo for voice cloning app - how much audio do we need? Does it need to be custom or could I plausibly find enough for a famous person?
--start trying to get conversation query button to work
--flesh out owneraccess decorator
--------------------------------------------------------------------------------
-easy tasks for low energy days
-
-- artbreeder tutorial
-- lots of waiting docs in core.py
-- dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
-    -parent stack system
-    -callbacks
-    -value storage system
--document session
--document transcript methods
--document textchunking class
--port htools as_df
-
--------------------------------------------------------------------------------
-backlog
-
--maybe update converse contextmanager to have input baked in
--refactor main.py (maybe a callbacks.py? Dearpygui OOP example also did things a bit differently (class for each element rather than a method for each), could try to change but probably too big of an overhaul given the small-ish payoff.)
--experiment w/ prompt to summarize past conversation? (just in gpt3 ui for now. May be a bit tricky to get this working right.)
--add prompt method/attr to conv manager?
--can we remove name2summary or name2base from conv manager?
--research options for adding new tab/window
-    -start working on convo tab
-    -add URL tab?
--see if slack app is a possibility (do I have auth to do in GG workspace?)
--record some mma examples (text? silent gif? video with audio?)
--prototype cover letter writer from job posting
--continue work on more generic Monitor class for htools
--Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
--add warning in case you try to query with empty text for a prompt that needs input
--add warning from a prompt's config file in options window
--consider image task tie-ins
-    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
--consider how we might support other (non-gpt3) tasks
-    -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
--add more voice interface features:
-    -allow voice commands? E.g. say "Task: Summarize. Input: ..."
--rename windows (would prefer to find way to separate id and label, but I don't think that's available)
--code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
--try out eleuther ai model (is it a viable alternative, at least to engine_i=0? Is it too big to load in a reasonable period of time? Are there existing apis hosting it?)
-    -same for big gpt2 model? I think that does have free apis hosting it but doesn't really have the same prompt response functionailty.
--watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
--start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
--try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
--try out other tasks and add to prompts dir:
-    -key point extraction
-    -question generation
--re-watch dall-e video
--add booste config file to paperspace
--look through and/or download coursera video gan notebook
--look through instructions/demo for voice cloning app - how much audio do we need? Does it need to be custom or could I plausibly find enough for a famous person?
--try chronology lib
--try booste lib
-
--------------------------------------------------------------------------------
-easy tasks for low energy days
-
-- artbreeder tutorial
-- lots of waiting docs in core.py
-- dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
-    -parent stack system
-    -callbacks
-    -value storage system
--document session
--document transcript methods
--document textchunking class
--port htools as_df
-
