@@ -227,7 +227,7 @@ class PromptManager:
         # Maps task name to query kwargs. Prompt templates have not yet been
         # evaluated at this point (i.e. still contain literal '{}' where values
         # will later be filled in).
-        self.prompts = self._load_templates(set(tasks) - set(skip_tasks))
+        self.prompts = self._load_templates(tasks, skip_tasks)
         self.log_dir = log_dir
         if log_dir:
             os.makedirs(log_dir, exist_ok=True)
@@ -235,14 +235,16 @@ class PromptManager:
         else:
             self.log_path = None
 
-    def _load_templates(self, tasks):
+    def _load_templates(self, tasks, skip_tasks=()):
         """Load template and default hyperparameters for each prompt.
 
         Parameters
         ----------
         tasks: Iterable[str]
             If empty, we load all available prompts in the data/prompts
-            directory.
+            directory that are not in skip_tasks.
+        skip_tasks: Iterable[str]
+            If provided, skip these tasks. This overrides `tasks`.
 
         Returns
         -------
@@ -251,7 +253,8 @@ class PromptManager:
         """
         name2kwargs = {}
         dir_ = Path('data/prompts')
-        paths = (dir_/p for p in tasks) if tasks else dir_.iterdir()
+        paths = (dir_/t for t in tasks) if tasks else dir_.iterdir()
+        if skip_tasks: paths = (p for p in paths if p.stem not in skip_tasks)
         for path in paths:
             if not path.is_dir():
                 if tasks: warnings.warn(f'{path} is not a directory.')

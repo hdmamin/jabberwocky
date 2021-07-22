@@ -1172,7 +1172,8 @@ X -revisit project backlog to see if there's anything I should get to
 
 7/21/21
 -------
--check punctuate task kwargs: do we update max_len dynamically? I don't think so but it would be nice.
+X -check punctuate task kwargs: do we update max_len dynamically? I don't think so but it would be nice.
+	UPDATE: max_tokens updates only when we click Punctuate task. Updated it so it updates when typing while still ensuring other kwargs don't update.
 -see how hard it would be to add a warning in app based on task's config file message.
 -give pyinstaller another shot (I think I may have saved some notes on the error msg I got last time)
 -consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)

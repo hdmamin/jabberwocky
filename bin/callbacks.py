@@ -21,7 +21,7 @@ from pathlib import Path
 import speech_recognition as sr
 import time
 
-from htools.core import save
+from htools.core import save, select
 from jabberwocky.openai_utils import query_gpt_neo
 from jabberwocky.utils import img_dims
 
@@ -178,7 +178,6 @@ def task_select_callback(sender, data):
     updated_prompt = MANAGER.prompt(task_name, user_text)
     chunked_prompt = CHUNKER.add('prompt', updated_prompt)
     set_value('prompt', chunked_prompt)
-    if not data.get('update_kwargs', True): return
 
     # Can't just use APP.get_query_kwargs() because that merely retrieves what
     # the GUI currently shows. We want the default kwargs which are stored by
@@ -188,6 +187,14 @@ def task_select_callback(sender, data):
     # Fixed value for max_tokens doesn't make sense for this task.
     if task_name == 'punctuate':
         kwargs['max_tokens'] = int(len(user_text.split()) * 2)
+
+        # Previously returned before even getting kwargs in this case, but
+        # realized this means punctuation task max_tokens kwarg doesn't get
+        # updated as we type. With updated system, that 1 kwarg will always
+        # be updated. `updated_kwargs` controls the other kwargs since we don't
+        # want those to be reset every time we type.
+        if not data.get('update_kwargs', True):
+            kwargs = select(kwargs, ['max_tokens'])
     for k, v in kwargs.items():
         # Choice of whether to mock calls is more related to the purpose of the
         # user session than the currently selected prompt.
@@ -201,7 +208,6 @@ def task_select_callback(sender, data):
 def end_conversation_callback(sender, data):
     """Triggered when user clicks the end conversation button in conv mode.
     Also tries to delete a stored conversation from CHUNKER if one exists.
-
     """
     name = CONV_MANAGER.current_persona
     CONV_MANAGER.end_conversation()

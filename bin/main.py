@@ -41,8 +41,6 @@ NAME2TASK = IndexedDict({
     'Machine Learning Abstract Writer': 'ml_abstract',
     'How To': 'how_to',
     'MMA': 'mma',
-    'Dates (debug)': 'short_dates',
-    'Math (debug)': 'shortest'
 })
 MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M', 'naive']
 GENDER2VOICE = {'F': 'karen',
