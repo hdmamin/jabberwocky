@@ -1192,16 +1192,18 @@ X -fix bug where dummy prompts were still showing up in gui
 -check on pyinstaller results
 	UPDATE: Same error as before. 
 	-troubleshoot if necessary (lol)
-	UPDATE: Tried adding pyinstaller hook from stackoverflow and upgrading numpy. Wordninja data file failed to be included so added Tree. Tried to add my data dir but pyinstaller won't accept parent data paths so moved spec file to project root.
+	UPDATE: Tried adding pyinstaller hook from stackoverflow and upgrading numpy. Wordninja data file failed to be included so added Tree. Tried to add my data dir but pyinstaller won't accept parent data paths so moved spec file to project root. Current status: data dir not included correctly (but maybe that means wordninja now works?). See error msg in misc.txt.
 ~ -consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
 	UPDATE: misc.txt
--consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
 
 7/23/21
 -------
 -more pyinstaller troubleshooting
 	-try auto-py-to-exe if stuck w/ pyinstaller? Same underlying lib but maybe gui makes some options more intuitive
--clean up readme
+-take screenshots of both gui modes
+	-record gif of 1 or more modes
+	-update readme w/ some or all of these
+-consider adding voice speed slider? For actual voice conversations I think it might get frustrating with the current rate of speech (slow).
 
 -------------------------------------------------------------------------------
 backlog (optional)

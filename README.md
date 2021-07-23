@@ -13,6 +13,8 @@ A GUI providing an audio interface to GPT3. We support conversations with most p
 
 ### Examples
 
+Transcripts of responses from a subset of non-conversation tasks can be found in the `data/completion` directory.
+
 ### Project Members
 * Harrison Mamin
 

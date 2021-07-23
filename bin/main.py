@@ -435,8 +435,8 @@ class App:
                 add_text('OpenAI\'s GPT3 produces the best results.\n'
                          'EleutherAI\'s GPT-Neo models are a solid free '
                          'alternative.\nNaive is mostly for debugging and '
-                         'will load a saved\nresponse from GPT3 for the Dates '
-                         'task\n(see below).')
+                         'will load a saved\nresponse from GPT3 for a simple '
+                         'date formatting task.')
 
             with label_above('task_list', 'Tasks:'):
                 add_listbox(

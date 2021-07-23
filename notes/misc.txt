@@ -101,3 +101,7 @@ possible post topics
 -Programming paradigms: declarative vs OOP and shoehorning one in where it's not ideal
 -using a library that's under frequent development (dearpygui)
 -pyinstaller and dearpygui
+
+---
+Latest error:
+FileNotFoundError: [Errno 2] No such file or directory: 'data/prompts'
