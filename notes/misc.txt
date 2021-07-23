@@ -82,4 +82,22 @@ Thoughts:
 pyinstaller error when trying to run result (file bin/dist/main/main.exe, exe not visible though):
 
 https://stackoverflow.com/questions/35478526/pyinstaller-numpy-intel-mkl-fatal-error-cannot-load-mkl-intel-thread-dll
+
 Looks like we need to write some hook for pyinstaller. I'm guessing this will be just one of many pyinstaller errors so I'll hold off until I'm pretty sure I'm done.
+
+7/22/21
+-------
+possible post themes
+-pick 1 thing ("this is what I learned from talking to gpt3"; "this is what I learned from building my first GUI"; etc.) and focus on that
+-document technical things I learned and want to be able to reference later (harder here since this wasn't super technically ambitious)
+-jot down a random assortment of thoughts
+-quick description of what I did - more portfolio-like than blog post like
+-general side project lessons
+
+possible post topics
+-take some time to actually talk to the available personas, then write about that. 
+-my first gui. Diffs from web app.
+-Building an audio interface to gpt3. UX difficulties.
+-Programming paradigms: declarative vs OOP and shoehorning one in where it's not ideal
+-using a library that's under frequent development (dearpygui)
+-pyinstaller and dearpygui

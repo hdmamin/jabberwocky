@@ -1,3 +1,7 @@
+"""Define constants used throughout the project.
+"""
+
+
 from htools.structures import IndexedDict
 
 

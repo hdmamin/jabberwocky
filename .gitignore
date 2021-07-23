@@ -4,10 +4,12 @@ __pycache__/
 .idea/
 data/*
 !data/prompts
+!data/completions
 *egg-info*
 lib/dist
 *.swp
-bin/dist
-bin/build
-bin/main.spec
+main.spec
+dist
+build
+main.spec
 

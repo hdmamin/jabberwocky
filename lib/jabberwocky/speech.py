@@ -1,3 +1,7 @@
+"""Module to help us interact with mac's speech command. This lets the GUI read
+responses out loud.
+"""
+
 import os
 import shlex
 

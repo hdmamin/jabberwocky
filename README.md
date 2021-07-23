@@ -11,6 +11,8 @@ A GUI providing an audio interface to GPT3. We support conversations with most p
 - Explain machine learning concepts in simple language
     - Generate ML paper abstracts
 
+### Examples
+
 ### Project Members
 * Harrison Mamin
 

@@ -1190,10 +1190,18 @@ X -fix bug where dummy prompts were still showing up in gui
 7/22/21
 -------
 -check on pyinstaller results
+	UPDATE: Same error as before. 
 	-troubleshoot if necessary (lol)
--consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
+	UPDATE: Tried adding pyinstaller hook from stackoverflow and upgrading numpy. Wordninja data file failed to be included so added Tree. Tried to add my data dir but pyinstaller won't accept parent data paths so moved spec file to project root.
+~ -consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
+	UPDATE: misc.txt
 -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
 
+7/23/21
+-------
+-more pyinstaller troubleshooting
+	-try auto-py-to-exe if stuck w/ pyinstaller? Same underlying lib but maybe gui makes some options more intuitive
+-clean up readme
 
 -------------------------------------------------------------------------------
 backlog (optional)
