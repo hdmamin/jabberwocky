@@ -1195,15 +1195,28 @@ X -fix bug where dummy prompts were still showing up in gui
 	UPDATE: Tried adding pyinstaller hook from stackoverflow and upgrading numpy. Wordninja data file failed to be included so added Tree. Tried to add my data dir but pyinstaller won't accept parent data paths so moved spec file to project root. Current status: data dir not included correctly (but maybe that means wordninja now works?). See error msg in misc.txt.
 ~ -consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
 	UPDATE: misc.txt
+-try to record kap mp4 w/ audio
+	UPDATE: worked but very slow to export and couldn't open in quicktime. VLC can play it but complains about the codec. Maybe try h264 mp4 next time.
 
 7/23/21
 -------
--more pyinstaller troubleshooting
-	-try auto-py-to-exe if stuck w/ pyinstaller? Same underlying lib but maybe gui makes some options more intuitive
--take screenshots of both gui modes
-	-record gif of 1 or more modes
-	-update readme w/ some or all of these
+~ -more pyinstaller troubleshooting
+	X -try auto-py-to-exe if stuck w/ pyinstaller? Same underlying lib but maybe gui makes some options more intuitive
+		UPDATE: dir structure looks good after building but paths no longer work as expected. I think paths may work differently for EXEs.
+X -take screenshots of both gui modes
+	X -record gif of 1 or more modes (or mp4 h264 if using sound)
+		UPDATE: listened to some old examples and sound quality is real bad. Just do silent for now.
+	X -update readme w/ some or all of these
 -consider adding voice speed slider? For actual voice conversations I think it might get frustrating with the current rate of speech (slow).
+
+7/24/21
+-------
+-try creating a fake persona manually (instead of wiki bio, can type in my own description)
+	-consider: should this be an option in the gui?
+-consider adding voice speed slider? For actual voice conversations I think it might get frustrating with the current rate of speech (slow).
+-consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
+	-if yes, work on docker file, docker-compose, etc.
+	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
 
 -------------------------------------------------------------------------------
 backlog (optional)

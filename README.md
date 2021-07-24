@@ -1,7 +1,7 @@
 # jabberwocky
 
 # Project Description
-A GUI providing an audio interface to GPT3. We support conversations with most public figures (basically anyone with a Wikipedia page) and provide a number of other modes including:
+A GUI providing an audio interface to GPT3. We support conversations with most public figures and provide a number of other pre-built tasks including:
 - Summarization
 - Explain like I'm 5
 - Translation
@@ -13,6 +13,13 @@ A GUI providing an audio interface to GPT3. We support conversations with most p
 
 ### Examples
 
+In conversation mode, you can chat with a number of pre-defined personas or add new ones:
+
+![](data/clips/demo/add_persona.gif)
+
+In task mode, you can ask GPT3 to perform a number pre-defined tasks. Written and spoken input are both supported. By default, GPT3's response is both displayed in writing and read aloud.
+
+![](data/clips/demo/punctuation.gif)
 Transcripts of responses from a subset of non-conversation tasks can be found in the `data/completion` directory.
 
 ### Project Members
