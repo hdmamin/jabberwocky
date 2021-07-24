@@ -5,7 +5,7 @@ __pycache__/
 data/*
 !data/prompts
 !data/completions
-!data/images
+!data/clips/demo
 *egg-info*
 lib/dist
 *.swp
