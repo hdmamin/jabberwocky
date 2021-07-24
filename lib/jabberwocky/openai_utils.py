@@ -16,9 +16,9 @@ import sys
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
-    listlike, xor_none, Results, flatten
+    listlike, Results, flatten
 from jabberwocky.config import C
-from jabberwocky.external_data import wiki_data
+from jabberwocky.external_data import wiki_data, _infer_gender
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     load_huggingface_api_key
 
@@ -208,7 +208,7 @@ class PromptManager:
     performing tasks on a video Transcript object.
     """
 
-    def __init__(self, *tasks, verbose=True, log_dir='data/logs',
+    def __init__(self, tasks=(), verbose=True, log_dir='data/logs',
                  skip_tasks=()):
         """
         Parameters
@@ -425,7 +425,7 @@ class ConversationManager:
 
     img_exts = {'.jpg', '.jpeg', '.png'}
 
-    def __init__(self, *names, data_dir='./data',
+    def __init__(self, names=(), custom_names=(), data_dir='./data',
                  backup_image='data/misc/unknown_person.png',
                  turn_window=3):
 
@@ -465,11 +465,17 @@ class ConversationManager:
         # Set directories for data storage, logging, etc.
         self.backup_image = Path(backup_image)
         self.data_dir = Path(data_dir)
-        self.persona_dir = self.data_dir/'conversation_personas'
+        # We often access this like `self.person_dir[is_custom]` where
+        # is_custom is a bool specifying whether the persona is
+        # custom-generated, i.e. not a real person with a wikipedia page.
+        # This works because indexing with False works like 0 and indexing with
+        # True works like 1.
+        self.persona_dir = [self.data_dir/'conversation_personas',
+                            self.data_dir/'conversation_personas_custom']
         self.conversation_dir = self.data_dir/'conversations'
         self.log_dir = self.data_dir/'logs'
         self.log_path = Path(self.log_dir)/'conversation_query_kwargs.json'
-        for dir_ in (self.persona_dir, self.conversation_dir, self.log_dir):
+        for dir_ in (*self.persona_dir, self.conversation_dir, self.log_dir):
             os.makedirs(dir_, exist_ok=True)
 
         # These attributes will be updated when we load a persona and cleared
@@ -491,14 +497,17 @@ class ConversationManager:
         self.name2img_path = {}
         self.name2base = {}
         self.name2gender = {}
-        self._load_personas(names)
+        self._load_personas(names, is_custom=False)
+        self._load_personas(custom_names, is_custom=True)
 
-    def _load_personas(self, names):
+    def _load_personas(self, names, is_custom=False):
         """Load any stored summaries and image paths of existing personas."""
-        names = names or [path.stem for path in self.persona_dir.iterdir()]
+        names = names or [path.stem
+                          for path in self.persona_dir[is_custom].iterdir()]
         for name in names:
             try:
-                self.update_persona_dicts(self.process_name(name))
+                self.update_persona_dicts(self.process_name(name),
+                                          is_custom=is_custom)
             except:
                 warnings.warn(f'Could not load files for {name}.')
 
@@ -571,35 +580,124 @@ class ConversationManager:
             raise RuntimeError('No conversation to save.')
         save(self.full_conversation, self.conversation_dir/fname)
 
-    def add_persona(self, name, return_data=False):
+    # def add_persona(self, name, return_data=False):
+    #     """Download materials for a new persona. This saves their wikipedia
+    #     summary and profile photo in a directory with their name inside the
+    #     persona_dir.
+    #     """
+    #     processed_name = self.process_name(name)
+    #     dir_ = self.persona_dir[0]/processed_name
+    #     if dir_.exists():
+    #         summary, img_path, gender = self.update_persona_dicts(
+    #             processed_name, return_values=True
+    #         )
+    #     else:
+    #         summary, _, img_path, gender = wiki_data(name, img_dir=dir_,
+    #                                                  fname='profile')
+    #         save(summary, dir_/'summary.txt')
+    #         save(gender, dir_/'gender.json')
+    #
+    #         # Otherwise it's an empty string if we fail to download an image.
+    #         if not img_path:
+    #             img_path = dir_/f'profile{self.backup_image.suffix}'
+    #             shutil.copy2(self.backup_image, img_path)
+    #         self.update_persona_dicts(processed_name)
+    #     if return_data: return summary, img_path, gender
+
+    def add_persona(self, name, summary=None, img_path=None, gender=None,
+                    is_custom=False, return_data=False):
         """Download materials for a new persona. This saves their wikipedia
         summary and profile photo in a directory with their name inside the
         persona_dir.
+
+        Parameters
+        ----------
+        name: str
+            Pretty-formatted name (e.g. 'Barack Obama', not 'barack_obama') of
+             the persona you'd like to add.
+        summary: str or None
+            Only specify when is_custom is True: in that case, this should be
+            a 1-3 sentence description of the persona you're creating. This
+            can be used to define both their personality and the tone of the
+            conversation.
+        img_path: str or Path or None
+            Only specify when is_custom is True: in that case, you can
+            optionally pass in the local file path for an image of the persona
+            you're creating.
+        gender: str or None
+            Only specify when is_custom is True: in that case, pass in a str in
+            ('F', 'M'). Otherwise leave as None.
+        is_custom: bool
+            True if you want to manually define a custom persona (usually
+            someone who doesn't exist or isn't well known, otherwise we'd
+            construct them in the normal way from wikipedia data). When True,
+            you must pass in a summary and gender (img_path is optional). When
+            False, you must no pass in any of those three parameters.
+        return_data: bool
+            When True, return tuple of summary, image path, gender. Otherwise
+            return None.
         """
+        if (summary or img_path or gender) and not is_custom:
+            raise ValueError('Can only pass in summary/img_path/gender for '
+                             'custom persona.')
+
         processed_name = self.process_name(name)
-        dir_ = self.persona_dir/processed_name
+        dir_ = self.persona_dir[is_custom]/processed_name
         if dir_.exists():
+            if summary or img_path or gender:
+                raise ValueError(
+                    'Do not pass in summary/img_path/gender for a persona '
+                    'that already exists.'
+                )
             summary, img_path, gender = self.update_persona_dicts(
-                processed_name, return_values=True
+                processed_name, return_values=True, is_custom=is_custom
             )
         else:
-            summary, _, img_path, gender = wiki_data(
-                name, img_dir=self.persona_dir/processed_name,
-                fname='profile'
-            )
+            if is_custom:
+                if not (summary and gender):
+                    raise ValueError(
+                        'Must provide a summary and gender for a custom '
+                        'persona that does not yet exist locally.'
+                    )
+            else:
+                summary, _, img_path, gender = wiki_data(name, img_dir=dir_,
+                                                         fname='profile')
+
             save(summary, dir_/'summary.txt')
             save(gender, dir_/'gender.json')
 
-            # Otherwise it's an empty string if we fail to download an image.
-            if not img_path:
-                img_path = dir_/f'profile{self.backup_image.suffix}'
-                shutil.copy2(self.backup_image, img_path)
-            self.update_persona_dicts(processed_name)
+            # In custom mode, we always need to move an image (either the
+            # backup image or a user-specified img_path from another dir -
+            # remember this is the case where no persona dir exists yet). In
+            # non-custom mode, we only need to move an image if we failed to
+            # download one and revert to the backup.
+            src_path = img_path or self.backup_image
+            img_path = dir_/f'profile{Path(src_path).suffix}'
+            if src_path != img_path:
+                shutil.copy2(src_path, img_path)
+
+            # It's an empty string if we fail to download an image in
+            # non-custom mode, or None if we choose not to pass in a path in
+            # custom mode.
+            self.update_persona_dicts(processed_name, is_custom=is_custom)
         if return_data: return summary, img_path, gender
 
-    def update_persona_dicts(self, processed_name, return_values=False):
+    # def add_custom_persona(self, name, summary, img_path=None, gender=None,
+    #                        return_data=False):
+    #     processed_name = self.process_name(name)
+    #     dir_ = self.persona_dir[1]/processed_name
+    #     if not img_path:
+    #         img_path or dir_/f'profile{self.backup_image.suffix}'
+    #         shutil.copy2(self.backup_image, img_path)
+    #     gender = gender or _infer_gender(summary)[0]
+    #     self.update_persona_dicts(processed_name, is_custom=True)
+    #     if return_data: return summary, img_path, gender
+
+    # IN PROGRESS
+    def update_persona_dicts(self, processed_name, return_values=False,
+                             is_custom=False):
         """Helper to update our various name2{something} dicts."""
-        dir_ = self.persona_dir/processed_name
+        dir_ = self.persona_dir[is_custom]/processed_name
         summary = load(dir_/'summary.txt')
         self.name2gender[processed_name] = load(dir_/'gender.json')
         self.name2img_path[processed_name] = [p for p in dir_.iterdir()
@@ -612,6 +710,22 @@ class ConversationManager:
             return Results(summary=summary,
                            img_path=self.name2img_path[processed_name],
                            gender=self.name2gender[processed_name])
+
+    # def update_persona_dicts(self, processed_name, return_values=False):
+    #     """Helper to update our various name2{something} dicts."""
+    #     dir_ = self.persona_dir/processed_name
+    #     summary = load(dir_/'summary.txt')
+    #     self.name2gender[processed_name] = load(dir_/'gender.json')
+    #     self.name2img_path[processed_name] = [p for p in dir_.iterdir()
+    #                                           if p.stem == 'profile'][0]
+    #     self.name2base[processed_name] = self._base_prompt.format(
+    #         name=self.process_name(processed_name, inverse=True),
+    #         summary=summary
+    #     )
+    #     if return_values:
+    #         return Results(summary=summary,
+    #                        img_path=self.name2img_path[processed_name],
+    #                        gender=self.name2gender[processed_name])
 
     def process_name(self, name, inverse=False):
         """Convert a name to pretty format (title case, no underscores) and
