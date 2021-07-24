@@ -1212,16 +1212,24 @@ X -take screenshots of both gui modes
 7/24/21
 -------
 X -move constants under __main__ check
--try creating a fake persona manually (instead of wiki bio, can type in my own description)
-	-consider: should this be an option in the gui?
+X -design way to handle custom personas
+	X -update convmanager to support custom personas
+	X -update dir structure to support custom personas
+	-update gui to support custom personas
+
+7/25/21
+-------
+-update gui to support custom personas
+	-is_custom checkbox
+	-add modal popup on add_persona btn click if is_custom is checked. Needs text box for summary, select field for gender, optional text input/file select for image
 -consider adding voice speed slider? For actual voice conversations I think it might get frustrating with the current rate of speech (slow).
--consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
-	-if yes, work on docker file, docker-compose, etc.
-	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
+	-if yes, work on docker file, docker-compose, etc.
+	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
 - htools things:
 	-flesh out owneraccess decorator
 	-port htools as_df
