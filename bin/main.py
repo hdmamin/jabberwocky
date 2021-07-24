@@ -24,27 +24,6 @@ from callbacks import *
 
 
 os.chdir('../')
-SPEAKER = Speaker(newline_pause=400)
-CHUNKER = GuiTextChunker(max_chars=70)
-MANAGER = PromptManager(verbose=False,
-                        skip_tasks=['conversation', 'shortest', 'short_dates'])
-CONV_MANAGER = ConversationManager()
-NAME2TASK = IndexedDict({
-    'Punctuate': 'punctuate',
-    'Translate': 'translate',
-    'Default': 'default',
-    'Debate': 'debate',
-    'Summarize': 'tldr',
-    'Analyze Writing': 'analyze_writing',
-    'Explain Like I\'m 5': 'eli',
-    'Explain Machine Learning': 'simplify_ml',
-    'Machine Learning Abstract Writer': 'ml_abstract',
-    'How To': 'how_to',
-    'MMA': 'mma',
-})
-MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M', 'naive']
-GENDER2VOICE = {'F': 'karen',
-                'M': 'daniel'}
 
 
 class App:
@@ -599,6 +578,31 @@ class App:
 
 
 if __name__ == '__main__':
+    SPEAKER = Speaker(newline_pause=400)
+    CHUNKER = GuiTextChunker(max_chars=70)
+    MANAGER = PromptManager(verbose=False, skip_tasks=['conversation',
+                                                       'shortest',
+                                                       'short_dates'])
+    CONV_MANAGER = ConversationManager()
+    NAME2TASK = IndexedDict({
+        'Punctuate': 'punctuate',
+        'Translate': 'translate',
+        'Default': 'default',
+        'Debate': 'debate',
+        'Summarize': 'tldr',
+        'Analyze Writing': 'analyze_writing',
+        'Explain Like I\'m 5': 'eli',
+        'Explain Machine Learning': 'simplify_ml',
+        'Machine Learning Abstract Writer': 'ml_abstract',
+        'How To': 'how_to',
+        'MMA': 'mma',
+    })
+    MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M',
+                   'naive']
+    GENDER2VOICE = {'F': 'karen',
+                    'M': 'daniel'}
+
+    # Create app, initialize callbacks, and run.
     APP = App()
     for module in ('callbacks', 'utils'):
         set_module_globals(module, SPEAKER=SPEAKER, CHUNKER=CHUNKER,

@@ -1211,6 +1211,7 @@ X -take screenshots of both gui modes
 
 7/24/21
 -------
+X -move constants under __main__ check
 -try creating a fake persona manually (instead of wiki bio, can type in my own description)
 	-consider: should this be an option in the gui?
 -consider adding voice speed slider? For actual voice conversations I think it might get frustrating with the current rate of speech (slow).

@@ -465,10 +465,10 @@ class ConversationManager:
         # Set directories for data storage, logging, etc.
         self.backup_image = Path(backup_image)
         self.data_dir = Path(data_dir)
-        self.persona_dir = self.data_dir / 'conversation_personas'
-        self.conversation_dir = self.data_dir / 'conversations'
-        self.log_dir = self.data_dir / 'logs'
-        self.log_path = Path(self.log_dir) / 'conversation_query_kwargs.json'
+        self.persona_dir = self.data_dir/'conversation_personas'
+        self.conversation_dir = self.data_dir/'conversations'
+        self.log_dir = self.data_dir/'logs'
+        self.log_path = Path(self.log_dir)/'conversation_query_kwargs.json'
         for dir_ in (self.persona_dir, self.conversation_dir, self.log_dir):
             os.makedirs(dir_, exist_ok=True)
 
@@ -569,7 +569,7 @@ class ConversationManager:
     def save_conversation(self, fname):
         if not self.user_turns:
             raise RuntimeError('No conversation to save.')
-        save(self.full_conversation, self.conversation_dir / fname)
+        save(self.full_conversation, self.conversation_dir/fname)
 
     def add_persona(self, name, return_data=False):
         """Download materials for a new persona. This saves their wikipedia
@@ -577,31 +577,31 @@ class ConversationManager:
         persona_dir.
         """
         processed_name = self.process_name(name)
-        dir_ = self.persona_dir / processed_name
+        dir_ = self.persona_dir/processed_name
         if dir_.exists():
             summary, img_path, gender = self.update_persona_dicts(
                 processed_name, return_values=True
             )
         else:
             summary, _, img_path, gender = wiki_data(
-                name, img_dir=self.persona_dir / processed_name,
+                name, img_dir=self.persona_dir/processed_name,
                 fname='profile'
             )
-            save(summary, dir_ / 'summary.txt')
-            save(gender, dir_ / 'gender.json')
+            save(summary, dir_/'summary.txt')
+            save(gender, dir_/'gender.json')
 
             # Otherwise it's an empty string if we fail to download an image.
             if not img_path:
-                img_path = dir_ / f'profile{self.backup_image.suffix}'
+                img_path = dir_/f'profile{self.backup_image.suffix}'
                 shutil.copy2(self.backup_image, img_path)
             self.update_persona_dicts(processed_name)
         if return_data: return summary, img_path, gender
 
     def update_persona_dicts(self, processed_name, return_values=False):
         """Helper to update our various name2{something} dicts."""
-        dir_ = self.persona_dir / processed_name
-        summary = load(dir_ / 'summary.txt')
-        self.name2gender[processed_name] = load(dir_ / 'gender.json')
+        dir_ = self.persona_dir/processed_name
+        summary = load(dir_/'summary.txt')
+        self.name2gender[processed_name] = load(dir_/'gender.json')
         self.name2img_path[processed_name] = [p for p in dir_.iterdir()
                                               if p.stem == 'profile'][0]
         self.name2base[processed_name] = self._base_prompt.format(
