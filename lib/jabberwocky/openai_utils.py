@@ -502,8 +502,9 @@ class ConversationManager:
 
     def _load_personas(self, names, is_custom=False):
         """Load any stored summaries and image paths of existing personas."""
-        names = names or [path.stem
-                          for path in self.persona_dir[is_custom].iterdir()]
+        names = names or [path.stem for path in
+                          self.persona_dir[is_custom].iterdir()
+                          if path.is_dir()]
         for name in names:
             try:
                 self.update_persona_dicts(self.process_name(name),
@@ -579,30 +580,6 @@ class ConversationManager:
         if not self.user_turns:
             raise RuntimeError('No conversation to save.')
         save(self.full_conversation, self.conversation_dir/fname)
-
-    # def add_persona(self, name, return_data=False):
-    #     """Download materials for a new persona. This saves their wikipedia
-    #     summary and profile photo in a directory with their name inside the
-    #     persona_dir.
-    #     """
-    #     processed_name = self.process_name(name)
-    #     dir_ = self.persona_dir[0]/processed_name
-    #     if dir_.exists():
-    #         summary, img_path, gender = self.update_persona_dicts(
-    #             processed_name, return_values=True
-    #         )
-    #     else:
-    #         summary, _, img_path, gender = wiki_data(name, img_dir=dir_,
-    #                                                  fname='profile')
-    #         save(summary, dir_/'summary.txt')
-    #         save(gender, dir_/'gender.json')
-    #
-    #         # Otherwise it's an empty string if we fail to download an image.
-    #         if not img_path:
-    #             img_path = dir_/f'profile{self.backup_image.suffix}'
-    #             shutil.copy2(self.backup_image, img_path)
-    #         self.update_persona_dicts(processed_name)
-    #     if return_data: return summary, img_path, gender
 
     def add_persona(self, name, summary=None, img_path=None, gender=None,
                     is_custom=False, return_data=False):
@@ -682,18 +659,6 @@ class ConversationManager:
             self.update_persona_dicts(processed_name, is_custom=is_custom)
         if return_data: return summary, img_path, gender
 
-    # def add_custom_persona(self, name, summary, img_path=None, gender=None,
-    #                        return_data=False):
-    #     processed_name = self.process_name(name)
-    #     dir_ = self.persona_dir[1]/processed_name
-    #     if not img_path:
-    #         img_path or dir_/f'profile{self.backup_image.suffix}'
-    #         shutil.copy2(self.backup_image, img_path)
-    #     gender = gender or _infer_gender(summary)[0]
-    #     self.update_persona_dicts(processed_name, is_custom=True)
-    #     if return_data: return summary, img_path, gender
-
-    # IN PROGRESS
     def update_persona_dicts(self, processed_name, return_values=False,
                              is_custom=False):
         """Helper to update our various name2{something} dicts."""
@@ -710,22 +675,6 @@ class ConversationManager:
             return Results(summary=summary,
                            img_path=self.name2img_path[processed_name],
                            gender=self.name2gender[processed_name])
-
-    # def update_persona_dicts(self, processed_name, return_values=False):
-    #     """Helper to update our various name2{something} dicts."""
-    #     dir_ = self.persona_dir/processed_name
-    #     summary = load(dir_/'summary.txt')
-    #     self.name2gender[processed_name] = load(dir_/'gender.json')
-    #     self.name2img_path[processed_name] = [p for p in dir_.iterdir()
-    #                                           if p.stem == 'profile'][0]
-    #     self.name2base[processed_name] = self._base_prompt.format(
-    #         name=self.process_name(processed_name, inverse=True),
-    #         summary=summary
-    #     )
-    #     if return_values:
-    #         return Results(summary=summary,
-    #                        img_path=self.name2img_path[processed_name],
-    #                        gender=self.name2gender[processed_name])
 
     def process_name(self, name, inverse=False):
         """Convert a name to pretty format (title case, no underscores) and
