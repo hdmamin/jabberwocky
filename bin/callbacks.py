@@ -257,19 +257,51 @@ def persona_select_callback(sender, data):
     SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current_gender]
 
 
+def add_custom_persona_callback(sender, data):
+    pass
+    # TODO
+
+
+# TODO: try to integrate w/ add_persona callback with a little tweaking.
+def generate_persona_callback(sender, data):
+    name = get_value(data['name_id'])
+    summary = get_value(data['summary_id'])
+    img_path = get_value(data['image_path_id'])
+    gender = ['F', 'M'][get_value(data['gender_id'])]
+    print('name:', name)
+    print('summary:', summary)
+    print('img path:', img_path)
+    print('gender:', gender)
+    CONV_MANAGER.add_persona(name, summary=summary, img_path=img_path,
+                             gender=gender, is_custom=True)
+
+    # Update available personas in GUI.
+    configure_item(data['target_id'], items=CONV_MANAGER.personas())
+    # Make new persona the active one. Dearpygui doesn't seem to let us
+    # change the selected listbox item so we have to do this a bit hackily.
+    persona_select_callback('add_persona_callback', {'name': name})
+
+    cancel_generate_callback('generate_persona_callback', data)
+
+
+def cancel_generate_callback(sender, data):
+    # TODO: finish/refactor?
+    close_popup(data['popup_id'])
+
+
 def add_persona_callback(sender, data):
     """Triggered in conv mode when user clicks the Add Persona button. This
     usually requires internet access since we try to download a quick bio from
     Wikipedia if we haven't already.
 
     data keys:
-        source_id (str: name of text input where user enters a new name)
+        name_id (str: name of text input where user enters a new name)
         target_id (str: name of listbox to update after downloading new data)
         show_during_id (str: item to show while this executes. Usually a
             message explaining that downloading is occurring since it can take
             a few seconds)
     """
-    name = get_value(data['source_id'])
+    name = get_value(data['name_id'])
     if not name: return
     show_item(data['show_during_id'])
     try:
@@ -333,7 +365,6 @@ def saveas_callback(sender, data):
         file = f'{CONV_MANAGER.current_persona}_{date}.txt'
     else:
         task_name = NAME2TASK[get_value(data['task_list_id'])]
-
         dir_ = str(Path(f'data/completions/{task_name}').absolute())
         file = f'{date}.txt'
     set_value(data['dir_id'], dir_)

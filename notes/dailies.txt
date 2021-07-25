@@ -1219,14 +1219,23 @@ X -design way to handle custom personas
 
 7/25/21
 -------
--update gui to support custom personas
-	-is_custom checkbox
-	-add modal popup on add_persona btn click if is_custom is checked. Needs text box for summary, select field for gender, optional text input/file select for image
--consider adding voice speed slider? For actual voice conversations I think it might get frustrating with the current rate of speech (slow).
+~ -update gui to support custom personas
+	_ -is_custom checkbox
+	UPDATE: still figuring out UI. For now I have a separate add_custom button.
+	X -add modal popup on add_persona btn click if is_custom is checked. Needs text box for summary, select field for gender, optional text input/file select for image
+
+7/26/21
+-------
+-add error handling for case where custom img doesn't exist
+	-add error handling for no summary/no name
+	-add error handling for already exists
+-more consideration re UI for add_persona vs. add_custom_persona (should we have 1 popup window handle both? An is_custom checkbox? 2 buttons?)
+-see if we can refactor callbacks to work w/ default add_persona
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-consider adding voice speed slider? For actual voice conversations I think it might get frustrating with the current rate of speech (slow).
 -consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
 	-if yes, work on docker file, docker-compose, etc.
 	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)

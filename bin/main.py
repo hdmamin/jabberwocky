@@ -526,12 +526,50 @@ class App:
                          default_value=True)
 
             # Select a persona.
-            add_button('add_persona_btn', label='Add Persona',
+            add_button('add_persona_btn', label='Add Auto Persona',
                        callback=add_persona_callback,
-                       callback_data={'source_id': 'add_persona_text',
+                       callback_data={'name_id': 'add_persona_text',
                                       'target_id': 'persona_list',
                                       'show_during_id': 'add_persona_msg',
                                       'error_msg_id': 'add_persona_error_msg'})
+            add_same_line()
+            add_button('add_custom_persona_btn', label='Add Custom Persona')#,
+                       # callback=add_custom_persona_callback,
+                       # callback_data={'source_id': 'add_persona_text',
+                       #                'target_id': 'persona_list',
+                       #                'show_during_id': 'add_persona_msg',
+                       #                'error_msg_id': 'add_persona_error_msg'})
+            with popup('add_custom_persona_btn', 'Custom Persona Info',
+                       modal=True, width=self.widths[.5],
+                       mousebutton=mvMouseButton_Left):
+                popup_item_width = int(self.widths[.5] * .85)
+                add_input_text('persona_name', label='Name',
+                               width=popup_item_width)
+                add_radio_button('Gender', items=['F', 'M'],
+                                 default_value=0,
+                                 horizontal=True)
+                add_input_text('custom_summary', label='Summary',
+                               default_value='', multiline=True,
+                               width=popup_item_width)
+                add_input_text('custom_image_path', default_value='',
+                               label='Image Path (optional)',
+                               width=popup_item_width)
+                generate_persona_data = {
+                    'popup_id': 'Custom Persona Info',
+                    'name_id': 'persona_name',
+                    'summary_id': 'custom_summary',
+                    'image_path_id': 'custom_image_path',
+                    'gender_id': 'Gender',
+                    'target_id': 'persona_list'
+                }
+                add_button('custom_generate_btn', label='Generate',
+                           callback=generate_persona_callback,
+                           callback_data=generate_persona_data)
+                add_same_line()
+                add_button('custom_cancel_btn', label='Cancel',
+                           callback=cancel_generate_callback,
+                           callback_data=generate_persona_data)
+
             add_same_line()
             add_text('add_persona_msg',
                      default_value='Generating new persona...', show=False)
@@ -578,12 +616,13 @@ class App:
 
 
 if __name__ == '__main__':
+    tasks = ['Barack OBAMA'] # TODO: tmp limit conv personas for faster loading.
     SPEAKER = Speaker(newline_pause=400)
     CHUNKER = GuiTextChunker(max_chars=70)
     MANAGER = PromptManager(verbose=False, skip_tasks=['conversation',
                                                        'shortest',
                                                        'short_dates'])
-    CONV_MANAGER = ConversationManager()
+    CONV_MANAGER = ConversationManager(tasks)
     NAME2TASK = IndexedDict({
         'Punctuate': 'punctuate',
         'Translate': 'translate',

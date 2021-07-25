@@ -647,10 +647,12 @@ class ConversationManager:
             # backup image or a user-specified img_path from another dir -
             # remember this is the case where no persona dir exists yet). In
             # non-custom mode, we only need to move an image if we failed to
-            # download one and revert to the backup.
+            # download one and revert to the backup. Be careful with logic:
+            # Path('abc') != 'abc', and if we convert img_path to a Path
+            # immediately, we'd interpret Path('') as truthy.
             src_path = img_path or self.backup_image
             img_path = dir_/f'profile{Path(src_path).suffix}'
-            if src_path != img_path:
+            if str(src_path) != str(img_path):
                 shutil.copy2(src_path, img_path)
 
             # It's an empty string if we fail to download an image in
