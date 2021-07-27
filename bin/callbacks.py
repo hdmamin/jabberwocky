@@ -272,8 +272,40 @@ def generate_persona_callback(sender, data):
     print('summary:', summary)
     print('img path:', img_path)
     print('gender:', gender)
-    CONV_MANAGER.add_persona(name, summary=summary, img_path=img_path,
-                             gender=gender, is_custom=True)
+    already_exists = CONV_MANAGER.persona_exists_locally(name)
+    print('already_exists', already_exists)
+    show_error = False
+    if not name:
+        set_value(data['error_msg_id'], 'Name must not be empty.')
+        show_error = True
+    if already_exists and (summary or img_path):
+        set_value(data['error_msg_id'],
+                  'Persona already exists. Are you sure you want to '
+                  'overwrite its summary and/or image path?')
+        show_error = True
+    if not summary and not already_exists:
+        set_value(data['error_msg_id'],
+                  'Summary must be provided when adding a new persona.')
+        show_error = True
+    if name in CONV_MANAGER:
+        set_value(data['error_msg_id'],
+                  'Persona already loaded. Are you sure you want to overwrite '
+                  'its summary and/or image path?')
+        show_error = True
+    if show_error:
+        show_item(data['error_msg_id'])
+        return
+
+    # 1 radio item is always selected so user can't leave this blank. We would
+    # get an error if we pass it to add_persona() though.
+    if already_exists: gender = None
+    try:
+        CONV_MANAGER.add_persona(name, summary=summary, img_path=img_path,
+                                 gender=gender, is_custom=True)
+    except FileNotFoundError as e:
+        set_value(data['error_msg_id'], 'Image path not found.')
+        show_item(data['error_msg_id'])
+        return
 
     # Update available personas in GUI.
     configure_item(data['target_id'], items=CONV_MANAGER.personas())

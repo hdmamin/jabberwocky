@@ -560,7 +560,8 @@ class App:
                     'summary_id': 'custom_summary',
                     'image_path_id': 'custom_image_path',
                     'gender_id': 'Gender',
-                    'target_id': 'persona_list'
+                    'target_id': 'persona_list',
+                    'error_msg_id': 'persona_save_error_msg'
                 }
                 add_button('custom_generate_btn', label='Generate',
                            callback=generate_persona_callback,
@@ -569,6 +570,8 @@ class App:
                 add_button('custom_cancel_btn', label='Cancel',
                            callback=cancel_generate_callback,
                            callback_data=generate_persona_data)
+                add_text('persona_save_error_msg',
+                         default_value='Persona already exists.', show=False)
 
             add_same_line()
             add_text('add_persona_msg',
@@ -616,7 +619,7 @@ class App:
 
 
 if __name__ == '__main__':
-    tasks = ['Barack OBAMA'] # TODO: tmp limit conv personas for faster loading.
+    tasks = ['Barack Obama'] # TODO: tmp limit conv personas for faster loading.
     SPEAKER = Speaker(newline_pause=400)
     CHUNKER = GuiTextChunker(max_chars=70)
     MANAGER = PromptManager(verbose=False, skip_tasks=['conversation',

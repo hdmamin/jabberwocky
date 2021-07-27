@@ -620,7 +620,7 @@ class ConversationManager:
 
         processed_name = self.process_name(name)
         dir_ = self.persona_dir[is_custom]/processed_name
-        if dir_.exists():
+        if dir_.is_dir():
             if summary or img_path or gender:
                 raise ValueError(
                     'Do not pass in summary/img_path/gender for a persona '
@@ -652,8 +652,14 @@ class ConversationManager:
             # immediately, we'd interpret Path('') as truthy.
             src_path = img_path or self.backup_image
             img_path = dir_/f'profile{Path(src_path).suffix}'
-            if str(src_path) != str(img_path):
-                shutil.copy2(src_path, img_path)
+            try:
+                if str(src_path) != str(img_path):
+                    shutil.copy2(src_path, img_path)
+            except FileNotFoundError as e:
+                # Clean up newly-added dir otherwise this will affect
+                # subsequent attempts to run this method.
+                shutil.rmtree(dir_)
+                raise e
 
             # It's an empty string if we fail to download an image in
             # non-custom mode, or None if we choose not to pass in a path in
@@ -677,6 +683,28 @@ class ConversationManager:
             return Results(summary=summary,
                            img_path=self.name2img_path[processed_name],
                            gender=self.name2gender[processed_name])
+
+    def persona_exists_locally(self, name):
+        """Check if a persona's info files are already available locally.
+
+        Parameters
+        ----------
+        name: str
+            Pretty-formatted name, e.g. "Albert Einstein" rather than
+            "albert_einstein".
+
+        Returns
+        -------
+        bool
+        """
+        processed_name = self.process_name(name)
+        for dir_ in self.persona_dir:
+            dir_ = dir_/processed_name
+            if dir_.is_dir() and all(
+                    name in [path.name for path in dir_.iterdir()]
+                    for name in ('gender.json', 'summary.txt')):
+                return True
+        return False
 
     def process_name(self, name, inverse=False):
         """Convert a name to pretty format (title case, no underscores) and
