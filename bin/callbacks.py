@@ -276,30 +276,24 @@ def generate_persona_callback(sender, data):
     already_exists = CONV_MANAGER.persona_exists_locally(name)
     force_save = get_value(data['force_save_id'])
     show_error = False
-    if not name:
-        set_value(data['error_msg_id'], 'Name must not be empty.')
-        show_error = True
-    if already_exists and (summary or img_path) and not force_save:
+    if not (name and summary):
         set_value(data['error_msg_id'],
-                  'Persona already exists. Are you sure you want to '
-                  'overwrite its summary and/or image path?')
+                  'Name and summary most both be provided.')
         show_error = True
-    if not summary and not already_exists:
-        set_value(data['error_msg_id'],
-                  'Summary must be provided when adding a new persona.')
-        show_error = True
-    if name in CONV_MANAGER and not force_save:
+    elif name in CONV_MANAGER and not force_save:
         set_value(data['error_msg_id'],
                   'Persona already loaded. Are you sure you want to overwrite '
                   'its summary and/or image path?')
+        show_error = True
+    elif already_exists and (summary or img_path) and not force_save:
+        set_value(data['error_msg_id'],
+                  'Persona already exists. Are you sure you want to '
+                  'overwrite its summary and/or image path?')
         show_error = True
     if show_error:
         show_item(data['error_msg_id'])
         return
 
-    # 1 radio item is always selected so user can't leave this blank. We would
-    # get an error if we pass it to add_persona() though.
-    if already_exists: gender = None
     try:
         CONV_MANAGER.add_persona(name, summary=summary, img_path=img_path,
                                  gender=gender, is_custom=True)

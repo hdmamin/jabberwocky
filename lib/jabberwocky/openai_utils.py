@@ -497,6 +497,8 @@ class ConversationManager:
         self.name2img_path = {}
         self.name2base = {}
         self.name2gender = {}
+
+        # Custom personas are loaded last so they override default personas.
         self._load_personas(names, is_custom=False)
         self._load_personas(custom_names, is_custom=True)
 
@@ -631,6 +633,8 @@ class ConversationManager:
             )
         else:
             if is_custom:
+                print('summary', summary)
+                print('gender', gender)
                 if not (summary and gender):
                     raise ValueError(
                         'Must provide a summary and gender for a custom '

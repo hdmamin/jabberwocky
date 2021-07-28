@@ -1233,18 +1233,27 @@ X -add error msg for case where custom img doesn't exist
 
 7/27/21
 -------
--more add_persona updates:
+~ -more add_persona updates:
     X -reset name/summary/path on save
-    -add checkbox for force generate
-        -update logic to check force generate checkbox value
+    X -add checkbox for force generate
+        X -update logic to check force generate checkbox value
     X -refactor so cancel_generate_callback is merged into cancel_save_conversation_callback?
--more consideration re UI for add_persona vs. add_custom_persona (should we have 1 popup window handle both? An is_custom checkbox? 2 buttons?)
--see if we can refactor callbacks to work w/ default add_persona
+X -more consideration re UI for add_persona vs. add_custom_persona (should we have 1 popup window handle both? An is_custom checkbox? 2 buttons?)
+    UPDATE: keep as 2 diff buttons. For default mode, user can just click generate button and for custom mode, it opens up a window to provide more info. I think that's a sensible UI.
+_ -see if we can refactor callbacks to work w/ default add_persona
+    UPDATE: different enough that let's just keep them separate.
+
+7/28/21
+-------
+-investigate bug where we replace an existing persona. Picture + summary don't update until we manually click on the persona.
+
+-think if there's any way to use streaming mode w/ prompt/conv managers and Speaker. Probably won't be compatible, and we'd have to do some surgery to give speaker natural sounding chunks of text (speaking 1 word at a time would sound much more robotic). But the slowness is annoying so we should at least look into it.
+
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
--consider adding voice speed slider? For actual voice conversations I think it might get frustrating with the current rate of speech (slow).
+-think if there's any way to use streaming mode w/ prompt/conv managers and Speaker. Probably won't be compatible, and we'd have to do some surgery to give speaker natural sounding chunks of text (speaking 1 word at a time would sound much more robotic). But the slowness is annoying so we should at least look into it.
 -consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
 	-if yes, work on docker file, docker-compose, etc.
 	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
