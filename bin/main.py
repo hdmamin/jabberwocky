@@ -533,12 +533,24 @@ class App:
                                       'show_during_id': 'add_persona_msg',
                                       'error_msg_id': 'add_persona_error_msg'})
             add_same_line()
-            add_button('add_custom_persona_btn', label='Add Custom Persona')#,
-                       # callback=add_custom_persona_callback,
-                       # callback_data={'source_id': 'add_persona_text',
-                       #                'target_id': 'persona_list',
-                       #                'show_during_id': 'add_persona_msg',
-                       #                'error_msg_id': 'add_persona_error_msg'})
+
+            # name_source_id is only used by the first Add Custom Persona
+            # button callback. This is just a default value - the user can
+            # always enter one later in the modal that pops up.
+            generate_persona_data = {
+                'popup_id': 'Custom Persona Info',
+                'name_id': 'persona_name',
+                'summary_id': 'custom_summary',
+                'image_path_id': 'custom_image_path',
+                'gender_id': 'Gender',
+                'target_id': 'persona_list',
+                'error_msg_id': 'persona_save_error_msg',
+                'name_source_id': 'add_persona_text',
+                'force_save_id': 'force_generate_box'
+            }
+            add_button('add_custom_persona_btn', label='Add Custom Persona',
+                       callback=add_custom_persona_callback,
+                       callback_data=generate_persona_data)
             with popup('add_custom_persona_btn', 'Custom Persona Info',
                        modal=True, width=self.widths[.5],
                        mousebutton=mvMouseButton_Left):
@@ -554,22 +566,16 @@ class App:
                 add_input_text('custom_image_path', default_value='',
                                label='Image Path (optional)',
                                width=popup_item_width)
-                generate_persona_data = {
-                    'popup_id': 'Custom Persona Info',
-                    'name_id': 'persona_name',
-                    'summary_id': 'custom_summary',
-                    'image_path_id': 'custom_image_path',
-                    'gender_id': 'Gender',
-                    'target_id': 'persona_list',
-                    'error_msg_id': 'persona_save_error_msg'
-                }
                 add_button('custom_generate_btn', label='Generate',
                            callback=generate_persona_callback,
                            callback_data=generate_persona_data)
                 add_same_line()
                 add_button('custom_cancel_btn', label='Cancel',
-                           callback=cancel_generate_callback,
+                           callback=cancel_save_conversation_callback,
                            callback_data=generate_persona_data)
+                add_same_line()
+                add_checkbox('force_generate_box', label='Force Generate',
+                             default_value=False)
                 add_text('persona_save_error_msg',
                          default_value='Persona already exists.', show=False)
 
@@ -619,7 +625,8 @@ class App:
 
 
 if __name__ == '__main__':
-    tasks = ['Barack Obama'] # TODO: tmp limit conv personas for faster loading.
+    # tasks = ['Barack Obama'] # TODO: tmp limit conv personas for faster loading.
+    tasks = []
     SPEAKER = Speaker(newline_pause=400)
     CHUNKER = GuiTextChunker(max_chars=70)
     MANAGER = PromptManager(verbose=False, skip_tasks=['conversation',

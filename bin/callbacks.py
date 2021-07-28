@@ -258,27 +258,28 @@ def persona_select_callback(sender, data):
 
 
 def add_custom_persona_callback(sender, data):
-    pass
-    # TODO
+    # Reset values so the next persona we generate doesn't show the last
+    # persona we added.
+    set_value(data['name_id'], get_value(data['name_source_id']))
+    set_value(data['summary_id'], '')
+    set_value(data['image_path_id'], '')
+    set_value(data['gender_id'], 0)
 
 
 # TODO: try to integrate w/ add_persona callback with a little tweaking.
 def generate_persona_callback(sender, data):
     name = get_value(data['name_id'])
-    summary = get_value(data['summary_id'])
+    summary = get_value(data['summary_id']).replace('\n', ' ')\
+                                           .replace('  ', ' ')
     img_path = get_value(data['image_path_id'])
     gender = ['F', 'M'][get_value(data['gender_id'])]
-    print('name:', name)
-    print('summary:', summary)
-    print('img path:', img_path)
-    print('gender:', gender)
     already_exists = CONV_MANAGER.persona_exists_locally(name)
-    print('already_exists', already_exists)
+    force_save = get_value(data['force_save_id'])
     show_error = False
     if not name:
         set_value(data['error_msg_id'], 'Name must not be empty.')
         show_error = True
-    if already_exists and (summary or img_path):
+    if already_exists and (summary or img_path) and not force_save:
         set_value(data['error_msg_id'],
                   'Persona already exists. Are you sure you want to '
                   'overwrite its summary and/or image path?')
@@ -287,7 +288,7 @@ def generate_persona_callback(sender, data):
         set_value(data['error_msg_id'],
                   'Summary must be provided when adding a new persona.')
         show_error = True
-    if name in CONV_MANAGER:
+    if name in CONV_MANAGER and not force_save:
         set_value(data['error_msg_id'],
                   'Persona already loaded. Are you sure you want to overwrite '
                   'its summary and/or image path?')
@@ -307,18 +308,12 @@ def generate_persona_callback(sender, data):
         show_item(data['error_msg_id'])
         return
 
-    # Update available personas in GUI.
+    # Update available personas in GUI and then make the new persona the active
+    # one. Dearpygui doesn't seem to let us change the selected listbox item
+    # so we have to do this a bit hackily.
     configure_item(data['target_id'], items=CONV_MANAGER.personas())
-    # Make new persona the active one. Dearpygui doesn't seem to let us
-    # change the selected listbox item so we have to do this a bit hackily.
     persona_select_callback('add_persona_callback', {'name': name})
-
-    cancel_generate_callback('generate_persona_callback', data)
-
-
-def cancel_generate_callback(sender, data):
-    # TODO: finish/refactor?
-    close_popup(data['popup_id'])
+    cancel_save_conversation_callback('generate_persona_callback', data)
 
 
 def add_persona_callback(sender, data):
@@ -372,7 +367,8 @@ def cancel_save_conversation_callback(sender, data):
     # Don't need to reset dir name and file name here because that happens in
     # Save As callback.
     hide_item(data['error_msg_id'])
-    set_value(data['force_save_id'], False)
+    if 'force_save_id' in data:
+        set_value(data['force_save_id'], False)
     close_popup(data['popup_id'])
 
 
