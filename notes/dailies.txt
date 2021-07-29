@@ -1246,7 +1246,6 @@ _ -see if we can refactor callbacks to work w/ default add_persona
 7/28/21
 -------
 -investigate bug where we replace an existing persona. Picture + summary don't update until we manually click on the persona.
-
 -think if there's any way to use streaming mode w/ prompt/conv managers and Speaker. Probably won't be compatible, and we'd have to do some surgery to give speaker natural sounding chunks of text (speaking 1 word at a time would sound much more robotic). But the slowness is annoying so we should at least look into it.
 
 

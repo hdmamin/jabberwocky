@@ -266,7 +266,6 @@ def add_custom_persona_callback(sender, data):
     set_value(data['gender_id'], 0)
 
 
-# TODO: try to integrate w/ add_persona callback with a little tweaking.
 def generate_persona_callback(sender, data):
     name = get_value(data['name_id'])
     summary = get_value(data['summary_id']).replace('\n', ' ')\
@@ -305,8 +304,12 @@ def generate_persona_callback(sender, data):
     # Update available personas in GUI and then make the new persona the active
     # one. Dearpygui doesn't seem to let us change the selected listbox item
     # so we have to do this a bit hackily.
+    # print(CONV_MANAGER.name2base[CONV_MANAGER.process_name(name)])
     configure_item(data['target_id'], items=CONV_MANAGER.personas())
     persona_select_callback('add_persona_callback', {'name': name})
+
+    CONV_MANAGER.start_conversation(name)
+    update_persona_info()
     cancel_save_conversation_callback('generate_persona_callback', data)
 
 
@@ -612,7 +615,6 @@ def update_persona_info(img_name='conversation_img',
     set_item_width(dummy_name, APP.widths[.5] // 4 - 4*APP.pad)
     add_same_line(parent=parent, before=img_name)
     # Must delete image after previous updates.
-    # if does_item_exist(img_name):
     delete_item(img_name)
     add_image(img_name, str(CONV_MANAGER.current_img_path), parent=parent,
               before=text_name, **dims)
