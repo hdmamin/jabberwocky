@@ -532,6 +532,10 @@ class App:
                                       'target_id': 'persona_list',
                                       'show_during_id': 'add_persona_msg',
                                       'error_msg_id': 'add_persona_error_msg'})
+            with tooltip('add_persona_btn', 'add_persona_btn_tooltip'):
+                add_text('Make sure to finish your current conversation first '
+                         '- \notherwise, this will end it automatically and '
+                         'start a \nconversation with the new persona.')
             add_same_line()
 
             # name_source_id is only used by the first Add Custom Persona
@@ -551,6 +555,13 @@ class App:
             add_button('add_custom_persona_btn', label='Add Custom Persona',
                        callback=add_custom_persona_callback,
                        callback_data=generate_persona_data)
+            with tooltip('add_custom_persona_btn',
+                         'add_custom_persona_btn_tooltip'):
+                add_text('This lets you provide the persona\'s bio and '
+                         'picture yourself \ninstead of auto-generating them.'
+                         'Make sure to finish your\ncurrent conversation '
+                         'first - otherwise, this will end it \nautomatically '
+                         'and start a conversation with the new persona.')
             with popup('add_custom_persona_btn', 'Custom Persona Info',
                        modal=True, width=self.widths[.5],
                        mousebutton=mvMouseButton_Left):

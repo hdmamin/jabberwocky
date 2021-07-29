@@ -246,8 +246,14 @@ def persona_select_callback(sender, data):
         name = data['name']
     else:
         name = CONV_MANAGER.personas()[get_value(sender)]
-    # Avoid resetting vars in the middle of a conversation.
-    if CONV_MANAGER.process_name(name) == CONV_MANAGER.current_persona:
+    # Avoid resetting vars in the middle of a conversation. Second part avoids
+    # subtle issue where if we force generate a custom persona that's already
+    # loaded (i.e. we overwrite an existing persona), the new persona wouldn't
+    # auto-load. We don't need this for default add_persona action because
+    # if the persona's already loaded, we'll just load it from files rather
+    # than overwriting anything.
+    if (CONV_MANAGER.process_name(name) == CONV_MANAGER.current_persona) and \
+            (sender != 'generate_persona_callback'):
         return
 
     CONV_MANAGER.start_conversation(name, download_if_necessary=False)
@@ -304,12 +310,8 @@ def generate_persona_callback(sender, data):
     # Update available personas in GUI and then make the new persona the active
     # one. Dearpygui doesn't seem to let us change the selected listbox item
     # so we have to do this a bit hackily.
-    # print(CONV_MANAGER.name2base[CONV_MANAGER.process_name(name)])
     configure_item(data['target_id'], items=CONV_MANAGER.personas())
-    persona_select_callback('add_persona_callback', {'name': name})
-
-    CONV_MANAGER.start_conversation(name)
-    update_persona_info()
+    persona_select_callback('generate_persona_callback', {'name': name})
     cancel_save_conversation_callback('generate_persona_callback', data)
 
 

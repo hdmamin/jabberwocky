@@ -1245,7 +1245,10 @@ _ -see if we can refactor callbacks to work w/ default add_persona
 
 7/28/21
 -------
--investigate bug where we replace an existing persona. Picture + summary don't update until we manually click on the persona.
+X -investigate bug where we replace an existing persona. Picture + summary don't update until we manually click on the persona.
+    UPDATE: updated persona_select_callback to handle specific case where we overwrite an existing persona with a custom one. In this case, the new name is the same as the old one (which usually means we don't want to start_conversation or make other updates since it's mid convo) but here we do.
+-add text item (think H1 title) above summary showing current persona (hopefully make our inability to change selected listbox item a little less confusing)
+X -add warning that generating a new persona will end the current conversation
 -think if there's any way to use streaming mode w/ prompt/conv managers and Speaker. Probably won't be compatible, and we'd have to do some surgery to give speaker natural sounding chunks of text (speaking 1 word at a time would sound much more robotic). But the slowness is annoying so we should at least look into it.
 
 
