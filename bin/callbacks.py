@@ -623,4 +623,3 @@ def update_persona_info(img_name='conversation_img',
     chunked = CHUNKER.add(text_key, CONV_MANAGER.current_summary,
                           max_chars=dims['width'] // 4)
     set_value(text_name, chunked)
-
