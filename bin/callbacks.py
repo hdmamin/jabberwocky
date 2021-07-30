@@ -115,6 +115,9 @@ def text_edit_callback(sender, data):
 
     Note: set_key_press_callback() is undocumented but it can't pass in a dict
     as data (it's an int of unknown meaning).
+
+    Here, sender is the id of the active window (e.g. conv_window,
+    default_options_window, etc.)
     """
     # This way even if user doesn't hit Auto-Format, query_callback() can
     # retrieve input from chunker. Otherwise we'd have to keep track of when to
@@ -126,7 +129,8 @@ def text_edit_callback(sender, data):
                              data={'task_list_id': 'task_list',
                                    'text_source_id': 'transcribed_text',
                                    'update_kwargs': False})
-    # Case: in conversation mode and user edits the add_persona text.
+    # Case: in conversation mode and user edits the add_persona text or
+    # speaker speed.
     elif sender == 'conv_options_window':
         # Can't pass data dict to this type of callback (seems to be a
         # character code for the last typed character instead) so we have to
@@ -541,6 +545,11 @@ def conv_query_callback(sender, data):
     set_value(data['target_id'], full_conv)
     if get_value(data['read_checkbox_id']):
         read_response(response, data)
+
+
+def speaker_speed_callback(sender, data):
+    scalar = get_value(sender)
+    scalar / 10
 
 
 def resize_callback(sender):

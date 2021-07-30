@@ -403,7 +403,7 @@ class App:
                                       'interrupt_id': 'interrupt_checkbox',
                                       'query_msg_id': 'query_progress_msg'})
             add_same_line()
-            add_checkbox('read_response', label='read response',
+            add_checkbox('read_response', label='Read Response',
                          default_value=True)
             with tooltip('read_response', 'read_response_tooltip'):
                 add_text('Check this box if you want GPT3\'s response\n to be '
@@ -522,8 +522,15 @@ class App:
                                'interrupt_id': 'conv_interrupt_checkbox',
                                'query_msg_id': 'conv_query_progress_msg'})
             add_same_line()
-            add_checkbox('conv_read_response', label='read response',
+            add_checkbox('conv_read_response', label='Read Response',
                          default_value=True)
+            add_same_line()
+            add_input_int('speed_input', default_value=0, min_value=0,
+                          max_value=10, min_clamped=True, max_clamped=True,
+                          label='Speaker Speed',
+                          width=int(APP.widths[.5] * .35),
+                          callback=speaker_speed_callback)
+            add_spacing(count=10)
 
             # Select a persona.
             add_button('add_persona_btn', label='Add Auto Persona',
