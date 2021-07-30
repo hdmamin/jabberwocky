@@ -1253,9 +1253,23 @@ X -add warning that generating a new persona will end the current conversation
 
 7/29/21
 -------
--widget in UI to control voice speed
-    -add functionality so it actually affects SPEAKER obj
--think if there's any way to use streaming mode w/ prompt/conv managers and Speaker. Probably won't be compatible, and we'd have to do some surgery to give speaker natural sounding chunks of text (speaking 1 word at a time would sound much more robotic). But the slowness is annoying so we should at least look into it.
+X -widget in UI to control voice speed
+    X -find good min and max spees for speaker
+        UPDATE: 120-220 seems reasonable.
+    X -adjust Speaker design so rate can be set between 0-10 and translated to Mac speaker scale automatically
+    X -add functionality so it actually affects SPEAKER obj
+~ -think if there's any way to use streaming mode w/ prompt/conv managers and Speaker. Probably won't be compatible, and we'd have to do some surgery to give speaker natural sounding chunks of text (speaking 1 word at a time would sound much more robotic). But the slowness is annoying so we should at least look into it.
+    UPDATE: looks like this actually should work for promptmanager but prob not convmanager. See ipython session.
+
+7/30/21
+-------
+-more work on streaming mode for default mode (see ipy sess). 
+    -I think we need to set strip=False when querying w/ stream=True otherwise we either end up w/ too many spaces or not enough. Confirm this change fixes things.
+        -If so, update query_gpt3 to error or warn if user doesn't do this correctly.
+    -try to update default mode in GUI to do this. (still some uncertainty: hopefully our chunker doesn't cause any errors)
+    -think: is there any way to redesign convmanager to do this without requiring a total rewrite?
+-look into changing window names ('conv_options_window' vs 'Conversation Options'). Ideally we'd keep the ID separate from the visible name but I think it's worth making the change even if we have to change the ID too.
+-add voice speed widget to default options window too
 
 
 -------------------------------------------------------------------------------

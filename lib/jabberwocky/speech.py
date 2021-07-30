@@ -26,24 +26,39 @@ class Speaker:
     functionality.
     """
 
-    def __init__(self, voice='karen', rate=135, newline_pause=300):
+    def __init__(self, voice='karen', rate=5, newline_pause=300):
+        """
+
+        Parameters
+        ----------
+        voice
+        rate: int
+            Determines speaker speed. Scale of 0-10 where 10 is fastest and 0
+            is slowest.
+        newline_pause
+        """
         self.voice = voice
-        self.rate = rate
         self.newline_pause = newline_pause
         self.is_speaking = False
+
+        # _rate will be updated automatically by setter method.
+        self._min_rate = 120
+        self.rate = rate
+        self._rate = None
+
+    @property
+    def rate(self):
+        return self._rate
+
+    @rate.setter
+    def rate(self, val):
+        assert 0 <= val <= 10, 'You should choose a rate in [0, 10].'
+        self._rate = self._min_rate + 100*(val / 10)
 
     @property
     def cmd_prefix(self):
         """Must recompute in case user changes voice."""
-        return f'say -v {self.voice} -r {self.rate} '
-
-    @cmd_prefix.deleter
-    def cmd_prefix(self):
-        raise RuntimeError('cmd_prefix cannot be deleted.')
-
-    @cmd_prefix.setter
-    def cmd_prefix(self, voice):
-        raise RuntimeError('cmd_prefix is read only.')
+        return f'say -v {self.voice} -r {self._rate} '
 
     @handle_interrupt(cbs=SpeakingStatusCallback())
     def speak(self, text):

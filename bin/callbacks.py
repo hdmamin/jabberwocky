@@ -548,8 +548,7 @@ def conv_query_callback(sender, data):
 
 
 def speaker_speed_callback(sender, data):
-    scalar = get_value(sender)
-    scalar / 10
+    SPEAKER.rate = get_value(sender)
 
 
 def resize_callback(sender):
