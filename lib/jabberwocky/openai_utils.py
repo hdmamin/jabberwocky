@@ -121,6 +121,10 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
     non-streaming mode, we don't return the prompt - that seems less
     appropriate for many time steps.
     """
+    if stream and strip_output:
+        warnings.warn('strip_output is automatically set to False when stream '
+                      'is True. It would be impossible to correctly '
+                      'reconstruct outputs otherwise.')
     if mock:
         res = load(C.mock_stream_paths[stream])
         if mock_func:
@@ -157,7 +161,7 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
 
     # Extract text and return. Zip maintains lazy evaluation.
     if stream:
-        texts = (strip(chunk.choices[0].text, strip_output) for chunk in res)
+        texts = (chunk.choices[0].text for chunk in res)
         return zip(texts, res) if return_full else texts
     else:
         output = (prompt, strip(res.choices[0].text, strip_output), res)

@@ -1264,32 +1264,36 @@ X -widget in UI to control voice speed
 7/30/21
 -------
 -more work on streaming mode for default mode (see ipy sess). 
-    -I think we need to set strip=False when querying w/ stream=True otherwise we either end up w/ too many spaces or not enough. Confirm this change fixes things.
-        -If so, update query_gpt3 to error or warn if user doesn't do this correctly.
+    X -I think we need to set strip=False when querying w/ stream=True otherwise we either end up w/ too many spaces or not enough. Confirm this change fixes things.
+        UPDATE: It does.
+        X -If so, update query_gpt3 to error or warn if user doesn't do this correctly.
+            UPDATE: warn user and auto skip stripping when in stream mode.
     -try to update default mode in GUI to do this. (still some uncertainty: hopefully our chunker doesn't cause any errors)
     -think: is there any way to redesign convmanager to do this without requiring a total rewrite?
 X -look into changing window names ('conv_options_window' vs 'Conversation Options'). Ideally we'd keep the ID separate from the visible name but I think it's worth making the change even if we have to change the ID too.
-    UPDATE: just changed ID, not worth trying to hack something crazy together to get around this.
--add voice speed widget to default options window too
+    UPDATE: just changed ID, not worth trying to hack something crazy together to get around this. Also changed main window name to Jabberwocky from default dearpygui.
+X -add voice speed widget to default options window too
+X -clean up backlog a bit - create wontfix section
 
+7/31/21
+-------
+-more work on streaming mode for default mode (see ipy sess). 
+    -try to update default mode in GUI to do this. (still some uncertainty: hopefully our chunker doesn't cause any errors)
+    -think: is there any way to redesign convmanager to do this without requiring a total rewrite?
+-look into gpt-neo funcs - seems like these stopped working after a while
+-consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
+	-if yes, work on docker file, docker-compose, etc.
+	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
--consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
-	-if yes, work on docker file, docker-compose, etc.
-	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
 - htools things:
 	-flesh out owneraccess decorator
 	-port htools as_df
 -watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
 -maybe update converse contextmanager to have input baked in
--see if slack app is a possibility (do I have auth to do in GG workspace?)
--prototype cover letter writer from job posting
 -continue work on more generic Monitor class for htools
--consider image task tie-ins
-    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
--rename windows (would prefer to find way to separate id and label, but I don't think that's available)
 
 -------------------------------------------------------------------------------
 easy tasks for low energy days
@@ -1301,3 +1305,10 @@ easy tasks for low energy days
     -value storage system
 -document session
 -document transcript methods
+
+Won't Do (things I considered doing but ultimately decided to skip, at least in this project)
+---------------------------------------------------------------------------------------------
+-see if slack app is a possibility (do I have auth to do in GG workspace?)
+-prototype cover letter writer from job posting
+-consider image task tie-ins
+    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
