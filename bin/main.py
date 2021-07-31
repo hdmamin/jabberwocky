@@ -179,6 +179,7 @@ class App:
                                       callback=menu_default_callback)
                         add_menu_item('conv_menu_choice', label='Conversation',
                                       callback=menu_conversation_callback)
+        set_main_window_title('Jabberwocky')
 
     def left_column(self):
         """Defines the dearpygui elements in the left column of the app.
@@ -187,7 +188,7 @@ class App:
         but encountered issues since dearpygui does some black magic with the
         current stack when defining windows.
         """
-        with window('default_window', width=self.widths[.5],
+        with window('Input', width=self.widths[.5],
                     height=self.heights[1.], x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True):
             ###################################################################
@@ -288,7 +289,7 @@ class App:
         #######################################################################
         # Conversation Window
         #######################################################################
-        with window('conv_window', width=self.widths[.5],
+        with window('Conversation', width=self.widths[.5],
                     height=self.heights[1.], x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):
             # Can't use persona_select_callback to do this because it calls
@@ -389,7 +390,7 @@ class App:
         but encountered issues since dearpygui does some black magic with the
         current stack when defining windows.
         """
-        with window('default_options_window', width=self.widths[.5],
+        with window('Options', width=self.widths[.5],
                     height=self.heights[1.],
                     x_pos=self.widths[.5] + 2*self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True):
@@ -408,6 +409,12 @@ class App:
             with tooltip('read_response', 'read_response_tooltip'):
                 add_text('Check this box if you want GPT3\'s response\n to be '
                          'read aloud.')
+            add_same_line()
+            add_input_int('default_speed_input', default_value=0, min_value=0,
+                          max_value=10, min_clamped=True, max_clamped=True,
+                          label='Speaker Speed',
+                          width=int(APP.widths[.5] * .35),
+                          callback=speaker_speed_callback)
 
             add_radio_button('model', items=MODEL_NAMES)
             with tooltip('model', 'model_tooltip'):
@@ -508,7 +515,7 @@ class App:
         #######################################################################
         # Conversation Options Window
         #######################################################################
-        with window('conv_options_window', width=self.widths[.5],
+        with window('Conversation Options', width=self.widths[.5],
                     height=self.heights[1.],
                     x_pos=self.widths[.5] + 2*self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True, show=False):

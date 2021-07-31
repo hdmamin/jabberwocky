@@ -1268,7 +1268,8 @@ X -widget in UI to control voice speed
         -If so, update query_gpt3 to error or warn if user doesn't do this correctly.
     -try to update default mode in GUI to do this. (still some uncertainty: hopefully our chunker doesn't cause any errors)
     -think: is there any way to redesign convmanager to do this without requiring a total rewrite?
--look into changing window names ('conv_options_window' vs 'Conversation Options'). Ideally we'd keep the ID separate from the visible name but I think it's worth making the change even if we have to change the ID too.
+X -look into changing window names ('conv_options_window' vs 'Conversation Options'). Ideally we'd keep the ID separate from the visible name but I think it's worth making the change even if we have to change the ID too.
+    UPDATE: just changed ID, not worth trying to hack something crazy together to get around this.
 -add voice speed widget to default options window too
 
 

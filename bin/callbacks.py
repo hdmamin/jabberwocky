@@ -39,7 +39,7 @@ def transcribe_callback(sender, data):
             transcription. Usually just a text element saying transcription is
             in progress.)
     """
-    if is_item_visible('default_window'):
+    if is_item_visible('Input'):
         set_value(data['target_id'], '')
     show_during = data.get('show_during_ids', [])
     for id_ in show_during:
@@ -63,7 +63,7 @@ def transcribe_callback(sender, data):
     for id_ in show_during:
         hide_item(id_)
 
-    if is_item_visible('default_window'):
+    if is_item_visible('Input'):
         set_value(data['target_id'], text)
         # If not in conversation mode, manually call this so prompt is updated
         # once we finish recording.
@@ -116,13 +116,13 @@ def text_edit_callback(sender, data):
     Note: set_key_press_callback() is undocumented but it can't pass in a dict
     as data (it's an int of unknown meaning).
 
-    Here, sender is the id of the active window (e.g. conv_window,
-    default_options_window, etc.)
+    Here, sender is the id of the active window (e.g. Conversation, Options,
+    etc.)
     """
     # This way even if user doesn't hit Auto-Format, query_callback() can
     # retrieve input from chunker. Otherwise we'd have to keep track of when to
     # retrieve it from text input box vs. from chunker which could get messy.
-    if is_item_visible('default_window'):
+    if is_item_visible('Input') and sender != 'Options':
         CHUNKER.add('transcribed', get_value('transcribed_text'),
                     return_chunked=False)
         task_select_callback('task_list',
@@ -131,7 +131,7 @@ def text_edit_callback(sender, data):
                                    'update_kwargs': False})
     # Case: in conversation mode and user edits the add_persona text or
     # speaker speed.
-    elif sender == 'conv_options_window':
+    elif sender == 'Conversation Options':
         # Can't pass data dict to this type of callback (seems to be a
         # character code for the last typed character instead) so we have to
         # hardcode this. This ensures that if we previously failed to add a
@@ -141,8 +141,9 @@ def text_edit_callback(sender, data):
     # Case: in conversation mode and user edits the main conversation text box.
     # Not sure if this is really effective though because the conv manager
     # maintains its own conversation history and I think it only uses CHUNKER
-    # to get the new prompt.
-    else:
+    # to get the new prompt. Use elif (not else) to prevent this from being
+    # triggered when user edits speech speed in default mode.
+    elif is_item_visible('Conversation'):
         edited = get_value('conv_text')
         CHUNKER.add('conv_transcribed', edited, return_chunked=False)
         # Can't figure out a way to get around this: have to do some surgery
@@ -391,7 +392,7 @@ def saveas_callback(sender, data):
     # save_callback will then execute if the user proceeds to hit
     # save from the newly visible modal.
     date = dt.today().strftime('%Y-%m-%d')
-    if is_item_visible('conv_window'):
+    if is_item_visible('Conversation'):
         dir_ = str(CONV_MANAGER.conversation_dir.absolute())
         file = f'{CONV_MANAGER.current_persona}_{date}.txt'
     else:
@@ -435,7 +436,7 @@ def save_callback(sender, data):
 
     # In case user tries to save an empty conversation.
     try:
-        if is_item_visible('conv_window'):
+        if is_item_visible('Conversation'):
             full_conv = CHUNKER.get('conv_transcribed', chunked=False)
         else:
             # Some surgery required: don't want full prompt with all examples
@@ -465,7 +466,7 @@ def save_callback(sender, data):
     # be done if we cancel the save operation. If user saved empty text, delete
     # call would throw an error without if clause. We also don't do this for
     # default mode in case we want to reuse a prompt for multiple tasks.
-    if is_item_visible('conv_window') and get_value(data['end_conv_id']):
+    if is_item_visible('Conversation') and get_value(data['end_conv_id']):
         if full_conv: CHUNKER.delete('conv_transcribed')
         set_value(data['source_text_id'], '')
         CONV_MANAGER.start_conversation(CONV_MANAGER.current_persona)
@@ -557,8 +558,8 @@ def resize_callback(sender):
     """
     width, height = get_main_window_size()
     APP.recompute_dimensions(width, height)
-    windows = ['conv_window', 'default_window', 'default_options_window',
-               'conv_options_window']
+    windows = ['Conversation', 'Input', 'Options',
+               'Conversation Options']
     for i, id_ in zip([0, 0, 1, 1], windows):
         set_item_width(id_, APP.widths[.5])
         set_item_height(id_, APP.heights[1.])
@@ -573,7 +574,7 @@ def resize_callback(sender):
                 set_item_width(child, APP.widths[.5] - 8*APP.pad)
 
     # Images don't show up as children so we resize them separately.
-    if is_item_visible('conv_options_window'):
+    if is_item_visible('Conversation Options'):
         update_persona_info()
 
 
@@ -581,10 +582,10 @@ def menu_conversation_callback(sender, data):
     """Triggered when user selects Conversation mode from the main menu.
     Controls which windows are displayed.
     """
-    show_item('conv_window')
-    show_item('conv_options_window')
-    hide_item('default_window')
-    hide_item('default_options_window')
+    show_item('Conversation')
+    show_item('Conversation Options')
+    hide_item('Input')
+    hide_item('Options')
     set_item_label('conv_menu_choice', 'Conversation\t[x]')
     set_item_label('default_menu_choice', 'Default')
 
@@ -593,19 +594,21 @@ def menu_default_callback(sender, data):
     """Triggered when user selects default mode from the main menu.
     Controls which windows are displayed.
     """
-    show_item('default_window')
-    show_item('default_options_window')
-    hide_item('conv_window')
-    hide_item('conv_options_window')
+    show_item('Input')
+    show_item('Options')
+    hide_item('Conversation')
+    hide_item('Conversation Options')
     set_item_label('default_menu_choice', 'Default\t[x]')
     set_item_label('conv_menu_choice', 'Conversation')
 
 
 def update_persona_info(img_name='conversation_img',
-                        parent='conv_options_window', text_name='summary_text',
-                        text_key='summary', dummy_name='img_dummy_spacer'):
+                        parent='Conversation Options',
+                        text_name='summary_text',
+                        text_key='summary',
+                        dummy_name='img_dummy_spacer'):
     """Update and resize persona bio and summary (characters per line changes
-    for the latter). This operates in the conv_options_window.
+    for the latter). This operates in the Conversation Options window.
 
     Parameters
     ----------
