@@ -1287,8 +1287,8 @@ X -more work on streaming mode for default mode (see ipy sess).
 
 8/1/21
 ------
--bug: stop phrases don't show up until we actively click on a prompt (not when the app first loads). UPDATE: looks like this affects all or most kwargs, not just stop phrases.
-    -think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
+X -bug: stop phrases don't show up until we actively click on a prompt (not when the app first loads). UPDATE: looks like this affects all or most kwargs, not just stop phrases.
+-think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
 -see if there's any way to make speaking/typing occur simultaneously. Previously tried launching a thread with target=read_response but that stopped new text from showing up until speaking ended. Have to investigate to determine if that's a limit of python or of dearpygui specifically (vaguely recall threads work kind of wonkily in callbacks - maybe if we move the threading inside read_response() itself).
 -look into gpt-neo funcs - seems like these stopped working after a while
 

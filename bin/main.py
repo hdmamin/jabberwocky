@@ -511,6 +511,10 @@ class App:
                          'in\nthe input box yet, you may\nsee a pair of curly '
                          'braces in here:\nthis will be replaced by\nyour '
                          'input once you provide it.')
+            task_select_callback('Options',
+                                 {'task_list_id': 'task_list',
+                                  'text_source_id': 'transcribed_text',
+                                  'update_kwargs': True})
 
         #######################################################################
         # Conversation Options Window
