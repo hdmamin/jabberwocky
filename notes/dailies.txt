@@ -1288,13 +1288,24 @@ X -more work on streaming mode for default mode (see ipy sess).
 8/1/21
 ------
 X -bug: stop phrases don't show up until we actively click on a prompt (not when the app first loads). UPDATE: looks like this affects all or most kwargs, not just stop phrases.
+~ -see if there's any way to make speaking/typing occur simultaneously. Previously tried launching a thread with target=read_response but that stopped new text from showing up until speaking ended. Have to investigate to determine if that's a limit of python or of dearpygui specifically (vaguely recall threads work kind of wonkily in callbacks - maybe if we move the threading inside read_response() itself).
+    UPDATE: yes. Definitely works in ipython and mostly works in GUI now, just refining details.
 -think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
--see if there's any way to make speaking/typing occur simultaneously. Previously tried launching a thread with target=read_response but that stopped new text from showing up until speaking ended. Have to investigate to determine if that's a limit of python or of dearpygui specifically (vaguely recall threads work kind of wonkily in callbacks - maybe if we move the threading inside read_response() itself).
 -look into gpt-neo funcs - seems like these stopped working after a while
+X -change 'query in progress...' message to 'typing...' like in many chat apps
+
+8/2/21
+------
+-bug: stop phrases still don't work for summarize task though they do for other tasks
+-fix inability to interrupt threaded speaker (currently read_response handles error which works if we call it once, but we're currently calling it repeatedly. Either need to raise error and handle it outside the func or rewrite func (maybe to do all the threading stuff as 1 self-contained unit).
+    -related: should we revise read_response to do all the threading stuff itself?
+    -sometimes speaker gets ahead of typer and has to wait. Consider ways to fix this (e.g. delay speaker start to the 2nd sentence? Get all text (non streamed) and then use my stream() func to start typing? Would certainly make it easier to use in conv mode though it wouldn't resolve the long waiting issues.)
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-look into gpt-neo funcs - seems like these stopped working after a while
+-think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
 -consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
 	-if yes, work on docker file, docker-compose, etc.
 	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)

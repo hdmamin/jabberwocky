@@ -515,16 +515,40 @@ def query_callback(sender, data):
             res = 'Query failed. Please check your settings and try again.'
 
     # Stream function provides "typing" effect.
+    # res_text = ''
+    # for chunk in stream(res):
+    #     res_text += chunk
+    #     chunked = CHUNKER.add('response', res_text)
+    #     set_value(data['target_id'], chunked)
+    #     time.sleep(.12)
+    #
+    # hide_item(data['query_msg_id'])
+    # if get_value(data['read_checkbox_id']):
+    #     read_response(res_text, data)
+
+    # TODO testing
+    from threading import Thread
+    threads = []
     res_text = ''
+    curr_text = ''
     for chunk in stream(res):
         res_text += chunk
+        curr_text += chunk
         chunked = CHUNKER.add('response', res_text)
         set_value(data['target_id'], chunked)
-        time.sleep(.12)
-
+        if any(char in chunk for char in ('.', '!', '?')):
+            # SPEAKER.speak(curr_text)
+            thread = Thread(target=SPEAKER.speak, args=(curr_text,))
+            # thread = Thread(target=read_response, args=(curr_text, data))
+            thread.start()
+            threads.append(thread)
+            print('in if:', curr_text)
+            # Make sure this isn't reset until AFTER the speaker thread starts.
+            curr_text = ''
+        time.sleep(.18)
+    if curr_text: SPEAKER.speak(curr_text)
     hide_item(data['query_msg_id'])
-    if get_value(data['read_checkbox_id']):
-        read_response(res_text, data)
+    for thread in threads: thread.join()
 
 
 def conv_query_callback(sender, data):

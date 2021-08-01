@@ -278,8 +278,8 @@ class App:
                 add_text('GPT3\'s response will be shown\nbelow after you hit '
                          'the\nQuery button.')
 
-            add_text('query_progress_msg',
-                     default_value='Query in progress...', show=False)
+            add_text('query_progress_msg', default_value='Typing...',
+                     show=False)
             add_checkbox('interrupt_checkbox', label='Interrupt', show=False)
             with label_above('response_text'):
                 add_input_text('response_text', default_value='',
@@ -368,8 +368,8 @@ class App:
                      show=False)
 
             # Visible when querying and speaking, respectively.
-            add_text('conv_query_progress_msg',
-                     default_value='Query in progress...', show=False)
+            add_text('conv_query_progress_msg', default_value='Typing...',
+                     show=False)
             add_checkbox('conv_interrupt_checkbox', label='Interrupt',
                          show=False)
             add_text('edit_warning_msg', show=False,
