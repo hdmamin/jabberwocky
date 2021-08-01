@@ -25,7 +25,7 @@ from htools.core import save, select
 from jabberwocky.openai_utils import query_gpt_neo
 from jabberwocky.utils import img_dims
 
-from utils import read_response
+from utils import read_response, stream
 
 
 def transcribe_callback(sender, data):
@@ -507,24 +507,24 @@ def query_callback(sender, data):
                           mock=True)
         elif model == 'naive':
             kwargs.update(mock=True, mock_func=None)
-
         try:
-            print('input prompt:\n' + text)
-            _, res = MANAGER.query(task=task, text=text, **kwargs)
+            res = MANAGER.query(task=task, text=text, stream=True,
+                                strip_output=False, **kwargs)
         except Exception as e:
             print(e)
             res = 'Query failed. Please check your settings and try again.'
 
-    # GPT3 seems to like a type of apostrophe that dearpygui can't display. We
-    # also insert newlines to display the text more nicely in the GUI, but
-    # avoid overwriting the raw response because the newlines add pauses when
-    # speech mode is enable.
-    chunked = CHUNKER.add('response', res)
-    set_value(data['target_id'], chunked)
+    # Stream function provides "typing" effect.
+    res_text = ''
+    for chunk in stream(res):
+        res_text += chunk
+        chunked = CHUNKER.add('response', res_text)
+        set_value(data['target_id'], chunked)
+        time.sleep(.12)
+
     hide_item(data['query_msg_id'])
-    print('\nres:\n' + chunked)
     if get_value(data['read_checkbox_id']):
-        read_response(res, data)
+        read_response(res_text, data)
 
 
 def conv_query_callback(sender, data):

@@ -144,3 +144,21 @@ def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None,
         if quit_after and time.perf_counter() - start > quit_after:
             print(f'Checkbox monitor quitting due to time exceeded.')
             break
+
+
+def stream_text(text, chunk_size=3):
+    """Generator that yields chunks of a string. GPT3 provides streaming mode
+    but gpt-neo doesn't and we sometimes also want to display error messages or
+    mocked results as if they are in streaming mode. This helps us do that.
+    """
+    yield from (text[i:i+chunk_size] for i in range(0, len(text), chunk_size))
+
+
+def stream(text_or_gen):
+    """Wrapper around stream_text(). Input can either be a string OR a
+    generator (as returned by query_gpt3() when stream=True).
+    """
+    if isinstance(text_or_gen, str):
+        yield from stream_text(text_or_gen)
+    else:
+        yield from text_or_gen

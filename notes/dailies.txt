@@ -1277,16 +1277,27 @@ X -clean up backlog a bit - create wontfix section
 
 7/31/21
 -------
--more work on streaming mode for default mode (see ipy sess). 
-    -try to update default mode in GUI to do this. (still some uncertainty: hopefully our chunker doesn't cause any errors)
-    -think: is there any way to redesign convmanager to do this without requiring a total rewrite?
+X -more work on streaming mode for default mode (see ipy sess). 
+    X -try to update default mode in GUI to do this. (still some uncertainty: hopefully our chunker doesn't cause any errors)
+-think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
 -look into gpt-neo funcs - seems like these stopped working after a while
 -consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
 	-if yes, work on docker file, docker-compose, etc.
 	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
 
+8/1/21
+------
+-bug: stop phrases don't show up until we actively click on a prompt (not when the app first loads). UPDATE: looks like this affects all or most kwargs, not just stop phrases.
+    -think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
+-see if there's any way to make speaking/typing occur simultaneously. Previously tried launching a thread with target=read_response but that stopped new text from showing up until speaking ended. Have to investigate to determine if that's a limit of python or of dearpygui specifically (vaguely recall threads work kind of wonkily in callbacks - maybe if we move the threading inside read_response() itself).
+-look into gpt-neo funcs - seems like these stopped working after a while
+
 -------------------------------------------------------------------------------
 backlog (optional)
+
+-consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
+	-if yes, work on docker file, docker-compose, etc.
+	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
 
 - htools things:
 	-flesh out owneraccess decorator

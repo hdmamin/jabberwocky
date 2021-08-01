@@ -410,7 +410,7 @@ class App:
                 add_text('Check this box if you want GPT3\'s response\n to be '
                          'read aloud.')
             add_same_line()
-            add_input_int('default_speed_input', default_value=0, min_value=0,
+            add_input_int('default_speed_input', default_value=5, min_value=0,
                           max_value=10, min_clamped=True, max_clamped=True,
                           label='Speaker Speed',
                           width=int(APP.widths[.5] * .35),
@@ -532,7 +532,7 @@ class App:
             add_checkbox('conv_read_response', label='Read Response',
                          default_value=True)
             add_same_line()
-            add_input_int('speed_input', default_value=0, min_value=0,
+            add_input_int('speed_input', default_value=5, min_value=0,
                           max_value=10, min_clamped=True, max_clamped=True,
                           label='Speaker Speed',
                           width=int(APP.widths[.5] * .35),
