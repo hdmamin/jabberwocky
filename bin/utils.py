@@ -33,7 +33,7 @@ def label_above(name, visible_name=None):
         set_item_label(name, '')
 
 
-def read_response(response, data):
+def read_response(response, data, errors=None):
     """Read response if desired. Threads allow us to interrupt speaker if user
     checks a checkbox. This was surprisingly difficult - I settled on a
     partial solution that can only quit after finishing saying a
@@ -50,7 +50,10 @@ def read_response(response, data):
         to interrupt speech.
     """
     show_item(data['interrupt_id'])
-    errors = []
+    # Careful: can't use "errors or []" here because we want to allow the user
+    # to pass in an empty list and watch it to see if errors are appended.
+    if errors is None:
+        errors = []
     thread = Thread(target=monitor_interrupt_checkbox,
                     args=(data['interrupt_id'], errors))
     thread.start()

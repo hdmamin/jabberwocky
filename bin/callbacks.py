@@ -529,8 +529,10 @@ def query_callback(sender, data):
     # TODO testing
     from threading import Thread
     threads = []
+    errors = []
     res_text = ''
     curr_text = ''
+    interrupted = False
     for chunk in stream(res):
         res_text += chunk
         curr_text += chunk
@@ -538,13 +540,21 @@ def query_callback(sender, data):
         set_value(data['target_id'], chunked)
         if any(char in chunk for char in ('.', '!', '?')):
             # thread = Thread(target=SPEAKER.speak, args=(curr_text,))
-            thread = Thread(target=read_response, args=(curr_text, data))
-            thread.start()
-            threads.append(thread)
+            if not errors:
+                thread = Thread(target=read_response,
+                                args=(curr_text, data, errors))
+                thread.start()
+                threads.append(thread)
             # Make sure this isn't reset until AFTER the speaker thread starts.
             curr_text = ''
+
+        # This is intentionally outside of above if statement. Want to check
+        # as frequently as possible.
+        if not interrupted and errors:
+            interrupted = True
         time.sleep(.18)
-    if curr_text: read_response(curr_text, data)
+    if curr_text and not interrupted:
+        read_response(curr_text, data)
     hide_item(data['query_msg_id'])
     for thread in threads: thread.join()
 

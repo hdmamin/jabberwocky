@@ -1300,15 +1300,23 @@ X -bug: stop phrases still don't work for summarize task though they do for othe
     UPDATE: huh, I guess the config just didn't have any stop words. Could have sworn it did but I updated it so it does now.
 X -add newline-prefixed stop phrase to punctuate config (esp w/ low engine_i, existing ones don't always work otherwise)
     UPDATE: also had to adjust load_prompt() func since yaml escapes newlines (I think that's why I didn't use them before). But that broke how they're displayed in the GUI so I re-escaped them after loading and then re-unescaped them before making the query. Yikes.
--fix inability to interrupt threaded speaker (currently read_response handles error which works if we call it once, but we're currently calling it repeatedly. Either need to raise error and handle it outside the func or rewrite func (maybe to do all the threading stuff as 1 self-contained unit).
-    -related: should we revise read_response to do all the threading stuff itself?
-    -sometimes speaker gets ahead of typer and has to wait. Consider ways to fix this (e.g. delay speaker start to the 2nd sentence? Get all text (non streamed) and then use my stream() func to start typing? Would certainly make it easier to use in conv mode though it wouldn't resolve the long waiting issues.)
+~ -fix inability to interrupt threaded speaker (currently read_response handles error which works if we call it once, but we're currently calling it repeatedly. Either need to raise error and handle it outside the func or rewrite func (maybe to do all the threading stuff as 1 self-contained unit).
+    UPDATE: interruption is possible now though requires a bit of refinement. Need to adjust checkbox so it is visible from start to end. Currently disappears between each speech turn.
+    _ -related: should we revise read_response to do all the threading stuff itself?
+        UPDATE: no for now, not sure yet how conv mode will handle things.
+
+8/3/21
+------
+-stop interrupt_checkbox from disappearing between speaker turns
+-clean up query_callback a bit (lots of commented out stuff)
+-sometimes speaker gets ahead of typer and has to wait. Consider ways to fix this (e.g. delay speaker start to the 2nd sentence? Get all text (non streamed) and then use my stream() func to start typing? Would certainly make it easier to use in conv mode though it wouldn't resolve the long waiting issues.)
+-think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
+
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
 -look into gpt-neo funcs - seems like these stopped working after a while
--think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
 -consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
 	-if yes, work on docker file, docker-compose, etc.
 	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
