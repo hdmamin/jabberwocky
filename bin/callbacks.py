@@ -538,13 +538,13 @@ def query_callback(sender, data):
         set_value(data['target_id'], chunked)
         if any(char in chunk for char in ('.', '!', '?')):
             # thread = Thread(target=SPEAKER.speak, args=(curr_text,))
-            thread = Thread(target=read_response, args=(curr_text, data, True))
+            thread = Thread(target=read_response, args=(curr_text, data))
             thread.start()
             threads.append(thread)
             # Make sure this isn't reset until AFTER the speaker thread starts.
             curr_text = ''
         time.sleep(.18)
-    if curr_text: read_response(curr_text, data, raise_errors=True)
+    if curr_text: read_response(curr_text, data)
     hide_item(data['query_msg_id'])
     for thread in threads: thread.join()
 
