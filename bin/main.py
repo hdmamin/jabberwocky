@@ -158,7 +158,8 @@ class App:
         """
         # Gets currently selected kwargs from GUI.
         kwargs = {name: get_value(name) for name in self.query_kwarg_ids}
-        kwargs['stop'] = kwargs['stop'].splitlines()
+        kwargs['stop'] = [term.replace('\\n', '\n') for term
+                          in kwargs['stop'].splitlines()]
         kwargs['prompt'] = self.get_prompt_text()
         return kwargs
 

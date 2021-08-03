@@ -33,7 +33,7 @@ def label_above(name, visible_name=None):
         set_item_label(name, '')
 
 
-def read_response(response, data):
+def read_response(response, data, raise_errors=False):
     """Read response if desired. Threads allow us to interrupt speaker if user
     checks a checkbox. This was surprisingly difficult - I settled on a
     partial solution that can only quit after finishing saying a
@@ -61,12 +61,16 @@ def read_response(response, data):
                 if errors:
                     set_value(data['interrupt_id'], False)
                     raise errors[0]
-    except RuntimeError:
+    except RuntimeError as e:
         # Checkbox monitor raises this type of error if the user asks to
         # interrupt. Would need to use multiple break statements and an else
         # clause in the inner for loop otherwise (without it, a chunk of text
         # containing a double newline but no period would only break out of the
         # inner loop when an exception is raised).
+        if raise_errors:
+            hide_item(data['interrupt_id'])
+            thread.join()
+            raise e
         pass
     hide_item(data['interrupt_id'])
     thread.join()

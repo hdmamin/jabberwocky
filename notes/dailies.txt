@@ -1296,7 +1296,10 @@ X -change 'query in progress...' message to 'typing...' like in many chat apps
 
 8/2/21
 ------
--bug: stop phrases still don't work for summarize task though they do for other tasks
+X -bug: stop phrases still don't work for summarize task though they do for other tasks
+    UPDATE: huh, I guess the config just didn't have any stop words. Could have sworn it did but I updated it so it does now.
+X -add newline-prefixed stop phrase to punctuate config (esp w/ low engine_i, existing ones don't always work otherwise)
+    UPDATE: also had to adjust load_prompt() func since yaml escapes newlines (I think that's why I didn't use them before). But that broke how they're displayed in the GUI so I re-escaped them after loading and then re-unescaped them before making the query. Yikes.
 -fix inability to interrupt threaded speaker (currently read_response handles error which works if we call it once, but we're currently calling it repeatedly. Either need to raise error and handle it outside the func or rewrite func (maybe to do all the threading stuff as 1 self-contained unit).
     -related: should we revise read_response to do all the threading stuff itself?
     -sometimes speaker gets ahead of typer and has to wait. Consider ways to fix this (e.g. delay speaker start to the 2nd sentence? Get all text (non streamed) and then use my stream() func to start typing? Would certainly make it easier to use in conv mode though it wouldn't resolve the long waiting issues.)

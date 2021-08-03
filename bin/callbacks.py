@@ -206,7 +206,7 @@ def task_select_callback(sender, data):
         if k == 'mock':
             continue
         if k == 'stop' and isinstance(v, list):
-            v = '\n'.join(v)
+            v = '\n'.join(term.encode('unicode_escape').decode() for term in v)
         set_value(k, v)
 
 
@@ -537,16 +537,14 @@ def query_callback(sender, data):
         chunked = CHUNKER.add('response', res_text)
         set_value(data['target_id'], chunked)
         if any(char in chunk for char in ('.', '!', '?')):
-            # SPEAKER.speak(curr_text)
-            thread = Thread(target=SPEAKER.speak, args=(curr_text,))
-            # thread = Thread(target=read_response, args=(curr_text, data))
+            # thread = Thread(target=SPEAKER.speak, args=(curr_text,))
+            thread = Thread(target=read_response, args=(curr_text, data, True))
             thread.start()
             threads.append(thread)
-            print('in if:', curr_text)
             # Make sure this isn't reset until AFTER the speaker thread starts.
             curr_text = ''
         time.sleep(.18)
-    if curr_text: SPEAKER.speak(curr_text)
+    if curr_text: read_response(curr_text, data, raise_errors=True)
     hide_item(data['query_msg_id'])
     for thread in threads: thread.join()
 

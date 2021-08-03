@@ -1071,8 +1071,16 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
             prompt = prompt_fmt.format(prompt)
     else:
         prompt = prompt_fmt
+
     # Vim adds trailing newline, which can hurt gpt3 quality.
     if rstrip: prompt = prompt.rstrip()
+
+    # Pyyaml seems to escape newlines (probably other special characters too
+    # but this is the only one I've used here, I think. Newline chars can be
+    # useful in stop terms because I often use them to distinguish between
+    # different examples in a prompt.
+    if 'stop' in kwargs:
+        kwargs['stop'] = [x.replace('\\n', '\n') for x in kwargs['stop']]
     kwargs['prompt'] = prompt
     msg = kwargs.pop('reminder', None)
     if msg and verbose: print(f'{name}: {msg}{spacer()}')
