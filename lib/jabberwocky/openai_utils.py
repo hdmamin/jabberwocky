@@ -829,11 +829,23 @@ class ConversationManager:
 
         # Log kwargs for troubleshooting purposes.
         save({'prompt': prompt, **kwargs}, self.log_path, verbose=False)
-        prompt, resp = query_gpt3(prompt, **kwargs)
-        self.gpt3_turns.append(resp.strip())
-        # Can't just concat prompt and response anymore because prompt is not
-        # the full conversation.
-        return prompt, resp
+        # prompt, resp = query_gpt3(prompt, **kwargs)
+        # self.gpt3_turns.append(resp.strip())
+        # # Can't just concat prompt and response anymore because prompt is not
+        # # the full conversation.
+        # return prompt, resp
+
+        res = query_gpt3(prompt, **kwargs)
+        if kwargs.get('stream', True):
+            self.gpt3_turns.append(res[0])
+            return res
+        return hooked_generator(res, self.turn_hook)
+
+    def turn_hook(self, item, i):
+        if i == 0:
+            self.gpt3_turns.append(item)
+        else:
+            self.gpt3_turns[-1] += item
 
     def _format_prompt(self, user_text='', do_full=False,
                        exclude_trailing_name=False):
