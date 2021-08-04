@@ -33,7 +33,7 @@ def label_above(name, visible_name=None):
         set_item_label(name, '')
 
 
-def read_response(response, data, errors=None):
+def read_response(response, data, errors=None, hide_on_exit=True):
     """Read response if desired. Threads allow us to interrupt speaker if user
     checks a checkbox. This was surprisingly difficult - I settled on a
     partial solution that can only quit after finishing saying a
@@ -71,7 +71,7 @@ def read_response(response, data, errors=None):
         # containing a double newline but no period would only break out of the
         # inner loop when an exception is raised).
         pass
-    hide_item(data['interrupt_id'])
+    if hide_on_exit: hide_item(data['interrupt_id'])
     thread.join()
 
 
