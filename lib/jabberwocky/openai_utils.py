@@ -837,7 +837,7 @@ class ConversationManager:
 
         res = query_gpt3(prompt, **kwargs)
         if kwargs.get('stream', True):
-            self.gpt3_turns.append(res[0])
+            self.gpt3_turns.append(res[1])
             return res
         return hooked_generator(res, self.turn_hook)
 
