@@ -1308,8 +1308,9 @@ X -add newline-prefixed stop phrase to punctuate config (esp w/ low engine_i, ex
 8/3/21
 ------
 X -stop interrupt_checkbox from disappearing between speaker turns
--clean up query_callback a bit (lots of commented out stuff)
--sometimes speaker gets ahead of typer and has to wait. Consider ways to fix this (e.g. delay speaker start to the 2nd sentence? Get all text (non streamed) and then use my stream() func to start typing? Would certainly make it easier to use in conv mode though it wouldn't resolve the long waiting issues.)
+X -clean up query_callback a bit (lots of commented out stuff)
+_ -sometimes speaker gets ahead of typer and has to wait. Consider ways to fix this (e.g. delay speaker start to the 2nd sentence? Get all text (non streamed) and then use my stream() func to start typing? Would certainly make it easier to use in conv mode though it wouldn't resolve the long waiting issues.)
+    UPDATE: haven't seen this issue recently. Maybe skip fixing unless I notice it being an issue.
 -think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
 
 

@@ -190,6 +190,32 @@ def set_module_globals(module, **kwargs):
         set_module_global(module, k, v)
 
 
+def hooked_generator(gen, *hooks):
+    """Attach hook(s) to a generator. Motivation: want to be able to return
+    query_gpt3 response in Conversationmanager even if stream=True and still
+    ensure that updates are made to the conversation history.
+
+    Parameters
+    ----------
+    gen
+    hooks: function(s)
+        1 or more functions that accept two positional arguments: the first is
+        the object yielded by the generator at each step and the second is the
+        index (starting at zero) of the current step. Any return value is
+        ignored - it simply executes. If multiple hooks are provided, they will
+        be executed in the order they were passed in.
+
+    Yields
+    ------
+    Values are yielded from the input generator. They will be unchanged unless
+    they are mutable AND one or more hooks alter them.
+    """
+    for i, val in enumerate(gen):
+        for hook in hooks:
+            hook(val, i)
+        yield val
+
+
 class Partial:
     """More powerful (though also potentially more fragile) version of
     functools.partial that updates the resulting signature to work better with

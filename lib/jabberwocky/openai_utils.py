@@ -18,9 +18,9 @@ import warnings
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
     listlike, Results, flatten
 from jabberwocky.config import C
-from jabberwocky.external_data import wiki_data, _infer_gender
+from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
-    load_huggingface_api_key
+    load_huggingface_api_key, hooked_generator
 
 
 class MockFunctionException(Exception):
@@ -915,14 +915,6 @@ class ConversationManager:
         str
         """
         return self._format_prompt(do_full=True, exclude_trailing_name=True)
-
-    @full_conversation.setter
-    def full_conversation(self):
-        raise RuntimeError('full_conversation is read-only.')
-
-    @full_conversation.deleter
-    def full_conversation(self):
-        raise RuntimeError('full_conversation is read-only.')
 
     @contextmanager
     def converse(self, name, fname='', download_if_necessary=False):

@@ -20,6 +20,7 @@ import os
 from pathlib import Path
 import speech_recognition as sr
 import time
+from threading import Thread
 
 from htools.core import save, select
 from jabberwocky.openai_utils import query_gpt_neo
@@ -515,25 +516,11 @@ def query_callback(sender, data):
             res = 'Query failed. Please check your settings and try again.'
 
     # Stream function provides "typing" effect.
-    # res_text = ''
-    # for chunk in stream(res):
-    #     res_text += chunk
-    #     chunked = CHUNKER.add('response', res_text)
-    #     set_value(data['target_id'], chunked)
-    #     time.sleep(.12)
-    #
-    # hide_item(data['query_msg_id'])
-    # if get_value(data['read_checkbox_id']):
-    #     read_response(res_text, data)
-
-    # TODO testing
-    from threading import Thread
     threads = []
     errors = []
     res_text = ''
     curr_text = ''
     for chunk in stream(res):
-        print(chunk, errors)
         res_text += chunk
         curr_text += chunk
         chunked = CHUNKER.add('response', res_text)
