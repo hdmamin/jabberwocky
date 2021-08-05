@@ -836,13 +836,15 @@ class ConversationManager:
         # return prompt, resp
 
         res = query_gpt3(prompt, **kwargs)
-        if kwargs.get('stream', True):
+        if not kwargs.get('stream', False):
             self.gpt3_turns.append(res[1])
             return res
         return hooked_generator(res, self.turn_hook)
 
-    def turn_hook(self, item, i):
-        if i == 0:
+    def turn_hook(self, item, i, is_post=False):
+        if is_post:
+            self.gpt3_turns[-1] = self.gpt3_turns[-1].strip()
+        elif i == 0:
             self.gpt3_turns.append(item)
         else:
             self.gpt3_turns[-1] += item

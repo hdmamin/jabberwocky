@@ -198,10 +198,12 @@ def hooked_generator(gen, *hooks):
     Parameters
     ----------
     gen
-    hooks: function(s)
-        1 or more functions that accept two positional arguments: the first is
-        the object yielded by the generator at each step and the second is the
-        index (starting at zero) of the current step. Any return value is
+    hooks: Iterable[function]
+        1 or more functions that accept three arguments: the first is
+        the object yielded by the generator at each step, the second is the
+        index (starting at zero) of the current step, and the third is a
+        boolean value `is_post` specifying whether we're calling it after the
+        generator has finished executing. Any return value is
         ignored - it simply executes. If multiple hooks are provided, they will
         be executed in the order they were passed in.
 
@@ -214,6 +216,8 @@ def hooked_generator(gen, *hooks):
         for hook in hooks:
             hook(val, i)
         yield val
+    for hook in hooks:
+        hook(val, i, is_post=True)
 
 
 class Partial:

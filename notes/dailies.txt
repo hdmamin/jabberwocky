@@ -1318,8 +1318,9 @@ _ -sometimes speaker gets ahead of typer and has to wait. Consider ways to fix t
 
 8/4/21
 ------
--test that stream mode now works for convmanager (just run through an example in nb with stream=True; functionality is already written)
-    -if no, troubleshoot
+X -test that stream mode now works for convmanager (just run through an example in nb with stream=True; functionality is already written)
+    X -if no, troubleshoot
+        UPDATE: needed to update hooked_generator() to allow a post-hook since gpt3 usually adds double newlines at the end (makes sense given the prompt format) which my formatter doesn't want since we strip outputs in not streaming mode.
     -if yes, update gui to use stream mode all the time
 -look into gpt-neo funcs - seems like these stopped working after a while
 
