@@ -813,6 +813,7 @@ class ConversationManager:
 
         kwargs = self.kwargs(fully_resolved=False, return_prompt=False,
                              extra_kwargs=extra_kwargs, **kwargs)
+        if kwargs.get('stream', False): kwargs['strip_output'] = False
         prompt = self.format_prompt(user_text=text)
         if debug:
             print('prompt:\n' + prompt)
@@ -887,7 +888,10 @@ class ConversationManager:
                           + [user_text.strip()])
             gpt3_turns = self.gpt3_turns[-self.gpt3_turn_window:]
         user_turns = [f'Me: {turn}' for turn in user_turns]
-        gpt3_turns = [f'{pretty_name}: {turn}' for turn in gpt3_turns]
+        # Strip gpt3 turns to be safe since streaming mode only strips them
+        # once the full query completes, and GUI uses full_conversation
+        # property while query is still in progress.
+        gpt3_turns = [f'{pretty_name}: {turn.strip()}' for turn in gpt3_turns]
         ordered = [user_turns, gpt3_turns]
         if len(gpt3_turns) == len(user_turns) and not do_full:
             ordered = reversed(ordered)

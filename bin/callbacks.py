@@ -554,12 +554,25 @@ def conv_query_callback(sender, data):
     # GPT3-generated outputs.
     # Grab response to use when reading lines, otherwise we have to perform
     # "surgery" on full conv.
-    _, response = CONV_MANAGER.query(engine_i=2)
-    hide_item(data['query_msg_id'])
-    full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.full_conversation)
-    set_value(data['target_id'], full_conv)
+    # _, response = CONV_MANAGER.query(engine_i=2)
+    # hide_item(data['query_msg_id'])
+    # full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.full_conversation)
+    # set_value(data['target_id'], full_conv)
+    # if get_value(data['read_checkbox_id']):
+    #     read_response(response, data)
+
+
+    # TODO
+    response = ''
+    for chunk in CONV_MANAGER.query(engine_i=0, stream=True): # TODO: change engine_i to 3
+        full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.full_conversation)
+        set_value(data['target_id'], full_conv)
+        response += chunk
+        time.sleep(.18)
+    # Responses tend to be short so let's just speak at the end. Simpler too.
     if get_value(data['read_checkbox_id']):
         read_response(response, data)
+    hide_item(data['query_msg_id'])
 
 
 def speaker_speed_callback(sender, data):
