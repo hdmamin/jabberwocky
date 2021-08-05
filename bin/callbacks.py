@@ -547,29 +547,27 @@ def conv_query_callback(sender, data):
     data keys:
         - target_id (str: text input element, used to display both input and
         output)
+        - read_checkbox_id
+        - interrupt_id
+        - query_msg_id
+        - debug_checkbox_id
     """
     show_item(data['query_msg_id'])
     # Notice we track our chunked conversation with a single key here unlike
     # default mode, where we require 1 for transcribed inputs and 1 for
     # GPT3-generated outputs.
-    # Grab response to use when reading lines, otherwise we have to perform
-    # "surgery" on full conv.
-    # _, response = CONV_MANAGER.query(engine_i=2)
-    # hide_item(data['query_msg_id'])
-    # full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.full_conversation)
-    # set_value(data['target_id'], full_conv)
-    # if get_value(data['read_checkbox_id']):
-    #     read_response(response, data)
-
-
-    # TODO
+    engine_i = 0 if get_value(data['debug_checkbox_id']) else 3
     response = ''
-    for chunk in CONV_MANAGER.query(engine_i=0, stream=True): # TODO: change engine_i to 3
-        full_conv = CHUNKER.add('conv_transcribed', CONV_MANAGER.full_conversation)
+    for chunk in CONV_MANAGER.query(engine_i=engine_i, stream=True):
+        full_conv = CHUNKER.add('conv_transcribed',
+                                CONV_MANAGER.full_conversation)
         set_value(data['target_id'], full_conv)
         response += chunk
-        time.sleep(.18)
-    # Responses tend to be short so let's just speak at the end. Simpler too.
+        # "Type" a bit faster than in default mode since we leave speaking til
+        # the end. Most responses are only 1-2 sentences anyway so I feel its
+        # not worth the added complexity to try to begin speaking sooner (we
+        # need a full sentence or speech comes out sounding stilted).
+        time.sleep(.16)
     if get_value(data['read_checkbox_id']):
         read_response(response, data)
     hide_item(data['query_msg_id'])

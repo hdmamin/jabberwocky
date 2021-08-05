@@ -1321,13 +1321,28 @@ _ -sometimes speaker gets ahead of typer and has to wait. Consider ways to fix t
 X -test that stream mode now works for convmanager (just run through an example in nb with stream=True; functionality is already written)
     X -if no, troubleshoot
         UPDATE: needed to update hooked_generator() to allow a post-hook since gpt3 usually adds double newlines at the end (makes sense given the prompt format) which my formatter doesn't want since we strip outputs in not streaming mode.
-    -if yes, update gui to use stream mode all the time
--look into gpt-neo funcs - seems like these stopped working after a while
+    X -quickly look through convmanager code to see if there's anything else that our new streaming mode might break (converse()?)
+        UPDATE: think it's fine, converse() only calls start and end conversation. Nothing to do with querying.
+    X -if yes, update gui to use stream mode all the time
+        UPDATE: works, though we leave speaking til afterwards at least for now. Most chat responses are only 1-2 sentences anyway so this doesn't change much.
+X -add widget to UI to control conv engine (maybe just a checkbox for dummy mode? For a real conversation we really do want davinci model, I think. So it's either engine_i=0 or 3, no need for 1 or 2).
+    X -add functionality
+
+8/5/21
+------
+-add hover tooltip to debug checkbox
+-maybe play around w/ alignment of various widgets
+-error handling for when auto-add persona fails
+-error handling when conv_query is called with no user input
+-document newly added kwargs in conv_query_callback
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-look into gpt-neo funcs - seems like these stopped working after a while
+-should bio show up in conv_Mode window? First consider what I want, then if I do want to hide it look into how big the effects would be (i.e. do I grab query prompt from there? Don't think so for conv mode but need to check)
+-can I provide better support for a text only mode? Right now I'm not sure this works, especially not at first. Would probably need "Me:" to show up in textbox on persona_select.
 -consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
 	-if yes, work on docker file, docker-compose, etc.
 	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)

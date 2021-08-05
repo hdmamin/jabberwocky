@@ -532,16 +532,19 @@ class App:
                 callback_data={'target_id': 'conv_text',
                                'read_checkbox_id': 'conv_read_response',
                                'interrupt_id': 'conv_interrupt_checkbox',
-                               'query_msg_id': 'conv_query_progress_msg'})
+                               'query_msg_id': 'conv_query_progress_msg',
+                               'debug_checkbox_id': 'conv_debug_checkbox'})
             add_same_line()
             add_checkbox('conv_read_response', label='Read Response',
                          default_value=True)
             add_same_line()
-            add_input_int('speed_input', default_value=5, min_value=0,
+            add_input_int('conv_speed_input', default_value=5, min_value=0,
                           max_value=10, min_clamped=True, max_clamped=True,
                           label='Speaker Speed',
                           width=int(APP.widths[.5] * .35),
                           callback=speaker_speed_callback)
+            add_checkbox('conv_debug_checkbox', label='Debug',
+                         default_value=False)
             add_spacing(count=10)
 
             # Select a persona.
