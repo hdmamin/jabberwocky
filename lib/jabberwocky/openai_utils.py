@@ -881,12 +881,19 @@ class ConversationManager:
 
         pretty_name = self.process_name(self.current_persona, inverse=True)
         if do_full:
-            user_turns = self.user_turns
+            user_turns = list(self.user_turns)
+            if user_text: user_turns.append(user_text)
             gpt3_turns = self.gpt3_turns
         else:
             user_turns = (self.user_turns[-self.user_turn_window:]
                           + [user_text.strip()])
             gpt3_turns = self.gpt3_turns[-self.gpt3_turn_window:]
+
+        if len(user_turns) - len(gpt3_turns) not in (0, 1):
+            raise RuntimeError(
+                f'Mismatched turn counts: user has {len(user_turns)} and gpt3'
+                f' has {len(gpt3_turns)} turns.'
+            )
         user_turns = [f'Me: {turn}' for turn in user_turns]
         # Strip gpt3 turns to be safe since streaming mode only strips them
         # once the full query completes, and GUI uses full_conversation

@@ -75,8 +75,15 @@ def transcribe_callback(sender, data):
                                    'key': 'transcribed'})
     else:
         CONV_MANAGER.query_later(text)
-        text = CONV_MANAGER.format_prompt(text, exclude_trailing_name=True)
+        print('text:', text)
+        # text = CONV_MANAGER.format_prompt(text, exclude_trailing_name=True)   # TODO
+        text = CONV_MANAGER._format_prompt(text, do_full=True,
+                                           exclude_trailing_name=True)
+        print('text:', text)
         chunked = CHUNKER.add('conv_transcribed', text)
+        print('chunked:', chunked)
+        # chunked = CHUNKER.add('conv_transcribed',
+        #                       CONV_MANAGER.full_conversation)
         set_value(data['target_id'], chunked)
 
 
