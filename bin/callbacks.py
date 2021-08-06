@@ -130,8 +130,8 @@ def text_edit_callback(sender, data):
                              data={'task_list_id': 'task_list',
                                    'text_source_id': 'transcribed_text',
                                    'update_kwargs': False})
-    # Case: in conversation mode and user edits the add_persona text or
-    # speaker speed.
+    # Case: in conversation mode and user edits the add_persona text, Engine,
+    # or speaker speed.
     elif sender == 'Conversation Options':
         # Can't pass data dict to this type of callback (seems to be a
         # character code for the last typed character instead) so we have to
@@ -547,18 +547,21 @@ def conv_query_callback(sender, data):
     data keys:
         - target_id (str: text input element, used to display both input and
         output)
-        - read_checkbox_id
-        - interrupt_id
-        - query_msg_id
-        - debug_checkbox_id
+        - read_checkbox_id (str: name of checkbox where user selects whether
+            to read response aloud)
+        - interrupt_id (str: name of checkbox user can check to interrupt
+            Speaker mid-speech)
+        - query_msg_id (str: name of text item containing the message to
+            display while a query is in progress)
+        - engine_i_id (str: name of int input where user selects engine_i)
     """
     show_item(data['query_msg_id'])
     # Notice we track our chunked conversation with a single key here unlike
     # default mode, where we require 1 for transcribed inputs and 1 for
     # GPT3-generated outputs.
-    engine_i = 0 if get_value(data['debug_checkbox_id']) else 3
     response = ''
-    for chunk in CONV_MANAGER.query(engine_i=engine_i, stream=True):
+    for chunk in CONV_MANAGER.query(engine_i=get_value(data['engine_i_id']),
+                                    stream=True):
         full_conv = CHUNKER.add('conv_transcribed',
                                 CONV_MANAGER.full_conversation)
         set_value(data['target_id'], full_conv)

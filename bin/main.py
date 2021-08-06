@@ -410,13 +410,13 @@ class App:
             with tooltip('read_response', 'read_response_tooltip'):
                 add_text('Check this box if you want GPT3\'s response\n to be '
                          'read aloud.')
-            add_same_line()
             add_input_int('default_speed_input', default_value=5, min_value=0,
                           max_value=10, min_clamped=True, max_clamped=True,
                           label='Speaker Speed',
-                          width=int(APP.widths[.5] * .35),
                           callback=speaker_speed_callback)
-
+            with tooltip('default_speed_input', 'speed_input_tooltip'):
+                add_text('Use this to adjust your conversational partner\'s\n'
+                         'rate of talking. 0 is slowest, 10 is fastest.')
             add_radio_button('model', items=MODEL_NAMES)
             with tooltip('model', 'model_tooltip'):
                 add_text('OpenAI\'s GPT3 produces the best results.\n'
@@ -533,18 +533,30 @@ class App:
                                'read_checkbox_id': 'conv_read_response',
                                'interrupt_id': 'conv_interrupt_checkbox',
                                'query_msg_id': 'conv_query_progress_msg',
-                               'debug_checkbox_id': 'conv_debug_checkbox'})
+                               'engine_i_id': 'conv_engine_i_input'})
             add_same_line()
             add_checkbox('conv_read_response', label='Read Response',
                          default_value=True)
-            add_same_line()
+            with tooltip('conv_read_response', 'conv_read_response_tooltip'):
+                add_text('Check this box if you want GPT3\'s response\n to be '
+                         'read aloud.')
             add_input_int('conv_speed_input', default_value=5, min_value=0,
                           max_value=10, min_clamped=True, max_clamped=True,
                           label='Speaker Speed',
-                          width=int(APP.widths[.5] * .35),
                           callback=speaker_speed_callback)
-            add_checkbox('conv_debug_checkbox', label='Debug',
-                         default_value=False)
+            with tooltip('conv_speed_input', 'conv_speed_input_tooltip'):
+                add_text('Use this to adjust your conversational partner\'s\n'
+                         'rate of talking. 0 is slowest, 10 is fastest.')
+            add_input_int('conv_engine_i_input', label='Engine',
+                          default_value=3, min_value=0, max_value=3,
+                          min_clamped=True, max_clamped=True)
+            with tooltip('conv_engine_i_input', 'conv_engine_i_input_tooltip'):
+                add_text(
+                    'Choose a number in [0, 3] (inclusive). Higher numbers\n'
+                    'use a more powerful model. Most personas will need a\n'
+                    'value of 3 to see good results. Engine 0 is cheapest\n'
+                    'and therefore good for debugging.'
+                 )
             add_spacing(count=10)
 
             # Select a persona.
