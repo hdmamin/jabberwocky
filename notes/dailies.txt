@@ -1343,6 +1343,13 @@ X -document newly added kwargs in conv_query_callback
 X -error handling for when auto-add persona fails
     UPDATE: already had error handling for case where page not found but when disambiguation error occurs we weren't catching it. Fixed now. wiki_data() always raises runtime error. Also moved error messages to new line.
 X -error handling when conv_query is called with no user input
+~ -start investigating new bug: 'Me: Me: {thing I actually said}'
+    UPDATE: seems to appear on conv_query_callback (in the first iteration of streaming response chunks), not text_edit_callback as I first thought. Does not change any messages after the first one. Also does not add a Me each team (i.e. after 10 queries, we still only have 2 Mes for the first user turn and 1 for the rest). Will require more investigation.
+-consider: can I provide better support for a text only mode? Right now I'm not sure this works, especially not at first. Would probably need "Me:" to show up in textbox on persona_select.
+
+8/7/21
+------
+-fix conv_query_callback bug: changes first line to 'Me: Me: {thing I actually said}'
 -consider: can I provide better support for a text only mode? Right now I'm not sure this works, especially not at first. Would probably need "Me:" to show up in textbox on persona_select.
 
 

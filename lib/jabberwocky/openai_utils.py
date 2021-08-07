@@ -585,7 +585,7 @@ class ConversationManager:
     def save_conversation(self, fname):
         if not self.user_turns:
             raise RuntimeError('No conversation to save.')
-        save(self.full_conversation, self.conversation_dir/fname)
+        save(self.full_conversation(), self.conversation_dir/fname)
 
     def add_persona(self, name, summary=None, img_path=None, gender=None,
                     is_custom=False, return_data=False):
@@ -849,7 +849,7 @@ class ConversationManager:
             self.gpt3_turns[-1] += item
 
     def _format_prompt(self, user_text='', do_full=False,
-                       exclude_trailing_name=False):
+                       include_trailing_name=True, include_summary=True):
         """Convert a new user turn to a fully-specified prompt. This also
         provides the core logic that allows us to reconstruct a full
         conversation from turns without also storing and updating a separate
@@ -864,7 +864,7 @@ class ConversationManager:
             prompt (if the conversation is longer than a few turns, this will
             not include the beginning of the conversation, though it will still
             include the wikipedia summary).
-        exclude_trailing_name
+        include_trailing_name
 
         Returns
         -------
@@ -901,14 +901,15 @@ class ConversationManager:
         if len(gpt3_turns) == len(user_turns) and not do_full:
             ordered = reversed(ordered)
         interleaved = filter(None, flatten(zip_longest(*ordered)))
-        # Need plus sign here: I guess implicit line continuation only works
-        # for things that are explicitly strings (not output of str.join).
-        prompt = f'{self.name2base[self.current_persona]}\n\n' \
-                 + '\n\n'.join(interleaved)
-        if exclude_trailing_name: return prompt
+        prompt = '\n\n'.join(interleaved)
+        if include_summary:
+            prompt = f'{self.name2base[self.current_persona]}\n\n' + prompt
+        if not include_trailing_name:
+            return prompt
         return f'{prompt}\n\n{self.process_name(self.current_persona, True)}:'
 
-    def format_prompt(self, user_text, exclude_trailing_name=False):
+    def format_prompt(self, user_text, include_trailing_name=True,
+                      include_summary=True):
         """Single formatted prompt including wiki bio and last few speaker
         turns (number depends on turn window).
 
@@ -916,7 +917,7 @@ class ConversationManager:
         ----------
         user_text: str
             Does not start with "Me:".
-        exclude_trailing_name: bool
+        include_trailing_name: bool
 
         Returns
         -------
@@ -924,11 +925,11 @@ class ConversationManager:
         """
         return self._format_prompt(
             user_text, do_full=False,
-            exclude_trailing_name=exclude_trailing_name
+            include_trailing_name=include_trailing_name,
+            include_summary=include_summary
         )
 
-    @property
-    def full_conversation(self):
+    def full_conversation(self, include_summary=True):
         """Reconstruct full conversation from turns. Note that at the moment,
         this will still return a value (the wiki bio) when no turns have
         occurred.
@@ -937,7 +938,8 @@ class ConversationManager:
         -------
         str
         """
-        return self._format_prompt(do_full=True, exclude_trailing_name=True)
+        return self._format_prompt(do_full=True, include_trailing_name=False,
+                                   include_summary=include_summary)
 
     @contextmanager
     def converse(self, name, fname='', download_if_necessary=False):

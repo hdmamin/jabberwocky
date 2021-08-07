@@ -75,8 +75,11 @@ def transcribe_callback(sender, data):
                                    'key': 'transcribed'})
     else:
         CONV_MANAGER.query_later(text)
+        # Do not use full_conversation here because we haven't added the new
+        # user response yet.
         text = CONV_MANAGER._format_prompt(text, do_full=True,
-                                           exclude_trailing_name=True)
+                                           include_trailing_name=False,
+                                           include_summary=False)
         chunked = CHUNKER.add('conv_transcribed', text)
         set_value(data['target_id'], chunked)
 
@@ -562,6 +565,10 @@ def conv_query_callback(sender, data):
         time.sleep(1)
         hide_item(data['query_error_msg_id'])
         return
+
+    # TODO testing start. Double Me NOT present yet.
+    print(CHUNKER.get('conv_transcribed', chunked=False))
+    # TODO testing end
     show_item(data['query_msg_id'])
     # Notice we track our chunked conversation with a single key here unlike
     # default mode, where we require 1 for transcribed inputs and 1 for
@@ -569,8 +576,13 @@ def conv_query_callback(sender, data):
     response = ''
     for chunk in CONV_MANAGER.query(engine_i=get_value(data['engine_i_id']),
                                     stream=True):
-        full_conv = CHUNKER.add('conv_transcribed',
-                                CONV_MANAGER.full_conversation)
+        full_conv = CHUNKER.add(
+            'conv_transcribed',
+            CONV_MANAGER.full_conversation(include_summary=False)
+        )
+        # TODO testing start. Double Me appears on the FIRST iteration.
+        print(full_conv)
+        # TODO testing end
         set_value(data['target_id'], full_conv)
         response += chunk
         # "Type" a bit faster than in default mode since we leave speaking til
