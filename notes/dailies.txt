@@ -1351,13 +1351,26 @@ X -error handling when conv_query is called with no user input
 ------
 X -fix conv_query_callback bug: changes first line to 'Me: Me: {thing I actually said}'
     UPDATE: bug in text_edit_callback text parsing caused by removing the summary from the displayed chat. This meant partitioning on "\n\nMe: " behaved unexpectedly for the first user turn because of the lack of newlines.
--consider: how might we add (optional?) auto punctuate mode for conv? Constant text edits, especially without vim hotkeys, ruins the fun a bit.
+X -consider: how might we add (optional?) auto punctuate mode for conv? Constant text edits, especially without vim hotkeys, ruins the fun a bit.
+    UPDATE: actually the basic functionality is quite easy to add with the components I've built. Tested it out and engine_i=3 does make the experience quite a bit smoother. Most of the fixes are pretty small but there's a big difference in user experience between needing to edit every transcription (even if it's just a couple punctuation marks) and just being able to talk. Engine_i of 0 and 1 didn't seem to work so well here though. Still need to try 2.
+~ -look into speech_recognition first word errors
+    UPDATE: couldn't find any references to this but looks like there are a bunch of settings I haven't tuned. Should look through those at some point and see what I can find.
 -consider: can I provide better support for a text only mode? Right now I'm not sure this works, especially not at first. Would probably need "Me:" to show up in textbox on persona_select.
+
+8/8/21
+------
+-try engine_i=2 for auto-punctuation in conv mode
+    -consider: should I make this optional? It really does seem to improve the experience. If I do make it optional it should just be a general mode, not a button you click to auto punctuate a single turn because that ruins the point.
+    -consider: maybe change default mode to make this a general mode, not a single transcription button too? Less important but still seems like a good idea.
+    -see if I can generate a shorter/cheaper punctuation prompt and kwargs. Punct prompt was originally developed to punctuate large-ish chunks of youtube transcription text so I believe the samples I used were pretty long. Most chat responses are very short so I think we could save $ by using shorter examples. Chat specific examples might also improve performance - I can use real transcription errors to help the model learn better fixes (i.e. how the transcriber often misses the first word).
+-look through speech_recognition settings - maybe can reduce premature timeouts, errors on first word, etc.
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-add the concurrent typing/speaking to conv mode that I use in default mode. While most responses are short, we do occasionally see multi-sentence responses (probably more often once I increase engine_i) and the functionality's already there - I can start with just copy/paste and if that works well, worry about refactoring afterwards.
+-consider: can I provide better support for a text only mode? Right now I'm not sure this works, especially not at first. Would probably need "Me:" to show up in textbox on persona_select.
 -look into gpt-neo funcs - seems like these stopped working after a while
 -should bio show up in conv_Mode window? First consider what I want, then if I do want to hide it look into how big the effects would be (i.e. do I grab query prompt from there? Don't think so for conv mode but need to check)
 -consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]

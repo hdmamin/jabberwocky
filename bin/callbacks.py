@@ -74,6 +74,25 @@ def transcribe_callback(sender, data):
                                    'update_kwargs': True,
                                    'key': 'transcribed'})
     else:
+        # CONV_MANAGER.query_later(text)
+        # # Do not use full_conversation here because we haven't added the new
+        # # user response yet.
+        # text = CONV_MANAGER._format_prompt(text, do_full=True,
+        #                                    include_trailing_name=False,
+        #                                    include_summary=False)
+        # chunked = CHUNKER.add('conv_transcribed', text)
+        # set_value(data['target_id'], chunked)
+
+        # TODO: testing auto punctuate. Working old code is above.
+        # NOTE: using cheap punctuation engine for testing but this doesn't
+        # work that well. Engine_i=3 empirically works well, 0-1 does not. Need
+        # test out i=2.
+        print('BEFORE:', text)
+        _, text = MANAGER.query(task='punctuate', text=text, stream=False,
+                                strip_output=True, engine_i=0)
+        print('AFTER:', text)
+        # res = MANAGER.query(task=task, text=text, stream=True,
+        #                     strip_output=False, **kwargs)
         CONV_MANAGER.query_later(text)
         # Do not use full_conversation here because we haven't added the new
         # user response yet.
