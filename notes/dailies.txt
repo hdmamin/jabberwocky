@@ -1340,8 +1340,9 @@ X -document newly added kwargs in conv_query_callback
 
 8/6/21
 ------
--error handling for when auto-add persona fails
--error handling when conv_query is called with no user input
+X -error handling for when auto-add persona fails
+    UPDATE: already had error handling for case where page not found but when disambiguation error occurs we weren't catching it. Fixed now. wiki_data() always raises runtime error. Also moved error messages to new line.
+X -error handling when conv_query is called with no user input
 -consider: can I provide better support for a text only mode? Right now I'm not sure this works, especially not at first. Would probably need "Me:" to show up in textbox on persona_select.
 
 

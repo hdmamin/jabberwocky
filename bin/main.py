@@ -533,6 +533,7 @@ class App:
                                'read_checkbox_id': 'conv_read_response',
                                'interrupt_id': 'conv_interrupt_checkbox',
                                'query_msg_id': 'conv_query_progress_msg',
+                               'query_error_msg_id': 'conv_query_error_msg',
                                'engine_i_id': 'conv_engine_i_input'})
             add_same_line()
             add_checkbox('conv_read_response', label='Read Response',
@@ -540,6 +541,12 @@ class App:
             with tooltip('conv_read_response', 'conv_read_response_tooltip'):
                 add_text('Check this box if you want GPT3\'s response\n to be '
                          'read aloud.')
+            add_text('conv_query_error_msg',
+                     default_value='No user message found. You must say '
+                                   'something first.',
+                     show=False)
+
+            # Row 2: int input options controlling speech speed and engine i.
             add_input_int('conv_speed_input', default_value=5, min_value=0,
                           max_value=10, min_clamped=True, max_clamped=True,
                           label='Speaker Speed',
@@ -624,10 +631,10 @@ class App:
                 add_text('persona_save_error_msg',
                          default_value='Persona already exists.', show=False)
 
-            add_same_line()
+            # add_same_line()
             add_text('add_persona_msg',
                      default_value='Generating new persona...', show=False)
-            add_same_line()
+            # add_same_line()
             add_text('add_persona_error_msg',
                      default_value='Failed to generate that persona. Try a '
                                    'different name.', show=False)

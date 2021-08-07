@@ -75,15 +75,9 @@ def transcribe_callback(sender, data):
                                    'key': 'transcribed'})
     else:
         CONV_MANAGER.query_later(text)
-        print('text:', text)
-        # text = CONV_MANAGER.format_prompt(text, exclude_trailing_name=True)   # TODO
         text = CONV_MANAGER._format_prompt(text, do_full=True,
                                            exclude_trailing_name=True)
-        print('text:', text)
         chunked = CHUNKER.add('conv_transcribed', text)
-        print('chunked:', chunked)
-        # chunked = CHUNKER.add('conv_transcribed',
-        #                       CONV_MANAGER.full_conversation)
         set_value(data['target_id'], chunked)
 
 
@@ -255,8 +249,7 @@ def persona_select_callback(sender, data):
     # Don't love hard-coding this but there's no data arg when triggered by
     # listbox selection.
     hide_item('add_persona_error_msg')
-    if data:
-        name = data['name']
+    if data: name = data['name']
     else:
         name = CONV_MANAGER.personas()[get_value(sender)]
     # Avoid resetting vars in the middle of a conversation. Second part avoids
@@ -561,7 +554,14 @@ def conv_query_callback(sender, data):
         - query_msg_id (str: name of text item containing the message to
             display while a query is in progress)
         - engine_i_id (str: name of int input where user selects engine_i)
+        - no_query_msg_id (str: name of text item showing error message if user
+            attempts to make a query before saying anything)
     """
+    if not CONV_MANAGER.cached_query:
+        show_item(data['query_error_msg_id'])
+        time.sleep(1)
+        hide_item(data['query_error_msg_id'])
+        return
     show_item(data['query_msg_id'])
     # Notice we track our chunked conversation with a single key here unlike
     # default mode, where we require 1 for transcribed inputs and 1 for

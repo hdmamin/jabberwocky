@@ -637,8 +637,6 @@ class ConversationManager:
             )
         else:
             if is_custom:
-                print('summary', summary)
-                print('gender', gender)
                 if not (summary and gender):
                     raise ValueError(
                         'Must provide a summary and gender for a custom '

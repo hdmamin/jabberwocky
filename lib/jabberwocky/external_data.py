@@ -10,7 +10,7 @@ import re
 import requests
 import warnings
 import wikipedia as wiki
-from wikipedia import PageError
+from wikipedia import PageError, DisambiguationError
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
 from htools import DotDict, tolist, Results
@@ -252,6 +252,8 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
         page = wiki_page(name, *tolist(tags), **page_kwargs)
     except RuntimeError as e:
         raise e
+    except DisambiguationError as e:
+        raise RuntimeError from e
     gender = _infer_gender(page.summary)[0]
     summary = page.summary.splitlines()[0]
     if truncate_summary_lines:
