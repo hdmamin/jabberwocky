@@ -1349,7 +1349,9 @@ X -error handling when conv_query is called with no user input
 
 8/7/21
 ------
--fix conv_query_callback bug: changes first line to 'Me: Me: {thing I actually said}'
+X -fix conv_query_callback bug: changes first line to 'Me: Me: {thing I actually said}'
+    UPDATE: bug in text_edit_callback text parsing caused by removing the summary from the displayed chat. This meant partitioning on "\n\nMe: " behaved unexpectedly for the first user turn because of the lack of newlines.
+-consider: how might we add (optional?) auto punctuate mode for conv? Constant text edits, especially without vim hotkeys, ruins the fun a bit.
 -consider: can I provide better support for a text only mode? Right now I'm not sure this works, especially not at first. Would probably need "Me:" to show up in textbox on persona_select.
 
 

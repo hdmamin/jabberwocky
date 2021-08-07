@@ -155,7 +155,21 @@ def text_edit_callback(sender, data):
         # to extract the last user turn. You can't edit gpt3 speech or your
         # turns that have already been sent to the model. Editing your most
         # recently transcribed turn BEFORE querying is the only accepted edit
-        # type.
+        # type. If the edited turn is the user's first, we prefix the
+        # conversation with a double newline so our parsing logic holds: on
+        # subsequent turns the double newline will be automatically inserted
+        # but the first one only has it when the summary is displayed, which
+        # we've chosen to skip. This meant we were getting a tricky bug where
+        # the first user turn was getting converted incorrectly: for example,
+        # if we changed the text from "Me: Hi" to "Me: Hi.", then the text
+        # edit callback would change our cached query to "Me: Me: Hi." because
+        # rpartition would not find any "\n\nMe: " and thus the whole
+        # transcription ended up in the "keep" portion. We could also remove
+        # the double newline and just partition on "Me: " or even "Me:" but
+        # I worry this text parsing is already a little brittle so I'd rather
+        # not risk making it moreso.
+        if not CONV_MANAGER.gpt3_turns and not edited.startswith('\n\n'):
+            edited = '\n\n' + edited
         last_turn = edited.rpartition('\n\nMe: ')[-1].strip()
         pretty_name = CONV_MANAGER.process_name(CONV_MANAGER.current_persona,
                                                 inverse=True)
@@ -566,9 +580,6 @@ def conv_query_callback(sender, data):
         hide_item(data['query_error_msg_id'])
         return
 
-    # TODO testing start. Double Me NOT present yet.
-    print(CHUNKER.get('conv_transcribed', chunked=False))
-    # TODO testing end
     show_item(data['query_msg_id'])
     # Notice we track our chunked conversation with a single key here unlike
     # default mode, where we require 1 for transcribed inputs and 1 for
@@ -580,11 +591,9 @@ def conv_query_callback(sender, data):
             'conv_transcribed',
             CONV_MANAGER.full_conversation(include_summary=False)
         )
-        # TODO testing start. Double Me appears on the FIRST iteration.
-        print(full_conv)
-        # TODO testing end
         set_value(data['target_id'], full_conv)
         response += chunk
+
         # "Type" a bit faster than in default mode since we leave speaking til
         # the end. Most responses are only 1-2 sentences anyway so I feel its
         # not worth the added complexity to try to begin speaking sooner (we
