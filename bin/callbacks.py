@@ -46,8 +46,10 @@ def transcribe_callback(sender, data):
     for id_ in show_during:
         show_item(id_)
 
-    # Record until pause.
+    # Record until pause. Default is to stop recording when the speaker pauses
+    # for 0.8 seconds, which I found a tiny bit short for my liking.
     recognizer = sr.Recognizer()
+    recognizer.pause_threshold = 0.9
     with sr.Microphone() as source:
         audio = recognizer.listen(source)
     try:
@@ -88,9 +90,9 @@ def transcribe_callback(sender, data):
         # work that well. Engine_i=3 empirically works well, 0-1 does not. Need
         # test out i=2.
         print('BEFORE:', text)
-        _, text = MANAGER.query(task='punctuate', text=text, stream=False,
-                                strip_output=True, engine_i=0)
-        print('AFTER:', text)
+        # _, text = MANAGER.query(task='punctuate', text=text, stream=False,
+        #                         strip_output=True, engine_i=0)
+        # print('AFTER:', text)
         # res = MANAGER.query(task=task, text=text, stream=True,
         #                     strip_output=False, **kwargs)
         CONV_MANAGER.query_later(text)

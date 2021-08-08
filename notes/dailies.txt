@@ -1359,11 +1359,27 @@ X -consider: how might we add (optional?) auto punctuate mode for conv? Constant
 
 8/8/21
 ------
--try engine_i=2 for auto-punctuation in conv mode
-    -consider: should I make this optional? It really does seem to improve the experience. If I do make it optional it should just be a general mode, not a button you click to auto punctuate a single turn because that ruins the point.
-    -consider: maybe change default mode to make this a general mode, not a single transcription button too? Less important but still seems like a good idea.
-    -see if I can generate a shorter/cheaper punctuation prompt and kwargs. Punct prompt was originally developed to punctuate large-ish chunks of youtube transcription text so I believe the samples I used were pretty long. Most chat responses are very short so I think we could save $ by using shorter examples. Chat specific examples might also improve performance - I can use real transcription errors to help the model learn better fixes (i.e. how the transcriber often misses the first word).
--look through speech_recognition settings - maybe can reduce premature timeouts, errors on first word, etc.
+-see if I can generate a shorter/cheaper punctuation prompt and kwargs. Punct prompt was originally developed to punctuate large-ish chunks of youtube transcription text so I believe the samples I used were pretty long. Most chat responses are very short so I think we could save $ by using shorter examples. Chat specific examples might also improve performance - I can use real transcription errors to help the model learn better fixes (i.e. how the transcriber often misses the first word).
+    X -run transcribe a bunch of times to try to determine common transcription error types
+    -prototype prompt in openai web UI
+    -save prompt and config file (e.g. "punctuate_transcribed")
+    -update naming/GUI if necessary (don't want 2 punctuate versions to show up in promptmanager task options)
+X -consider: should I make auto-punctuation optional? It really does seem to improve the experience. If I do make it optional it should just be a general mode, not a button you click to auto punctuate a single turn because that ruins the point.
+    UPDATE: no, with a shorter transcription-specific punctuation prompt we should be able to make this have negligible cost (e.g. 1 cent per 50 transcriptions with engine_i=0 should be doable)
+    X -consider: maybe change default mode to make this a general mode, not a single transcription button too? Less important but still seems like a good idea.
+        UPDATE: Yes, I like this idea. Haven't implemented it yet.
+~ -look through speech_recognition settings - maybe can reduce premature timeouts, errors on first word, etc.
+    UPDATE: got through first few. See file in data/tmp. Slightly increased pause threshold from .8 sec to .9.
+
+8/9/21
+------
+-continue going through speech_recognition options 1 by 1
+    -listen_in_background
+    -recognize_google(show_all=True)
+    -audio.get_wave_data()
+-prototype new shorter punctuation prompt in openai web ui
+    -save prompt and config file (e.g. "punctuate_transcribed")
+    -update naming/GUI if necessary (don't want 2 punctuate versions to show up in promptmanager task options)
 
 
 -------------------------------------------------------------------------------
