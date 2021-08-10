@@ -1373,13 +1373,27 @@ X -consider: should I make auto-punctuation optional? It really does seem to imp
 
 8/9/21
 ------
--continue going through speech_recognition options 1 by 1
-    -listen_in_background
-    -recognize_google(show_all=True)
-    -audio.get_wave_data()
--prototype new shorter punctuation prompt in openai web ui
-    -save prompt and config file (e.g. "punctuate_transcribed")
+X -continue going through speech_recognition options 1 by 1
+    ~ -listen_in_background
+        UPDATE: looks like this could plausibly remove the need to hit the transcribe button. However, need to confirm that threading doesn't cause dearpygui problems. Also unclear what would happen if user speaks during a query. Maybe stop it during a query and then restart it. Or maybe it will work fine as is?
+    ~ -recognize_google(show_all=True)
+        UPDATE: Could have prompt get a piece of text and a confidence score and allow slightly bigger changes when confidence is low. But gp3 isn't great with numbers IIRc so this might do more harm than good.
+    ~ -audio.get_wave_data()
+        UPDATE: Got this working with listen in background (didn't try regular listen but I'd imagine that's even simpler bc no need to stitch together segments).
+X -prototype new shorter punctuation prompt in openai web ui
+    X -save prompt and config file (e.g. "punctuate_transcribed")
+	X -add to gui conv mode
+		UPDATE: updated task name, still untested in gui though.
     -update naming/GUI if necessary (don't want 2 punctuate versions to show up in promptmanager task options)
+
+8/10/21
+-------
+-maybe add conv mode checkbox to do auto-punctuation or not?
+	-maybe update default mode to do this too?
+	-remove auto-punct button/functionality from default mode?
+	-consider how to handle default mode task list: should both punctuate tasks really show up in listbox?
+	-clean up transcribe callback
+-consider how we might integrate listen_in_background and/or auto start regular listen() method between gpt3 queries
 
 
 -------------------------------------------------------------------------------

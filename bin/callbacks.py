@@ -90,8 +90,8 @@ def transcribe_callback(sender, data):
         # work that well. Engine_i=3 empirically works well, 0-1 does not. Need
         # test out i=2.
         print('BEFORE:', text)
-        # _, text = MANAGER.query(task='punctuate', text=text, stream=False,
-        #                         strip_output=True, engine_i=0)
+        # _, text = MANAGER.query(task='punctuate_transcription', text=text,
+        #                         stream=False, strip_output=True, engine_i=0)
         # print('AFTER:', text)
         # res = MANAGER.query(task=task, text=text, stream=True,
         #                     strip_output=False, **kwargs)
