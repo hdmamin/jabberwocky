@@ -197,7 +197,8 @@ class App:
             ###################################################################
             add_button('record_btn', label='Record',
                        callback_data={'show_during_ids': ['record_msg'],
-                                      'target_id': 'transcribed_text'},
+                                      'target_id': 'transcribed_text',
+                                      'auto_punct_id': 'auto_punct'},
                        callback=transcribe_callback)
             with tooltip('record_btn', 'record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
@@ -264,8 +265,7 @@ class App:
                 add_text('default_save_error_msg',
                          default_value='Failed to save file.', show=False)
 
-            add_text('record_msg', default_value='Recording in progress...',
-                     show=False)
+            add_text('record_msg', default_value='Listening...', show=False)
 
             # Label is displayed next to input unless we manually suppress it.
             with label_above('transcribed_text'):
@@ -304,7 +304,8 @@ class App:
             # Same as in default window but with different names/callback_data.
             add_button('conv_record_btn', label='Record',
                        callback_data={'show_during_ids': ['conv_record_msg'],
-                                      'target_id': 'conv_text'},
+                                      'target_id': 'conv_text',
+                                      'auto_punct_id': 'conv_auto_punct'},
                        callback=transcribe_callback)
             with tooltip('conv_record_btn', 'conv_record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
@@ -364,8 +365,7 @@ class App:
             with tooltip('end_conv_btn', 'end_conv_btn_callback'):
                 add_text('This will delete the current conversation. \nYou '
                          'will no longer be able to save a transcript.')
-            add_text('conv_record_msg',
-                     default_value='Recording in progress...',
+            add_text('conv_record_msg', default_value='Listening...',
                      show=False)
 
             # Visible when querying and speaking, respectively.
@@ -410,6 +410,15 @@ class App:
             with tooltip('read_response', 'read_response_tooltip'):
                 add_text('Check this box if you want GPT3\'s response\n to be '
                          'read aloud.')
+            add_same_line()
+            add_checkbox('auto_punct', label='Auto-Punctutate',
+                         default_value=True)
+            with tooltip('auto_punct', 'auto_punct_tooltip'):
+                add_text(
+                    'Checking this will use GPT3 to automatically clean up\n'
+                    'your transcribed lines. This should make transcription\n'
+                    'quality a bit higher but results will be slower.'
+                )
             add_input_int('default_speed_input', default_value=5, min_value=0,
                           max_value=10, min_clamped=True, max_clamped=True,
                           label='Speaker Speed',
@@ -541,6 +550,15 @@ class App:
             with tooltip('conv_read_response', 'conv_read_response_tooltip'):
                 add_text('Check this box if you want GPT3\'s response\n to be '
                          'read aloud.')
+            add_same_line()
+            add_checkbox('conv_auto_punct', label='Auto-Punctutate',
+                         default_value=True)
+            with tooltip('conv_auto_punct', 'conv_auto_punct_tooltip'):
+                add_text(
+                    'Checking this will use GPT3 to automatically clean up\n'
+                    'your transcribed lines. This should make transcription\n'
+                    'quality a bit higher but results will be slower.'
+                )
             add_text('conv_query_error_msg',
                      default_value='No user message found. You must say '
                                    'something first.',
@@ -685,6 +703,7 @@ if __name__ == '__main__':
                                                        'shortest',
                                                        'short_dates'])
     CONV_MANAGER = ConversationManager(tasks)
+    # Tasks not listed here won't show up in the Tasks listbox in default mode.
     NAME2TASK = IndexedDict({
         'Punctuate': 'punctuate',
         'Translate': 'translate',

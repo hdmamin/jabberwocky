@@ -45,6 +45,7 @@ def transcribe_callback(sender, data):
     show_during = data.get('show_during_ids', [])
     for id_ in show_during:
         show_item(id_)
+    error_message = 'Parsing failed. Please try again.'
 
     # Record until pause. Default is to stop recording when the speaker pauses
     # for 0.8 seconds, which I found a tiny bit short for my liking.
@@ -55,12 +56,18 @@ def transcribe_callback(sender, data):
     try:
         text = recognizer.recognize_google(audio)
     except sr.UnknownValueError:
-        text = 'Parsing failed. Please try again.'
+        text = error_message
 
     # Don't just use capitalize because this removes existing capitals.
     # Probably don't have these anyway (transcription seems to usually be
     # lowercase) but just being safe here.
     text = text[0].upper() + text[1:]
+
+    print('BEFORE:', text)   # TODO: rm
+    if text != error_message and get_value(data['auto_punct_id']):
+        _, text = MANAGER.query(task='punctuate_transcription', text=text,
+                                stream=False, strip_output=True)
+    print('AFTER:', text)
 
     # Update text and various components now that transcription is complete.
     for id_ in show_during:
@@ -76,25 +83,6 @@ def transcribe_callback(sender, data):
                                    'update_kwargs': True,
                                    'key': 'transcribed'})
     else:
-        # CONV_MANAGER.query_later(text)
-        # # Do not use full_conversation here because we haven't added the new
-        # # user response yet.
-        # text = CONV_MANAGER._format_prompt(text, do_full=True,
-        #                                    include_trailing_name=False,
-        #                                    include_summary=False)
-        # chunked = CHUNKER.add('conv_transcribed', text)
-        # set_value(data['target_id'], chunked)
-
-        # TODO: testing auto punctuate. Working old code is above.
-        # NOTE: using cheap punctuation engine for testing but this doesn't
-        # work that well. Engine_i=3 empirically works well, 0-1 does not. Need
-        # test out i=2.
-        print('BEFORE:', text)
-        # _, text = MANAGER.query(task='punctuate_transcription', text=text,
-        #                         stream=False, strip_output=True, engine_i=0)
-        # print('AFTER:', text)
-        # res = MANAGER.query(task=task, text=text, stream=True,
-        #                     strip_output=False, **kwargs)
         CONV_MANAGER.query_later(text)
         # Do not use full_conversation here because we haven't added the new
         # user response yet.
@@ -106,9 +94,9 @@ def transcribe_callback(sender, data):
 
 
 def format_text_callback(sender, data):
-    """Used in conv mode when user hits auto-format button. Mostly just chunks
-    text since dearpygui doesn't wrap lines automatically. Also adds a colon
-    at the end of text if task is "how to".
+    """Used in default mode when user hits auto-format button. Mostly just
+    chunks text since dearpygui doesn't wrap lines automatically. Also adds a
+    colon at the end of text if task is "how to".
 
     data keys:
         - text_source_id (str: name of element to get text from)
@@ -131,7 +119,8 @@ def format_text_callback(sender, data):
         'task_list',
         data={'task_list_id': data['task_list_id'],
               'text_source_id': data['text_source_id'],
-              'update_kwargs': data.get('update_kwargs', False)})
+              'update_kwargs': data.get('update_kwargs', False)}
+    )
 
 
 def text_edit_callback(sender, data):
@@ -287,9 +276,11 @@ def persona_select_callback(sender, data):
     # Don't love hard-coding this but there's no data arg when triggered by
     # listbox selection.
     hide_item('add_persona_error_msg')
-    if data: name = data['name']
+    if data:
+        name = data['name']
     else:
         name = CONV_MANAGER.personas()[get_value(sender)]
+
     # Avoid resetting vars in the middle of a conversation. Second part avoids
     # subtle issue where if we force generate a custom persona that's already
     # loaded (i.e. we overwrite an existing persona), the new persona wouldn't
@@ -305,6 +296,12 @@ def persona_select_callback(sender, data):
     set_value('conv_text', '')
     # Must happen after we start conversation.
     SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current_gender]
+
+    # Start listening for user response automatically.
+    transcribe_callback('conv_query_callback',
+                        {'show_during_ids': ['conv_record_msg'],
+                         'target_id': 'conv_text',
+                         'auto_punct_id': 'conv_auto_punct'})
 
 
 def add_custom_persona_callback(sender, data):
@@ -623,6 +620,12 @@ def conv_query_callback(sender, data):
     if get_value(data['read_checkbox_id']):
         read_response(response, data)
     hide_item(data['query_msg_id'])
+
+    # Start listening for user response automatically.
+    transcribe_callback('conv_query_callback',
+                        {'show_during_ids': ['conv_record_msg'],
+                         'target_id': 'conv_text',
+                         'auto_punct_id': 'conv_auto_punct'})
 
 
 def speaker_speed_callback(sender, data):

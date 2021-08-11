@@ -1388,12 +1388,23 @@ X -prototype new shorter punctuation prompt in openai web ui
 
 8/10/21
 -------
--maybe add conv mode checkbox to do auto-punctuation or not?
-	-maybe update default mode to do this too?
-	-remove auto-punct button/functionality from default mode?
-	-consider how to handle default mode task list: should both punctuate tasks really show up in listbox?
-	-clean up transcribe callback
--consider how we might integrate listen_in_background and/or auto start regular listen() method between gpt3 queries
+X -maybe add conv mode checkbox to do auto-punctuation or not?
+	X -maybe update default mode to do this too?
+	_ -remove auto-punct button/functionality from default mode?
+		UPDATE: Looked and this actually does other stuff too (e.g. trailing colon for How To task). Keep.
+	X -consider how to handle default mode task list: should both punctuate tasks really show up in listbox?
+		UPDATE: we already only see Punctuate as long as I don't update the NAME2TASK dict. Think that's fine.
+	~ -clean up transcribe callback
+		UPDATE: keep before/after print statements for now. Nice way to keep an eye on how effective auto-punctuation is.
+~ -consider how we might integrate listen_in_background and/or auto start regular listen() method between gpt3 queries
+	UPDATE: persona_select_callback and conv_query_callback both trigger transcribe callback now.
+
+8/11/21
+-------
+-check default max timeout for listen() and consider if we need to increase it
+	-consider: should we start listening immediately when entering conv mode? Transcribe button is mostly unnecessary now so I'm tempted to delete it, but I don't know if we should thrust a user immediately into a conv when they enter conv window.
+-consider: auto query when transcription is done? This doesn't give us a chance to clean up or edit transcriptions manually but maybe with gpt3 postprocessing they're good enough. And I bet this would make the conv feel much more real.
+-update conv mode's speaking to not wait for whole response to complete. With engine_i=3 we seem to get longer responses and this functionality seems worth it to port over.
 
 
 -------------------------------------------------------------------------------
