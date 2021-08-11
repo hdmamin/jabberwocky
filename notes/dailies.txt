@@ -1398,13 +1398,18 @@ X -maybe add conv mode checkbox to do auto-punctuation or not?
 		UPDATE: keep before/after print statements for now. Nice way to keep an eye on how effective auto-punctuation is.
 ~ -consider how we might integrate listen_in_background and/or auto start regular listen() method between gpt3 queries
 	UPDATE: persona_select_callback and conv_query_callback both trigger transcribe callback now.
+~ -start updating conv mode's speaking to not wait for whole response to complete. With engine_i=3 we seem to get longer responses and this functionality seems worth it to port over.
+	UPDATE: extracted relevant query_callback functionality into new function. Still a few things to look into and test.
 
 8/11/21
 -------
+-replace conv_query_cb logic w/ concurrent_typing function. See if this works.
+	-does conv_query callback not hide interrupt msg at end? Or maybe that's part of read_response and I can remove it from default query cb?
+	-does default mode forget to look at read_checkbox_id? Looks like we might just always read it atm. Fix if necessary.
+	-replace default mode query concurrent typing logic w/ call to function I factored out.
 -check default max timeout for listen() and consider if we need to increase it
 	-consider: should we start listening immediately when entering conv mode? Transcribe button is mostly unnecessary now so I'm tempted to delete it, but I don't know if we should thrust a user immediately into a conv when they enter conv window.
 -consider: auto query when transcription is done? This doesn't give us a chance to clean up or edit transcriptions manually but maybe with gpt3 postprocessing they're good enough. And I bet this would make the conv feel much more real.
--update conv mode's speaking to not wait for whole response to complete. With engine_i=3 we seem to get longer responses and this functionality seems worth it to port over.
 
 
 -------------------------------------------------------------------------------

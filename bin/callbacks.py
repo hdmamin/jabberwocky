@@ -553,12 +553,12 @@ def query_callback(sender, data):
     # Stream function provides "typing" effect.
     threads = []
     errors = []
-    res_text = ''
+    full_text = ''
     curr_text = ''
     for chunk in stream(res):
-        res_text += chunk
+        full_text += chunk
         curr_text += chunk
-        chunked = CHUNKER.add('response', res_text)
+        chunked = CHUNKER.add('response', full_text)
         set_value(data['target_id'], chunked)
         if any(char in chunk for char in ('.', '!', '?', '\n\n')):
             if not errors:
@@ -626,6 +626,34 @@ def conv_query_callback(sender, data):
                         {'show_during_ids': ['conv_record_msg'],
                          'target_id': 'conv_text',
                          'auto_punct_id': 'conv_auto_punct'})
+
+
+# TODO: in progress
+def concurrent_speaking_typing(streamable, data, pause=.18):
+    # Stream function provides "typing" effect.
+    threads = []
+    errors = []
+    full_text = ''
+    curr_text = ''
+    for chunk in stream(streamable):
+        full_text += chunk
+        curr_text += chunk
+        chunked = CHUNKER.add('response', full_text)
+        set_value(data['target_id'], chunked)
+        if any(char in chunk for char in ('.', '!', '?', '\n\n')):
+            if not errors:
+                thread = Thread(target=read_response,
+                                args=(curr_text, data, errors, False))
+                thread.start()
+                threads.append(thread)
+            # Make sure this isn't reset until AFTER the speaker thread starts.
+            curr_text = ''
+        time.sleep(pause)
+    if curr_text and not errors:
+        read_response(curr_text, data)
+    hide_item(data['interrupt_id'])
+    hide_item(data['query_msg_id'])
+    for thread in threads: thread.join()
 
 
 def speaker_speed_callback(sender, data):
