@@ -550,31 +550,7 @@ def query_callback(sender, data):
             print(e)
             res = 'Query failed. Please check your settings and try again.'
 
-    # Stream function provides "typing" effect.
-    # threads = []
-    # errors = []
-    # full_text = ''
-    # curr_text = ''
-    # for chunk in stream(res):
-    #     full_text += chunk
-    #     curr_text += chunk
-    #     chunked = CHUNKER.add('response', full_text)
-    #     set_value(data['target_id'], chunked)
-    #     if any(char in chunk for char in ('.', '!', '?', '\n\n')):
-    #         if not errors:
-    #             thread = Thread(target=read_response,
-    #                             args=(curr_text, data, errors, False))
-    #             thread.start()
-    #             threads.append(thread)
-    #         Make sure this isn't reset until AFTER the speaker thread starts.
-            # curr_text = ''
-        # time.sleep(.18)
-    # if curr_text and not errors:
-    #     read_response(curr_text, data)
-    # hide_item(data['interrupt_id'])
-    # hide_item(data['query_msg_id'])
-    # for thread in threads: thread.join()
-    
+    # Type and read response aloud.
     concurrent_speaking_typing(res, data)
 
 
@@ -600,34 +576,11 @@ def conv_query_callback(sender, data):
         hide_item(data['query_error_msg_id'])
         return
 
+    # Query gpt3, then type and read response.
     show_item(data['query_msg_id'])
-    # Notice we track our chunked conversation with a single key here unlike
-    # default mode, where we require 1 for transcribed inputs and 1 for
-    # GPT3-generated outputs.
-    # response = ''
-    # for chunk in CONV_MANAGER.query(engine_i=get_value(data['engine_i_id']),
-    #                                 stream=True):
-    #     full_conv = CHUNKER.add(
-    #         'conv_transcribed',
-    #         CONV_MANAGER.full_conversation(include_summary=False)
-    #     )
-    #     set_value(data['target_id'], full_conv)
-    #     response += chunk
-    #
-    #     # "Type" a bit faster than in default mode since we leave speaking til
-    #     # the end. Most responses are only 1-2 sentences anyway so I feel its
-    #     # not worth the added complexity to try to begin speaking sooner (we
-    #     # need a full sentence or speech comes out sounding stilted).
-    #     time.sleep(.16)
-    # if get_value(data['read_checkbox_id']):
-    #     read_response(response, data)
-    # hide_item(data['query_msg_id'])
-
-    # TODO
     res = CONV_MANAGER.query(engine_i=get_value(data['engine_i_id']),
                              stream=True)
     concurrent_speaking_typing(res, data)
-    # TODO end
 
     # Start listening for user response automatically.
     transcribe_callback('conv_query_callback',
