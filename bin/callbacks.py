@@ -29,6 +29,10 @@ from jabberwocky.utils import img_dims
 from utils import read_response, stream
 
 
+RECOGNIZER = sr.Recognizer()
+RECOGNIZER.pause_threshold = 0.9
+
+
 def transcribe_callback(sender, data):
     """Triggered when user hits the Record button. Used in both default mode
     and conv mode.
@@ -49,12 +53,11 @@ def transcribe_callback(sender, data):
 
     # Record until pause. Default is to stop recording when the speaker pauses
     # for 0.8 seconds, which I found a tiny bit short for my liking.
-    recognizer = sr.Recognizer()
-    recognizer.pause_threshold = 0.9
     with sr.Microphone() as source:
-        audio = recognizer.listen(source)
+        RECOGNIZER.adjust_for_ambient_noise(source)
+        audio = RECOGNIZER.listen(source)
     try:
-        text = recognizer.recognize_google(audio)
+        text = RECOGNIZER.recognize_google(audio)
     except sr.UnknownValueError:
         text = error_message
 
@@ -580,7 +583,7 @@ def conv_query_callback(sender, data):
     show_item(data['query_msg_id'])
     res = CONV_MANAGER.query(engine_i=get_value(data['engine_i_id']),
                              stream=True)
-    concurrent_speaking_typing(res, data)
+    concurrent_speaking_typing(res, data, conv_mode=True)
 
     # Start listening for user response automatically.
     transcribe_callback('conv_query_callback',
@@ -590,7 +593,7 @@ def conv_query_callback(sender, data):
 
 
 # TODO: in progress
-def concurrent_speaking_typing(streamable, data, pause=.18):
+def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     # Stream function provides "typing" effect.
     threads = []
     errors = []
@@ -599,7 +602,13 @@ def concurrent_speaking_typing(streamable, data, pause=.18):
     for chunk in stream(streamable):
         full_text += chunk
         curr_text += chunk
-        chunked = CHUNKER.add('response', full_text)
+        if conv_mode:
+            chunked = CHUNKER.add(
+                'conv_transcribed',
+                CONV_MANAGER.full_conversation(include_summary=False)
+            )
+        else:
+            chunked = CHUNKER.add('response', full_text)
         set_value(data['target_id'], chunked)
         if any(char in chunk for char in ('.', '!', '?', '\n\n')):
             if not errors:

@@ -1403,26 +1403,28 @@ X -maybe add conv mode checkbox to do auto-punctuation or not?
 
 8/11/21
 -------
--replace conv_query_cb logic w/ concurrent_typing function. See if this works.
+X -replace conv_query_cb logic w/ concurrent_typing function. See if this works.
 	-does conv_query callback not hide interrupt msg at end? Or maybe that's part of read_response and I can remove it from default query cb?
 	-does default mode forget to look at read_checkbox_id? Looks like we might just always read it atm. Fix if necessary.
-	-replace default mode query concurrent typing logic w/ call to function I factored out.
--check default max timeout for listen() and consider if we need to increase it
-	-consider: should we start listening immediately when entering conv mode? Transcribe button is mostly unnecessary now so I'm tempted to delete it, but I don't know if we should thrust a user immediately into a conv when they enter conv window.
--consider: auto query when transcription is done? This doesn't give us a chance to clean up or edit transcriptions manually but maybe with gpt3 postprocessing they're good enough. And I bet this would make the conv feel much more real.
+	X -replace default mode query concurrent typing logic w/ call to function I factored out.
+~ -check default max timeout for listen() and consider if we need to increase it
+	UPDATE: docs claim timeout=None by default which means we never time out, but usually seems to timeout after 3-15 seconds. Unclear what's going on here.
+	~ -consider: should we start listening immediately when entering conv mode? Transcribe button is mostly unnecessary now so I'm tempted to delete it, but I don't know if we should thrust a user immediately into a conv when they enter conv window.
+		UPDATE: if we're even going to consider this, we need to figure out a way to prevent timeouts first.
+~ -consider: auto query when transcription is done? This doesn't give us a chance to clean up or edit transcriptions manually but maybe with gpt3 postprocessing they're good enough. And I bet this would make the conv feel much more real.
+	UPDATE: hold off for now. Would be cool but I need to see more evidence that an edit-free conv (or at least no manual edits) provides good enough quality.
+
+8/12/21
+-------
+-plan how we might be able to swap in listen_in_background
+	-start implementing
+-work on docker file, docker-compose, etc.
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
--add the concurrent typing/speaking to conv mode that I use in default mode. While most responses are short, we do occasionally see multi-sentence responses (probably more often once I increase engine_i) and the functionality's already there - I can start with just copy/paste and if that works well, worry about refactoring afterwards.
--consider: can I provide better support for a text only mode? Right now I'm not sure this works, especially not at first. Would probably need "Me:" to show up in textbox on persona_select.
 -look into gpt-neo funcs - seems like these stopped working after a while
--should bio show up in conv_Mode window? First consider what I want, then if I do want to hide it look into how big the effects would be (i.e. do I grab query prompt from there? Don't think so for conv mode but need to check)
--consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
-	-if yes, work on docker file, docker-compose, etc.
-	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
-
 - htools things:
 	-flesh out owneraccess decorator
 	-port htools as_df
