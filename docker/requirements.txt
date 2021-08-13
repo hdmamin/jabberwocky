@@ -1,0 +1,2 @@
+dearpygui==0.6.415
+jabberwocky==0.1.1
