@@ -8,5 +8,10 @@ services:
     container_name: jabberwocky-container
     volumes:
       - ~/.openai:/.openai
-      - ${DATA_PATH}:/gui/data
-      - ${BIN_PATH}:/gui/bin
+      - ${PROMPTS_PATH}:/gui/data/prompts
+      - ${PERSONAS_PATH}:/gui/data/conversation_personas
+      - ${CUSTOM_PERSONAS_PATH}:/gui/data/conversation_personas_custom
+      - ${CONVERSATIONS_PATH}:/gui/data/conversations
+      - ${COMPLETIONS_PATH}:/gui/data/completions
+      - ${LOGS_PATH}:/gui/data/logs
+      - ${FONTS_PATH}:/gui/data/fonts

@@ -11,5 +11,7 @@ COPY requirements.txt .
 
 RUN pip install -r requirements.txt
 
-CMD "/bin/bash"
-# CMD ["cd", "gui", "&&", "python", "bin/main.py"]
+RUN python -m nltk.downloader punkt
+
+# CMD "/bin/bash"
+CMD ["cd", "gui", "&&", "python", "bin/main.py"]
