@@ -23,8 +23,6 @@ from utils import label_above
 from callbacks import *
 
 
-os.chdir('../')
-
 
 class App:
     """Dearpygui app. Was trying to organize things instead of having 1 giant
@@ -695,14 +693,12 @@ class App:
 
 
 if __name__ == '__main__':
-    # tasks = ['Barack Obama'] # TODO: tmp limit conv personas for faster loading.
-    tasks = []
     SPEAKER = Speaker(newline_pause=400)
     CHUNKER = GuiTextChunker(max_chars=70)
     MANAGER = PromptManager(verbose=False, skip_tasks=['conversation',
                                                        'shortest',
                                                        'short_dates'])
-    CONV_MANAGER = ConversationManager(tasks)
+    CONV_MANAGER = ConversationManager()
     # Tasks not listed here won't show up in the Tasks listbox in default mode.
     NAME2TASK = IndexedDict({
         'Punctuate': 'punctuate',

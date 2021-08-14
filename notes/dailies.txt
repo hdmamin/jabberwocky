@@ -1416,14 +1416,35 @@ X -replace conv_query_cb logic w/ concurrent_typing function. See if this works.
 
 8/12/21
 -------
--plan how we might be able to swap in listen_in_background
-	-start implementing
--work on docker file, docker-compose, etc.
+_ -plan how we might be able to swap in listen_in_background
+	UPDATE: unnecessary. Listen actually does exactly what we want, the only issue is that the energy_threshold can get things wrong and trigger prematurely. But listen_in_background wouldn't solve that problem either.
+	_ -start implementing
+~ -work on dockerfile, docker-compose, etc.
+	UPDATE: draft of dockerfile and docker-compose. Still working on this.
+X -make fuzzywuzzy speedup optional for htools
+	UPDATE: removed from defaults and added new versions with it and with speedup. Eventually should update to make a version for each module.
+
+8/13/21
+-------
+X -troubleshoot gcc failure in docker build
+	UPDATE: fuzzywuzzy[speedup] required apt install build-essentials.
+~ -continue working on docker, docker-compose, etc.
+	UPDATE: Some solid progress. Got python packages to install and volumes to mount. However, pandas_flavor is causing import issues (see misc.txt for error).
+
+8/14/21
+-------
+-troubleshoot pandas_flavor xarray import bug
+-write documentation for running w/ docker
+	-in docker dir?
+	-in project root?
+-add dockerignore so only relevant data subdirs are mounted?
+-maybe update concurrent typing func to sentence_tokenize repeatedly rather than check for period (otherwise we get unnecessary pauses for sentences like "J.T. Snow hit a fly ball."
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-description viewable on pypi (think this needs to be rst, not md)
 -look into gpt-neo funcs - seems like these stopped working after a while
 - htools things:
 	-flesh out owneraccess decorator

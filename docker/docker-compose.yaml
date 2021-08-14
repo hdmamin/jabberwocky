@@ -8,5 +8,5 @@ services:
     container_name: jabberwocky-container
     volumes:
       - ~/.openai:/.openai
-      - ../data:data
-      - ../bin:bin
+      - ${DATA_PATH}:/gui/data
+      - ${BIN_PATH}:/gui/bin

@@ -103,5 +103,26 @@ possible post topics
 -pyinstaller and dearpygui
 
 ---
-Latest error:
+Latest dearpygui error:
 FileNotFoundError: [Errno 2] No such file or directory: 'data/prompts'
+
+8/13/21
+-------
+-latest docker error:
+
+ File "/usr/local/lib/python3.7/site-packages/pandas_flavor/__init__.py", line 5, in <module>
+    from .xarray import (register_xarray_dataarray_method, 
+  File "/usr/local/lib/python3.7/site-packages/pandas_flavor/xarray.py", line 2, in <module>
+    import xarray as xr
+  File "/usr/local/lib/python3.7/site-packages/xarray/__init__.py", line 3, in <module>
+    from . import testing, tutorial, ufuncs
+  File "/usr/local/lib/python3.7/site-packages/xarray/testing.py", line 9, in <module>
+    from xarray.core import duck_array_ops, formatting, utils
+  File "/usr/local/lib/python3.7/site-packages/xarray/core/duck_array_ops.py", line 16, in <module>
+    from . import dask_array_compat, dask_array_ops, dtypes, npcompat, nputils
+  File "/usr/local/lib/python3.7/site-packages/xarray/core/npcompat.py", line 80, in <module>
+    from numpy.typing import DTypeLike
+  File "/usr/local/lib/python3.7/site-packages/numpy/typing/__init__.py", line 316, in <module>
+    from ._dtype_like import (
+  File "/usr/local/lib/python3.7/site-packages/numpy/typing/_dtype_like.py", line 95, in <module>
+    class _SupportsDType(Generic[_DType_co]):
