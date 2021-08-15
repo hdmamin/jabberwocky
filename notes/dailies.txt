@@ -1433,13 +1433,28 @@ X -troubleshoot gcc failure in docker build
 
 8/14/21
 -------
--troubleshoot pandas_flavor xarray import bug
--write documentation for running w/ docker
-	-in docker dir?
-	-in project root?
--add dockerignore so only relevant data subdirs are mounted?
--maybe update concurrent typing func to sentence_tokenize repeatedly rather than check for period (otherwise we get unnecessary pauses for sentences like "J.T. Snow hit a fly ball."
+X -troubleshoot pandas_flavor xarray import bug
+	UPDATE: specified old pandas_flavor version w/out xarray dep.
+~ -add dockerignore so only relevant data subdirs are mounted?
+	UPDATE: doesn't work on volumes apparently, just copy/add commands. Instead, manually mount each data subdir using multiple vars in setenv.sh. Not ideal but it works.
+~ -more docker troubleshooting
+	UPDATE: docker-compose up not working but wrote out equivalent command in start.sh for now. Nltk was missing a download so I added that in dockerfile. Added Speechrecognition package dep (not in jabberwocky, just in bin I guess). Didn't quite get gui running (see error in misc.txt) - I think this error may be related to running the gui in docker. Not as straightforward as I thought. Found some hints of possibly getting this to work but it would only work on mac.
 
+8/15/21
+-------
+~ -more docker troubleshooting
+	X -install xquartz
+	~ -follow tutorial to connect from container
+        UPDATE: made a tiny bit of progress. I think the problem is not (yet) the connecting to my mac bit, it's something about the rendering engine dearpygui uses under the hood. Related to nvidia drivers?
+
+8/16/21
+-------
+-more docker troubleshooting
+    -read through tabs about error trying to open drirc files
+-consider: worth giving pyinstaller another shot?
+-other options (break from IT troubleshooting):
+    -maybe update concurrent typing func to sentence_tokenize repeatedly rather than check for period (otherwise we get unnecessary pauses for sentences like "J.T. Snow hit a fly ball."
+    -write documentation for running w/ docker in docker dir and/or project root
 
 -------------------------------------------------------------------------------
 backlog (optional)

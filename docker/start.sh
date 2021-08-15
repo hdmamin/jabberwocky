@@ -9,4 +9,6 @@ docker run -it -v $CONVERSATIONS_PATH:/gui/data/conversations \
     -v $FONTS_PATH:/gui/data/fonts \
     -v $BIN_PATH:/gui/bin \
     -v ~/.openai:/root/.openai \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -e DISPLAY=$IP:0 \
     jabberwocky /bin/bash

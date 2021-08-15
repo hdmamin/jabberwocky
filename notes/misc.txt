@@ -108,7 +108,7 @@ FileNotFoundError: [Errno 2] No such file or directory: 'data/prompts'
 
 8/13/21
 -------
--latest docker error:
+-latest docker error [UPDATE: fixed by downgrading pandas_flavor]:
 
  File "/usr/local/lib/python3.7/site-packages/pandas_flavor/__init__.py", line 5, in <module>
     from .xarray import (register_xarray_dataarray_method, 
@@ -126,3 +126,22 @@ FileNotFoundError: [Errno 2] No such file or directory: 'data/prompts'
     from ._dtype_like import (
   File "/usr/local/lib/python3.7/site-packages/numpy/typing/_dtype_like.py", line 95, in <module>
     class _SupportsDType(Generic[_DType_co]):
+
+8/14/21
+-------
+latest docker error:
+Glfw Error 65544: X11: The DISPLAY environment variable is missing
+Glfw Error 65537: The GLFW library is not initialized
+Glfw Error 65537: The GLFW library is not initialized
+Glfw Error 65537: The GLFW library is not initialized
+python: /home/appveyor/projects/dearpygui/Dependencies/glfw/src/window.c:531: glfwSetWindowPos: Assertion `window != NULL' failed
+
+8/15/21
+-------
+recent docker changes (order matters):
+
+apt install sudo
+apt-get install -y gnupg gnupg2
+apt-get install -y mesa-utils and libgl1-mesa-glx
+sudo add-apt-repository ppa:ubuntu-x-swat/updates
+sudo apt dist-upgrad
