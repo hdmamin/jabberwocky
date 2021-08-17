@@ -14,3 +14,4 @@ dist
 build
 main.spec
 output/
+tmp/

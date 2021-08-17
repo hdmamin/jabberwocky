@@ -149,7 +149,7 @@ def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None,
             break
 
 
-def stream_text(text, chunk_size=3):
+def stream_chars(text, chunk_size=3):
     """Generator that yields chunks of a string. GPT3 provides streaming mode
     but gpt-neo doesn't and we sometimes also want to display error messages or
     mocked results as if they are in streaming mode. This helps us do that.
@@ -157,11 +157,22 @@ def stream_text(text, chunk_size=3):
     yield from (text[i:i+chunk_size] for i in range(0, len(text), chunk_size))
 
 
+def stream_words(text):
+    """Like stream_chars but splits on spaces. Realized stream_chars was a bad
+    idea because we risk giving SPEAKER turns like
+    "This is over. W" and "hat are you doing next?", neither of which would be
+    pronounced as intended. We yield with a space for consistency with the
+    other streaming interfaces which require no further postprocessing.
+    """
+    for word in text.split(' '):
+        yield word + ' '
+
+
 def stream(text_or_gen):
     """Wrapper around stream_text(). Input can either be a string OR a
     generator (as returned by query_gpt3() when stream=True).
     """
     if isinstance(text_or_gen, str):
-        yield from stream_text(text_or_gen)
+        yield from stream_words(text_or_gen)
     else:
         yield from text_or_gen

@@ -23,7 +23,6 @@ from utils import label_above
 from callbacks import *
 
 
-
 class App:
     """Dearpygui app. Was trying to organize things instead of having 1 giant
     glob of context managers but I'm not sure this ended up any clearer. OOP

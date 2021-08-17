@@ -592,7 +592,6 @@ def conv_query_callback(sender, data):
                          'auto_punct_id': 'conv_auto_punct'})
 
 
-# TODO: in progress
 def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     # Stream function provides "typing" effect.
     threads = []

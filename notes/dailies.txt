@@ -1450,11 +1450,27 @@ X -troubleshoot pandas_flavor xarray import bug
 8/16/21
 -------
 -more docker troubleshooting
-    -read through tabs about error trying to open drirc files
+    ~ -read through tabs about error trying to open drirc files
+        UPDATE: sounds like this is not really the problem, those files are optional, it's the other issues (fbconfig, swrast) that I already tried to fix that are the problem.
 -consider: worth giving pyinstaller another shot?
+    X -create very simple app
+    ~ -see if I can get that to generate exe
+        UPDATE: even barebones app fails w/ segmentation fault. Stack suggests this may just be a mac thing.
+~ -look into pyinstaller alternatives
+    UPDATE: py2app maybe?
 -other options (break from IT troubleshooting):
-    -maybe update concurrent typing func to sentence_tokenize repeatedly rather than check for period (otherwise we get unnecessary pauses for sentences like "J.T. Snow hit a fly ball."
+    ~ -maybe update concurrent typing func to sentence_tokenize repeatedly rather than check for period (otherwise we get unnecessary pauses for sentences like "J.T. Snow hit a fly ball."
+        UPDATE: started on this (see tmux pane 2)
     -write documentation for running w/ docker in docker dir and/or project root
+    X -fix stream_text issue
+        UPDATE: realized we don't really want random subwords because we can get splits like "It is over. W", "ho are you?". Although it's it possible for gpt3 to give us something sort of like that (maybe w/ more common subword than W but still).
+
+8/17/21
+-------
+-continue working on possible version of concurrent_typing that uses sentence_tokenize rather than check for period
+    -integrate into GUI
+-look into other pyinstaller alternatives (py2app looks alright but want to explore options)
+
 
 -------------------------------------------------------------------------------
 backlog (optional)
