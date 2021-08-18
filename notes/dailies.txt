@@ -1467,14 +1467,21 @@ X -troubleshoot pandas_flavor xarray import bug
 
 8/17/21
 -------
--continue working on possible version of concurrent_typing that uses sentence_tokenize rather than check for period
+~ -continue working on possible version of concurrent_typing that uses sentence_tokenize rather than check for period
+    UPDATE: Some progress but there's a ways to go. Rewrote simple version of read_response as a coroutine which lets us pass in tokens 1 at a time and reads sentences when appropriate. Wrote custom Thread class to try to let us pass things to it after starting. Runs without raising error but doesn't work as intended yet - while it speaks at the appropriate times, speech is once again blocking.
     -integrate into GUI
 -look into other pyinstaller alternatives (py2app looks alright but want to explore options)
+
+8/18/21
+-------
+-try updating custom Thread class to use queu like stackoverflow example. Hopefully this will make speech non-blocking.
+    -alternate plan: make coro launch thread w/ speaker when necessary?
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-look into other pyinstaller alternatives (py2app looks alright but want to explore options)
 -description viewable on pypi (think this needs to be rst, not md)
 -look into gpt-neo funcs - seems like these stopped working after a while
 - htools things:
