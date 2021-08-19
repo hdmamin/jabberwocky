@@ -1474,8 +1474,21 @@ X -troubleshoot pandas_flavor xarray import bug
 
 8/18/21
 -------
--try updating custom Thread class to use queu like stackoverflow example. Hopefully this will make speech non-blocking.
-    -alternate plan: make coro launch thread w/ speaker when necessary?
+X -try updating custom Thread class to use queu like stackoverflow example. Hopefully this will make speech non-blocking.
+    UPDATE: works in notebook. Still lacking some dearpygui details and error monitoring though.
+    _ -alternate plan: make coro launch thread w/ speaker when necessary?
+~ -port to py files
+    UPDATE: ported read_response_coro and started adding in dearpygui-specific functionality. Still haven't ported concurrent_typing().
+
+8/19/21
+-------
+-port concurrent_typing func (don't delete old one yet)
+    -update so data is passed to thread so it can pass it to coro
+-test read_response_coro WITHOUT any interrupt monitoring (keep it simple)
+    -debug if necessary
+-add in interrupt monitoring
+    -test
+    -debug if necessary
 
 
 -------------------------------------------------------------------------------

@@ -11,6 +11,8 @@ from nltk.tokenize import sent_tokenize
 from threading import Thread
 import time
 
+from htools.meta import coroutine
+
 
 @ctx_manager
 def label_above(name, visible_name=None):
@@ -73,6 +75,45 @@ def read_response(response, data, errors=None, hide_on_exit=True):
         pass
     if hide_on_exit: hide_item(data['interrupt_id'])
     thread.join()
+
+
+# IN PROGRESS. Has changes not in notebook.
+@coroutine
+def read_response_coro(data, errors=None, hide_on_exit=True):
+    # Must send None as an extra last item so that this coroutine knows when
+    # we're done sending in new tokens so it can check for any unread text.
+    def _exit(data, thread, hide_on_exit=True):
+        if hide_on_exit:
+            hide_item(data['interrupt_id'])
+        thread.join()
+
+    show_item(data['interrupt_id'])
+    if errors is None:
+        # Careful: can't use "errors or []" here because we want to allow the
+        # user to pass in an empty list and watch it to see if errors are
+        # appended.
+        errors = []
+
+    # Watch out for user requests to interrupt speaker. This will be joined in
+    # _exit().
+    thread = Thread(target=monitor_interrupt_checkbox,
+                    args=(data['interrupt_id'], errors))
+    thread.start()
+    text = ''
+    while not errors:
+        token = yield
+        if token is None:
+            SPEAKER.speak(sents[0] if sents else '')
+            _exit(data, thread, hide_on_exit)
+        else:
+            text += token
+            sents = sent_tokenize(text)
+            if len(sents) > 1:
+                for chunk in sents[0].split('\n\n'):
+                    SPEAKER.speak(chunk)
+                text = text.replace(sents[0], '', 1)
+        if errors:
+            _exit(data, thread, hide_on_exit)
 
 
 def monitor_speaker(speaker, name, wait=1, quit_after=None, debug=False):
@@ -176,3 +217,19 @@ def stream(text_or_gen):
         yield from stream_words(text_or_gen)
     else:
         yield from text_or_gen
+
+
+class CoroutinableThread(Thread):
+
+    def __init__(self, target, queue, args=(), kwargs=None):
+        # Target should be a coroutine like read_response_coro.
+        super().__init__(target=target, args=args, kwargs=kwargs)
+        self.target = target(*args, **(kwargs or {}))
+        self.queue = queue
+
+    def run(self):
+        while True:
+            val = self.queue.get()
+            self.target.send(val)
+            # Must do this after send so our coroutine gets the sentinel.
+            if val is None: return
