@@ -18,6 +18,7 @@ from dearpygui.core import *
 from dearpygui.simple import *
 import os
 from pathlib import Path
+from queue import Queue
 import speech_recognition as sr
 import time
 from threading import Thread
@@ -26,7 +27,7 @@ from htools.core import save, select
 from jabberwocky.openai_utils import query_gpt_neo
 from jabberwocky.utils import img_dims
 
-from utils import read_response, stream
+from utils import read_response, read_response_coro, stream, CoroutinableThread
 
 
 RECOGNIZER = sr.Recognizer()
@@ -592,37 +593,66 @@ def conv_query_callback(sender, data):
                          'auto_punct_id': 'conv_auto_punct'})
 
 
+# def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
+#     # Stream function provides "typing" effect.
+#     threads = []
+#     errors = []
+#     full_text = ''
+#     curr_text = ''
+#     for chunk in stream(streamable):
+#         full_text += chunk
+#         curr_text += chunk
+#         if conv_mode:
+#             chunked = CHUNKER.add(
+#                 'conv_transcribed',
+#                 CONV_MANAGER.full_conversation(include_summary=False)
+#             )
+#         else:
+#             chunked = CHUNKER.add('response', full_text)
+#         set_value(data['target_id'], chunked)
+#         if any(char in chunk for char in ('.', '!', '?', '\n\n')):
+#             if not errors:
+#                 thread = Thread(target=read_response,
+#                                 args=(curr_text, data, errors, False))
+#                 thread.start()
+#                 threads.append(thread)
+#             # Make sure this isn't reset until AFTER the speaker thread starts.
+#             curr_text = ''
+#         time.sleep(pause)
+#     if curr_text and not errors:
+#         read_response(curr_text, data)
+#     hide_item(data['interrupt_id'])
+#     hide_item(data['query_msg_id'])
+#     for thread in threads: thread.join()
+
+
+# TODO: in progress
 def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     # Stream function provides "typing" effect.
-    threads = []
-    errors = []
+    # full_text only used in default mode.
     full_text = ''
-    curr_text = ''
+    q = Queue()
+    thread = CoroutinableThread(target=read_response_coro, queue=q,
+                                args=(data, []))
+    thread.start()
     for chunk in stream(streamable):
-        full_text += chunk
-        curr_text += chunk
         if conv_mode:
             chunked = CHUNKER.add(
                 'conv_transcribed',
                 CONV_MANAGER.full_conversation(include_summary=False)
             )
         else:
+            full_text += chunk
             chunked = CHUNKER.add('response', full_text)
+        print(chunk) # TODO
         set_value(data['target_id'], chunked)
-        if any(char in chunk for char in ('.', '!', '?', '\n\n')):
-            if not errors:
-                thread = Thread(target=read_response,
-                                args=(curr_text, data, errors, False))
-                thread.start()
-                threads.append(thread)
-            # Make sure this isn't reset until AFTER the speaker thread starts.
-            curr_text = ''
+        thread.queue.put(chunk)
         time.sleep(pause)
-    if curr_text and not errors:
-        read_response(curr_text, data)
+    # Sentinel value ensures we speak any remaining sentence.
+    thread.queue.put(None)
+    thread.join()
     hide_item(data['interrupt_id'])
     hide_item(data['query_msg_id'])
-    for thread in threads: thread.join()
 
 
 def speaker_speed_callback(sender, data):

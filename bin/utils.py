@@ -83,6 +83,7 @@ def read_response_coro(data, errors=None, hide_on_exit=True):
     # Must send None as an extra last item so that this coroutine knows when
     # we're done sending in new tokens so it can check for any unread text.
     def _exit(data, thread, hide_on_exit=True):
+        set_value(data['interrupt_id'], False)
         if hide_on_exit:
             hide_item(data['interrupt_id'])
         thread.join()
@@ -102,8 +103,9 @@ def read_response_coro(data, errors=None, hide_on_exit=True):
     text = ''
     while not errors:
         token = yield
+        print('coro:', token, 'errors:', errors)
         if token is None:
-            SPEAKER.speak(sents[0] if sents else '')
+            if sents: SPEAKER.speak(sents[0])
             _exit(data, thread, hide_on_exit)
         else:
             text += token
@@ -113,6 +115,7 @@ def read_response_coro(data, errors=None, hide_on_exit=True):
                     SPEAKER.speak(chunk)
                 text = text.replace(sents[0], '', 1)
         if errors:
+            print('coro found ERRORS. exiting')
             _exit(data, thread, hide_on_exit)
 
 
