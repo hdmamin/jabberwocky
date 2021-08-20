@@ -1482,13 +1482,24 @@ X -try updating custom Thread class to use queu like stackoverflow example. Hope
 
 8/19/21
 -------
--port concurrent_typing func (don't delete old one yet)
-    -update so data is passed to thread so it can pass it to coro
--test read_response_coro WITHOUT any interrupt monitoring (keep it simple)
-    -debug if necessary
--add in interrupt monitoring
-    -test
-    -debug if necessary
+X -port concurrent_typing func (don't delete old one yet)
+    X -update so data is passed to thread so it can pass it to coro
+X -test read_response_coro WITHOUT any interrupt monitoring (keep it simple)
+    X -debug if necessary
+~ -add in interrupt monitoring
+    ~ -test
+    ~ -debug if necessary
+        UPDATE: almost working. Just found a new bug though: I allowed concurrent_speaking_typing function to run to completion without interruption but it never reached the call to hide the query_msg_id ("typing..."). This means I can't make additional queries. Also, while interruption appears to work, I'm worried there might still be an error: we see thread raising an error even though I feel like all the error handling in concurrent_speaking_typing() should have accounted for this.
+
+8/20/21
+-------
+-investigate new bug: concurrent_speaking_typing never reaches the last hide_item call when not interrupted
+-look more into what overriding thread.run() is doing. Try to nail down concerns about error in thread (seems it continues to send values after coro is done accepting them).
+-clean up code (lots of commented out bits, print statements, etc. from porting new concurrent speaking functionality)
+
+
+-------------------------------------------------------------------------------
+backlog (optional)
 
 
 -------------------------------------------------------------------------------

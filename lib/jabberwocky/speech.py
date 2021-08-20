@@ -2,6 +2,7 @@
 responses out loud.
 """
 
+from contextlib import contextmanager
 import os
 import shlex
 
@@ -17,7 +18,14 @@ class SpeakingStatusCallback(Callback):
         inputs['self'].is_speaking = True
 
     def on_end(self, func, inputs, output=None):
-        inputs['self'].is_speaking = False
+        # The point of a Speaker session is to always appear to be speaking
+        # to anything monitoring it. This allows us to monitor our interrupt
+        # checkbox while the speaker speaks without worrying that the monitor
+        # will quite between speaker sentences (recall it speaks 1 sentence at
+        # a time as tokens come in - without a session, it would appear to not
+        # be speaking during the pauses in between).
+        if not inputs['self'].in_session:
+            inputs['self'].is_speaking = False
 
 
 class Speaker:
@@ -40,6 +48,7 @@ class Speaker:
         self.voice = voice
         self.newline_pause = newline_pause
         self.is_speaking = False
+        self.in_session = False
 
         # _rate will be updated automatically by setter method.
         self._min_rate = 120
@@ -59,6 +68,22 @@ class Speaker:
     def cmd_prefix(self):
         """Must recompute in case user changes voice."""
         return f'say -v {self.voice} -r {self._rate} '
+
+    @contextmanager
+    def session(self):
+        # Use a session if we always want to appear to be speaking until some
+        # event occurs. This allows us to monitor our interrupt checkbox
+        # while the speaker speaks without worrying that the monitor
+        # will quite between speaker sentences (recall it speaks 1 sentence at
+        # a time as tokens come in - without a session, it would appear to not
+        # be speaking during the pauses in between).
+        self.in_session = True
+        self.is_speaking = True
+        try:
+            yield
+        finally:
+            self.in_session = False
+            self.is_speaking = False
 
     @handle_interrupt(cbs=SpeakingStatusCallback())
     def speak(self, text):

@@ -631,9 +631,10 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     # Stream function provides "typing" effect.
     # full_text only used in default mode.
     full_text = ''
+    errors = []
     q = Queue()
     thread = CoroutinableThread(target=read_response_coro, queue=q,
-                                args=(data, []))
+                                args=(data, errors))
     thread.start()
     for chunk in stream(streamable):
         if conv_mode:
@@ -646,10 +647,17 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
             chunked = CHUNKER.add('response', full_text)
         print(chunk) # TODO
         set_value(data['target_id'], chunked)
-        thread.queue.put(chunk)
+        try:
+            thread.queue.put(chunk)
+        except StopIteration:
+            pass
+
         time.sleep(pause)
     # Sentinel value ensures we speak any remaining sentence.
-    thread.queue.put(None)
+    try:
+        thread.queue.put(None)
+    except StopIteration:
+        pass
     thread.join()
     hide_item(data['interrupt_id'])
     hide_item(data['query_msg_id'])
