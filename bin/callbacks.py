@@ -68,11 +68,11 @@ def transcribe_callback(sender, data):
     # lowercase) but just being safe here.
     text = text[0].upper() + text[1:]
 
-    print('BEFORE:', text)   # TODO: rm
+    print('BEFORE transcribe:', text)   # TODO: rm
     if text != error_message and get_value(data['auto_punct_id']):
         _, text = MANAGER.query(task='punctuate_transcription', text=text,
                                 stream=False, strip_output=True)
-    print('AFTER:', text)
+    print('AFTER transcribe:', text)
 
     # Update text and various components now that transcription is complete.
     for id_ in show_during:

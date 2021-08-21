@@ -36,7 +36,12 @@ def label_above(name, visible_name=None):
 
 
 def read_response(response, data, errors=None, hide_on_exit=True):
-    """Read response if desired. Threads allow us to interrupt speaker if user
+    """Deprecated in favor of read_response_coro. Note that this version
+    runs the checkbox monitor while the coroutine version leaves that to the
+    concurrent_typing_speaking function (wasn't working in dearpygui otherwise,
+    though the core non-dearpygui functionality worked in ipython).
+
+    Read response if desired. Threads allow us to interrupt speaker if user
     checks a checkbox. This was surprisingly difficult - I settled on a
     partial solution that can only quit after finishing saying a
     sentence/line, so there may be a bit of a delayed response after asking
@@ -81,7 +86,7 @@ def read_response(response, data, errors=None, hide_on_exit=True):
 def read_response_coro(data, errors=None, hide_on_exit=True):
     # Must send None as an extra last item so that this coroutine knows when
     # we're done sending in new tokens so it can check for any unread text.
-    def _exit(data, thread, hide_on_exit=True):
+    def _exit(data, hide_on_exit=True):
         set_value(data['interrupt_id'], False)
         if hide_on_exit:
             hide_item(data['interrupt_id'])
@@ -96,7 +101,6 @@ def read_response_coro(data, errors=None, hide_on_exit=True):
 
     # Watch out for user requests to interrupt speaker. This will be joined in
     # _exit().
-    thread = None # TODO
     text = ''
     # Must start manually otherwise contextmanager never exits. Seems to be
     # dearpygui-related since it works in ipython.
@@ -105,7 +109,7 @@ def read_response_coro(data, errors=None, hide_on_exit=True):
         token = yield
         if token is None:
             if sents: SPEAKER.speak(sents[0])
-            _exit(data, thread, hide_on_exit)
+            _exit(data, hide_on_exit)
         else:
             text += token
             sents = sent_tokenize(text)
@@ -114,7 +118,7 @@ def read_response_coro(data, errors=None, hide_on_exit=True):
                     SPEAKER.speak(chunk)
                 text = text.replace(sents[0], '', 1)
         if errors:
-            _exit(data, thread, hide_on_exit)
+            _exit(data, hide_on_exit)
 
 
 def monitor_speaker(speaker, name, wait=1, quit_after=None, debug=False):

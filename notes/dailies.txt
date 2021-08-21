@@ -1501,6 +1501,7 @@ X -investigate new bug: concurrent_speaking_typing never reaches the last hide_i
 8/21/21
 -------
 -finish cleaning up code in concurrent_speaking funcs, read_response funcs (comments, print statements, etc.)
+-bug: can't seem to halt listener? Can only end conv which erases history or wait for listener to time out.
 -See if I can reproduce issue where thread encounters error even though it doesn't raise an error in the overall program (seems it continues to send values after coro is done accepting them). Think maybe I fixed this with the "if val is None" check in thread.run()? Maybe look more into what overriding thread.run() is doing. 
 -look into gpt-neo funcs - seems like these stopped working after a while
 
@@ -1508,6 +1509,7 @@ X -investigate new bug: concurrent_speaking_typing never reaches the last hide_i
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-prototype god prompt (check out fine tuning endpoint?)
 -look into other pyinstaller alternatives (py2app looks alright but want to explore options)
 -description viewable on pypi (think this needs to be rst, not md)
 -look into gpt-neo funcs - seems like these stopped working after a while
