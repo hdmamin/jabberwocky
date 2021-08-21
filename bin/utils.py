@@ -62,7 +62,7 @@ def read_response(response, data, errors=None, hide_on_exit=True):
     if errors is None:
         errors = []
     thread = Thread(target=monitor_interrupt_checkbox,
-                    args=(data['interrupt_id'], errors))
+                    args=(data['interrupt_id'], errors, SPEAKER))
     thread.start()
     try:
         for sent in sent_tokenize(response):
@@ -150,7 +150,8 @@ def monitor_speaker(speaker, name, wait=1, quit_after=None, debug=False):
             break
 
 
-def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None,
+def monitor_interrupt_checkbox(box_id, errors, obj, attr='is_speaking',
+                               wait=1, initial_grace_period=0, quit_after=None,
                                error_type=RuntimeError):
     """Track when the interrupt option is checked (run this function in a
     separate thread). Couldn't figure out a way to check this with a button
@@ -161,13 +162,17 @@ def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None,
     ----------
     box_id: str
         Name of dearpygui checkbox to monitor.
-    errors: list
+    errors: list or None
         List to track errors in main thread. It starts out empty but this
         function will append True (arbitrarily) if the checkbox of interest is
         checked. The main thread can then periodically check if the list
         remains empty. This is a workaround solution to the trickier task of
         propagating an exception from a thread to the main thread (which I
         read may not be a good idea anyway).
+
+        If None, an error will be raised directly instead of simply being
+        appended to a list. You must use PropagatingThread to be able to catch
+        this.
     wait: int
         How frequently to check if the speaker is speaking. A value of 2 means
         we'd check once every 2 seconds.
@@ -183,13 +188,21 @@ def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None,
     start = time.perf_counter()
     while True:
         if get_value(box_id):
-            errors.append(error_type('User interrupted speaking session.'))
+            if errors is None:
+                raise error_type('User interrupted session.')
+            else:
+                errors.append(error_type('User interrupted session.'))
             print('Checkbox monitor quitting due to checkbox selection.')
             break
         time.sleep(wait)
-        if not SPEAKER.is_speaking:
-            print('Checkbox monitor quitting due to end of speech.')
-            break
+        if not getattr(obj, attr):
+            if time.perf_counter() - start > initial_grace_period:
+                print('Checkbox monitor quitting because obj finished '
+                      'speaking/listening.')
+                break
+            else:
+                print('Checkbox monitor not exiting because we\'re still in '
+                      'the initial grace period.')
         if quit_after and time.perf_counter() - start > quit_after:
             print(f'Checkbox monitor quitting due to time exceeded.')
             break
@@ -238,3 +251,44 @@ class CoroutinableThread(Thread):
             self.target.send(val)
             # Must do this after send so our coroutine gets the sentinel.
             if val is None: return
+
+
+class PropagatingThread(Thread):
+    """Thread that can propagate an exception that occurs in the thread
+    to the caller. This can happen either immediately (when the exception
+    occurs) or when the thread is joined. This also makes thread.join() return
+    the value returned by the thread's target function.
+
+    Based on version here:
+    https://stackoverflow.com/questions/2829329/catch-a-threads-exception-in-the-caller-thread
+    """
+
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs=None, *, daemon=None,
+                 raise_immediately=False):
+        """
+        Parameters
+        ----------
+        raise_immediately: bool
+            If True, raise any exception as soon as it occurs. Otherwise, it
+            will be raised on the call to thread.join().
+        """
+        super().__init__(group=group, target=target, name=name,
+                         args=args, kwargs=kwargs, daemon=daemon)
+        self.raise_immediately = raise_immediately
+        self.exception = None
+        self.result = None
+
+    def run(self):
+        try:
+            self.result = self._target(*self._args, **self._kwargs)
+        except Exception as e:
+            self.exception = e
+            if self.raise_immediately:
+                raise e
+
+    def join(self, timeout=None):
+        super().join(timeout)
+        if not self.raise_immediately and self.exception:
+            raise self.exception
+        return self.result

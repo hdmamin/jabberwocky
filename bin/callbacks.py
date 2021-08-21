@@ -28,10 +28,11 @@ from jabberwocky.openai_utils import query_gpt_neo
 from jabberwocky.utils import img_dims
 
 from utils import read_response, read_response_coro, stream, \
-    monitor_interrupt_checkbox, CoroutinableThread
+    monitor_interrupt_checkbox, CoroutinableThread, PropagatingThread
 
 
 RECOGNIZER = sr.Recognizer()
+RECOGNIZER.is_listening = False
 RECOGNIZER.pause_threshold = 0.9
 
 
@@ -55,29 +56,48 @@ def transcribe_callback(sender, data):
 
     # Record until pause. Default is to stop recording when the speaker pauses
     # for 0.8 seconds, which I found a tiny bit short for my liking.
-    with sr.Microphone() as source:
-        RECOGNIZER.adjust_for_ambient_noise(source)
-        audio = RECOGNIZER.listen(source)
+    show_item(data['stop_record_id'])
+    thread = PropagatingThread(target=monitor_interrupt_checkbox,
+                               kwargs={'box_id': data['stop_record_id'],
+                                       'errors': None, 'obj': RECOGNIZER,
+                                       'attr': 'is_listening',
+                                       'wait': .25,
+                                       'initial_grace_period': 1},
+                               raise_immediately=True)
     try:
-        text = RECOGNIZER.recognize_google(audio)
-    except sr.UnknownValueError:
+        thread.start()
+        with sr.Microphone() as source:
+            RECOGNIZER.is_listening = True
+            RECOGNIZER.adjust_for_ambient_noise(source)
+            audio = RECOGNIZER.listen(source)
+        RECOGNIZER.is_listening = False
+        try:
+            text = RECOGNIZER.recognize_google(audio)
+        except sr.UnknownValueError:
+            text = error_message
+
+        # Don't just use capitalize because this removes existing capitals.
+        # Probably don't have these anyway (transcription seems to usually be
+        # lowercase) but just being safe here.
+        text = text[0].upper() + text[1:]
+
+        log_debug('BEFORE transcribe: ' + text)
+        if text != error_message and get_value(data['auto_punct_id']):
+            _, text = MANAGER.query(task='punctuate_transcription', text=text,
+                                    stream=False, strip_output=True)
+        log_debug('AFTER transcribe: ' + text)
+
+        # Cleanup various messages/widgets.
+        set_value(data['stop_record_id'], False)
+        hide_item(data['stop_record_id'])
+        for id_ in show_during:
+            hide_item(id_)
+    except Exception as e:
+        print('transcribe halted due to:', e)
         text = error_message
-
-    # Don't just use capitalize because this removes existing capitals.
-    # Probably don't have these anyway (transcription seems to usually be
-    # lowercase) but just being safe here.
-    text = text[0].upper() + text[1:]
-
-    print('BEFORE transcribe:', text)   # TODO: rm
-    if text != error_message and get_value(data['auto_punct_id']):
-        _, text = MANAGER.query(task='punctuate_transcription', text=text,
-                                stream=False, strip_output=True)
-    print('AFTER transcribe:', text)
+    thread.join()
 
     # Update text and various components now that transcription is complete.
-    for id_ in show_during:
-        hide_item(id_)
-
     if is_item_visible('Input'):
         set_value(data['target_id'], text)
         # If not in conversation mode, manually call this so prompt is updated
@@ -594,40 +614,6 @@ def conv_query_callback(sender, data):
                          'auto_punct_id': 'conv_auto_punct'})
 
 
-# def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
-#     # Stream function provides "typing" effect.
-#     threads = []
-#     errors = []
-#     full_text = ''
-#     curr_text = ''
-#     for chunk in stream(streamable):
-#         full_text += chunk
-#         curr_text += chunk
-#         if conv_mode:
-#             chunked = CHUNKER.add(
-#                 'conv_transcribed',
-#                 CONV_MANAGER.full_conversation(include_summary=False)
-#             )
-#         else:
-#             chunked = CHUNKER.add('response', full_text)
-#         set_value(data['target_id'], chunked)
-#         if any(char in chunk for char in ('.', '!', '?', '\n\n')):
-#             if not errors:
-#                 thread = Thread(target=read_response,
-#                                 args=(curr_text, data, errors, False))
-#                 thread.start()
-#                 threads.append(thread)
-#             # Make sure this isn't reset until AFTER the speaker thread starts.
-#             curr_text = ''
-#         time.sleep(pause)
-#     if curr_text and not errors:
-#         read_response(curr_text, data)
-#     hide_item(data['interrupt_id'])
-#     hide_item(data['query_msg_id'])
-#     for thread in threads: thread.join()
-
-
-# TODO: in progress
 def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     # Stream function provides "typing" effect.
     # full_text only used in default mode.

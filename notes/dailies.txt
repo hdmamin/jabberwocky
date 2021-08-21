@@ -1500,10 +1500,18 @@ X -investigate new bug: concurrent_speaking_typing never reaches the last hide_i
 
 8/21/21
 -------
--finish cleaning up code in concurrent_speaking funcs, read_response funcs (comments, print statements, etc.)
--bug: can't seem to halt listener? Can only end conv which erases history or wait for listener to time out.
+X -finish cleaning up code in concurrent_speaking funcs, read_response funcs (comments, print statements, etc.)
+~ -bug: can't seem to halt listener? Can only end conv which erases history or wait for listener to time out.
+    UPDATE: added checkbox to allow us to interrupt listener. Wrote propagatingThread to see if we can raise error directly rather than using convoluted method of passing list of errors around and constnatly checking it. Tentatively works in ipython but in dearpygui it seems that we're still not catching errors in the main thread.
 -See if I can reproduce issue where thread encounters error even though it doesn't raise an error in the overall program (seems it continues to send values after coro is done accepting them). Think maybe I fixed this with the "if val is None" check in thread.run()? Maybe look more into what overriding thread.run() is doing. 
 -look into gpt-neo funcs - seems like these stopped working after a while
+
+8/22/21
+-------
+-investigate stop_recording bug. Seems PropagatingThread works in ipython but not in dearpygui. Investigate how dearpygui deals with threads (guessing there's some magic going on that's causing problems here).
+-See if I can reproduce issue where thread encounters error even though it doesn't raise an error in the overall program (seems it continues to send values after coro is done accepting them). Think maybe I fixed this with the "if val is None" check in thread.run()? Maybe look more into what overriding thread.run() is doing. 
+-look into gpt-neo funcs - seems like these stopped working after a while
+
 
 
 -------------------------------------------------------------------------------

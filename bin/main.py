@@ -195,7 +195,8 @@ class App:
             add_button('record_btn', label='Record',
                        callback_data={'show_during_ids': ['record_msg'],
                                       'target_id': 'transcribed_text',
-                                      'auto_punct_id': 'auto_punct'},
+                                      'auto_punct_id': 'auto_punct',
+                                      'stop_record_id': 'stop_record'},
                        callback=transcribe_callback)
             with tooltip('record_btn', 'record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
@@ -263,8 +264,12 @@ class App:
                          default_value='Failed to save file.', show=False)
 
             add_text('record_msg', default_value='Listening...', show=False)
+            add_same_line()
+            add_checkbox('stop_record', label='Stop Listening',
+                         default_value=False, show=False)
 
             # Label is displayed next to input unless we manually suppress it.
+            add_spacing()
             with label_above('transcribed_text'):
                 add_input_text('transcribed_text', default_value='',
                                multiline=True,
