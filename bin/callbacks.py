@@ -658,7 +658,9 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
         thread.queue.put(None)
     except StopIteration:
         pass
+    print('concurrent func: PRE JOIN')
     thread.join()
+    print('AFTER PUT. HIDE ITEMS.')
     hide_item(data['interrupt_id'])
     hide_item(data['query_msg_id'])
 
