@@ -76,14 +76,23 @@ class Speaker:
         # while the speaker speaks without worrying that the monitor
         # will quite between speaker sentences (recall it speaks 1 sentence at
         # a time as tokens come in - without a session, it would appear to not
-        # be speaking during the pauses in between).
-        self.in_session = True
-        self.is_speaking = True
+        # be speaking during the pauses in between). Refactor this into start
+        # and end session methods because I had trouble getting the session
+        # syntatic sugar to work inside a coroutine that loops (
+        # read_response_coro, specifically).
+        self.start_session()
         try:
             yield
         finally:
-            self.in_session = False
-            self.is_speaking = False
+            self.end_session()
+
+    def start_session(self):
+        self.in_session = True
+        self.is_speaking = True
+
+    def end_session(self):
+        self.in_session = False
+        self.is_speaking = False
 
     @handle_interrupt(cbs=SpeakingStatusCallback())
     def speak(self, text):

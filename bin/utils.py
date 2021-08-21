@@ -77,21 +77,15 @@ def read_response(response, data, errors=None, hide_on_exit=True):
     thread.join()
 
 
-# IN PROGRESS. Has changes not in notebook.
 @coroutine
 def read_response_coro(data, errors=None, hide_on_exit=True):
     # Must send None as an extra last item so that this coroutine knows when
     # we're done sending in new tokens so it can check for any unread text.
     def _exit(data, thread, hide_on_exit=True):
-        print('exit: before set_value')
         set_value(data['interrupt_id'], False)
-        print('exit: after set_value')
         if hide_on_exit:
-            print('in hide_on_exit')
             hide_item(data['interrupt_id'])
-        # print('exit: after hide on exit')
-        # thread.join()
-        print('exit: after join')
+        SPEAKER.end_session()
 
     show_item(data['interrupt_id'])
     if errors is None:
@@ -102,28 +96,25 @@ def read_response_coro(data, errors=None, hide_on_exit=True):
 
     # Watch out for user requests to interrupt speaker. This will be joined in
     # _exit().
-    thread = Thread(target=monitor_interrupt_checkbox,
-                    args=(data['interrupt_id'], errors))
-    thread.start()
+    thread = None # TODO
     text = ''
-    with SPEAKER.session():
-        while not errors:
-            token = yield
-            print('coro:', token, 'errors:', errors)
-            if token is None:
-                if sents: SPEAKER.speak(sents[0])
-                print('coro exiting bc token is NONE.')
-                _exit(data, thread, hide_on_exit)
-            else:
-                text += token
-                sents = sent_tokenize(text)
-                if len(sents) > 1:
-                    for chunk in sents[0].split('\n\n'):
-                        SPEAKER.speak(chunk)
-                    text = text.replace(sents[0], '', 1)
-            if errors:
-                print('coro found ERRORS. exiting')
-                _exit(data, thread, hide_on_exit)
+    # Must start manually otherwise contextmanager never exits. Seems to be
+    # dearpygui-related since it works in ipython.
+    SPEAKER.start_session()
+    while not errors:
+        token = yield
+        if token is None:
+            if sents: SPEAKER.speak(sents[0])
+            _exit(data, thread, hide_on_exit)
+        else:
+            text += token
+            sents = sent_tokenize(text)
+            if len(sents) > 1:
+                for chunk in sents[0].split('\n\n'):
+                    SPEAKER.speak(chunk)
+                text = text.replace(sents[0], '', 1)
+        if errors:
+            _exit(data, thread, hide_on_exit)
 
 
 def monitor_speaker(speaker, name, wait=1, quit_after=None, debug=False):
@@ -193,8 +184,6 @@ def monitor_interrupt_checkbox(box_id, errors, wait=1, quit_after=None,
             break
         time.sleep(wait)
         if not SPEAKER.is_speaking:
-            # TODO
-            print('is_speaking', SPEAKER.is_speaking, 'in_session', SPEAKER.in_session)
             print('Checkbox monitor quitting due to end of speech.')
             break
         if quit_after and time.perf_counter() - start > quit_after:

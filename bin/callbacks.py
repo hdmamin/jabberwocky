@@ -27,7 +27,8 @@ from htools.core import save, select
 from jabberwocky.openai_utils import query_gpt_neo
 from jabberwocky.utils import img_dims
 
-from utils import read_response, read_response_coro, stream, CoroutinableThread
+from utils import read_response, read_response_coro, stream, \
+    monitor_interrupt_checkbox, CoroutinableThread
 
 
 RECOGNIZER = sr.Recognizer()
@@ -633,9 +634,12 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     full_text = ''
     errors = []
     q = Queue()
-    thread = CoroutinableThread(target=read_response_coro, queue=q,
-                                args=(data, errors))
-    thread.start()
+    monitor_thread = Thread(target=monitor_interrupt_checkbox,
+                            args=(data['interrupt_id'], errors))
+    speaker_thread = CoroutinableThread(target=read_response_coro, queue=q,
+                                        args=(data, errors))
+    monitor_thread.start()
+    speaker_thread.start()
     for chunk in stream(streamable):
         if conv_mode:
             chunked = CHUNKER.add(
@@ -645,22 +649,20 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
         else:
             full_text += chunk
             chunked = CHUNKER.add('response', full_text)
-        print(chunk) # TODO
         set_value(data['target_id'], chunked)
         try:
-            thread.queue.put(chunk)
+            speaker_thread.queue.put(chunk)
         except StopIteration:
             pass
 
         time.sleep(pause)
     # Sentinel value ensures we speak any remaining sentence.
     try:
-        thread.queue.put(None)
+        speaker_thread.queue.put(None)
     except StopIteration:
         pass
-    print('concurrent func: PRE JOIN')
-    thread.join()
-    print('AFTER PUT. HIDE ITEMS.')
+    speaker_thread.join()
+    monitor_thread.join()
     hide_item(data['interrupt_id'])
     hide_item(data['query_msg_id'])
 

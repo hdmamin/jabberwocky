@@ -1493,13 +1493,16 @@ X -test read_response_coro WITHOUT any interrupt monitoring (keep it simple)
 
 8/20/21
 -------
--investigate new bug: concurrent_speaking_typing never reaches the last hide_item call when not interrupted
+X -investigate new bug: concurrent_speaking_typing never reaches the last hide_item call when not interrupted
+    UPDATE: speaker contextmanager was never closing to checkbox monitor was never breaking out of its infinite loop so we could never join the monitor thread. Updated speaker session so we can start and end it manually.
 -look more into what overriding thread.run() is doing. Try to nail down concerns about error in thread (seems it continues to send values after coro is done accepting them).
--clean up code (lots of commented out bits, print statements, etc. from porting new concurrent speaking functionality)
+~ -clean up code (lots of commented out bits, print statements, etc. from porting new concurrent speaking functionality)
 
-
--------------------------------------------------------------------------------
-backlog (optional)
+8/21/21
+-------
+-finish cleaning up code in concurrent_speaking funcs, read_response funcs (comments, print statements, etc.)
+-See if I can reproduce issue where thread encounters error even though it doesn't raise an error in the overall program (seems it continues to send values after coro is done accepting them). Think maybe I fixed this with the "if val is None" check in thread.run()? Maybe look more into what overriding thread.run() is doing. 
+-look into gpt-neo funcs - seems like these stopped working after a while
 
 
 -------------------------------------------------------------------------------
