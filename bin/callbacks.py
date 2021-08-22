@@ -64,13 +64,13 @@ def transcribe_callback(sender, data):
                                        'wait': .25,
                                        'initial_grace_period': 1},
                                raise_immediately=True)
+    RECOGNIZER.is_listening = True
+    thread.start()
+    # User can cancel listener at any point within this try block.
     try:
-        thread.start()
         with sr.Microphone() as source:
-            RECOGNIZER.is_listening = True
             RECOGNIZER.adjust_for_ambient_noise(source)
             audio = RECOGNIZER.listen(source)
-        RECOGNIZER.is_listening = False
         try:
             text = RECOGNIZER.recognize_google(audio)
         except sr.UnknownValueError:
@@ -82,20 +82,23 @@ def transcribe_callback(sender, data):
         text = text[0].upper() + text[1:]
 
         log_debug('BEFORE transcribe: ' + text)
-        if text != error_message and get_value(data['auto_punct_id']):
+        if text and text != error_message and get_value(data['auto_punct_id']):
             _, text = MANAGER.query(task='punctuate_transcription', text=text,
                                     stream=False, strip_output=True)
         log_debug('AFTER transcribe: ' + text)
 
-        # Cleanup various messages/widgets.
-        set_value(data['stop_record_id'], False)
-        hide_item(data['stop_record_id'])
-        for id_ in show_during:
-            hide_item(id_)
-    except Exception as e:
+    except (KeyboardInterrupt, SystemExit) as e:
         print('transcribe halted due to:', e)
-        text = error_message
+        text = ''
+    finally:
+        RECOGNIZER.is_listening = False
     thread.join()
+
+    # Cleanup various messages/widgets.
+    set_value(data['stop_record_id'], False)
+    hide_item(data['stop_record_id'])
+    for id_ in show_during:
+        hide_item(id_)
 
     # Update text and various components now that transcription is complete.
     if is_item_visible('Input'):

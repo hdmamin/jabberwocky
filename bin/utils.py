@@ -9,6 +9,7 @@ from dearpygui.core import *
 from dearpygui.simple import *
 from nltk.tokenize import sent_tokenize
 from threading import Thread
+import _thread
 import time
 
 from htools.meta import coroutine
@@ -188,11 +189,11 @@ def monitor_interrupt_checkbox(box_id, errors, obj, attr='is_speaking',
     start = time.perf_counter()
     while True:
         if get_value(box_id):
+            print('Checkbox monitor quitting due to checkbox selection.')
             if errors is None:
                 raise error_type('User interrupted session.')
             else:
                 errors.append(error_type('User interrupted session.'))
-            print('Checkbox monitor quitting due to checkbox selection.')
             break
         time.sleep(wait)
         if not getattr(obj, attr):
@@ -254,12 +255,17 @@ class CoroutinableThread(Thread):
 
 
 class PropagatingThread(Thread):
-    """Thread that can propagate an exception that occurs in the thread
-    to the caller. This can happen either immediately (when the exception
-    occurs) or when the thread is joined. This also makes thread.join() return
-    the value returned by the thread's target function.
+    """Thread that will raise an exception in the calling thread as soon as one
+    occurs in the worker thread. You must use a KeyboardInterrupt or
+    BaseException in your try/except block since that is the only type of
+    exception we can raise. If you don't need the exception to be raised
+    immediately, you can set raise_immediately=False and it won't be propagated
+    until the thread is joined.
 
-    Based on version here:
+    thread.join() also returns the value returned by the thread's target
+    function.
+
+    Partially based on version here, though that can only raise on join():
     https://stackoverflow.com/questions/2829329/catch-a-threads-exception-in-the-caller-thread
     """
 
@@ -270,8 +276,11 @@ class PropagatingThread(Thread):
         Parameters
         ----------
         raise_immediately: bool
-            If True, raise any exception as soon as it occurs. Otherwise, it
-            will be raised on the call to thread.join().
+            If True, raise any exception as soon as it occurs. In order to
+            propagate this to the calling thread, we are forced to use a
+            KeyboardInterrupt. No information about the actual exception will
+            be propagated. If False, the actual exception will be raised on
+            the call to thread.join().
         """
         super().__init__(group=group, target=target, name=name,
                          args=args, kwargs=kwargs, daemon=daemon)
@@ -285,7 +294,9 @@ class PropagatingThread(Thread):
         except Exception as e:
             self.exception = e
             if self.raise_immediately:
-                raise e
+                print('RAISE in thread.run:', e)
+                _thread.interrupt_main()
+                print('post raise')
 
     def join(self, timeout=None):
         super().join(timeout)

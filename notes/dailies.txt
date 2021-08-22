@@ -1508,8 +1508,14 @@ X -finish cleaning up code in concurrent_speaking funcs, read_response funcs (co
 
 8/22/21
 -------
--investigate stop_recording bug. Seems PropagatingThread works in ipython but not in dearpygui. Investigate how dearpygui deals with threads (guessing there's some magic going on that's causing problems here).
--See if I can reproduce issue where thread encounters error even though it doesn't raise an error in the overall program (seems it continues to send values after coro is done accepting them). Think maybe I fixed this with the "if val is None" check in thread.run()? Maybe look more into what overriding thread.run() is doing. 
+~ -investigate stop_recording bug. Seems PropagatingThread works in ipython but not in dearpygui. Investigate how dearpygui deals with threads (guessing there's some magic going on that's causing problems here).
+    UPDATE: realized PropagatingThread actually was NOT working as intended even in ipython. Fixed that but found that while new method works in ipython, it does not work in dearpygui. Also found that dearpygui used to use run_async_function for this type of thing but removed it in favor of threads. Even _thread.interrupt_main() does not work in dearpygui.
+
+8/23/21
+-------
+-brainstorm more ways around threading error propagation problem
+    -look into adding checkbox callback that raises error directly (why didn't I do this earlier? I thought maybe this wasn't an option for checkbox but it looks like it is)
+    -look into speech_recognition interruption strategies (that's the main thing I want to interrupt. Investigated briefly already and it's not promising)
 -look into gpt-neo funcs - seems like these stopped working after a while
 
 
