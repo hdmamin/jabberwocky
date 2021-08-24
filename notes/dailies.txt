@@ -1514,10 +1514,26 @@ X -finish cleaning up code in concurrent_speaking funcs, read_response funcs (co
 8/23/21
 -------
 -brainstorm more ways around threading error propagation problem
-    -look into adding checkbox callback that raises error directly (why didn't I do this earlier? I thought maybe this wasn't an option for checkbox but it looks like it is)
-    -look into speech_recognition interruption strategies (that's the main thing I want to interrupt. Investigated briefly already and it's not promising)
+    X -look into adding checkbox callback that raises error directly (why didn't I do this earlier? I thought maybe this wasn't an option for checkbox but it looks like it is)
+        UPDATE: Ah, that's why. Callback blocks next callback, so once we hit record no callbacks will trigger until that function exits, meaning interrupt callback can't interrupt until it's too late.
+    X -look into speech_recognition interruption strategies (that's the main thing I want to interrupt. Investigated briefly already and it's not promising)
+        UPDATE: no promising leads.
+    UPDATE: also tried making thread a global var, starting thread with just the monitor thread and the speech_recognition stuff (was hoping that bc we're not just in the callback thread that the interrupt would work again) but neither worked. New ideas added below.
+    -try writing interruptable thread, then launch monitor in 1 thread and listener in 1 interruptable thread. Then use inf loop to frequently check if monitor thread is alive and if not, interrupt listener thread. May be able to use existing _stop method.
+    ~ -similar to above but use multiprocessing.Process. Has built in terminate() method.
+        UPDATE: this looks like it's working! Still need to polish things up a bit and test diff situations but this looks promising.
 -look into gpt-neo funcs - seems like these stopped working after a while
 
+8/24/21
+-------
+-confirm process-based approach to interruption works when quitting immediately
+    -when quitting mid speech
+    -when quitting after speech, during google TTS
+    -when quitting after TTS, during gpt3 punctuate
+-clean up transcribe_callback, transcribe, concurrent_typing, Propagating thread, monitor_checkbox funcs (comments, print statements, etc.)
+    -rm useless return value from transcribe (or figure out a way to return it and get rid of results.append)
+-check interruption works in conv mode - does this require any changes?
+-look into gpt-neo funcs - seems like these stopped working after a while
 
 
 -------------------------------------------------------------------------------

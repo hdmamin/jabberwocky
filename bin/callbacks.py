@@ -16,7 +16,7 @@ looking at this module in isolation.
 from datetime import datetime as dt
 from dearpygui.core import *
 from dearpygui.simple import *
-import os
+from multiprocessing import Process
 from pathlib import Path
 from queue import Queue
 import speech_recognition as sr
@@ -34,6 +34,30 @@ from utils import read_response, read_response_coro, stream, \
 RECOGNIZER = sr.Recognizer()
 RECOGNIZER.is_listening = False
 RECOGNIZER.pause_threshold = 0.9
+
+
+def transcribe(data, error_message, results):
+    # User can cancel listener at any point within this try block.
+    with sr.Microphone() as source:
+        RECOGNIZER.adjust_for_ambient_noise(source)
+        audio = RECOGNIZER.listen(source)
+    try:
+        text = RECOGNIZER.recognize_google(audio)
+    except sr.UnknownValueError:
+        text = error_message
+
+    # Don't just use capitalize because this removes existing capitals.
+    # Probably don't have these anyway (transcription seems to usually be
+    # lowercase) but just being safe here.
+    text = text[0].upper() + text[1:]
+
+    log_debug('BEFORE transcribe: ' + text)
+    if text and text != error_message and get_value(data['auto_punct_id']):
+        _, text = MANAGER.query(task='punctuate_transcription', text=text,
+                                stream=False, strip_output=True)
+    log_debug('AFTER transcribe: ' + text)
+    results.append(text)
+    return text
 
 
 def transcribe_callback(sender, data):
@@ -66,32 +90,52 @@ def transcribe_callback(sender, data):
                                raise_immediately=True)
     RECOGNIZER.is_listening = True
     thread.start()
-    # User can cancel listener at any point within this try block.
-    try:
-        with sr.Microphone() as source:
-            RECOGNIZER.adjust_for_ambient_noise(source)
-            audio = RECOGNIZER.listen(source)
-        try:
-            text = RECOGNIZER.recognize_google(audio)
-        except sr.UnknownValueError:
-            text = error_message
 
-        # Don't just use capitalize because this removes existing capitals.
-        # Probably don't have these anyway (transcription seems to usually be
-        # lowercase) but just being safe here.
-        text = text[0].upper() + text[1:]
+    # TODO start
+    results = []
+    process = Process(target=transcribe, args=(data, error_message, results))
+    process.start()
+    while True:
+        time.sleep(.1)
+        if not thread.is_alive():
+            print('THREAD DEAD. TERMINATING PROCESS.')
+            process.terminate()
+            break
 
-        log_debug('BEFORE transcribe: ' + text)
-        if text and text != error_message and get_value(data['auto_punct_id']):
-            _, text = MANAGER.query(task='punctuate_transcription', text=text,
-                                    stream=False, strip_output=True)
-        log_debug('AFTER transcribe: ' + text)
+    process.join()
+    RECOGNIZER.is_listening = False
+    if results:
+        text = results[0]
+    else:
+        text = 'CANCELED' # TODO change to empty str
+    # TODO end
 
-    except (KeyboardInterrupt, SystemExit) as e:
-        print('transcribe halted due to:', e)
-        text = ''
-    finally:
-        RECOGNIZER.is_listening = False
+    # # User can cancel listener at any point within this try block.
+    # try:
+    #     with sr.Microphone() as source:
+    #         RECOGNIZER.adjust_for_ambient_noise(source)
+    #         audio = RECOGNIZER.listen(source)
+    #     try:
+    #         text = RECOGNIZER.recognize_google(audio)
+    #     except sr.UnknownValueError:
+    #         text = error_message
+    #
+    #     # Don't just use capitalize because this removes existing capitals.
+    #     # Probably don't have these anyway (transcription seems to usually be
+    #     # lowercase) but just being safe here.
+    #     text = text[0].upper() + text[1:]
+    #
+    #     log_debug('BEFORE transcribe: ' + text)
+    #     if text and text != error_message and get_value(data['auto_punct_id']):
+    #         _, text = MANAGER.query(task='punctuate_transcription', text=text,
+    #                                 stream=False, strip_output=True)
+    #     log_debug('AFTER transcribe: ' + text)
+    #
+    # except KeyboardInterrupt as e:
+    #     print('transcribe halted due to:', e)
+    #     text = ''
+    # finally:
+    #     RECOGNIZER.is_listening = False
     thread.join()
 
     # Cleanup various messages/widgets.

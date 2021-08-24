@@ -7,6 +7,7 @@ will show errors since SPEAKER is undefined at definition time).
 from contextlib import contextmanager as ctx_manager
 from dearpygui.core import *
 from dearpygui.simple import *
+from functools import wraps
 from nltk.tokenize import sent_tokenize
 from threading import Thread
 import _thread
@@ -254,6 +255,22 @@ class CoroutinableThread(Thread):
             if val is None: return
 
 
+def interrupt_on_complete(meth):
+    """Decorator that powers PropagatingThread. We do this here rather than
+    interrupting directly from run() method because run must return in order
+    for thread to stop, but of course we can't do anything directly from the
+    method after returning.
+    """
+    @wraps(meth)
+    def wrapper(*args, **kwargs):
+        res = meth(*args, **kwargs)
+        if args[0].exception and args[0].raise_immediately:
+            print('INTERRUPTING')
+            _thread.interrupt_main()
+        return res
+    return wrapper
+
+
 class PropagatingThread(Thread):
     """Thread that will raise an exception in the calling thread as soon as one
     occurs in the worker thread. You must use a KeyboardInterrupt or
@@ -288,18 +305,16 @@ class PropagatingThread(Thread):
         self.exception = None
         self.result = None
 
+    @interrupt_on_complete
     def run(self):
         try:
             self.result = self._target(*self._args, **self._kwargs)
         except Exception as e:
             self.exception = e
-            if self.raise_immediately:
-                print('RAISE in thread.run:', e)
-                _thread.interrupt_main()
-                print('post raise')
 
     def join(self, timeout=None):
         super().join(timeout)
         if not self.raise_immediately and self.exception:
             raise self.exception
         return self.result
+
