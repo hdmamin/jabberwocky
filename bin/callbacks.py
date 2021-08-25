@@ -17,6 +17,7 @@ from datetime import datetime as dt
 from dearpygui.core import *
 from dearpygui.simple import *
 from multiprocessing import Process
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from queue import Queue
 import speech_recognition as sr
@@ -38,13 +39,17 @@ RECOGNIZER.pause_threshold = 0.9
 
 def transcribe(data, error_message, results):
     # User can cancel listener at any point within this try block.
+    print('in transcribe')
     with sr.Microphone() as source:
         RECOGNIZER.adjust_for_ambient_noise(source)
+        print('start listen')
         audio = RECOGNIZER.listen(source)
     try:
+        print('start try')
         text = RECOGNIZER.recognize_google(audio)
     except sr.UnknownValueError:
         text = error_message
+    print('post except:', text)
 
     # Don't just use capitalize because this removes existing capitals.
     # Probably don't have these anyway (transcription seems to usually be
@@ -88,15 +93,25 @@ def transcribe_callback(sender, data):
 
     # TODO start
     results = []
-    process = Process(target=transcribe, args=(data, error_message, results))
-    process.start()
+    # process = Process(target=transcribe, args=(data, error_message, results))
+    # process.start()
+    pool = ThreadPool(processes=1)
+    pool_res = pool.apply_async(transcribe, args=(data, error_message, results))
+    print('post async')
     while True:
         time.sleep(.1)
         if not thread.is_alive():
             print('THREAD DEAD. TERMINATING PROCESS.')
-            process.terminate()
+            # process.terminate()
+            pool.terminate()
             break
-    process.join()
+        if pool_res.get():
+            pool.close()
+            break
+    # process.join()
+    print('post while')
+    pool.join()
+    print('post join')
     if results:
         text = results[0]
     else:
@@ -105,16 +120,19 @@ def transcribe_callback(sender, data):
     # Separate this from the terminatable process because it writes to a log
     # file and I haven't found how to cleanup on terminate(). Only allow
     # cancellation before or after this step.
-    print('before if'); time.sleep(4) # TODO
+    print('before if')
+    # time.sleep(4) # TODO
     if thread.is_alive() and text and text != error_message and text != 'CANCELED' and get_value(data['auto_punct_id']):
         log_debug('BEFORE transcribe: ' + text)
-        print('in if pre query'); time.sleep(4) # TODO
+        print('in if pre query')
+        # time.sleep(4) # TODO
         _, text = MANAGER.query(task='punctuate_transcription', text=text,
                                 stream=False, strip_output=True)
         log_debug('AFTER transcribe: ' + text)
 
 
-    print('after if post query'); time.sleep(4) # TODO
+    print('after if post query')
+    # time.sleep(4) # TODO
     if not thread.is_alive():
         text = 'CANCELED'
     # Techncially recognizer stopped listening earlier but we're just using

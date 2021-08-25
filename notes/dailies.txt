@@ -1528,8 +1528,8 @@ X -finish cleaning up code in concurrent_speaking funcs, read_response funcs (co
 -------
 -confirm process-based approach to interruption works when quitting immediately
     X -when quitting pre speech
-    -when not quitting
-        UPDATE: recording no longer works :(. I guess we can't run speech_recognizer in another process? Also tried running the recognizer in a thread inside a process and that also fails. In ipython, any use of a Process with speech_recognition results in a portAudio error.
+    _ -when not quitting
+        UPDATE: recording no longer works :(. I guess we can't run speech_recognizer in another process? Also tried running the recognizer in a thread inside a process and that also fails. In ipython, any use of a Process with speech_recognition results in a portAudio error. Multiprocessing.pool.ThreadPool shows some promise (can run speech_recognition listener; can interrupt, at least in theory). However, interrupting it in the middle of speaking seems to fail (only if listening has started but we haven't started talking yet). Also not sure if I'm imagining it but it seems real slow.
     -when quitting mid speech
     -when quitting after speech, during google TTS
     -when quitting after TTS, during gpt3 punctuate
@@ -1538,10 +1538,19 @@ X -finish cleaning up code in concurrent_speaking funcs, read_response funcs (co
 -check interruption works in conv mode - does this require any changes?
 -look into gpt-neo funcs - seems like these stopped working after a while
 
+8/25/21
+-------
+-see if there's a way to make threadpool faster
+    -see if we can interrupt threadpool in ipython
+    -consider: maybe only support cancellation before speaking starts or before gpt3 punctuate?
+    -consider other alternatives: e.g. say "STOP" (but a more distinctive phrase?) to cancel and not punctuate.
+-look into thread._stop based interrupt method
+-code cleanup
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-move show during message in transcribe so "listening..." doesn't show too early. If we speak while recognizer is still adjusting to ambient noise level, it will miss it.
 -prototype god prompt (check out fine tuning endpoint?)
 -look into other pyinstaller alternatives (py2app looks alright but want to explore options)
 -description viewable on pypi (think this needs to be rst, not md)
