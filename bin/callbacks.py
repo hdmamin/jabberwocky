@@ -51,11 +51,6 @@ def transcribe(data, error_message, results):
     # lowercase) but just being safe here.
     text = text[0].upper() + text[1:]
 
-    log_debug('BEFORE transcribe: ' + text)
-    if text and text != error_message and get_value(data['auto_punct_id']):
-        _, text = MANAGER.query(task='punctuate_transcription', text=text,
-                                stream=False, strip_output=True)
-    log_debug('AFTER transcribe: ' + text)
     results.append(text)
     return text
 
@@ -101,13 +96,30 @@ def transcribe_callback(sender, data):
             print('THREAD DEAD. TERMINATING PROCESS.')
             process.terminate()
             break
-
     process.join()
-    RECOGNIZER.is_listening = False
     if results:
         text = results[0]
     else:
         text = 'CANCELED' # TODO change to empty str
+
+    # Separate this from the terminatable process because it writes to a log
+    # file and I haven't found how to cleanup on terminate(). Only allow
+    # cancellation before or after this step.
+    print('before if'); time.sleep(4) # TODO
+    if thread.is_alive() and text and text != error_message and text != 'CANCELED' and get_value(data['auto_punct_id']):
+        log_debug('BEFORE transcribe: ' + text)
+        print('in if pre query'); time.sleep(4) # TODO
+        _, text = MANAGER.query(task='punctuate_transcription', text=text,
+                                stream=False, strip_output=True)
+        log_debug('AFTER transcribe: ' + text)
+
+
+    print('after if post query'); time.sleep(4) # TODO
+    if not thread.is_alive():
+        text = 'CANCELED'
+    # Techncially recognizer stopped listening earlier but we're just using
+    # this to let our checkbox monitor know when to quit.
+    RECOGNIZER.is_listening = False
     # TODO end
 
     # # User can cancel listener at any point within this try block.

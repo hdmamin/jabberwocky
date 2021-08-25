@@ -1527,6 +1527,9 @@ X -finish cleaning up code in concurrent_speaking funcs, read_response funcs (co
 8/24/21
 -------
 -confirm process-based approach to interruption works when quitting immediately
+    X -when quitting pre speech
+    -when not quitting
+        UPDATE: recording no longer works :(. I guess we can't run speech_recognizer in another process? Also tried running the recognizer in a thread inside a process and that also fails. In ipython, any use of a Process with speech_recognition results in a portAudio error.
     -when quitting mid speech
     -when quitting after speech, during google TTS
     -when quitting after TTS, during gpt3 punctuate
