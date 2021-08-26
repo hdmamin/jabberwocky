@@ -1540,12 +1540,25 @@ X -finish cleaning up code in concurrent_speaking funcs, read_response funcs (co
 
 8/25/21
 -------
--see if there's a way to make threadpool faster
+X -see if there's a way to make threadpool faster
+    UPDATE: confirmed it was slower than regular Thread in ipython though not as slow as I expected.
     -see if we can interrupt threadpool in ipython
     -consider: maybe only support cancellation before speaking starts or before gpt3 punctuate?
-    -consider other alternatives: e.g. say "STOP" (but a more distinctive phrase?) to cancel and not punctuate.
--look into thread._stop based interrupt method
+    ~ -consider other alternatives: e.g. say "STOP" (but a more distinctive phrase?) to cancel and not punctuate.
+        UPDATE: tried one more standard method of writing my own stop method but I'm having trouble making stop throw an error that run() can see.
+X -look into thread._stop based interrupt method
+    UPDATE: doesn't look useful. Realized example still uses it for a looping style setup with frequent checks.
+X -move 'listening' message a bit later
+    UPDATE: will require further testing and ideally I'd move it even later, but I did move it a little bit. Didn't notice much of a diference though.
+
+8/26/21
+-------
+-try reproducing threadpool method in ipython and see if we can interrupt record() func there (recall problem: can't interrupt DURING speech. Also, interruption generally seems very slow.)
+-try pydev method using frames
+-consider: maybe only support cancellation before speaking starts or before gpt3 punctuate?
+-consider other alternatives: e.g. say "STOP" (but a more distinctive phrase?) to cancel and not punctuate.
 -code cleanup
+
 
 -------------------------------------------------------------------------------
 backlog (optional)

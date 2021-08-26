@@ -73,9 +73,6 @@ def transcribe_callback(sender, data):
     """
     if is_item_visible('Input'):
         set_value(data['target_id'], '')
-    show_during = data.get('show_during_ids', [])
-    for id_ in show_during:
-        show_item(id_)
     error_message = 'Parsing failed. Please try again.'
 
     # Record until pause. Default is to stop recording when the speaker pauses
@@ -97,6 +94,9 @@ def transcribe_callback(sender, data):
     # process.start()
     pool = ThreadPool(processes=1)
     pool_res = pool.apply_async(transcribe, args=(data, error_message, results))
+    show_during = data.get('show_during_ids', [])
+    for id_ in show_during:   # TODO: do not delete this for loop. Not part of testing.
+        show_item(id_)
     print('post async')
     while True:
         time.sleep(.1)
