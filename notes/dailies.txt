@@ -1553,17 +1553,29 @@ X -move 'listening' message a bit later
 
 8/26/21
 -------
--try reproducing threadpool method in ipython and see if we can interrupt record() func there (recall problem: can't interrupt DURING speech. Also, interruption generally seems very slow.)
--try pydev method using frames
--consider: maybe only support cancellation before speaking starts or before gpt3 punctuate?
--consider other alternatives: e.g. say "STOP" (but a more distinctive phrase?) to cancel and not punctuate.
+~ -try reproducing threadpool method in ipython and see if we can interrupt record() func there (recall problem: can't interrupt DURING speech. Also, interruption generally seems very slow.)
+    UPDATE: wasn't able to interrupt speaker here either once it started.
+~ -try pydev method using frames
+    UPDATE: started but found a comment on that post suggesting another way using ctypes. Tried that instead and it SEEMS to be very promising, fingers crossed. Added it to gui and so far everything looks good, though not extensively tested.
+
+8/27/21
+-------
+-test ctypes-based interrupt more thoroughly (insert time.sleep between steps to test. If several work, at some point it might become clear this method works and maybe we don't need to formally test every possible variation)
+    -interrupt before listener starts
+    -interrupt during ambient noise adjustment
+    -interrupt during talking
+    -interrupt during listening w/ no talking
+    -interrupt after talking, during TTS
+    -interrupt after TTS
+    -interrupt post TTS, pre-query
+    -don't interrupt (actually record something)
 -code cleanup
+-move show during message in transcribe so "listening..." doesn't show too early. If we speak while recognizer is still adjusting to ambient noise level, it will miss it.
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
--move show during message in transcribe so "listening..." doesn't show too early. If we speak while recognizer is still adjusting to ambient noise level, it will miss it.
 -prototype god prompt (check out fine tuning endpoint?)
 -look into other pyinstaller alternatives (py2app looks alright but want to explore options)
 -description viewable on pypi (think this needs to be rst, not md)

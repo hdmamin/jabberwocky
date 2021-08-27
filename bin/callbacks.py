@@ -56,7 +56,6 @@ def transcribe(data, error_message, results):
     # Probably don't have these anyway (transcription seems to usually be
     # lowercase) but just being safe here.
     text = text[0].upper() + text[1:]
-
     results.append(text)
     return text
 
@@ -91,27 +90,27 @@ def transcribe_callback(sender, data):
 
     # TODO start
     results = []
-    # process = Process(target=transcribe, args=(data, error_message, results))
-    # process.start()
-    pool = ThreadPool(processes=1)
-    pool_res = pool.apply_async(transcribe, args=(data, error_message, results))
+    thread_record = Thread(target=transcribe,
+                           args=(data, error_message, results))
+    thread_record.start()
     show_during = data.get('show_during_ids', [])
     for id_ in show_during:   # TODO: do not delete this for loop. Not part of testing.
         show_item(id_)
-    print('post async')
-    while True:
-        time.sleep(.1)
-        if not thread.is_alive():
-            print('THREAD DEAD. TERMINATING PROCESS.')
-            # process.terminate()
-            pool.terminate()
-            break
-        if pool_res.get():
-            pool.close()
-            break
-    # process.join()
+    print('pre while')
+    try:
+        while True:
+            time.sleep(.1)
+            if not thread.is_alive():
+                print('THREAD DEAD. TERMINATING PROCESS.')
+                interrupt(thread_record)
+                break
+            if not thread_record.is_alive():
+                print('Record exited naturally.')
+                break
+    except RuntimeError:
+        print('INTERRUPTED')
     print('post while')
-    pool.join()
+    thread_record.join()
     print('post join')
     if results:
         text = results[0]
