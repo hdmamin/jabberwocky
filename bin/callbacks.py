@@ -29,7 +29,8 @@ from jabberwocky.openai_utils import query_gpt_neo
 from jabberwocky.utils import img_dims
 
 from utils import read_response, read_response_coro, stream, \
-    monitor_interrupt_checkbox, CoroutinableThread, PropagatingThread
+    monitor_interrupt_checkbox, CoroutinableThread, PropagatingThread, \
+    interrupt
 
 
 RECOGNIZER = sr.Recognizer()

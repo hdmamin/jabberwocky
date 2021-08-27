@@ -5,10 +5,12 @@ will show errors since SPEAKER is undefined at definition time).
 """
 
 from contextlib import contextmanager as ctx_manager
+import ctypes
 from dearpygui.core import *
 from dearpygui.simple import *
 from functools import wraps
 from nltk.tokenize import sent_tokenize
+import threading
 from threading import Thread
 import _thread
 import time
@@ -318,3 +320,28 @@ class PropagatingThread(Thread):
             raise self.exception
         return self.result
 
+
+def interrupt(thread, exc_type=RuntimeError):
+    """Interrupt a running thread.
+    From https://gist.github.com/liuw/2407154 with minor tweaks.
+
+    Parameters
+    ----------
+    thread: threading.Thread
+        A thread which is currently alive.
+    exc_type: type
+        Exception class to raise when interrupting the thread.
+    """
+    if thread.ident not in threading._active:
+        raise ValueError('Thread not found.')
+
+    val = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+        ctypes.c_long(thread.ident),
+        ctypes.py_object(exc_type)
+    )
+
+    if val == 0:
+        raise ValueError('Invalid thread ID.')
+    if val > 1:
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, 0)
+        raise SystemError('PyThreadState_SetAsyncExc failed')
