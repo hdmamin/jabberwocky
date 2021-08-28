@@ -42,15 +42,14 @@ def transcribe(data, error_message, results):
     # User can cancel listener at any point within this try block.
     print('in transcribe')
     with sr.Microphone() as source:
+        print('start adjust')
         RECOGNIZER.adjust_for_ambient_noise(source)
         print('start listen')
         audio = RECOGNIZER.listen(source)
     try:
-        print('start try')
         text = RECOGNIZER.recognize_google(audio)
     except sr.UnknownValueError:
         text = error_message
-    print('post except:', text)
 
     # Don't just use capitalize because this removes existing capitals.
     # Probably don't have these anyway (transcription seems to usually be
@@ -75,43 +74,41 @@ def transcribe_callback(sender, data):
         set_value(data['target_id'], '')
     error_message = 'Parsing failed. Please try again.'
 
+    # TODO start
     # Record until pause. Default is to stop recording when the speaker pauses
     # for 0.8 seconds, which I found a tiny bit short for my liking.
-    show_item(data['stop_record_id'])
-    thread = PropagatingThread(target=monitor_interrupt_checkbox,
-                               kwargs={'box_id': data['stop_record_id'],
-                                       'errors': None, 'obj': RECOGNIZER,
-                                       'attr': 'is_listening',
-                                       'wait': .25,
-                                       'initial_grace_period': 1},
-                               raise_immediately=True)
     RECOGNIZER.is_listening = True
-    thread.start()
-
-    # TODO start
     results = []
     thread_record = Thread(target=transcribe,
                            args=(data, error_message, results))
     thread_record.start()
     show_during = data.get('show_during_ids', [])
+    print('record thread start')
     for id_ in show_during:   # TODO: do not delete this for loop. Not part of testing.
         show_item(id_)
+    show_item(data['stop_record_id'])
+
+    print('starting monitor')
+    thread = PropagatingThread(target=monitor_interrupt_checkbox,
+                               kwargs={'box_id': data['stop_record_id'],
+                                       'errors': None, 'obj': RECOGNIZER,
+                                       'attr': 'is_listening',
+                                       'wait': .25},
+                               raise_immediately=True)
+    thread.start()
     print('pre while')
-    try:
-        while True:
-            time.sleep(.1)
-            if not thread.is_alive():
-                print('THREAD DEAD. TERMINATING PROCESS.')
-                interrupt(thread_record)
-                break
-            if not thread_record.is_alive():
-                print('Record exited naturally.')
-                break
-    except RuntimeError:
-        print('INTERRUPTED')
+    while True:
+        if not thread.is_alive():
+            print('THREAD DEAD. TERMINATING PROCESS.')
+            interrupt(thread_record)
+            break
+        if not thread_record.is_alive():
+            print('Record exited naturally.')
+            break
+        time.sleep(.1)
     print('post while')
     thread_record.join()
-    print('post join')
+    print('post record join')
     if results:
         text = results[0]
     else:
@@ -120,8 +117,6 @@ def transcribe_callback(sender, data):
     # Separate this from the terminatable process because it writes to a log
     # file and I haven't found how to cleanup on terminate(). Only allow
     # cancellation before or after this step.
-    print('before if')
-    # time.sleep(4) # TODO
     if thread.is_alive() and text and text != error_message and text != 'CANCELED' and get_value(data['auto_punct_id']):
         log_debug('BEFORE transcribe: ' + text)
         print('in if pre query')
@@ -138,6 +133,7 @@ def transcribe_callback(sender, data):
     # Techncially recognizer stopped listening earlier but we're just using
     # this to let our checkbox monitor know when to quit.
     RECOGNIZER.is_listening = False
+    thread.join()
     # TODO end
 
     # # User can cancel listener at any point within this try block.
@@ -166,7 +162,7 @@ def transcribe_callback(sender, data):
     #     text = ''
     # finally:
     #     RECOGNIZER.is_listening = False
-    thread.join()
+    # thread.join()
 
     # Cleanup various messages/widgets.
     set_value(data['stop_record_id'], False)

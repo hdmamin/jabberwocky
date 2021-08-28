@@ -1560,15 +1560,17 @@ X -move 'listening' message a bit later
 
 8/27/21
 -------
--test ctypes-based interrupt more thoroughly (insert time.sleep between steps to test. If several work, at some point it might become clear this method works and maybe we don't need to formally test every possible variation)
-    -interrupt before listener starts
-    -interrupt during ambient noise adjustment
-    -interrupt during talking
-    -interrupt during listening w/ no talking
-    -interrupt after talking, during TTS
-    -interrupt after TTS
-    -interrupt post TTS, pre-query
-    -don't interrupt (actually record something)
+X -add extra ctypes call for when threads_affected > 1 (see programtalk tab)
+    X -adj var names to be more descriptive
+    X -document: doesn't work w/ time.sleep
+X -test ctypes-based interrupt more thoroughly (insert time.sleep between steps to test. If several work, at some point it might become clear this method works and maybe we don't need to formally test every possible variation)
+    X -interrupt before start mic
+    X -interrupt during ambient noise adjustment
+    X -interrupt during talking
+    X -interrupt during listening w/ no talking
+    X -interrupt after talking, during TTS
+    X -interrupt post TTS, pre-query
+    X -don't interrupt (actually record something)
 -code cleanup
 -move show during message in transcribe so "listening..." doesn't show too early. If we speak while recognizer is still adjusting to ambient noise level, it will miss it.
 

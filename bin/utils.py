@@ -322,7 +322,9 @@ class PropagatingThread(Thread):
 
 
 def interrupt(thread, exc_type=RuntimeError):
-    """Interrupt a running thread.
+    """Interrupt a running thread. Apparently doesn't work when waiting for
+    time.sleep().
+
     From https://gist.github.com/liuw/2407154 with minor tweaks.
 
     Parameters
@@ -339,13 +341,13 @@ def interrupt(thread, exc_type=RuntimeError):
     if thread.ident not in threading._active:
         raise ValueError('Thread not found.')
 
-    val = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+    n_stopped = ctypes.pythonapi.PyThreadState_SetAsyncExc(
         ctypes.c_long(thread.ident),
         ctypes.py_object(exc_type)
     )
 
-    if val == 0:
+    if n_stopped == 0:
         raise ValueError('Invalid thread ID.')
-    if val > 1:
+    if n_stopped > 1:
         ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, 0)
         raise SystemError('PyThreadState_SetAsyncExc failed')
