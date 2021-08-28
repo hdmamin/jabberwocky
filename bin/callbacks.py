@@ -136,34 +136,6 @@ def transcribe_callback(sender, data):
     thread.join()
     # TODO end
 
-    # # User can cancel listener at any point within this try block.
-    # try:
-    #     with sr.Microphone() as source:
-    #         RECOGNIZER.adjust_for_ambient_noise(source)
-    #         audio = RECOGNIZER.listen(source)
-    #     try:
-    #         text = RECOGNIZER.recognize_google(audio)
-    #     except sr.UnknownValueError:
-    #         text = error_message
-    #
-    #     # Don't just use capitalize because this removes existing capitals.
-    #     # Probably don't have these anyway (transcription seems to usually be
-    #     # lowercase) but just being safe here.
-    #     text = text[0].upper() + text[1:]
-    #
-    #     log_debug('BEFORE transcribe: ' + text)
-    #     if text and text != error_message and get_value(data['auto_punct_id']):
-    #         _, text = MANAGER.query(task='punctuate_transcription', text=text,
-    #                                 stream=False, strip_output=True)
-    #     log_debug('AFTER transcribe: ' + text)
-    #
-    # except KeyboardInterrupt as e:
-    #     print('transcribe halted due to:', e)
-    #     text = ''
-    # finally:
-    #     RECOGNIZER.is_listening = False
-    # thread.join()
-
     # Cleanup various messages/widgets.
     set_value(data['stop_record_id'], False)
     hide_item(data['stop_record_id'])
