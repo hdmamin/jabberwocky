@@ -41,10 +41,10 @@ RECOGNIZER.pause_threshold = 0.9
 def transcribe(data, error_message, results):
     # User can cancel listener at any point within this try block.
     with sr.Microphone() as source:
-        print('start adjust')
+        show_item(data['adjust_id'])
         RECOGNIZER.adjust_for_ambient_noise(source)
+        hide_item(data['adjust_id'])
         show_item(data['listening_id'])
-        print('start listen')
         audio = RECOGNIZER.listen(source)
     try:
         text = RECOGNIZER.recognize_google(audio)
@@ -73,7 +73,6 @@ def transcribe_callback(sender, data):
         set_value(data['target_id'], '')
     error_message = 'Parsing failed. Please try again.'
 
-    # TODO start
     # Record until pause. Default is to stop recording when the speaker pauses
     # for 0.8 seconds, which I found a tiny bit short for my liking.
     RECOGNIZER.is_listening = True
@@ -82,7 +81,6 @@ def transcribe_callback(sender, data):
                            args=(data, error_message, results))
     thread_record.start()
 
-    print('starting monitor')
     thread = PropagatingThread(target=monitor_interrupt_checkbox,
                                kwargs={'box_id': data['stop_record_id'],
                                        'errors': None, 'obj': RECOGNIZER,
@@ -129,10 +127,12 @@ def transcribe_callback(sender, data):
     RECOGNIZER.is_listening = False
     thread.join()
 
-    # Cleanup various messages/widgets.
+    # Cleanup various messages/widgets. Some may have been hidden earlier but
+    # we make sure here in case the listening thread was interrupted early.
     set_value(data['stop_record_id'], False)
     hide_item(data['stop_record_id'])
     hide_item(data['listening_id'])
+    hide_item(data['adjust_id'])
 
     # Update text and various components now that transcription is complete.
     if is_item_visible('Input'):

@@ -1571,17 +1571,26 @@ X -test ctypes-based interrupt more thoroughly (insert time.sleep between steps 
     X -interrupt after talking, during TTS
     X -interrupt post TTS, pre-query
     X -don't interrupt (actually record something)
--code cleanup
--move show during message in transcribe so "listening..." doesn't show too early. If we speak while recognizer is still adjusting to ambient noise level, it will miss it.
+X -code cleanup
+X -add interruption checkbox to conv mode
+X -move show during message in transcribe so "listening..." doesn't show too early. If we speak while recognizer is still adjusting to ambient noise level, it will miss it.
+    UPDATE: also added 'adjusting mic' msg that shows before 'listening...'
+X -test interruptions in conv mode
+
+8/28/21
+-------
+-look into slow mic startup - do we really need to adjust for ambient noise every time?
+-look into possible lack of auto-listen in conv mode (though now that I think of it I didn't make any queries today aside from punct, so there's really no reason to think it's not working as expected)
+-prototype god prompt using standard method
+    -check out fine tuning endpoint
+-investigate possibly broken gpt-neo funcs
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
--prototype god prompt (check out fine tuning endpoint?)
 -look into other pyinstaller alternatives (py2app looks alright but want to explore options)
 -description viewable on pypi (think this needs to be rst, not md)
--look into gpt-neo funcs - seems like these stopped working after a while
 - htools things:
 	-flesh out owneraccess decorator
 	-port htools as_df

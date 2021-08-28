@@ -334,10 +334,6 @@ def interrupt(thread, exc_type=RuntimeError):
     exc_type: type
         Exception class to raise when interrupting the thread.
     """
-    # TODO
-    print('thread.ident:', thread.ident)
-    print('active:', threading._active.keys())
-    # TODO end
     if thread.ident not in threading._active:
         raise ValueError('Thread not found.')
 

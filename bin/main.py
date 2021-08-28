@@ -196,7 +196,8 @@ class App:
                        callback_data={'listening_id': 'record_msg',
                                       'target_id': 'transcribed_text',
                                       'auto_punct_id': 'auto_punct',
-                                      'stop_record_id': 'stop_record'},
+                                      'stop_record_id': 'stop_record',
+                                      'adjust_id': 'adjust_msg'},
                        callback=transcribe_callback)
             with tooltip('record_btn', 'record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
@@ -263,10 +264,14 @@ class App:
                 add_text('default_save_error_msg',
                          default_value='Failed to save file.', show=False)
 
+            add_text('adjust_msg', default_value='Adjusting mic...',
+                     show=False)
             add_text('record_msg', default_value='Listening...', show=False)
             add_same_line()
-            add_checkbox('stop_record', label='Stop Listening',
-                         default_value=False, show=False)
+            # Use generic label since we may want to cancel before the listener
+            # has actually started.
+            add_checkbox('stop_record', label='Cancel', default_value=False,
+                         show=False)
 
             # Label is displayed next to input unless we manually suppress it.
             add_spacing()
@@ -307,7 +312,9 @@ class App:
             add_button('conv_record_btn', label='Record',
                        callback_data={'listening_id': 'conv_record_msg',
                                       'target_id': 'conv_text',
-                                      'auto_punct_id': 'conv_auto_punct'},
+                                      'auto_punct_id': 'conv_auto_punct',
+                                      'stop_record_id': 'conv_stop_record',
+                                      'adjust_id': 'conv_adjust_msg'},
                        callback=transcribe_callback)
             with tooltip('conv_record_btn', 'conv_record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
@@ -367,8 +374,15 @@ class App:
             with tooltip('end_conv_btn', 'end_conv_btn_callback'):
                 add_text('This will delete the current conversation. \nYou '
                          'will no longer be able to save a transcript.')
+            add_text('conv_adjust_msg', default_value='Adjusting mic...',
+                     show=False)
             add_text('conv_record_msg', default_value='Listening...',
                      show=False)
+            add_same_line()
+            # Use generic label since we may want to cancel before the listener
+            # has actually started.
+            add_checkbox('conv_stop_record', label='Cancel',
+                         default_value=False, show=False)
 
             # Visible when querying and speaking, respectively.
             add_text('conv_query_progress_msg', default_value='Typing...',
@@ -382,6 +396,9 @@ class App:
             # Just tweaked height until it seemed to do what I want (no
             # vertical scroll w/ default window size). Not sure how to
             # calculate precisely what I want (unknown height of query button).
+            # Spacing is necessary otherwise text gets crammed on the same line
+            # as buttons because by default all the messages are hidden.
+            add_spacing()
             add_input_text('conv_text', label='', default_value='',
                            multiline=True, width=self.widths[.5] - 8*self.pad,
                            height=self.heights[1] - 16*self.pad)
