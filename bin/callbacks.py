@@ -40,10 +40,10 @@ RECOGNIZER.pause_threshold = 0.9
 
 def transcribe(data, error_message, results):
     # User can cancel listener at any point within this try block.
-    print('in transcribe')
     with sr.Microphone() as source:
         print('start adjust')
         RECOGNIZER.adjust_for_ambient_noise(source)
+        show_item(data['listening_id'])
         print('start listen')
         audio = RECOGNIZER.listen(source)
     try:
@@ -66,9 +66,8 @@ def transcribe_callback(sender, data):
     data keys:
         - target_id (str: dearpygui text input box to display transcribed text
             in)
-        - show_during_ids (Iterable[str]: dearpygui items to display during
-            transcription. Usually just a text element saying transcription is
-            in progress.)
+        - listening_id (str: dearpygui text message to display during
+            transcription, usually something like "listening...".)
     """
     if is_item_visible('Input'):
         set_value(data['target_id'], '')
@@ -82,11 +81,6 @@ def transcribe_callback(sender, data):
     thread_record = Thread(target=transcribe,
                            args=(data, error_message, results))
     thread_record.start()
-    show_during = data.get('show_during_ids', [])
-    print('record thread start')
-    for id_ in show_during:   # TODO: do not delete this for loop. Not part of testing.
-        show_item(id_)
-    show_item(data['stop_record_id'])
 
     print('starting monitor')
     thread = PropagatingThread(target=monitor_interrupt_checkbox,
@@ -96,51 +90,49 @@ def transcribe_callback(sender, data):
                                        'wait': .25},
                                raise_immediately=True)
     thread.start()
-    print('pre while')
+    show_item(data['stop_record_id'])
+
+    # Thread monitor will exit if the user checks the interrupt box or if
+    # listening completes.
     while True:
         if not thread.is_alive():
-            print('THREAD DEAD. TERMINATING PROCESS.')
+            print('MONITOR THREAD DEAD. TERMINATING LISTENER.')
             interrupt(thread_record)
             break
         if not thread_record.is_alive():
             print('Record exited naturally.')
             break
         time.sleep(.1)
-    print('post while')
     thread_record.join()
-    print('post record join')
     if results:
         text = results[0]
     else:
-        text = 'CANCELED' # TODO change to empty str
+        text = ''
 
-    # Separate this from the terminatable process because it writes to a log
-    # file and I haven't found how to cleanup on terminate(). Only allow
-    # cancellation before or after this step.
-    if thread.is_alive() and text and text != error_message and text != 'CANCELED' and get_value(data['auto_punct_id']):
+    # Separate this from the interruptable thread because it writes to a log
+    # file and I haven't found a way to cleanup on exit. Only allow
+    #  cancellation before or after this step. We do check if thread is alive
+    # last to give the user up until the last possible fraction of a second to
+    # cancel.
+    if text and text != error_message and get_value(data['auto_punct_id']) \
+            and thread.is_alive():
         log_debug('BEFORE transcribe: ' + text)
-        print('in if pre query')
-        # time.sleep(4) # TODO
         _, text = MANAGER.query(task='punctuate_transcription', text=text,
                                 stream=False, strip_output=True)
         log_debug('AFTER transcribe: ' + text)
 
-
-    print('after if post query')
-    # time.sleep(4) # TODO
     if not thread.is_alive():
-        text = 'CANCELED'
-    # Techncially recognizer stopped listening earlier but we're just using
+        text = ''
+
+    # Technically recognizer stopped listening earlier but we're just using
     # this to let our checkbox monitor know when to quit.
     RECOGNIZER.is_listening = False
     thread.join()
-    # TODO end
 
     # Cleanup various messages/widgets.
     set_value(data['stop_record_id'], False)
     hide_item(data['stop_record_id'])
-    for id_ in show_during:
-        hide_item(id_)
+    hide_item(data['listening_id'])
 
     # Update text and various components now that transcription is complete.
     if is_item_visible('Input'):

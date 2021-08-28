@@ -193,7 +193,7 @@ class App:
             # Default window (1 time queries)
             ###################################################################
             add_button('record_btn', label='Record',
-                       callback_data={'show_during_ids': ['record_msg'],
+                       callback_data={'listening_id': 'record_msg',
                                       'target_id': 'transcribed_text',
                                       'auto_punct_id': 'auto_punct',
                                       'stop_record_id': 'stop_record'},
@@ -305,7 +305,7 @@ class App:
 
             # Same as in default window but with different names/callback_data.
             add_button('conv_record_btn', label='Record',
-                       callback_data={'show_during_ids': ['conv_record_msg'],
+                       callback_data={'listening_id': 'conv_record_msg',
                                       'target_id': 'conv_text',
                                       'auto_punct_id': 'conv_auto_punct'},
                        callback=transcribe_callback)
