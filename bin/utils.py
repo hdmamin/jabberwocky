@@ -177,6 +177,14 @@ def monitor_interrupt_checkbox(box_id, errors, obj, attr='is_speaking',
         If None, an error will be raised directly instead of simply being
         appended to a list. You must use PropagatingThread to be able to catch
         this.
+    obj: any
+        The object doing whatever it is that may need to be interrupted.
+        Often speech_recognition.Recognizer or jabberwocky.speech.Speaker.
+        It must have an attribute that tells us when it starts and finishes
+        (see `attr` param).
+    attr: str
+        Attribute of obj to monitor. When this is Falsy (indicating the event
+        to potentially interrupt is no longer ongoing), the monitor will quit.
     wait: int
         How frequently to check if the speaker is speaking. A value of 2 means
         we'd check once every 2 seconds.
@@ -242,6 +250,10 @@ def stream(text_or_gen):
 
 
 class CoroutinableThread(Thread):
+    """Lets us send values to a coroutine running in a thread. In this context
+    we're not necessarily doing anything async with the coroutine - it's just
+    a nice way to process new values.
+    """
 
     def __init__(self, target, queue, args=(), kwargs=None):
         # Target should be a coroutine like read_response_coro.

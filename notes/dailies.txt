@@ -1579,18 +1579,27 @@ X -test interruptions in conv mode
 
 8/28/21
 -------
--look into slow mic startup - do we really need to adjust for ambient noise every time?
--look into possible lack of auto-listen in conv mode (though now that I think of it I didn't make any queries today aside from punct, so there's really no reason to think it's not working as expected)
--prototype god prompt using standard method
-    -check out fine tuning endpoint
+X -look into slow mic startup - do we really need to adjust for ambient noise every time?
+    UPDATE: docs say no. Technically if we turn on/off a fan midway through a conv, this would be a problem, but for now let's try just calibrating once at the beginning.
+X -look into possible lack of auto-listen in conv mode (though now that I think of it I didn't make any queries today aside from punct, so there's really no reason to think it's not working as expected)
+    UPDATE: the problem I thought was there wasn't, but I did find some old calls that needed to be updated based on my updates to the data passed to transcribe_callback and the interface of checkbox_monitor.
+~ -prototype god prompt using standard method
+    X -check out fine tuning endpoint
+        UPDATE: see notes in misc.txt
+
+8/29/21
+-------
+-update transcribe_callback docstring w/ new expected keys
 -investigate possibly broken gpt-neo funcs
+-more god prompt prototyping
+-look into py2app for exe generation
+-description viewable on pypi (think this needs to be rst, not md)
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
 -look into other pyinstaller alternatives (py2app looks alright but want to explore options)
--description viewable on pypi (think this needs to be rst, not md)
 - htools things:
 	-flesh out owneraccess decorator
 	-port htools as_df

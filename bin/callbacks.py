@@ -16,8 +16,6 @@ looking at this module in isolation.
 from datetime import datetime as dt
 from dearpygui.core import *
 from dearpygui.simple import *
-from multiprocessing import Process
-from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from queue import Queue
 import speech_recognition as sr
@@ -36,14 +34,17 @@ from utils import read_response, read_response_coro, stream, \
 RECOGNIZER = sr.Recognizer()
 RECOGNIZER.is_listening = False
 RECOGNIZER.pause_threshold = 0.9
+RECOGNIZER.calibrated = False
 
 
 def transcribe(data, error_message, results):
     # User can cancel listener at any point within this try block.
     with sr.Microphone() as source:
-        show_item(data['adjust_id'])
-        RECOGNIZER.adjust_for_ambient_noise(source)
-        hide_item(data['adjust_id'])
+        if not RECOGNIZER.calibrated:
+            show_item(data['adjust_id'])
+            RECOGNIZER.adjust_for_ambient_noise(source)
+            RECOGNIZER.calibrated = True
+            hide_item(data['adjust_id'])
         show_item(data['listening_id'])
         audio = RECOGNIZER.listen(source)
     try:
@@ -83,7 +84,8 @@ def transcribe_callback(sender, data):
 
     thread = PropagatingThread(target=monitor_interrupt_checkbox,
                                kwargs={'box_id': data['stop_record_id'],
-                                       'errors': None, 'obj': RECOGNIZER,
+                                       'errors': None,
+                                       'obj': RECOGNIZER,
                                        'attr': 'is_listening',
                                        'wait': .25},
                                raise_immediately=True)
@@ -361,9 +363,11 @@ def persona_select_callback(sender, data):
 
     # Start listening for user response automatically.
     transcribe_callback('conv_query_callback',
-                        {'show_during_ids': ['conv_record_msg'],
+                        {'listening_id': 'conv_record_msg',
                          'target_id': 'conv_text',
-                         'auto_punct_id': 'conv_auto_punct'})
+                         'auto_punct_id': 'conv_auto_punct',
+                         'stop_record_id': 'conv_stop_record',
+                         'adjust_id': 'conv_adjust_msg'})
 
 
 def add_custom_persona_callback(sender, data):
@@ -646,9 +650,11 @@ def conv_query_callback(sender, data):
 
     # Start listening for user response automatically.
     transcribe_callback('conv_query_callback',
-                        {'show_during_ids': ['conv_record_msg'],
+                        {'listening_id': 'conv_record_msg',
                          'target_id': 'conv_text',
-                         'auto_punct_id': 'conv_auto_punct'})
+                         'auto_punct_id': 'conv_auto_punct',
+                         'stop_record_id': 'conv_stop_record',
+                         'adjust_id': 'conv_adjust_msg'})
 
 
 def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
@@ -658,7 +664,12 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     errors = []
     q = Queue()
     monitor_thread = Thread(target=monitor_interrupt_checkbox,
-                            args=(data['interrupt_id'], errors))
+                            # args=(data['interrupt_id'], errors))
+                            kwargs={'box_id': data['interrupt_id'],
+                                    'errors': errors,
+                                    'obj': SPEAKER,
+                                    'attr': 'is_speaking',
+                                    'wait': .25})
     speaker_thread = CoroutinableThread(target=read_response_coro, queue=q,
                                         args=(data, errors))
     monitor_thread.start()

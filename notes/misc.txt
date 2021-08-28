@@ -145,3 +145,14 @@ apt-get install -y gnupg gnupg2
 apt-get install -y mesa-utils and libgl1-mesa-glx
 sudo add-apt-repository ppa:ubuntu-x-swat/updates
 sudo apt dist-upgrad
+
+8/28/21
+-------
+fine tuning notes
+-no davinci fine tuning
+-pricing is a bit more expensive for the same model but not prohibitively so - fine-tuned curie is half the cost of davinci, and the lack of instructions/prompt can reduce the number of tokens
+-conditional generation recommends at least ~500 examples. Open-ended generation (e.g. generating whole podcast transcripts) needs at least a few thousand. Those numbers are honestly not that bad for most tasks. I could probably scrape data for most tasks, but if it really comes down to it, generating 500 manual examples manually isn't crazy.
+
+notes on god prompt
+-for better or for worse, god is not very talkative. I guess it's probably common for fictional conversations with god to have the character hoping for some detailed solution to their problems but what they get are short, vague, slightly mystical answers.
+-still lots of room to experiment with the prompt. A Douglas Adams-y god might be fun, but would probably require fine-tuning.
