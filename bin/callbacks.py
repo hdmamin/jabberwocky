@@ -69,6 +69,13 @@ def transcribe_callback(sender, data):
             in)
         - listening_id (str: dearpygui text message to display during
             transcription, usually something like "listening...".)
+        - auto_punct_id (str: dearpygui checkbox determining whether to use
+            gpt3 to auto-punctuate the transcribed text)
+        - stop_record_id (str: dearpygui checkbox user can check to interrupt
+            listening/transcription)
+        - adjust_id (str: dearpygui text item displaying message while
+            recognizer is adjusting for ambient noise. Currently set this up to
+            execute only once per GUI session.)
     """
     if is_item_visible('Input'):
         set_value(data['target_id'], '')

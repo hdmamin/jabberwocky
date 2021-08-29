@@ -1589,16 +1589,34 @@ X -look into possible lack of auto-listen in conv mode (though now that I think 
 
 8/29/21
 -------
--update transcribe_callback docstring w/ new expected keys
--investigate possibly broken gpt-neo funcs
+X -update transcribe_callback docstring w/ new expected keys
+X -investigate possibly broken gpt-neo funcs
+    UPDATE: Looks like this may be an api problem? Realized if I generate text on the modelhub api, we get a message saying model loading and if I later try to query it everything works (and generally quite quickly). The slow responses and errors must be because the model is not currently loaded on their end. Looked a bit online but couldn't find any mentions about this.
+~ -start building gpt-j query func
+    UPDATE: mostly working, just need to see if there are any warnings or extra things I need to add to handle unavailable options. Also check if this works as a mock func.
 -more god prompt prototyping
 -look into py2app for exe generation
 -description viewable on pypi (think this needs to be rst, not md)
+
+8/30/21
+-------
+-finish gptj func
+    -warnings/errors/handling for unavailable hypers?
+    -does this work as a query_gpt3 mock func?
+    -port to lib
+    -document (include some details on what engine this is equivalent to. IIRC it's curie, aka engine_i=2, but confirm)
+-add gptj option to default mode?
+    -add to conv mode?
+-try various default tasks with gptj a bit and see how it performs
+    -try conv mode w/ gptj
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-more god prompt prototyping
+-look into py2app for exe generation
+-description viewable on pypi (think this needs to be rst, not md)
 -look into other pyinstaller alternatives (py2app looks alright but want to explore options)
 - htools things:
 	-flesh out owneraccess decorator
