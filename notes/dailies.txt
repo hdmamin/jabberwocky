@@ -1623,6 +1623,8 @@ X -add gptj option to conv mode
 X -update model blurb to include gpt-j
 X -fix save issue
     UPDATE: strangely, missing os import. Wonder how that worked before. Maybe it got lost in refactoring or due to accidental vim magic.
+X -fix logging issue
+    UPDATE: can't save function as json so when mock_func is provided it failed. Save str(mock_func) if is Function.
 ~ -investigate new bugs when using gpt-j (or maybe any time stream=False? Unsure)
     ~ -typing is super fast (if effect is there at all? Hard to tell)
         UPDATE: for non-gpt models, stream is False and we currently seem to be returning the mocked response (i.e. not wrapping it w/ stream()) so the first "token" is the prompt and the second is the full response. Surprisingly, this occurs in both default and conv mode - could have sworn I'd implemented this already but I guess not.
