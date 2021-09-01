@@ -448,10 +448,12 @@ class App:
             add_radio_button('model', items=MODEL_NAMES)
             with tooltip('model', 'model_tooltip'):
                 add_text('OpenAI\'s GPT3 produces the best results.\n'
-                         'EleutherAI\'s GPT-Neo models are a solid free '
-                         'alternative.\nNaive is mostly for debugging and '
-                         'will load a saved\nresponse from GPT3 for a simple '
-                         'date formatting task.')
+                         'Eleuther AI\'s GPT-J is basically an open-source\n'
+                         'Curie but API uptime can be iffy. Their GPT-Neo \n'
+                         'models are also solid options but their first \n'
+                         'response can be very slow. Naive is mostly for\n'
+                         'debugging and will load a saved response from\n'
+                         'GPT3 for a simple date formatting task.')
 
             with label_above('task_list', 'Tasks:'):
                 add_listbox(
@@ -489,7 +491,8 @@ class App:
                         tooltip_text = 'There are 4 engines, indexed\nfrom ' \
                                        'zero, where larger numbers\n' \
                                        'correspond to more powerful models\n' \
-                                       'and better outputs.'
+                                       'and better outputs. This is only\n' \
+                                       'used with GPT3.'
                     else:
                         min_value = 1
                         input_toks = get_value('transcribed_text').split()
@@ -599,8 +602,16 @@ class App:
                     'Choose a number in [0, 3] (inclusive). Higher numbers\n'
                     'use a more powerful model. Most personas will need a\n'
                     'value of 3 to see good results. Engine 0 is cheapest\n'
-                    'and therefore good for debugging.'
+                    'and therefore good for debugging. This setting is only\n'
+                    'used when using GPT3.'
                  )
+            add_radio_button('conv_model', items=MODEL_NAMES[:-1])
+            with tooltip('conv_model', 'conv_model_tooltip'):
+                add_text('OpenAI\'s GPT3 produces the best results.\n'
+                         'Eleuther AI\'s GPT-J is basically an open-source\n'
+                         'Curie but API uptime can be iffy. Their GPT-Neo \n'
+                         'models are also solid options but the first \n'
+                         'response can be very slow.')
             add_spacing(count=10)
 
             # Select a persona.
@@ -734,8 +745,8 @@ if __name__ == '__main__':
         'How To': 'how_to',
         'MMA': 'mma',
     })
-    MODEL_NAMES = ['gpt3', 'gpt-neo 2.7B', 'gpt-neo 1.3B', 'gpt-neo 125M',
-                   'naive']
+    MODEL_NAMES = ['GPT3', 'GPT-J', 'GPT-neo 2.7B', 'GPT-neo 1.3B',
+                   'GPT-neo 125M', 'Naive']
     GENDER2VOICE = {'F': 'karen',
                     'M': 'daniel'}
 

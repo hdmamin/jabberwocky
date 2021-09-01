@@ -1601,23 +1601,52 @@ X -investigate possibly broken gpt-neo funcs
 8/30/21
 -------
 -finish gptj func
-    -warnings/errors/handling for unavailable hypers?
-    -does this work as a query_gpt3 mock func?
-    -port to lib
-    -document (include some details on what engine this is equivalent to. IIRC it's curie, aka engine_i=2, but confirm)
--add gptj option to default mode?
+    X -warnings/errors/handling for unavailable hypers?
+    X -does this work as a query_gpt3 mock func?
+        UPDATE: can't test because api seems to be down atm but after checking what mock_func is expected to do, it should work fine.
+    X -port to lib
+    X -document (include some details on what engine this is equivalent to. IIRC it's curie, aka engine_i=2, but confirm)
+X -add gptj option to default mode?
     -add to conv mode?
--try various default tasks with gptj a bit and see how it performs
-    -try conv mode w/ gptj
+_ -try various default tasks with gptj a bit and see how it performs
+    UPDATE: gptj api down so can't try in GUI.
+    ~ -try conv mode w/ gptj
+        UPDATE: gptj api is down so can't try it in GUI. Tried a prompt in online UI and there were some noticeable errors but it was good enough that maybe it's worth adding to my GUI (if api seems to have decent uptime). Not a bad free option, especially with a more carefully constructed prompt.
+    ~ -try code generation w/ gptj
+        UPDATE: not bad. Yikes.
+~ -look into other pyinstaller alternatives (py2app looks alright but want to explore options)
+    UPDATE: found pyoxidizer and nuitka but haven't looked into them much yet.
+
+8/31/21
+-------
+X -add gptj option to conv mode
+X -update model blurb to include gpt-j
+X -fix save issue
+    UPDATE: strangely, missing os import. Wonder how that worked before. Maybe it got lost in refactoring or due to accidental vim magic.
+~ -investigate new bugs when using gpt-j (or maybe any time stream=False? Unsure)
+    ~ -typing is super fast (if effect is there at all? Hard to tell)
+        UPDATE: for non-gpt models, stream is False and we currently seem to be returning the mocked response (i.e. not wrapping it w/ stream()) so the first "token" is the prompt and the second is the full response. Surprisingly, this occurs in both default and conv mode - could have sworn I'd implemented this already but I guess not.
+    ~ -instead of reading last sentence, speaker starts over from the beginning and reads up until the last sentence again before quitting (need to confirm that behavior but that seems to be what's happening)
+        UPDATE: same root cause as prev issue. I guess that's good.
+-look into py2app for exe generation
+    -look more into pyoxidizer and/or nuitka if this fails
+
+9/1/21
+------
+-fix newly discovered bugs when stream=False (see yesterday - need to wrap text response in streamable gen, ignoring prompt)
+    -check if that fixes lack of typing effect
+    -check if that fixes skipping last sentence + repeating first
+    -clean up debugging statements in utils.read_response_coro
+
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
--more god prompt prototyping
 -look into py2app for exe generation
+    -look more into pyoxidizer and/or nuitka if this fails
+-more god prompt prototyping
 -description viewable on pypi (think this needs to be rst, not md)
--look into other pyinstaller alternatives (py2app looks alright but want to explore options)
 - htools things:
 	-flesh out owneraccess decorator
 	-port htools as_df

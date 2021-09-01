@@ -104,14 +104,21 @@ def read_response_coro(data, errors=None, hide_on_exit=True):
         errors = []
 
     # Watch out for user requests to interrupt speaker. This will be joined in
-    # _exit().
+    # _exit(). Create sents list beforehand to handle the (hopefully
+    # impossible) case where the first item sent in is None.
     text = ''
+    sents = []
     # Must start manually otherwise contextmanager never exits. Seems to be
     # dearpygui-related since it works in ipython.
     SPEAKER.start_session()
     while not errors:
         token = yield
+        # TODO start
+        print('token:', token)
+        print('sents:', sents)
+        # TODO end
         if token is None:
+            # Speak any unspoken fragments before exiting.
             if sents: SPEAKER.speak(sents[0])
             _exit(data, hide_on_exit)
         else:

@@ -315,7 +315,11 @@ class PromptManager:
             print('fully resolved kwargs:\n',
                   dict(bound_args(query_gpt3, [], kwargs)))
             return
-        if self.log_path: save({'prompt': prompt, **kwargs}, self.log_path)
+        if self.log_path:
+            save_kwargs = {'prompt': prompt, **kwargs}
+            if save_kwargs.get('mock_func', None):
+                save_kwargs['mock_func'] = str(save_kwargs['mock_func'])
+            save(save_kwargs, self.log_path)
         return query_gpt3(prompt, **kwargs)
 
     def kwargs(self, task, fully_resolved=True, return_prompt=False,
@@ -827,13 +831,13 @@ class ConversationManager:
         self.cached_query = ''
 
         # Log kwargs for troubleshooting purposes.
-        save({'prompt': prompt, **kwargs}, self.log_path, verbose=False)
-        # prompt, resp = query_gpt3(prompt, **kwargs)
-        # self.gpt3_turns.append(resp.strip())
-        # # Can't just concat prompt and response anymore because prompt is not
-        # # the full conversation.
-        # return prompt, resp
+        save_kwargs = {'prompt': prompt, **kwargs}
+        if save_kwargs.get('mock_func', None):
+            save_kwargs['mock_func'] = str(save_kwargs['mock_func'])
+        save(save_kwargs, self.log_path, verbose=False)
 
+        # Query and return generator. This allows us to use streaming mode in
+        # GUI while still updating this instance with gpt3's response.
         res = query_gpt3(prompt, **kwargs)
         if not kwargs.get('stream', False):
             self.gpt3_turns.append(res[1])
@@ -1201,8 +1205,10 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
                            'repetition_penalty': repetition_penalty,
                            'return_full_text': False}}
     url = 'https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-{}'
-    r = requests.post(url.format(size), headers=headers, data=json.dumps(data))
     try:
+        # Put the request itself inside try too in case of timeout.
+        r = requests.post(url.format(size), headers=headers,
+                          data=json.dumps(data))
         r.raise_for_status()
     except requests.HTTPError as e:
         raise MockFunctionException(str(e)) from None
@@ -1216,6 +1222,59 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
         stop_idx = min(idx) if idx else None
         res = res[:stop_idx]
     return prompt, res
+
+
+def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
+    """Queries free GPT-J API. GPT-J has 6 billion parameters and is, roughly
+    speaking, the open-source equivalent of Curie. It was trained on more
+    code than GPT3 though so it may do surprisingly well at those kinds of
+    tasks. This function should be usable as a mock_func argument in
+    query_gpt_3.
+
+    API uptime may be questionable though. There's an accompanying front end
+    here:
+    http://api.vicgalle.net:8000/
+
+    Parameters
+    ----------
+    prompt: str
+    temperature: float
+    max_tokens: int
+    kwargs: any
+        Only supported options are top_p (float) and stop (Iterable[str]).
+        Notice that stream mode is not supported.
+
+    Returns
+    -------
+    tuple[str]: Prompt, response.
+    """
+    params = {'context': prompt,
+              'token_max_length': max_tokens,
+              'temperature': temperature,
+              'top_p': kwargs.pop('top_p', 1.0)}
+
+    # Ensure that we end up with a list AND that stop is still Falsy if user
+    # explicitly passes in stop=None.
+    stop = tolist(kwargs.pop('stop', None) or [])
+    if stop: params['stop_sequence'] = stop[0]
+
+    # Must keep this after the block of stop-related logic above.
+    if kwargs: warnings.warn('GPT-J api does not support other kwargs.')
+
+    try:
+        res = requests.post('http://api.vicgalle.net:5000/generate',
+                            params=params)
+        res.raise_for_status()
+    except Exception as e:
+        raise MockFunctionException(str(e)) from None
+    res = res.json()
+
+    # Endpoint doesn't support multiple stop sequences so we have to
+    # postprocess. Even with a single stop sequence, it includes it while gpt3
+    # and my gpt-neo function exclude it, so we need to handle that here.
+    idx = min([i for i in map(res['text'].find, stop) if i >= 0] or [None])
+    completion = res['text'][:idx]
+    return res['prompt'], completion
 
 
 def conversation_formatter(text_fmt, prompt, **kwargs):

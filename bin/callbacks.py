@@ -16,6 +16,7 @@ looking at this module in isolation.
 from datetime import datetime as dt
 from dearpygui.core import *
 from dearpygui.simple import *
+import os
 from pathlib import Path
 from queue import Queue
 import speech_recognition as sr
@@ -23,7 +24,7 @@ import time
 from threading import Thread
 
 from htools.core import save, select
-from jabberwocky.openai_utils import query_gpt_neo
+from jabberwocky.openai_utils import query_gpt_neo, query_gpt_j
 from jabberwocky.utils import img_dims
 
 from utils import read_response, read_response_coro, stream, \
@@ -609,22 +610,52 @@ def query_callback(sender, data):
               'making a query.'
     else:
         text = CHUNKER.get('transcribed', chunked=False)
-
         model = MODEL_NAMES[get_value('model')]
-        if 'neo' in model:
-            kwargs.update(mock_func=query_gpt_neo, size=model.split()[-1],
-                          mock=True)
-        elif model == 'naive':
-            kwargs.update(mock=True, mock_func=None)
+        kwargs = update_query_kwargs_from_model_name(model, kwargs)
         try:
-            res = MANAGER.query(task=task, text=text, stream=True,
-                                strip_output=False, **kwargs)
+            res = MANAGER.query(task=task, text=text, strip_output=False,
+                                **kwargs)
         except Exception as e:
             print(e)
             res = 'Query failed. Please check your settings and try again.'
 
     # Type and read response aloud.
     concurrent_speaking_typing(res, data)
+
+
+def update_query_kwargs_from_model_name(model, query_kwargs):
+    """Adjust query parameters depending on which model a user chose. For
+    example, GPT3 will use streaming mode, GPT neo query function requires a
+    `size` param, etc.
+
+    Parameters
+    ----------
+    model: str
+        One of MODEL_NAMES defined in bin/main.py.
+        E.g. GPT3, GPT-neo 1.3B, GPT-J.
+    query_kwargs: dict
+        Params controlling text generation. E.g. max_tokens, temperature.
+
+    Returns
+    -------
+    dict: Same as query_kwargs but adjusted to use the appropriate model. Other
+    kwargs are tweaked too since each API offers slightly different options.
+    """
+    model = model.lower()
+    query_kwargs = dict(query_kwargs)
+    if 'neo' in model:
+        query_kwargs.update(mock_func=query_gpt_neo,
+                            size=model.split()[-1].upper(),
+                            mock=True)
+    elif model == 'gpt-j':
+        query_kwargs.update(mock_func=query_gpt_j)
+    elif model == 'naive':
+        query_kwargs.update(mock=True, mock_func=None)
+    else:
+        # Only gpt3 mode really supports streaming. Naive technically does
+        # but it's not particularly useful.
+        query_kwargs['stream'] = True
+    return query_kwargs
 
 
 def conv_query_callback(sender, data):
@@ -651,8 +682,11 @@ def conv_query_callback(sender, data):
 
     # Query gpt3, then type and read response.
     show_item(data['query_msg_id'])
-    res = CONV_MANAGER.query(engine_i=get_value(data['engine_i_id']),
-                             stream=True)
+    model = MODEL_NAMES[get_value('conv_model')]
+    kwargs = update_query_kwargs_from_model_name(
+        model, {'engine_i': get_value(data['engine_i_id'])}
+    )
+    res = CONV_MANAGER.query(**kwargs)
     concurrent_speaking_typing(res, data, conv_mode=True)
 
     # Start listening for user response automatically.
@@ -671,7 +705,6 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     errors = []
     q = Queue()
     monitor_thread = Thread(target=monitor_interrupt_checkbox,
-                            # args=(data['interrupt_id'], errors))
                             kwargs={'box_id': data['interrupt_id'],
                                     'errors': errors,
                                     'obj': SPEAKER,
