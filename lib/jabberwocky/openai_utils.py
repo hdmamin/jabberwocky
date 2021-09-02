@@ -717,8 +717,9 @@ class ConversationManager:
         return False
 
     def process_name(self, name, inverse=False):
-        """Convert a name to pretty format (title case, no underscores) and
-        back. The non-inverse method also removes periods (technically, you
+        """Convert a name to snake case (by default) or from snake case to
+        pretty format (title case, no underscores) if inverse=True.
+        The default method also removes periods (technically, you
         shouldn't be including these to begin with, but it's not a serious
         enough violation to throw an error) but note that inverse will NOT
         re-insert periods.
@@ -727,11 +728,13 @@ class ConversationManager:
         ----------
         name: str
         inverse: bool
-            If True, perform the inverse operation, converting a
-            pretty-formatted str to lowercase and replacing spaces with
-            underscores.
+            If False, convert a pretty-formatted string to snake case (replace
+            spaces with underscores and remove periods). If True, perform
+            the inverse operation, converting a snake case string to pretty
+            format. Periods are never added back in.
         """
         if inverse:
+            # To pretty format.
             return name.replace('_', ' ').title()
         return name.lower().replace(' ', '_').replace('.', '')
 

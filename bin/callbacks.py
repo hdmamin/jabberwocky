@@ -720,12 +720,29 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
                                         args=(data, errors))
     monitor_thread.start()
     speaker_thread.start()
+
+    # Only used in conv mode - default mode must update full_text each
+    # iteration regardless. ConvManager does it automatically when streaming
+    # because we use the full_conversation attr, but when stream=False (as it
+    # must be when using one of the open source models) we already have the
+    # full conversation by the time this function is called. Therefore, without
+    # this step we'd display the text all at once rather than getting our
+    # typing effect.
+    streamed_response = True
+    if conv_mode and isinstance(streamable, str):
+        full_text = CONV_MANAGER.full_conversation(include_summary=False)
+        pretty_name = CONV_MANAGER.process_name(CONV_MANAGER.current_persona,
+                                                inverse=True)
+        full_text = ''.join(full_text.rpartition(f'\n\n{pretty_name}: ')[:-1])
+        streamed_response = False
+
     for chunk in stream(streamable):
         if conv_mode:
-            chunked = CHUNKER.add(
-                'conv_transcribed',
-                CONV_MANAGER.full_conversation(include_summary=False)
-            )
+            if streamed_response:
+                full_text = CONV_MANAGER.full_conversation(False)
+            else:
+                full_text += chunk
+            chunked = CHUNKER.add('conv_transcribed', full_text)
         else:
             full_text += chunk
             chunked = CHUNKER.add('response', full_text)
