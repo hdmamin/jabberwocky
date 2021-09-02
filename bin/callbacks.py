@@ -369,13 +369,14 @@ def persona_select_callback(sender, data):
     # Must happen after we start conversation.
     SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current_gender]
 
-    # Start listening for user response automatically.
-    transcribe_callback('conv_query_callback',
-                        {'listening_id': 'conv_record_msg',
-                         'target_id': 'conv_text',
-                         'auto_punct_id': 'conv_auto_punct',
-                         'stop_record_id': 'conv_stop_record',
-                         'adjust_id': 'conv_adjust_msg'})
+    if sender != 'end_conversation_callback':
+        # Start listening for user response automatically.
+        transcribe_callback('conv_query_callback',
+                            {'listening_id': 'conv_record_msg',
+                             'target_id': 'conv_text',
+                             'auto_punct_id': 'conv_auto_punct',
+                             'stop_record_id': 'conv_stop_record',
+                             'adjust_id': 'conv_adjust_msg'})
 
 
 def add_custom_persona_callback(sender, data):

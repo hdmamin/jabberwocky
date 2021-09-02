@@ -113,10 +113,6 @@ def read_response_coro(data, errors=None, hide_on_exit=True):
     SPEAKER.start_session()
     while not errors:
         token = yield
-        # TODO start
-        print('token:', token)
-        print('sents:', sents)
-        # TODO end
         if token is None:
             # Speak any unspoken fragments before exiting.
             if sents: SPEAKER.speak(sents[0])

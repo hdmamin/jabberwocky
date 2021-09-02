@@ -1635,10 +1635,14 @@ X -fix logging issue
 
 9/1/21
 ------
--fix newly discovered bugs when stream=False (see yesterday - need to wrap text response in streamable gen, ignoring prompt)
+X -fix newly discovered bugs when stream=False (see yesterday - need to wrap text response in streamable gen, ignoring prompt)
     X -check if that fixes lack of typing effect
     X -check if that fixes skipping last sentence + repeating first
-    -clean up debugging statements in utils.read_response_coro
+    X -clean up debugging statements in utils.read_response_coro
+X -update persona_select_callback so listening does not begin automatically after hitting "end conversation" button (decided this felt unnatural)
+
+9/2/21
+------
 -look into py2app for exe generation
     -look more into pyoxidizer and/or nuitka if this fails
 
