@@ -615,6 +615,9 @@ def query_callback(sender, data):
         try:
             res = MANAGER.query(task=task, text=text, strip_output=False,
                                 **kwargs)
+            # In mode stream=False (i.e. when not using GPT3) we only want the
+            # response, not the prompt.
+            if isinstance(res, tuple): res = res[1]
         except Exception as e:
             print(e)
             res = 'Query failed. Please check your settings and try again.'
@@ -687,6 +690,9 @@ def conv_query_callback(sender, data):
         model, {'engine_i': get_value(data['engine_i_id'])}
     )
     res = CONV_MANAGER.query(**kwargs)
+    # In mode stream=False (i.e. when not using GPT3) we only want the
+    # response, not the prompt.
+    if isinstance(res, tuple): res = res[1]
     concurrent_speaking_typing(res, data, conv_mode=True)
 
     # Start listening for user response automatically.

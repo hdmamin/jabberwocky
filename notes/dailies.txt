@@ -1637,14 +1637,17 @@ X -fix logging issue
 ------
 -fix newly discovered bugs when stream=False (see yesterday - need to wrap text response in streamable gen, ignoring prompt)
     -check if that fixes lack of typing effect
-    -check if that fixes skipping last sentence + repeating first
+    X -check if that fixes skipping last sentence + repeating first
     -clean up debugging statements in utils.read_response_coro
+-look into py2app for exe generation
+    -look more into pyoxidizer and/or nuitka if this fails
 
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-look into possibility of keyboard shortcuts?
 -look into py2app for exe generation
     -look more into pyoxidizer and/or nuitka if this fails
 -more god prompt prototyping
