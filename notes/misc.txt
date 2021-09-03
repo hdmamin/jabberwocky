@@ -156,3 +156,10 @@ fine tuning notes
 notes on god prompt
 -for better or for worse, god is not very talkative. I guess it's probably common for fictional conversations with god to have the character hoping for some detailed solution to their problems but what they get are short, vague, slightly mystical answers.
 -still lots of room to experiment with the prompt. A Douglas Adams-y god might be fun, but would probably require fine-tuning.
+
+9/2/21
+------
+running app in alias mode. Save as in default mode has default path:
+/Users/hmamin/jabberwocky/dist/main.app/Contents/Resources/data/completions/punctuate
+instead of
+/Users/hmamin/jabberwocky/data/completions/punctuate

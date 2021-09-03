@@ -1643,9 +1643,20 @@ X -update persona_select_callback so listening does not begin automatically afte
 
 9/2/21
 ------
--look into py2app for exe generation
+~ -look into py2app for exe generation
+    UPDATE: some progress. Got app to build in Alias mode (similar to editable mode for pip).
     -look more into pyoxidizer and/or nuitka if this fails
+X -launch big sleep training run to generate logo/icon (if I ever get exe to build I can provide an icon. One option is to try to generate one. Don't know how well this will work but I want to try the notebook anyway so this is a fine place to start.)
+-look through some logos/icons for ideas in case I go manual route
+    UPDATE: relevant components: audio lines, microphone, telephone, two faces, message bubbles, J, 
 
+9/3/21
+------
+-continue py2app exe generation troubleshooting
+    -start with err in lower left pane "no such file or directory ...python3.7/site-packages/rtree/lib"
+-check in on big sleep training run
+    -maybe try a new prompt
+-start editing manual icon in gimp
 
 
 -------------------------------------------------------------------------------
