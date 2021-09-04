@@ -1652,21 +1652,32 @@ X -launch big sleep training run to generate logo/icon (if I ever get exe to bui
 
 9/3/21
 ------
--continue py2app exe generation troubleshooting
-    -start with err in lower left pane "no such file or directory ...python3.7/site-packages/rtree/lib"
--check in on big sleep training run
-    -maybe try a new prompt
--start editing manual icon in gimp
+~ -continue py2app exe generation troubleshooting
+    ~ -start with err in lower left pane "no such file or directory ...python3.7/site-packages/rtree/lib"
+        UPDATE: found some signs rtree is a common issue here. Tried upgrading rtree (a few people claim that fixes it but some say otherwise) and started rebuilding. Started reading a bit about py2app recipes. After looking into sip warnings, sounds like the build isn't working even aside from this: if it completes, we'll still be missing some (all?) packages.
+X -check in on big sleep training run
+    _ -maybe try a new prompt
+        UPDATE: Was okay but not really what I want for icon.
+X -start editing manual icon in gimp
+    UPDATE: done. Worked pretty well IMO!
+
+9/4/21
+------
+-switch app default mode to Conv
+    -make first in main menu
+-description viewable on pypi (think this needs to be rst, not md)
+    -add icon to both versions of the readme
+-py2app troubleshooting
+    -check on build
+    -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
 -look into possibility of keyboard shortcuts?
--look into py2app for exe generation
-    -look more into pyoxidizer and/or nuitka if this fails
+-look more into pyoxidizer and/or nuitka if py2app fails
 -more god prompt prototyping
--description viewable on pypi (think this needs to be rst, not md)
 - htools things:
 	-flesh out owneraccess decorator
 	-port htools as_df
