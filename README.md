@@ -1,5 +1,7 @@
 # jabberwocky
 
+<img src='data/icons/icon.png' height='100'>
+
 # Project Description
 A GUI providing an audio interface to GPT3. We support conversations with most public figures and provide a number of other pre-built tasks including:
 - Summarization

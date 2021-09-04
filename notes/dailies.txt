@@ -1663,8 +1663,9 @@ X -start editing manual icon in gimp
 
 9/4/21
 ------
--switch app default mode to Conv
-    -make first in main menu
+X -switch app default mode to Conv
+    X -make first in main menu
+    -rename default mode to "task" mode and update all func names, var names, etc.
 -description viewable on pypi (think this needs to be rst, not md)
     -add icon to both versions of the readme
 -py2app troubleshooting
