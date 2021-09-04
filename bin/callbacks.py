@@ -62,7 +62,7 @@ def transcribe(data, error_message, results):
 
 
 def transcribe_callback(sender, data):
-    """Triggered when user hits the Record button. Used in both default mode
+    """Triggered when user hits the Record button. Used in both task mode
     and conv mode.
 
     data keys:
@@ -166,7 +166,7 @@ def transcribe_callback(sender, data):
 
 
 def format_text_callback(sender, data):
-    """Used in default mode when user hits auto-format button. Mostly just
+    """Used in task mode when user hits auto-format button. Mostly just
     chunks text since dearpygui doesn't wrap lines automatically. Also adds a
     colon at the end of text if task is "how to".
 
@@ -229,7 +229,7 @@ def text_edit_callback(sender, data):
     # Not sure if this is really effective though because the conv manager
     # maintains its own conversation history and I think it only uses CHUNKER
     # to get the new prompt. Use elif (not else) to prevent this from being
-    # triggered when user edits speech speed in default mode.
+    # triggered when user edits speech speed in task mode.
     elif is_item_visible('Conversation'):
         edited = get_value('conv_text')
         CHUNKER.add('conv_transcribed', edited, return_chunked=False)
@@ -264,7 +264,7 @@ def text_edit_callback(sender, data):
 
 
 def task_select_callback(sender, data):
-    """Triggered when user selects a task (e.g. Summary) in default mode.
+    """Triggered when user selects a task (e.g. Summary) in task mode.
 
     data keys:
         - task_list_id (str: element containing selected item. Returns an int.)
@@ -488,7 +488,7 @@ def cancel_save_conversation_callback(sender, data):
 
 
 def saveas_callback(sender, data):
-    """Triggered when user hits Save As button in either default or conv mode.
+    """Triggered when user hits Save As button in either task or conv mode.
     Note that saving will not actually occur until the user hits the save
     button in the popup that appears because we still need to confirm the file
     name, directory, etc.
@@ -521,7 +521,7 @@ def save_callback(sender, data):
     data_keys:
         - source_text_id (str: The text fields containing the content being
         saved. If in conversation mode, these will be cleared after saving.
-        Default mode doesn't really need to specify them since they're unused
+        Task mode doesn't really need to specify them since they're unused
         in that case. end_conv_id (str: ID of checkbox in conv mode specifying
         whether to end the conversation. This isn't always true - we might want
         to save as we go along, just like any time you're writing a long
@@ -576,7 +576,7 @@ def save_callback(sender, data):
     # Reset text box, text chunker, and conversation manager. These should NOT
     # be done if we cancel the save operation. If user saved empty text, delete
     # call would throw an error without if clause. We also don't do this for
-    # default mode in case we want to reuse a prompt for multiple tasks.
+    # task mode in case we want to reuse a prompt for multiple tasks.
     if is_item_visible('Conversation') and get_value(data['end_conv_id']):
         if full_conv: CHUNKER.delete('conv_transcribed')
         set_value(data['source_text_id'], '')
@@ -585,7 +585,7 @@ def save_callback(sender, data):
 
 
 def query_callback(sender, data):
-    """Triggered when user hits query button in default mode. Conv query is
+    """Triggered when user hits query button in task mode. Conv query is
     separate because the process is quite different: that's why we have a
     separate prompt manager for regular tasks and for conversation.
 
@@ -707,7 +707,7 @@ def conv_query_callback(sender, data):
 
 def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     # Stream function provides "typing" effect.
-    # full_text only used in default mode.
+    # full_text only used in task mode.
     full_text = ''
     errors = []
     q = Queue()
@@ -722,7 +722,7 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     monitor_thread.start()
     speaker_thread.start()
 
-    # Only used in conv mode - default mode must update full_text each
+    # Only used in conv mode - task mode must update full_text each
     # iteration regardless. ConvManager does it automatically when streaming
     # because we use the full_conversation attr, but when stream=False (as it
     # must be when using one of the open source models) we already have the
@@ -804,18 +804,18 @@ def menu_conversation_callback(sender, data):
     hide_item('Input')
     hide_item('Options')
     set_item_label('conv_menu_choice', 'Conversation\t[x]')
-    set_item_label('default_menu_choice', 'Default')
+    set_item_label('task_menu_choice', 'Task')
 
 
-def menu_default_callback(sender, data):
-    """Triggered when user selects default mode from the main menu.
+def menu_task_callback(sender, data):
+    """Triggered when user selects task mode from the main menu.
     Controls which windows are displayed.
     """
     show_item('Input')
     show_item('Options')
     hide_item('Conversation')
     hide_item('Conversation Options')
-    set_item_label('default_menu_choice', 'Default\t[x]')
+    set_item_label('task_menu_choice', 'Task\t[x]')
     set_item_label('conv_menu_choice', 'Conversation')
 
 

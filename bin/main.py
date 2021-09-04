@@ -126,7 +126,7 @@ class App:
 
     def get_prompt_text(self, task_list_id='task_list',
                         text_source_id='transcribed_text', do_format=True):
-        """In default mode, get the current prompt. This can either be fully
+        """In task mode, get the current prompt. This can either be fully
         resolved or not, depending on your choice of do_format.
 
         Parameters
@@ -149,7 +149,7 @@ class App:
         return task_name, input_
 
     def get_query_kwargs(self) -> dict:
-        """Gets currently selected kwargs from GUI when in default mode. The
+        """Gets currently selected kwargs from GUI when in task mode. The
         user can set these via various widgets and we need to access them to
         make queries with the appropriate kwargs.
         """
@@ -164,7 +164,7 @@ class App:
         """Defines the main window which hours both column windows. This lets
         us override the default background color which can't be changed
         otherwise. This method also defines the menu bar which lets us switch
-        between default and conv modes.
+        between task and conv modes.
         """
         # Just here to suppress the default background and its un-settable
         # color. Do not delete.
@@ -172,16 +172,17 @@ class App:
             with menu_bar('menu_bar'):
                 with menu('Settings'):
                     with menu('Mode'):
-                        add_menu_item('default_menu_choice',
-                                      label='Default\t[x]',
-                                      callback=menu_default_callback)
-                        add_menu_item('conv_menu_choice', label='Conversation',
+                        add_menu_item('conv_menu_choice',
+                                      label='Conversation\t[x]',
                                       callback=menu_conversation_callback)
+                        add_menu_item('task_menu_choice',
+                                      label='Task',
+                                      callback=menu_task_callback)
         set_main_window_title('Jabberwocky')
 
     def left_column(self):
         """Defines the dearpygui elements in the left column of the app.
-        Notice this includes both the default window and the conv window, only
+        Notice this includes both the task window and the conv window, only
         one of which is visible at a time. I believe I tried to separate them
         but encountered issues since dearpygui does some black magic with the
         current stack when defining windows.
@@ -190,7 +191,7 @@ class App:
                     height=self.heights[1.], x_pos=self.pad,
                     y_pos=self.pad, no_resize=True, no_move=True):
             ###################################################################
-            # Default window (1 time queries)
+            # Task window (1-time queries)
             ###################################################################
             add_button('record_btn', label='Record',
                        callback_data={'listening_id': 'record_msg',
@@ -224,44 +225,44 @@ class App:
                     'manually press the button.'
                 )
             add_same_line()
-            add_button('default_saveas_btn', label='Save As',
+            add_button('task_saveas_btn', label='Save As',
                        callback=saveas_callback,
-                       callback_data={'dir_id': 'default_save_dir_text',
-                                      'file_id': 'default_save_file_text',
+                       callback_data={'dir_id': 'task_save_dir_text',
+                                      'file_id': 'task_save_file_text',
                                       'task_list_id': 'task_list'})
-            with tooltip('default_saveas_btn', 'default_saveas_btn_tooltip'):
+            with tooltip('task_saveas_btn', 'task_saveas_btn_tooltip'):
                 add_text('Do not save while speaking is in progress.')
 
-            with popup('default_saveas_btn', 'Save Completion', modal=True,
+            with popup('task_saveas_btn', 'Save Completion', modal=True,
                        width=450, mousebutton=mvMouseButton_Left):
                 # Input dir and file names both get updated in save as callback
                 # so the values here don't really matter.
-                add_input_text('default_save_dir_text', label='Directory',
+                add_input_text('task_save_dir_text', label='Directory',
                                default_value='')
-                add_input_text('default_save_file_text', label='File Name',
+                add_input_text('task_save_file_text', label='File Name',
                                default_value='')
                 add_same_line()
-                add_checkbox('default_force_save_box', label='Force Save',
+                add_checkbox('task_force_save_box', label='Force Save',
                              default_value=False)
                 # Notice this can skip a few of the keys we need to provide in
                 # conv mode.
                 save_callback_data = {
                     'popup_id': 'Save Completion',
-                    'error_msg_id': 'default_save_error_msg',
-                    'dir_id': 'default_save_dir_text',
-                    'file_id': 'default_save_file_text',
-                    'force_save_id': 'default_force_save_box',
+                    'error_msg_id': 'task_save_error_msg',
+                    'dir_id': 'task_save_dir_text',
+                    'file_id': 'task_save_file_text',
+                    'force_save_id': 'task_force_save_box',
                     'task_list_id': 'task_list'
                 }
-                add_button('default_save_btn', label='Save',
+                add_button('task_save_btn', label='Save',
                            callback=save_callback,
                            callback_data=save_callback_data)
                 add_same_line()
-                add_button('default_cancel_save_btn', label='Cancel',
+                add_button('task_cancel_save_btn', label='Cancel',
                            callback=cancel_save_conversation_callback,
                            callback_data=save_callback_data)
                 add_same_line()
-                add_text('default_save_error_msg',
+                add_text('task_save_error_msg',
                          default_value='Failed to save file.', show=False)
 
             add_text('adjust_msg', default_value='Adjusting mic...',
@@ -308,7 +309,7 @@ class App:
             SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current_gender]
             set_key_press_callback(text_edit_callback)
 
-            # Same as in default window but with different names/callback_data.
+            # Same as in task window but with different names/callback_data.
             add_button('conv_record_btn', label='Record',
                        callback_data={'listening_id': 'conv_record_msg',
                                       'target_id': 'conv_text',
@@ -394,7 +395,7 @@ class App:
                                    'speaking turn.')
 
             # Just tweaked height until it seemed to do what I want (no
-            # vertical scroll w/ default window size). Not sure how to
+            # vertical scroll w/ task window size). Not sure how to
             # calculate precisely what I want (unknown height of query button).
             # Spacing is necessary otherwise text gets crammed on the same line
             # as buttons because by default all the messages are hidden.
@@ -416,7 +417,7 @@ class App:
                     y_pos=self.pad, no_resize=True, no_move=True):
 
             ###################################################################
-            # Default Options Window
+            # Task Options Window
             ###################################################################
             add_button('query_btn', label='Query', callback=query_callback,
                        callback_data={'target_id': 'response_text',
@@ -438,11 +439,11 @@ class App:
                     'your transcribed lines. This should make transcription\n'
                     'quality a bit higher but results will be slower.'
                 )
-            add_input_int('default_speed_input', default_value=5, min_value=0,
+            add_input_int('task_speed_input', default_value=5, min_value=0,
                           max_value=10, min_clamped=True, max_clamped=True,
                           label='Speaker Speed',
                           callback=speaker_speed_callback)
-            with tooltip('default_speed_input', 'speed_input_tooltip'):
+            with tooltip('task_speed_input', 'speed_input_tooltip'):
                 add_text('Use this to adjust your conversational partner\'s\n'
                          'rate of talking. 0 is slowest, 10 is fastest.')
             add_radio_button('model', items=MODEL_NAMES)
@@ -717,6 +718,7 @@ class App:
         self.primary_window()
         self.left_column()
         self.right_column()
+        menu_conversation_callback(None, None)
 
     def run(self):
         """Builds and runs dearpygui app."""
@@ -731,7 +733,7 @@ if __name__ == '__main__':
                                                        'shortest',
                                                        'short_dates'])
     CONV_MANAGER = ConversationManager()
-    # Tasks not listed here won't show up in the Tasks listbox in default mode.
+    # Tasks not listed here won't show up in the Tasks listbox in task mode.
     NAME2TASK = IndexedDict({
         'Punctuate': 'punctuate',
         'Translate': 'translate',
