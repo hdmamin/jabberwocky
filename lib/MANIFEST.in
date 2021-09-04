@@ -1,4 +1,5 @@
 recursive-include jabberwocky *.py
 include README.md
 include requirements.txt
-
+include ../data/icons/icon.png
+recursive-include ../data/clips/demo *

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import setuptools
 
 
@@ -17,6 +18,11 @@ def version():
             return row.split(' = ')[-1].strip('\n').strip("'")
 
 
+def file_text(fname):
+    path = Path(__file__).parent/fname
+    return path.read_text()
+
+
 setuptools.setup(name='jabberwocky',
                  version=version(),
                  author='Harrison Mamin',
@@ -24,5 +30,7 @@ setuptools.setup(name='jabberwocky',
                  description='Core library powering a GUI providing an audio '
                              'interface to GPT3.',
                  install_requires=requirements(),
-                 packages=setuptools.find_packages())
+                 packages=setuptools.find_packages(),
+                 long_description=file_text('README.md'),
+                 long_description_content_type='text/markdown')
 
