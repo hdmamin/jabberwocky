@@ -1665,12 +1665,21 @@ X -start editing manual icon in gimp
 ------
 X -switch app default mode to Conv
     X -make first in main menu
-    -rename default mode to "task" mode and update all func names, var names, etc.
--description viewable on pypi (think this needs to be rst, not md)
-    -add icon to both versions of the readme
+    X -rename default mode to "task" mode and update all func names, var names, etc.
+X -description viewable on pypi (think this needs to be rst, not md)
+    X -add icon to both versions of the readme
 -py2app troubleshooting
-    -check on build
+    X -check on build
+        UPDATED: failed w/ same rtree error.
     -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
+
+9/5/21
+------
+-record new example gif showing concurrent typing/speaking
+-py2app troubleshooting
+    -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
+    -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
+    -join dearpygui discord and see if I can get help there? May be difficult since it's now a pretty outdated version.
 
 
 -------------------------------------------------------------------------------
