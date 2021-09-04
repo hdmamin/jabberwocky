@@ -1,6 +1,6 @@
 # Jabberwocky
 
-<img src='https://github.com/hdmamin/jabberwocky/blob/347e1514769264219393abf8a62b1a808cb70421/data/icons/icon.png' height='100'>
+<img src='https://github.com/hdmamin/jabberwocky/raw/347e1514769264219393abf8a62b1a808cb70421/data/icons/icon.png' height='100'>
 
 # Project Description
 The core library powering a GUI that provides an audio interface to GPT3. We support conversations with most public figures and provide a number of other pre-built tasks including:
@@ -17,11 +17,11 @@ The core library powering a GUI that provides an audio interface to GPT3. We sup
 
 In conversation mode, you can chat with a number of pre-defined personas or add new ones:
 
-![](https://github.com/hdmamin/jabberwocky/blob/347e1514769264219393abf8a62b1a808cb70421/data/clips/demo/add_persona.gif)
+![](https://github.com/hdmamin/jabberwocky/raw/347e1514769264219393abf8a62b1a808cb70421/data/clips/demo/add_persona.gif)
 
 In task mode, you can ask GPT3 to perform a number pre-defined tasks. Written and spoken input are both supported. By default, GPT3's response is both displayed in writing and read aloud.
 
-![](https://github.com/hdmamin/jabberwocky/blob/347e1514769264219393abf8a62b1a808cb70421/data/clips/demo/punctuation.gif)
+![](https://github.com/hdmamin/jabberwocky/raw/347e1514769264219393abf8a62b1a808cb70421/data/clips/demo/punctuation.gif)
 Transcripts of responses from a subset of non-conversation tasks can be found in the `data/completion` directory.
 
 ### Project Members
