@@ -6,6 +6,10 @@ data/*
 !data/prompts
 !data/completions
 !data/clips/demo/
+# Getting gitignore exception to work on 1 file is a little tricky.
+!data/icons/
+data/icons/*
+!data/icons/icon.png
 *egg-info*
 lib/dist
 *.swp
