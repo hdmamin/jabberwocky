@@ -1,6 +1,7 @@
-# Jabberwocky
-
+<p align='center'>
 <img src='data/icons/icon.png' height='100'>
+<h1>Jabberwocky</h1>
+</p>
 
 https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4
 
@@ -24,7 +25,7 @@ In conversation mode, you can chat with a number of pre-defined personas or add 
 In task mode, you can ask GPT3 to perform a number pre-defined tasks. Written and spoken input are both supported. By default, GPT3's response is both displayed in writing and read aloud.
 
 ![](data/clips/demo/punctuation.gif)
-Transcripts of responses from a subset of non-conversation tasks can be found in the `data/completion` directory.
+Transcripts of responses from a subset of non-conversation tasks can be found in the `data/completions` directory.
 
 ### Project Members
 * Harrison Mamin
