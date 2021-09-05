@@ -1675,7 +1675,7 @@ X -description viewable on pypi (think this needs to be rst, not md)
 
 9/5/21
 ------
--record new example gif showing concurrent typing/speaking
+X -record new example gif showing concurrent typing/speaking (punctuation default prompt)
 -py2app troubleshooting
     -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
     -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
@@ -1685,6 +1685,8 @@ X -description viewable on pypi (think this needs to be rst, not md)
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-clear name in Add Persona input after adding
+-add start conv button? Not technically necessary but maybe it would be good from a UX perspective?
 -look into possibility of keyboard shortcuts?
 -look more into pyoxidizer and/or nuitka if py2app fails
 -more god prompt prototyping
