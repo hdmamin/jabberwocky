@@ -1,7 +1,8 @@
 # Jabberwocky
 
 <img src='data/icons/icon.png' height='100'>
-![](data/clips/demo/neil_degrasse_tyson_with_audio.mp4)
+
+https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4
 
 # Project Description
 A GUI providing an audio interface to GPT3. We support conversations with most public figures and provide a number of other pre-built tasks including:
