@@ -1676,17 +1676,32 @@ X -description viewable on pypi (think this needs to be rst, not md)
 9/5/21
 ------
 X -record new example gif showing concurrent typing/speaking (punctuation default prompt)
+    X -record new conv response gif/mp4
+    X -figure out how to add mp4 to github readme (it is possible now!)
+    X -update readme
+    X -update pypi readme
+    X -add blurb to pypi readme
 -py2app troubleshooting
     -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
     -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
-    -join dearpygui discord and see if I can get help there? May be difficult since it's now a pretty outdated version.
+    X -join dearpygui discord
+        -msg for help there? May be difficult since it's now a pretty outdated version.
+~ -look into adding icon w/ dearpygui (bundling should do this too but would be nice if it appeared when running manually)
+    UPDATE: github conversations imply it is in this version but I'm not finding any of the functions they listed so maybe it got pushed to a later version.
 
+9/6/21
+------
+-change task option order? Either prioritize manually (default first, punct second, etc.) or alphabetize. Right now it looks to be neither.
+-clear name in Add Persona input after adding
+-add start conv button? Not technically necessary but maybe it would be good from a UX perspective?
+-msg dpygui for help w/ bundling? May be difficult since it's now a pretty outdated version.
+-py2app troubleshooting
+    -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
+    -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
--clear name in Add Persona input after adding
--add start conv button? Not technically necessary but maybe it would be good from a UX perspective?
 -look into possibility of keyboard shortcuts?
 -look more into pyoxidizer and/or nuitka if py2app fails
 -more god prompt prototyping
