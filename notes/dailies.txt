@@ -1691,11 +1691,23 @@ X -record new example gif showing concurrent typing/speaking (punctuation defaul
 
 9/6/21
 ------
--noticed readme auto table is from notebooks dir. Try to diagnose cause and fix it.
-    -check if lib readme works after fix (currently has correct refs to lib, note notebooks. Weird.)
--change task option order? Either prioritize manually (default first, punct second, etc.) or alphabetize. Right now it looks to be neither.
--clear name in Add Persona input after adding
--add start conv button? Not technically necessary but maybe it would be good from a UX perspective?
+X -noticed readme auto table is from notebooks dir. Try to diagnose cause and fix it.
+    UPDATE: py2app setup.py in project root made htools cli think notebooks was a package. Should probably make user specify lib dirs separately from non-lib dirs in future htools update, but for now I just move the setup.py file to a new subdir and made a note of the issue in htools.
+    X -check if lib readme works after fix (currently has correct refs to lib, note notebooks. Weird.)
+X -change task option order? Either prioritize manually (default first, punct second, etc.) or alphabetize. Right now it looks to be neither.
+    UPDATE: Turns out I just manually specified the order. Updated it so default is first. Order after that is less important but I tweaked it a little.
+X -clear name in Add Persona input after adding
+    UPDATE: fixed. Also realized the In Progress message wasn't disappearing at the right time since persona_select_callback triggers transcription so it continued to show until we finished listening. Subtlety about try/except/else/finally/separate block when returning in Except.
+    X -check that I can rm commented out same_line() calls before add persona msgs. Then either uncomment or rm.
+        UPDATE: Removed.
+    -made same changes in custom add_persona mode (I think it uses separate functionality so the above changes prob didn't fix it, but check)
+_ -add start conv button? Not technically necessary but maybe it would be good from a UX perspective?
+    UPDATE: Decided to skip this. Added an explanation to the stop_conv button instead.
+-instructions in readme
+    -how to add your api key
+    -how to install packages
+        -makefile command?
+    -how to run
 -msg dpygui for help w/ bundling? May be difficult since it's now a pretty outdated version.
 -py2app troubleshooting
     -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?

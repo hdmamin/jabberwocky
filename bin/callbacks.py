@@ -380,6 +380,22 @@ def persona_select_callback(sender, data):
 
 
 def add_custom_persona_callback(sender, data):
+    """Executes when user clicks Add Custom Persona button in conv mode. Note
+    that the actual generation does not yet occur - that happens in
+    generate_persona_callback. This just preps the form for the user to
+    interact with.
+
+    data keys:
+      -  popup_id
+      -  name_id
+      -  summary_id
+      -  image_path_id
+      -  gender_id
+      -  target_id
+      -  error_msg_id
+      -  name_source_id
+      -  force_save_id
+    """
     # Reset values so the next persona we generate doesn't show the last
     # persona we added.
     set_value(data['name_id'], get_value(data['name_source_id']))
@@ -389,6 +405,9 @@ def add_custom_persona_callback(sender, data):
 
 
 def generate_persona_callback(sender, data):
+    """Triggered when user clicks Generate button in popup window that appears
+    after clicking Add Custom Persona from conv mode.
+    """
     name = get_value(data['name_id'])
     summary = get_value(data['summary_id']).replace('\n', ' ')\
                                            .replace('  ', ' ')
@@ -427,8 +446,9 @@ def generate_persona_callback(sender, data):
     # one. Dearpygui doesn't seem to let us change the selected listbox item
     # so we have to do this a bit hackily.
     configure_item(data['target_id'], items=CONV_MANAGER.personas())
-    persona_select_callback('generate_persona_callback', {'name': name})
     cancel_save_conversation_callback('generate_persona_callback', data)
+    # Do this last since it triggers transcription callback.
+    persona_select_callback('generate_persona_callback', {'name': name})
 
 
 def add_persona_callback(sender, data):
@@ -456,17 +476,22 @@ def add_persona_callback(sender, data):
     else:
         personas = CONV_MANAGER.personas()
         configure_item(data['target_id'], items=personas)
-        # Make new persona the active one. Dearpygui doesn't seem to let us
-        # change the selected listbox item so we have to do this a bit hackily.
-        persona_select_callback('add_persona_callback', {'name': name})
     finally:
         hide_item(data['show_during_id'])
+        set_value(data['name_id'], '')
+
+    # Make new persona the active one. Dearpygui doesn't seem to let us
+    # change the selected listbox item so we have to do this a bit hackily.
+    # Keep this outside of finally block because we don't want it to execute if
+    # there was an error adding the persona.
+    persona_select_callback('add_persona_callback', {'name': name})
 
 
 def cancel_save_conversation_callback(sender, data):
     """This is executed when the user hits cancel in the Save file popup. It's
-    also manually called at the end of save_callback since it's a convenient
-    way to reset several items at once.
+    also manually called at the end of save_callback and
+    generate_persona_callback since it's a convenient way to reset several
+    items at once.
 
     data keys:
         - error_msg_id (str: text element containing a message displayed when
@@ -484,6 +509,11 @@ def cancel_save_conversation_callback(sender, data):
     hide_item(data['error_msg_id'])
     if 'force_save_id' in data:
         set_value(data['force_save_id'], False)
+    # Add Custom Persona has this. Covers case where we manually call this from
+    # generate_persona_callback or when the user clicks Cancel button in the
+    # popup that appears when adding a custom person.
+    if 'name_source_id' in data:
+        set_value(data['name_source_id'], '')
     close_popup(data['popup_id'])
 
 

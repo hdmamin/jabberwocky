@@ -374,7 +374,11 @@ class App:
                        callback=end_conversation_callback)
             with tooltip('end_conv_btn', 'end_conv_btn_callback'):
                 add_text('This will delete the current conversation. \nYou '
-                         'will no longer be able to save a transcript.')
+                         'will no longer be able to save a transcript.\n'
+                         'Selecting a new Persona will start a new \n'
+                         'conversation with that person. Alternatively, simply'
+                         '\nhit record to start a new conversation with the '
+                         '\nsame person you just talked to.')
             add_text('conv_adjust_msg', default_value='Adjusting mic...',
                      show=False)
             add_text('conv_record_msg', default_value='Listening...',
@@ -680,10 +684,8 @@ class App:
                 add_text('persona_save_error_msg',
                          default_value='Persona already exists.', show=False)
 
-            # add_same_line()
             add_text('add_persona_msg',
                      default_value='Generating new persona...', show=False)
-            # add_same_line()
             add_text('add_persona_error_msg',
                      default_value='Failed to generate that persona. Try a '
                                    'different name.', show=False)
@@ -735,13 +737,13 @@ if __name__ == '__main__':
     CONV_MANAGER = ConversationManager()
     # Tasks not listed here won't show up in the Tasks listbox in task mode.
     NAME2TASK = IndexedDict({
+        'Default': 'default',
         'Punctuate': 'punctuate',
         'Translate': 'translate',
-        'Default': 'default',
         'Debate': 'debate',
         'Summarize': 'tldr',
-        'Analyze Writing': 'analyze_writing',
         'Explain Like I\'m 5': 'eli',
+        'Analyze Writing': 'analyze_writing',
         'Explain Machine Learning': 'simplify_ml',
         'Machine Learning Abstract Writer': 'ml_abstract',
         'How To': 'how_to',
