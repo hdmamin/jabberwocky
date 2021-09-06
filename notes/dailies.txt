@@ -1691,6 +1691,8 @@ X -record new example gif showing concurrent typing/speaking (punctuation defaul
 
 9/6/21
 ------
+-noticed readme auto table is from notebooks dir. Try to diagnose cause and fix it.
+    -check if lib readme works after fix (currently has correct refs to lib, note notebooks. Weird.)
 -change task option order? Either prioritize manually (default first, punct second, etc.) or alphabetize. Right now it looks to be neither.
 -clear name in Add Persona input after adding
 -add start conv button? Not technically necessary but maybe it would be good from a UX perspective?

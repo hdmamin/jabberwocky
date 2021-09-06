@@ -45,7 +45,7 @@ jabberwocky/
 ```
 
 ---
-Start of auto-generated file data.<br/>Last updated: 2021-09-04 13:15:33
+Start of auto-generated file data.<br/>Last updated: 2021-09-06 12:13:01
 
 <table border="1" class="dataframe">
   <thead>
@@ -62,7 +62,7 @@ Start of auto-generated file data.<br/>Last updated: 2021-09-04 13:15:33
       <td>__init__.py</td>
       <td>_</td>
       <td>1</td>
-      <td>2021-08-13 20:31:57</td>
+      <td>2021-09-04 13:32:08</td>
       <td>22.00 b</td>
     </tr>
     <tr>

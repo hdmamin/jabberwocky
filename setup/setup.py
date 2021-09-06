@@ -1,3 +1,8 @@
+"""Py2app configuration. I keep this separate from the project root because
+otherwise my ReadmeUpdater malfunctions and places notebook summaries in the
+root README.
+"""
+
 from setuptools import setup
 import sys
 
@@ -5,7 +10,7 @@ import sys
 sys.setrecursionlimit(2_500)
 OPTIONS = {
     'argv_emulation': False,
-    'iconfile': 'data/icons/icon.icns',
+    'iconfile': '../data/icons/icon.icns',
     'plist': {
         'PyRuntimeLocations':
         ['@executable_path/../Frameworks/libpython3.7m.dylib',
@@ -14,8 +19,8 @@ OPTIONS = {
 }
 
 setup(
-    app=['bin/main.py'],
-    data_files=['data'],
+    app=['../bin/main.py'],
+    data_files=['../data'],
     setup_requires=['py2app'],
     options={'py2app': OPTIONS}
 )
