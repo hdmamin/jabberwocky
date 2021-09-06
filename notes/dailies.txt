@@ -1700,46 +1700,65 @@ X -clear name in Add Persona input after adding
     UPDATE: fixed. Also realized the In Progress message wasn't disappearing at the right time since persona_select_callback triggers transcription so it continued to show until we finished listening. Subtlety about try/except/else/finally/separate block when returning in Except.
     X -check that I can rm commented out same_line() calls before add persona msgs. Then either uncomment or rm.
         UPDATE: Removed.
-    -made same changes in custom add_persona mode (I think it uses separate functionality so the above changes prob didn't fix it, but check)
+    X -made same changes in custom add_persona mode (I think it uses separate functionality so the above changes prob didn't fix it, but check)
 _ -add start conv button? Not technically necessary but maybe it would be good from a UX perspective?
     UPDATE: Decided to skip this. Added an explanation to the stop_conv button instead.
+X -show error msg if user tries to add empty name in auto add persona mode
+    UPDATE: also strengthened logic here and in add custom persona mode so that leading/trailing spaces are stripped (also from summary in custom case) and therefore ' ' triggers the same error.
+~ -add some basic docs to GuiTextChunker
+    UPDATE: some methods are still undocumented but I wrote something to remind myself of the gist of what's going on. Can decide whether to add more later or not.
+-look into possibility of keyboard shortcuts?
+    UPDATE: seeing some promise here with is_key_down(), maybe is_key_pressed(), set_key_press_callback().
+
+9/7/21
+------
+-consider: rename Record to Talk or Transcribe? Undecided.
+-look more into possibility of keyboard shortcuts
+    -diff between is_key_down and is_key_pressed?
+    -if relatively quick, add hotkey for record, query, maybe cancel record?
 -instructions in readme
     -how to add your api key
     -how to install packages
         -makefile command?
     -how to run
--msg dpygui for help w/ bundling? May be difficult since it's now a pretty outdated version.
--py2app troubleshooting
-    -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
-    -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
+-evaluate difficulty of adding "delete persona" option. Mostly helpful for testing and it's not hard to delete from the terminal but might be nice.
+
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
--look into possibility of keyboard shortcuts?
--look more into pyoxidizer and/or nuitka if py2app fails
--more god prompt prototyping
+-update personal site w/ quick summary, things learned, etc.?
+-update postmortem
+-delete persona
 - htools things:
 	-flesh out owneraccess decorator
 	-port htools as_df
+    -continue work on more generic Monitor class for htools
 -watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
 -maybe update converse contextmanager to have input baked in
--continue work on more generic Monitor class for htools
+-py2app troubleshooting
+    -msg dpygui for help w/ bundling? May be difficult since it's now a pretty outdated version.
+    -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
+    -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
+    -look more into pyoxidizer and/or nuitka instead
 
--------------------------------------------------------------------------------
+
 easy tasks for low energy days
-
-- lots of waiting docs in core.py
-- dearpygui videos tutorials (https://github.com/hoffstadt/DearPyGui/wiki/Video-Tutorials):
-    -parent stack system
-    -callbacks
-    -value storage system
--document session
--document transcript methods
+------------------------------
+-
 
 Won't Do (things I considered doing but ultimately decided to skip, at least in this project)
 ---------------------------------------------------------------------------------------------
 -see if slack app is a possibility (do I have auth to do in GG workspace?)
 -prototype cover letter writer from job posting
--consider image task tie-ins
+-consider image task tie-ins [already allowed a ton of scope creep. At the very least leave this for a later project.]
     -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
+-document session and transcript classes in core.py (most of those ended up not being used for the GUI)
+
+Future Extensions
+-----------------
+-custom voices w/ something like tacotron
+-face animation (look like they're speaking the words in sync with audio)
+-support for text messaging, Alexa, other modes of communication?
+-support to record conversation (audio)
+-some sort of coding mode

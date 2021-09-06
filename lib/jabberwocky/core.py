@@ -471,6 +471,17 @@ class Session:
 
 
 class GuiTextChunker:
+    """Used by GUI to display text with a max line length. Dearpygui doesn't
+    have any auto-text wrap that I could find (at least in this version) so
+    longer responses would otherwise trail way past the defined text box. I
+    don't like the huge horizontal scrollbars that result so this is my
+    workaround.
+
+    This maintains both "chunked" (max line length enforced) and non-chunked
+    versions of an input text because we often prefer not to send GPT-3 text
+    with newlines haphazardly inserted. I.e. we show the user the chunked
+    version but query with the raw version.
+    """
 
     def __init__(self, max_chars=79):
         self.raw = {}

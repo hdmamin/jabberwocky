@@ -408,9 +408,10 @@ def generate_persona_callback(sender, data):
     """Triggered when user clicks Generate button in popup window that appears
     after clicking Add Custom Persona from conv mode.
     """
-    name = get_value(data['name_id'])
+    name = get_value(data['name_id']).strip(' ')
     summary = get_value(data['summary_id']).replace('\n', ' ')\
-                                           .replace('  ', ' ')
+                                           .replace('  ', ' ')\
+                                           .strip(' ')
     img_path = get_value(data['image_path_id'])
     gender = ['F', 'M'][get_value(data['gender_id'])]
     already_exists = CONV_MANAGER.persona_exists_locally(name)
@@ -463,8 +464,10 @@ def add_persona_callback(sender, data):
             message explaining that downloading is occurring since it can take
             a few seconds)
     """
-    name = get_value(data['name_id'])
-    if not name: return
+    name = get_value(data['name_id']).strip(' ')
+    if not name:
+        show_item(data['error_msg_id'])
+        return
     show_item(data['show_during_id'])
     try:
         CONV_MANAGER.add_persona(name)
