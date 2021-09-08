@@ -884,3 +884,33 @@ def update_persona_info(img_name='conversation_img',
     chunked = CHUNKER.add(text_key, CONV_MANAGER.current_summary,
                           max_chars=dims['width'] // 4)
     set_value(text_name, chunked)
+
+
+def record_hotkey_callback(sender, data):
+    # User can hold CTRL and tap SHIFT to record. Data will be the most recent
+    # key pressed, which we want to be shift (340). Therefore we check if
+    # CTRL is also pressed.
+    ctrl = is_key_down(341)
+    if not ctrl:
+        return
+
+    # CTRL + SHIFT: start recording if not already.
+    if data == 340 and not RECOGNIZER.is_listening:
+        if is_item_visible('Conversation'):
+            cb_data = {'listening_id': 'conv_record_msg',
+                       'target_id': 'conv_text',
+                       'auto_punct_id': 'conv_auto_punct',
+                       'stop_record_id': 'conv_stop_record',
+                       'adjust_id': 'conv_adjust_msg'}
+        elif is_item_visible():
+            cb_data = {'listening_id': 'record_msg',
+                       'target_id': 'transcribed_text',
+                       'auto_punct_id': 'auto_punct',
+                       'stop_record_id': 'stop_record',
+                       'adjust_id': 'adjust_msg'}
+        else:
+            print('Neither main window is visible.')
+            return
+        transcribe_callback('record_hotkey_callback', data=cb_data)
+    elif data == 256 and RECOGNIZER.is_listening:
+        pass

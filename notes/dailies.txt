@@ -1712,10 +1712,18 @@ X -show error msg if user tries to add empty name in auto add persona mode
 
 9/7/21
 ------
--consider: rename Record to Talk or Transcribe? Undecided.
+X -consider: rename Record to Talk or Transcribe? Undecided.
+    UPDATE: no. None of the alternatives seem clearly better.
 -look more into possibility of keyboard shortcuts
-    -diff between is_key_down and is_key_pressed?
-    -if relatively quick, add hotkey for record, query, maybe cancel record?
+    ~ -diff between is_key_down and is_key_pressed?
+        UPDATE: Still a tad unclear but key_press_callback seems to be working well. Use is_key_down to check if CTRL (the anchor hotkey) is down and check if data is one of the modifier keys.
+    ~ -if relatively quick, add hotkey for record, query, maybe cancel record?
+        UPDATE: added hotkey for record (ctrl+shift). Could still change this though. Briefly looked into possibility of a cancel hotkey but that's harder since it currently occurs by interrupting a thread defined inside transcribe_callback. Also tried seeing if I could change pause threshold during listening but it doesn't seem to take effect til afterward listening completes.
+
+9/8/21
+------
+-document record hotkey in conv mode button
+    -in task mode button
 -instructions in readme
     -how to add your api key
     -how to install packages

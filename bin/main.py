@@ -8,7 +8,6 @@ python bin/main.py
 # I think dearpygui imports a different contextmanager so we rename this one.
 from dearpygui.core import *
 from dearpygui.simple import *
-import os
 
 from htools.core import tolist, select
 from htools.meta import params
@@ -721,6 +720,7 @@ class App:
         self.left_column()
         self.right_column()
         menu_conversation_callback(None, None)
+        set_key_press_callback(record_hotkey_callback)
 
     def run(self):
         """Builds and runs dearpygui app."""
