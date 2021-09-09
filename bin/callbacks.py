@@ -27,9 +27,8 @@ from htools.core import save, select
 from jabberwocky.openai_utils import query_gpt_neo, query_gpt_j
 from jabberwocky.utils import img_dims
 
-from utils import read_response, read_response_coro, stream, \
-    monitor_interrupt_checkbox, CoroutinableThread, PropagatingThread, \
-    interrupt
+from utils import read_response_coro, stream, monitor_interrupt_checkbox,\
+    CoroutinableThread, PropagatingThread, interrupt
 
 
 RECOGNIZER = sr.Recognizer()
@@ -195,6 +194,68 @@ def format_text_callback(sender, data):
     )
 
 
+def hotkey_handler(sender, data):
+    print('data', data)
+    if is_item_visible('Conversation'):
+        print('conv mode')
+        conv_mode = True
+    elif is_item_visible('Input'):
+        conv_mode = False
+        print('NON conv mode')
+    else:
+        print('Neither main window is visible.')
+        return
+
+    # CTRL + SHIFT: start recording if not already.
+    if data == 340 and not RECOGNIZER.is_listening:
+        if conv_mode:
+            cb_data = {'listening_id': 'conv_record_msg',
+                       'target_id': 'conv_text',
+                       'auto_punct_id': 'conv_auto_punct',
+                       'stop_record_id': 'conv_stop_record',
+                       'adjust_id': 'conv_adjust_msg'}
+        else:
+            cb_data = {'listening_id': 'record_msg',
+                       'target_id': 'transcribed_text',
+                       'auto_punct_id': 'auto_punct',
+                       'stop_record_id': 'stop_record',
+                       'adjust_id': 'adjust_msg'}
+        transcribe_callback('record_hotkey_callback', data=cb_data)
+
+    # CTRL + ESC: cancel recording if ongoing. May not be possible with current
+    # interruption method though.
+    elif data == 256 and RECOGNIZER.is_listening:
+        pass
+    # CTRL + q:
+    elif data == 81:
+        print('data', data)
+        if conv_mode:
+            cb_data = {'target_id': 'conv_text',
+                       'read_checkbox_id': 'conv_read_response',
+                       'interrupt_id': 'conv_interrupt_checkbox',
+                       'query_msg_id': 'conv_query_progress_msg',
+                       'query_error_msg_id': 'conv_query_error_msg',
+                       'engine_i_id': 'conv_engine_i_input'}
+            conv_query_callback('record_hotkey_callback', cb_data)
+        else:
+            cb_data = {'target_id': 'response_text',
+                       'read_checkbox_id': 'read_response',
+                       'interrupt_id': 'interrupt_checkbox',
+                       'query_msg_id': 'query_progress_msg'}
+            query_callback('record_hotkey_callback', cb_data)
+    # CTRL + s: save prompt/conversation if exists.
+    # elif data == 83:
+    #     print('data 83')
+    #     if conv_mode:
+    #         cb_data = {'dir_id': 'save_dir_text',
+    #                    'file_id': 'save_file_text'}
+    #     else:
+    #         cb_data = {'dir_id': 'task_save_dir_text',
+    #                    'file_id': 'task_save_file_text',
+    #                    'task_list_id': 'task_list'}
+    #     saveas_callback('record_hotkey_callback', cb_data)
+
+
 def text_edit_callback(sender, data):
     """Triggered when user types in transcription text field. This way user
     edits update the prompt before making a query (this is often necessary
@@ -206,6 +267,15 @@ def text_edit_callback(sender, data):
     Here, sender is the id of the active window (e.g. Conversation, Options,
     etc.)
     """
+    # User can hold CTRL and tap SHIFT to record. Data will be the most recent
+    # key pressed, which we want to be shift (340). Therefore we check if
+    # CTRL is also pressed.
+    # ctrl = is_key_down(341)
+    if is_key_down(341):
+        return hotkey_handler('text_edit_callback', data)
+    # if not ctrl:
+    #     return
+
     # This way even if user doesn't hit Auto-Format, query_callback() can
     # retrieve input from chunker. Otherwise we'd have to keep track of when to
     # retrieve it from text input box vs. from chunker which could get messy.
@@ -886,31 +956,3 @@ def update_persona_info(img_name='conversation_img',
     set_value(text_name, chunked)
 
 
-def record_hotkey_callback(sender, data):
-    # User can hold CTRL and tap SHIFT to record. Data will be the most recent
-    # key pressed, which we want to be shift (340). Therefore we check if
-    # CTRL is also pressed.
-    ctrl = is_key_down(341)
-    if not ctrl:
-        return
-
-    # CTRL + SHIFT: start recording if not already.
-    if data == 340 and not RECOGNIZER.is_listening:
-        if is_item_visible('Conversation'):
-            cb_data = {'listening_id': 'conv_record_msg',
-                       'target_id': 'conv_text',
-                       'auto_punct_id': 'conv_auto_punct',
-                       'stop_record_id': 'conv_stop_record',
-                       'adjust_id': 'conv_adjust_msg'}
-        elif is_item_visible():
-            cb_data = {'listening_id': 'record_msg',
-                       'target_id': 'transcribed_text',
-                       'auto_punct_id': 'auto_punct',
-                       'stop_record_id': 'stop_record',
-                       'adjust_id': 'adjust_msg'}
-        else:
-            print('Neither main window is visible.')
-            return
-        transcribe_callback('record_hotkey_callback', data=cb_data)
-    elif data == 256 and RECOGNIZER.is_listening:
-        pass

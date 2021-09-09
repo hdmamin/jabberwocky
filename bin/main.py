@@ -202,7 +202,7 @@ class App:
             with tooltip('record_btn', 'record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
                          'done and\nthe transcribed text should appear\n'
-                         'within several seconds.')
+                         'within several seconds. Hotkey: CTRL+SHIFT')
             add_same_line()
             add_button('autoformat_btn', label='Auto-Format',
                        callback=format_text_callback,
@@ -230,7 +230,7 @@ class App:
                                       'file_id': 'task_save_file_text',
                                       'task_list_id': 'task_list'})
             with tooltip('task_saveas_btn', 'task_saveas_btn_tooltip'):
-                add_text('Do not save while speaking is in progress.')
+                add_text('Save completion to a text file.')
 
             with popup('task_saveas_btn', 'Save Completion', modal=True,
                        width=450, mousebutton=mvMouseButton_Left):
@@ -279,7 +279,6 @@ class App:
                 add_input_text('transcribed_text', default_value='',
                                multiline=True,
                                width=self.widths[.5] - 8*self.pad, height=300)
-            set_key_press_callback(text_edit_callback)
             add_spacing(count=2)
             add_text('Response')
             with tooltip('Response', 'Response_tooltip'):
@@ -306,7 +305,6 @@ class App:
             name = CONV_MANAGER.personas()[0]
             CONV_MANAGER.start_conversation(name, True)
             SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current_gender]
-            set_key_press_callback(text_edit_callback)
 
             # Same as in task window but with different names/callback_data.
             add_button('conv_record_btn', label='Record',
@@ -319,14 +317,14 @@ class App:
             with tooltip('conv_record_btn', 'conv_record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
                          'done and\nthe transcribed text should appear\n'
-                         'within several seconds.')
+                         'within several seconds. Hotkey: CTRL+SHIFT')
             add_same_line()
             add_button('conv_saveas_btn', label='Save As',
                        callback=saveas_callback,
                        callback_data={'dir_id': 'save_dir_text',
                                       'file_id': 'save_file_text'})
             with tooltip('conv_saveas_btn', 'conv_saveas_btn_tooltip'):
-                add_text('Do not save while speaking is in progress.')
+                add_text('Save full conversation to a text file.')
             with popup('conv_saveas_btn', 'Save Conversation', modal=True,
                        width=450, mousebutton=mvMouseButton_Left):
                 # Input dir and file names both get updated in save as callback
@@ -720,7 +718,7 @@ class App:
         self.left_column()
         self.right_column()
         menu_conversation_callback(None, None)
-        set_key_press_callback(record_hotkey_callback)
+        set_key_press_callback(text_edit_callback)
 
     def run(self):
         """Builds and runs dearpygui app."""
