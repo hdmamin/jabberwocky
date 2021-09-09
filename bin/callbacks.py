@@ -243,17 +243,6 @@ def hotkey_handler(sender, data):
                        'interrupt_id': 'interrupt_checkbox',
                        'query_msg_id': 'query_progress_msg'}
             query_callback('record_hotkey_callback', cb_data)
-    # CTRL + s: save prompt/conversation if exists.
-    # elif data == 83:
-    #     print('data 83')
-    #     if conv_mode:
-    #         cb_data = {'dir_id': 'save_dir_text',
-    #                    'file_id': 'save_file_text'}
-    #     else:
-    #         cb_data = {'dir_id': 'task_save_dir_text',
-    #                    'file_id': 'task_save_file_text',
-    #                    'task_list_id': 'task_list'}
-    #     saveas_callback('record_hotkey_callback', cb_data)
 
 
 def text_edit_callback(sender, data):
