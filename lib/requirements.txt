@@ -1,5 +1,5 @@
 colorama==0.4.3
-htools==6.2.0[speedup]
+htools==6.2.2[speedup]
 nltk==3.4.4
 numpy==1.21.1
 openai==0.6.2

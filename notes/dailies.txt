@@ -1722,13 +1722,28 @@ X -consider: rename Record to Talk or Transcribe? Undecided.
 
 9/8/21
 ------
--document record hotkey in conv mode button
-    -in task mode button
+X -document record hotkey in conv mode button
+    X -in task mode button
+-try to add other hotkeys
+    _ -save
+        UPDATE: this callback is a bit different since there's a popup involved that requires a mousebutton event. Deleted my attempt.
+    ~ -query
+        UPDATE: this seems rather buggy, esp in conv mode (?).
+    X -fix other hotkey bugs: old text_edit callback was overriden so new writing wasn't updating prompt.
+X -htools decorator: min_wait
+
+9/9/21
+------
 -instructions in readme
     -how to add your api key
     -how to install packages
         -makefile command?
     -how to run
+    -hotkeys
+-try enabling just transcribe hotkey. Do we still get errors?
+    -try enabling just query hotkey. Do we still get errors?
+    -fix issue if possible, otherwise rm
+    -clean up comments, extra code
 -evaluate difficulty of adding "delete persona" option. Mostly helpful for testing and it's not hard to delete from the terminal but might be nice.
 
 

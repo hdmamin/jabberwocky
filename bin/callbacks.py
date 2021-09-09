@@ -24,6 +24,7 @@ import time
 from threading import Thread
 
 from htools.core import save, select
+from htools.meta import min_wait
 from jabberwocky.openai_utils import query_gpt_neo, query_gpt_j
 from jabberwocky.utils import img_dims
 
@@ -194,6 +195,7 @@ def format_text_callback(sender, data):
     )
 
 
+@min_wait(2)
 def hotkey_handler(sender, data):
     print('data', data)
     if is_item_visible('Conversation'):
@@ -222,10 +224,6 @@ def hotkey_handler(sender, data):
                        'adjust_id': 'adjust_msg'}
         transcribe_callback('record_hotkey_callback', data=cb_data)
 
-    # CTRL + ESC: cancel recording if ongoing. May not be possible with current
-    # interruption method though.
-    elif data == 256 and RECOGNIZER.is_listening:
-        pass
     # CTRL + q:
     elif data == 81:
         print('data', data)
@@ -259,11 +257,13 @@ def text_edit_callback(sender, data):
     # User can hold CTRL and tap SHIFT to record. Data will be the most recent
     # key pressed, which we want to be shift (340). Therefore we check if
     # CTRL is also pressed.
-    # ctrl = is_key_down(341)
-    if is_key_down(341):
-        return hotkey_handler('text_edit_callback', data)
-    # if not ctrl:
-    #     return
+    # TODO: hotkeys broken. Often when I use them, query will execute and
+    # speech
+    # will start but text doesn't show up until after speaking completes and I
+    # cancel the listening that auto starts afterwards. Still trying to
+    # pinpoint cause.
+    # if is_key_down(341) and data != 341:
+    #     return hotkey_handler('text_edit_callback', data)
 
     # This way even if user doesn't hit Auto-Format, query_callback() can
     # retrieve input from chunker. Otherwise we'd have to keep track of when to
