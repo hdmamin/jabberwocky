@@ -1,4 +1,4 @@
-.PHONY: todo nb clean lib pypi readmes
+.PHONY: todo nb clean lib pypi readmes run
 
 # Convention: add _ between comment sign and TODO to hide an item that you don't want to delete entirely. This will still be findable if you run `ack TODO`.
 todo:
@@ -19,3 +19,5 @@ pypi: lib
 readmes:
 	htools update_readmes "['bin', 'notebooks', 'lib/jabberwocky']"
  
+run:
+	python bin/main.py

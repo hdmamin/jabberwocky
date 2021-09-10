@@ -197,7 +197,7 @@ def format_text_callback(sender, data):
 
 @min_wait(2)
 def hotkey_handler(sender, data):
-    print('data', data)
+    print('hotkey data', data)
     if is_item_visible('Conversation'):
         print('conv mode')
         conv_mode = True
@@ -829,6 +829,8 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
         full_text = ''.join(full_text.rpartition(f'\n\n{pretty_name}: ')[:-1])
         streamed_response = False
 
+    # Chunk should be a token when using GPT-3 and a word (space-split)
+    # otherwise.
     for chunk in stream(streamable):
         if conv_mode:
             if streamed_response:

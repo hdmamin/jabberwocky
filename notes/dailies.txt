@@ -1734,36 +1734,42 @@ X -htools decorator: min_wait
 
 9/9/21
 ------
--instructions in readme
-    -how to add your api key
-    -how to install packages
-        -makefile command?
-    -how to run
-    -hotkeys
+X -instructions in readme
+    X -how to add your api key
+    X -how to install packages
+        _ -makefile command?
+    X -how to run
+    ~ -hotkeys
+        UPDATE: depends on whether I get these working or decide to skip them.
 -try enabling just transcribe hotkey. Do we still get errors?
     -try enabling just query hotkey. Do we still get errors?
     -fix issue if possible, otherwise rm
     -clean up comments, extra code
--evaluate difficulty of adding "delete persona" option. Mostly helpful for testing and it's not hard to delete from the terminal but might be nice.
+X -evaluate difficulty of adding "delete persona" option. Mostly helpful for testing and it's not hard to delete from the terminal but might be nice.
+    UPDATE: not super clear what UI for this would even look like. Now that I'm (hopefully) done testing functionality for now, I think this is a "skip" at this point.
+~ -evaluate difficulty of changing typing from word-level to character level (currently whole tok/word appears at a time which doesn't look quite as real)
+    UPDATE: maybe possible but not super easy with my current setup - we always re-chunk text before displaying it so switching to char level would mean re-chunking ~3-5x as often. Still considering.
+
+9/10/21
+-------
+-try enabling just transcribe hotkey. Do we still get errors?
+    -try enabling just query hotkey. Do we still get errors?
+    -fix issue if possible, otherwise rm
+    -clean up comments, extra code
+    -update readme hotkey section depending on whether hotkeys are ultimately included or not
+-update postmortem
 
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
 -update personal site w/ quick summary, things learned, etc.?
--update postmortem
--delete persona
 - htools things:
 	-flesh out owneraccess decorator
 	-port htools as_df
     -continue work on more generic Monitor class for htools
 -watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
 -maybe update converse contextmanager to have input baked in
--py2app troubleshooting
-    -msg dpygui for help w/ bundling? May be difficult since it's now a pretty outdated version.
-    -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
-    -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
-    -look more into pyoxidizer and/or nuitka instead
 
 
 easy tasks for low energy days
@@ -1772,7 +1778,6 @@ easy tasks for low energy days
 
 Won't Do (things I considered doing but ultimately decided to skip, at least in this project)
 ---------------------------------------------------------------------------------------------
--see if slack app is a possibility (do I have auth to do in GG workspace?)
 -prototype cover letter writer from job posting
 -consider image task tie-ins [already allowed a ton of scope creep. At the very least leave this for a later project.]
     -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
@@ -1785,3 +1790,11 @@ Future Extensions
 -support for text messaging, Alexa, other modes of communication?
 -support to record conversation (audio)
 -some sort of coding mode
+-delete persona
+-add new prompt in task mode
+-edit persona
+-py2app troubleshooting
+    -msg dpygui for help w/ bundling? May be difficult since it's now a pretty outdated version.
+    -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
+    -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
+    -look more into pyoxidizer and/or nuitka instead
