@@ -78,6 +78,13 @@ def transcribe_callback(sender, data):
             recognizer is adjusting for ambient noise. Currently set this up to
             execute only once per GUI session.)
     """
+    # TODO
+    if does_item_exist('dummy window'):
+        print('deleting dummy')
+        delete_item('dummy window')
+        end()
+    # TODO END
+
     if is_item_visible('Input'):
         set_value(data['target_id'], '')
     error_message = 'Parsing failed. Please try again.'
@@ -208,25 +215,27 @@ def hotkey_handler(sender, data):
         print('Neither main window is visible.')
         return
 
+    add_window('dummy window', no_focus_on_appearing=False,
+               no_bring_to_front_on_focus=True, show=True) # TODO testing
+
     # CTRL + SHIFT: start recording if not already.
-    # if data == 340 and not RECOGNIZER.is_listening:
-    #     if conv_mode:
-    #         cb_data = {'listening_id': 'conv_record_msg',
-    #                    'target_id': 'conv_text',
-    #                    'auto_punct_id': 'conv_auto_punct',
-    #                    'stop_record_id': 'conv_stop_record',
-    #                    'adjust_id': 'conv_adjust_msg'}
-    #     else:
-    #         cb_data = {'listening_id': 'record_msg',
-    #                    'target_id': 'transcribed_text',
-    #                    'auto_punct_id': 'auto_punct',
-    #                    'stop_record_id': 'stop_record',
-    #                    'adjust_id': 'adjust_msg'}
-    #     transcribe_callback('record_hotkey_callback', data=cb_data)
+    if data == 340 and not RECOGNIZER.is_listening:
+        if conv_mode:
+            cb_data = {'listening_id': 'conv_record_msg',
+                       'target_id': 'conv_text',
+                       'auto_punct_id': 'conv_auto_punct',
+                       'stop_record_id': 'conv_stop_record',
+                       'adjust_id': 'conv_adjust_msg'}
+        else:
+            cb_data = {'listening_id': 'record_msg',
+                       'target_id': 'transcribed_text',
+                       'auto_punct_id': 'auto_punct',
+                       'stop_record_id': 'stop_record',
+                       'adjust_id': 'adjust_msg'}
+        transcribe_callback('record_hotkey_callback', data=cb_data)
 
     # CTRL + q: query gpt3.
-    if data == 81: # TODO
-    # elif data == 81:
+    elif data == 81:
         print('IN QUERY HOTKEY IF')
         if conv_mode:
             cb_data = {'target_id': 'conv_text',
@@ -243,6 +252,16 @@ def hotkey_handler(sender, data):
                        'query_msg_id': 'query_progress_msg'}
             query_callback('record_hotkey_callback', cb_data)
 
+    # Transcribe callback does this, so this should already have happened
+    # if this is triggered by a record hotkey or a query hotkey in conv mode.
+    # If we use a query hotkey in task mode we need to cleanup though. I leave
+    # this outside the if clauses in case the user hits CTRL with another
+    # key.
+    if does_item_exist('dummy window'):
+        print('deleting dummy')
+        delete_item('dummy window')
+        end()
+
 
 def text_edit_callback(sender, data):
     """Triggered when user types in transcription text field. This way user
@@ -255,6 +274,7 @@ def text_edit_callback(sender, data):
     Here, sender is the id of the active window (e.g. Conversation, Options,
     etc.)
     """
+    hotkey = 341   # 341 for ctrl, 256 for escape
     # User can hold CTRL and tap SHIFT to record. Data will be the most recent
     # key pressed, which we want to be shift (340). Therefore we check if
     # CTRL is also pressed.
@@ -263,15 +283,15 @@ def text_edit_callback(sender, data):
     # will start but text doesn't show up until after speaking completes and I
     # cancel the listening that auto starts afterwards. Still trying to
     # pinpoint cause.
-    if is_key_down(341):
-        if data != 341: hotkey_handler('text_edit_callback', data)
+    if is_key_down(hotkey):
+        if data != hotkey: hotkey_handler('text_edit_callback', data)
         print('CTRL KEY DOWN; PRE RETURN')
         return
     # This is actually a different case than above: I'm guessing there are
     # times where this callback is triggered but by the time we reach the
     # is_key_down check CTRL has been released? Without this check we get
     # text edit errors in conv mode.
-    if data == 341:
+    if data == hotkey:
         return
 
     # This way even if user doesn't hit Auto-Format, query_callback() can

@@ -1759,16 +1759,33 @@ X -try enabling just transcribe hotkey. Do we still get errors?
 
 9/11/21
 -------
--try having query hotkey auto-focus an element that's not the output text box. Otherwise we can't update it.
+X -try having query hotkey auto-focus an element that's not the output text box. Otherwise we can't update it.
+    UPDATE: focus_item() not available til later version. Tried escape as hotkey again but realized it actually acts as Undo, not backspace, which I can't figure out how to override. Tried creating text item but that didn't change focus. Tried creating dummy window and that does change focus, though a couple issues remain. Query hotkey works both in conv mode and task mode, regardless of cursor location. Record hotkey works in both modes IF cursor is not in record text box (in conv mode, that means the only text box) but works if it's anywhere else.
     -clean up comments, extra code
     -update readme hotkey section depending on whether hotkeys are ultimately included or not
 -fix new bug: no error msg if we try to save to a path that exists
 -update postmortem
 
+9/12/21
+-------
+-add new line before edit_warning_msg (missing in at least 1 mode, maybe both)
+-try commenting out dummy window add/del (both in hotkey_handler and transcribe_cb). Check if record hotkey works when cursor in output text box in conv mode
+    -same as above but in task mode
+    -continue debugging why record hotkey not working
+        -write list of all possible points of failure (window doesn't appear, does but isn't deleted, etc.)
+        -try to narrow down list by ruling out each item 1 by 1
+    -clean up comments, extra code
+-update readme hotkey section depending on whether hotkeys are ultimately included or not
+-update record button tooltip w/ or w/out hotkey
+    -update query button tooltip w/ or w/out hotkey
+
+
 
 -------------------------------------------------------------------------------
 backlog (optional)
 
+-fix new bug: no error msg if we try to save to a path that exists
+-update postmortem
 -update personal site w/ quick summary, things learned, etc.?
 - htools things:
 	-flesh out owneraccess decorator
