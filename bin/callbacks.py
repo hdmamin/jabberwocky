@@ -209,24 +209,25 @@ def hotkey_handler(sender, data):
         return
 
     # CTRL + SHIFT: start recording if not already.
-    if data == 340 and not RECOGNIZER.is_listening:
-        if conv_mode:
-            cb_data = {'listening_id': 'conv_record_msg',
-                       'target_id': 'conv_text',
-                       'auto_punct_id': 'conv_auto_punct',
-                       'stop_record_id': 'conv_stop_record',
-                       'adjust_id': 'conv_adjust_msg'}
-        else:
-            cb_data = {'listening_id': 'record_msg',
-                       'target_id': 'transcribed_text',
-                       'auto_punct_id': 'auto_punct',
-                       'stop_record_id': 'stop_record',
-                       'adjust_id': 'adjust_msg'}
-        transcribe_callback('record_hotkey_callback', data=cb_data)
+    # if data == 340 and not RECOGNIZER.is_listening:
+    #     if conv_mode:
+    #         cb_data = {'listening_id': 'conv_record_msg',
+    #                    'target_id': 'conv_text',
+    #                    'auto_punct_id': 'conv_auto_punct',
+    #                    'stop_record_id': 'conv_stop_record',
+    #                    'adjust_id': 'conv_adjust_msg'}
+    #     else:
+    #         cb_data = {'listening_id': 'record_msg',
+    #                    'target_id': 'transcribed_text',
+    #                    'auto_punct_id': 'auto_punct',
+    #                    'stop_record_id': 'stop_record',
+    #                    'adjust_id': 'adjust_msg'}
+    #     transcribe_callback('record_hotkey_callback', data=cb_data)
 
-    # CTRL + q:
-    elif data == 81:
-        print('data', data)
+    # CTRL + q: query gpt3.
+    if data == 81: # TODO
+    # elif data == 81:
+        print('IN QUERY HOTKEY IF')
         if conv_mode:
             cb_data = {'target_id': 'conv_text',
                        'read_checkbox_id': 'conv_read_response',
@@ -262,8 +263,16 @@ def text_edit_callback(sender, data):
     # will start but text doesn't show up until after speaking completes and I
     # cancel the listening that auto starts afterwards. Still trying to
     # pinpoint cause.
-    # if is_key_down(341) and data != 341:
-    #     return hotkey_handler('text_edit_callback', data)
+    if is_key_down(341):
+        if data != 341: hotkey_handler('text_edit_callback', data)
+        print('CTRL KEY DOWN; PRE RETURN')
+        return
+    # This is actually a different case than above: I'm guessing there are
+    # times where this callback is triggered but by the time we reach the
+    # is_key_down check CTRL has been released? Without this check we get
+    # text edit errors in conv mode.
+    if data == 341:
+        return
 
     # This way even if user doesn't hit Auto-Format, query_callback() can
     # retrieve input from chunker. Otherwise we'd have to keep track of when to
@@ -317,6 +326,7 @@ def text_edit_callback(sender, data):
         if f'\n\n{pretty_name}: ' not in last_turn:
             CONV_MANAGER.query_later(last_turn)
         else:
+            print('TEXT EDIT ERROR', data) # TODO
             show_item('edit_warning_msg')
             time.sleep(2)
             hide_item('edit_warning_msg')

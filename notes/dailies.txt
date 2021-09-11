@@ -1752,11 +1752,17 @@ X -evaluate difficulty of adding "delete persona" option. Mostly helpful for tes
 
 9/10/21
 -------
--try enabling just transcribe hotkey. Do we still get errors?
-    -try enabling just query hotkey. Do we still get errors?
-    -fix issue if possible, otherwise rm
+X -try enabling just transcribe hotkey. Do we still get errors?
+    UPDATE: no (checked both modes).
+    X -try enabling just query hotkey. Do we still get errors?
+        UPDATE: no errors in task mode, yes in conv mode. Further clues: seems like if I press hotkey while cursor is in text input box, we get the error. But if I press it while something else is selected it works. I'm thinking maybe dearpygui can't update the text in an input box while the cursor is in it. That might explain why task mode seems to work ok - I'm usually in the input box so the output box can be updated without problem. Further update: task mode fails if cursor is in the output text box! I think this must be it. Possible solution: make escape (or caps lock on my computer) the anchor hotkey. That deselects the textbox. Further update: escape acts as delete+esc which is not great. But I found an undocumented focus_item() function which sounds promising (just choose some other window/item to focus on when hotkey is used).
+
+9/11/21
+-------
+-try having query hotkey auto-focus an element that's not the output text box. Otherwise we can't update it.
     -clean up comments, extra code
     -update readme hotkey section depending on whether hotkeys are ultimately included or not
+-fix new bug: no error msg if we try to save to a path that exists
 -update postmortem
 
 
