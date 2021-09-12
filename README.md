@@ -72,7 +72,7 @@ Conversation mode only supports spoken input, though you can edit flawed transcr
 
 ### Task Mode
 
-In task mode, you can ask GPT3 to perform a number pre-defined tasks. Written and spoken input are both supported. By default, GPT3's response is both typed out and read aloud.
+In task mode, you can ask GPT-3 to perform a number pre-defined tasks. Written and spoken input are both supported. By default, GPT-3's response is both typed out and read aloud.
 
 ![](data/clips/demo/punctuation.gif)
 Transcripts of responses from a small subset of non-conversation tasks can be found in the `data/completions` directory. You can also save your own completions while using the app.
