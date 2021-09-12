@@ -1786,7 +1786,10 @@ X -update record button tooltip w/ or w/out hotkey
 
 9/13/21
 -------
+-record new Add Persona example
+    -update readme
 -fix new bug: no error msg if we try to save to a path that exists
+-decide what to do about docker and setup dirs (keep for potential changes later? Or del to keep things tidy?)
 -update and finalize postmortem
 
 

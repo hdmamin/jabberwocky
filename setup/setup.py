@@ -19,7 +19,7 @@ OPTIONS = {
 }
 
 setup(
-    app=['../bin/main.py'],
+    app=['../gui/main.py'],
     data_files=['../data'],
     setup_requires=['py2app'],
     options={'py2app': OPTIONS}

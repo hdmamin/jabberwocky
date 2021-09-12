@@ -2,7 +2,7 @@
 
 Example usage:
 --------------
-python bin/main.py
+python gui/main.py
 """
 
 # I think dearpygui imports a different contextmanager so we rename this one.
