@@ -1797,6 +1797,8 @@ X -update record button tooltip w/ or w/out hotkey
 
 backlog
 -------
+-consider updating typing to occur w/ every new char rather than every new tok (simplest way is just to re-chunk after every char but that seems excessive. Also, for long convs the live typing quickly loses visibility anyway).
+    -can we force text input to auto focus on the bottom portion when there's a lot to scroll through?
 -update personal site w/ quick summary, things learned, etc.?
 
 easy tasks for low energy days
