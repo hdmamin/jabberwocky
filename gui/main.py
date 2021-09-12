@@ -202,7 +202,7 @@ class App:
             with tooltip('record_btn', 'record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
                          'done and\nthe transcribed text should appear\n'
-                         'within several seconds. Hotkey: CTRL+SHIFT')
+                         'within several seconds.')
             add_same_line()
             add_button('autoformat_btn', label='Auto-Format',
                        callback=format_text_callback,
@@ -283,7 +283,7 @@ class App:
             add_text('Response')
             with tooltip('Response', 'Response_tooltip'):
                 add_text('GPT3\'s response will be shown\nbelow after you hit '
-                         'the\nQuery button.')
+                         'the\nGet Response button.')
 
             add_text('query_progress_msg', default_value='Typing...',
                      show=False)
@@ -317,7 +317,7 @@ class App:
             with tooltip('conv_record_btn', 'conv_record_btn_tooltip'):
                 add_text('Press and begin talking.\nSimply stop talking when '
                          'done and\nthe transcribed text should appear\n'
-                         'within several seconds. Hotkey: CTRL+SHIFT')
+                         'within several seconds.')
             add_same_line()
             add_button('conv_saveas_btn', label='Save As',
                        callback=saveas_callback,
@@ -421,7 +421,8 @@ class App:
             ###################################################################
             # Task Options Window
             ###################################################################
-            add_button('query_btn', label='Query', callback=query_callback,
+            add_button('query_btn', label='Get Response',
+                       callback=query_callback,
                        callback_data={'target_id': 'response_text',
                                       'read_checkbox_id': 'read_response',
                                       'interrupt_id': 'interrupt_checkbox',
@@ -561,7 +562,7 @@ class App:
 
             # Make query.
             add_button(
-                'conv_query_btn', label='Query',
+                'conv_query_btn', label='Get Response',
                 callback=conv_query_callback,
                 callback_data={'target_id': 'conv_text',
                                'read_checkbox_id': 'conv_read_response',

@@ -49,7 +49,7 @@ export OPENAI_API_KEY=your_openai_api_key
 4. Run the app.
 
 ```
-python bin/main.py
+python gui/main.py
 ```
 
 If you have `make` installed you can also use the command:
@@ -77,9 +77,14 @@ In task mode, you can ask GPT3 to perform a number pre-defined tasks. Written an
 ![](data/clips/demo/punctuation.gif)
 Transcripts of responses from a small subset of non-conversation tasks can be found in the `data/completions` directory. You can also save your own completions while using the app.
 
+## Usage Notes
+
+The first time you speak, the speech transcription back end will take a few seconds to calibrate to the level of ambient noise in your environment. You will know it's ready for transcription when you see a "Listening..." message appear below the Record button. Calibration only occurs once to save time.
+
 ### Hotkeys
 
-# TODO: either update this section w/ hotkeys if I get them working or remove it if I decide to skip them.
+**CTRL + SHIFT**: Start recording audio (same as pressing the "Record" button).  
+**CTRL + a**: Get GPT-3's response to whatever input you've recorded (same as pressing the "Get Response" button).
 
 ### Project Members
 * Harrison Mamin
@@ -91,6 +96,6 @@ jabberwocky/
 ├── notes        # Miscellaneous notes from the development process stored as raw text files.
 ├── notebooks    # Jupyter notebooks for experimentation and exploratory analysis.
 ├── reports      # Markdown reports (performance reports, blog posts, etc.)
-├── bin          # Scripts to be run from the project root directory.
+├── gui          # GUI scripts. The main script should be run from the project root directory. 
 └── lib          # Python package. Code can be imported in analysis notebooks, py scripts, etc.
 ```

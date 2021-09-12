@@ -1777,27 +1777,24 @@ X -add new line before edit_warning_msg
         _ -write list of all possible points of failure (window doesn't appear, does but isn't deleted, etc.)
         _ -try to narrow down list by ruling out each item 1 by 1
         UPDATE: transcribe hotkey immediately triggers transcribe cb which was auto-deleting my dummy window at the start and thus returning focus to the textbox the dummy was meant to take focus away from. I added an option to postpone dummy deletion to the end of the transcribe callback and this fixes recording in both modes.
-    -clean up comments, extra code
+    X -clean up comments, extra code
     X -document new data args in transcribe_callback and add comments in hotkey_handler
--update readme hotkey section depending on whether hotkeys are ultimately included or not
--update record button tooltip w/ or w/out hotkey
-    -update query button tooltip w/ or w/out hotkey
+X -update readme hotkey section depending on whether hotkeys are ultimately included or not
+X -update record button tooltip w/ or w/out hotkey
+    X -update query button tooltip w/ or w/out hotkey
+    UPDATE: decided to remove tooltips for hotkeys. Just specify in readme.
 
+9/13/21
+-------
+-fix new bug: no error msg if we try to save to a path that exists
+-update and finalize postmortem
 
 
 -------------------------------------------------------------------------------
-backlog (optional)
 
--fix new bug: no error msg if we try to save to a path that exists
--update postmortem
+backlog
+-------
 -update personal site w/ quick summary, things learned, etc.?
-- htools things:
-	-flesh out owneraccess decorator
-	-port htools as_df
-    -continue work on more generic Monitor class for htools
--watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
--maybe update converse contextmanager to have input baked in
-
 
 easy tasks for low energy days
 ------------------------------
@@ -1809,6 +1806,7 @@ Won't Do (things I considered doing but ultimately decided to skip, at least in 
 -consider image task tie-ins [already allowed a ton of scope creep. At the very least leave this for a later project.]
     -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
 -document session and transcript classes in core.py (most of those ended up not being used for the GUI)
+-update converse contextmanager to have input baked in (I think there are enough potention options for interesting new interfaces (sms, alexa, VR/AR) that I'd prefer to devote any future efforts to one of those rather than something that's likely limited to CLI-type usage.
 
 Future Extensions
 -----------------
@@ -1825,3 +1823,4 @@ Future Extensions
     -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
     -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
     -look more into pyoxidizer and/or nuitka instead
+-look into new nvidia package which might be a good alternative for transcription and/or TTS (sentdex has a video on it which might help)

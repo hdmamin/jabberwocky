@@ -217,6 +217,7 @@ def format_text_callback(sender, data):
 
 @min_wait(1.5)
 def hotkey_handler(sender, data):
+    print('hotkey data:', data)
     if is_item_visible('Conversation'):
         conv_mode = True
     elif is_item_visible('Input'):
@@ -254,8 +255,8 @@ def hotkey_handler(sender, data):
                        'pre_delete_dummy': False}
         transcribe_callback('record_hotkey_callback', data=cb_data)
 
-    # CTRL + q: query gpt3.
-    elif data == 81:
+    # CTRL + a: query gpt3 for response.
+    elif data == 65:
         if conv_mode:
             cb_data = {'target_id': 'conv_text',
                        'read_checkbox_id': 'conv_read_response',
@@ -292,7 +293,8 @@ def text_edit_callback(sender, data):
     Here, sender is the id of the active window (e.g. Conversation, Options,
     etc.)
     """
-    hotkey = 341   # 341 for ctrl, 256 for escape
+    # 341 for ctrl
+    hotkey = 341
     # User can hold CTRL and tap SHIFT to record. Data will be the most recent
     # key pressed, which we want to be shift (340). Therefore we check if
     # CTRL is also pressed.
@@ -769,7 +771,7 @@ def update_query_kwargs_from_model_name(model, query_kwargs):
     Parameters
     ----------
     model: str
-        One of MODEL_NAMES defined in bin/main.py.
+        One of MODEL_NAMES defined in gui/main.py.
         E.g. GPT3, GPT-neo 1.3B, GPT-J.
     query_kwargs: dict
         Params controlling text generation. E.g. max_tokens, temperature.

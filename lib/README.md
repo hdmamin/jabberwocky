@@ -45,7 +45,7 @@ jabberwocky/
 ```
 
 ---
-Start of auto-generated file data.<br/>Last updated: 2021-09-06 12:14:58
+Start of auto-generated file data.<br/>Last updated: 2021-09-12 13:53:34
 
 <table border="1" class="dataframe">
   <thead>
@@ -75,9 +75,9 @@ Start of auto-generated file data.<br/>Last updated: 2021-09-06 12:14:58
     <tr>
       <td>core.py</td>
       <td>Core functionality that ties together multiple APIs.</td>
-      <td>598</td>
-      <td>2021-07-19 20:13:47</td>
-      <td>23.61 kb</td>
+      <td>609</td>
+      <td>2021-09-06 13:39:53</td>
+      <td>24.21 kb</td>
     </tr>
     <tr>
       <td>external_data.py</td>

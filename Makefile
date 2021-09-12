@@ -2,7 +2,7 @@
 
 # Convention: add _ between comment sign and TODO to hide an item that you don't want to delete entirely. This will still be findable if you run `ack TODO`.
 todo:
-		ack -R '# TODO' {bin,lib,notebooks,notes,reports,services} || :
+		ack -R '# TODO' {gui,lib,notebooks,notes,reports} || :
 
 nb:
 		cp notebooks/TEMPLATE.ipynb notebooks/nb000-untitled.ipynb
@@ -17,7 +17,7 @@ pypi: lib
 		cd lib && twine upload --repository pypi dist/*
 
 readmes:
-	htools update_readmes "['bin', 'notebooks', 'lib/jabberwocky']"
+	htools update_readmes "['gui', 'notebooks', 'lib/jabberwocky']"
  
 run:
-	python bin/main.py
+	python gui/main.py
