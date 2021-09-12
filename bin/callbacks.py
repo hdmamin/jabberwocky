@@ -77,13 +77,22 @@ def transcribe_callback(sender, data):
         - adjust_id (str: dearpygui text item displaying message while
             recognizer is adjusting for ambient noise. Currently set this up to
             execute only once per GUI session.)
+        - pre_delete_dummy (bool: optional. If True (the default), try to
+            delete dummy window if one exists before executing the
+            transcription logic. This is created by our
+            hotkey_handler to take focus away from an input text box so that we
+            can update its output, which isn't possible if it's focused. This
+            is False when triggered by the transcribe hotkey and True
+            otherwise.)
+        - post_delete dummy (bool: optional. Same as pre_delete_dummy but
+            checks at the end of this function. At the moment this is always
+            True but only executes when triggerd by our record callback, as
+            that's the only time the dummy window should be present by the end
+            of the function.)
     """
-    # TODO
-    if does_item_exist('dummy window'):
-        print('deleting dummy')
+    if data.get('pre_delete_dummy', True) and does_item_exist('dummy window'):
         delete_item('dummy window')
         end()
-    # TODO END
 
     if is_item_visible('Input'):
         set_value(data['target_id'], '')
@@ -171,6 +180,10 @@ def transcribe_callback(sender, data):
         chunked = CHUNKER.add('conv_transcribed', text)
         set_value(data['target_id'], chunked)
 
+    if data.get('post_delete_dummy', True) and does_item_exist('dummy window'):
+        delete_item('dummy window')
+        end()
+
 
 def format_text_callback(sender, data):
     """Used in task mode when user hits auto-format button. Mostly just
@@ -202,21 +215,26 @@ def format_text_callback(sender, data):
     )
 
 
-@min_wait(2)
+@min_wait(1.5)
 def hotkey_handler(sender, data):
-    print('hotkey data', data)
     if is_item_visible('Conversation'):
-        print('conv mode')
         conv_mode = True
     elif is_item_visible('Input'):
         conv_mode = False
-        print('NON conv mode')
     else:
+        # Don't think this ever happens intentionally but I think it's
+        # technically possible.
         print('Neither main window is visible.')
         return
 
+    # Take focus off of the text input box where typing will occur in.
+    # Otherwise hotkeys can't update text in that box if called when the cursor
+    # is in that box, which is a common use case (e.g. in conv mode if we edit
+    # our last transcription, we want to be able to call query without clicking
+    # outside of the text input box. Hitting the escape key first doesn't work
+    # either as it functions as an undo key in dearpygui.
     add_window('dummy window', no_focus_on_appearing=False,
-               no_bring_to_front_on_focus=True, show=True) # TODO testing
+               no_bring_to_front_on_focus=True, show=True)
 
     # CTRL + SHIFT: start recording if not already.
     if data == 340 and not RECOGNIZER.is_listening:
@@ -225,18 +243,19 @@ def hotkey_handler(sender, data):
                        'target_id': 'conv_text',
                        'auto_punct_id': 'conv_auto_punct',
                        'stop_record_id': 'conv_stop_record',
-                       'adjust_id': 'conv_adjust_msg'}
+                       'adjust_id': 'conv_adjust_msg',
+                       'pre_delete_dummy': False}
         else:
             cb_data = {'listening_id': 'record_msg',
                        'target_id': 'transcribed_text',
                        'auto_punct_id': 'auto_punct',
                        'stop_record_id': 'stop_record',
-                       'adjust_id': 'adjust_msg'}
+                       'adjust_id': 'adjust_msg',
+                       'pre_delete_dummy': False}
         transcribe_callback('record_hotkey_callback', data=cb_data)
 
     # CTRL + q: query gpt3.
     elif data == 81:
-        print('IN QUERY HOTKEY IF')
         if conv_mode:
             cb_data = {'target_id': 'conv_text',
                        'read_checkbox_id': 'conv_read_response',
@@ -258,7 +277,6 @@ def hotkey_handler(sender, data):
     # this outside the if clauses in case the user hits CTRL with another
     # key.
     if does_item_exist('dummy window'):
-        print('deleting dummy')
         delete_item('dummy window')
         end()
 
@@ -278,14 +296,8 @@ def text_edit_callback(sender, data):
     # User can hold CTRL and tap SHIFT to record. Data will be the most recent
     # key pressed, which we want to be shift (340). Therefore we check if
     # CTRL is also pressed.
-    # TODO: hotkeys broken. Often when I use them, query will execute and
-    # speech
-    # will start but text doesn't show up until after speaking completes and I
-    # cancel the listening that auto starts afterwards. Still trying to
-    # pinpoint cause.
     if is_key_down(hotkey):
         if data != hotkey: hotkey_handler('text_edit_callback', data)
-        print('CTRL KEY DOWN; PRE RETURN')
         return
     # This is actually a different case than above: I'm guessing there are
     # times where this callback is triggered but by the time we reach the
@@ -346,10 +358,10 @@ def text_edit_callback(sender, data):
         if f'\n\n{pretty_name}: ' not in last_turn:
             CONV_MANAGER.query_later(last_turn)
         else:
-            print('TEXT EDIT ERROR', data) # TODO
-            show_item('edit_warning_msg')
-            time.sleep(2)
-            hide_item('edit_warning_msg')
+            if not is_item_visible('edit_warning_msg'):
+                show_item('edit_warning_msg')
+                time.sleep(2)
+                hide_item('edit_warning_msg')
 
 
 def task_select_callback(sender, data):

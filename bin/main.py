@@ -391,6 +391,7 @@ class App:
                      show=False)
             add_checkbox('conv_interrupt_checkbox', label='Interrupt',
                          show=False)
+            add_spacing()
             add_text('edit_warning_msg', show=False,
                      default_value='You can only edit your most recent '
                                    'speaking turn.')

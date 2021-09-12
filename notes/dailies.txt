@@ -1768,13 +1768,17 @@ X -try having query hotkey auto-focus an element that's not the output text box.
 
 9/12/21
 -------
--add new line before edit_warning_msg (missing in at least 1 mode, maybe both)
+X -add new line before edit_warning_msg
 -try commenting out dummy window add/del (both in hotkey_handler and transcribe_cb). Check if record hotkey works when cursor in output text box in conv mode
-    -same as above but in task mode
-    -continue debugging why record hotkey not working
-        -write list of all possible points of failure (window doesn't appear, does but isn't deleted, etc.)
-        -try to narrow down list by ruling out each item 1 by 1
+    UPDATE: doesn't work when cursor in output text box.
+    X -same as above but in task mode
+        UPDATE: doesn't work here either. This confirms that the addition of the dummy window doesn't break that functionality - it simply doesn't solve it the way it does for query callback.
+    X -continue debugging why record hotkey not working
+        _ -write list of all possible points of failure (window doesn't appear, does but isn't deleted, etc.)
+        _ -try to narrow down list by ruling out each item 1 by 1
+        UPDATE: transcribe hotkey immediately triggers transcribe cb which was auto-deleting my dummy window at the start and thus returning focus to the textbox the dummy was meant to take focus away from. I added an option to postpone dummy deletion to the end of the transcribe callback and this fixes recording in both modes.
     -clean up comments, extra code
+    X -document new data args in transcribe_callback and add comments in hotkey_handler
 -update readme hotkey section depending on whether hotkeys are ultimately included or not
 -update record button tooltip w/ or w/out hotkey
     -update query button tooltip w/ or w/out hotkey
