@@ -3,7 +3,11 @@
 <h1 align='center'>Jabberwocky</h1>
 </p>
 
-![](https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4)
+
+<video src='https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4'>
+Your browser doesn't support embedded videos. View demo here: https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4
+</video>
+<p></p>
 
 This was not really designed to be used as a standalone library - it was mostly used as a convenient way to structure and import code in other parts of the [project](https://github.com/hdmamin/jabberwocky). Some components may be reusable for other projects combining GPT-3 with audio, however.
 
@@ -21,6 +25,44 @@ We also provide Task Mode containing built-in prompts for a number of sample tas
 - Explain machine learning concepts in simple language
 - Generate ML paper abstracts
 - MMA Fight Analysis and Prediction
+
+## Getting Started
+
+1. Clone the repo.
+```
+git clone https://github.com/hdmamin/jabberwocky.git
+```
+
+2. Install the necessary packages. I recommend using a conda environment or virtual environment.
+```
+pip install jabberwocky
+```
+
+3. Add your openai API key somewhere the program can access it. There are two ways to do this:
+
+```
+echo your_openai_api_key > ~/.openai
+```
+
+or
+
+```
+export OPENAI_API_KEY=your_openai_api_key
+```
+
+(Make sure to use your actual key, not the literal text `your_openai_api_key`.)
+
+4. Run the app.
+
+```
+python gui/main.py
+```
+
+If you have `make` installed you can also use the command:
+
+```
+make run
+```
 
 ## Usage
 
@@ -42,7 +84,7 @@ In task mode, you can ask GPT-3 to perform a number pre-defined tasks. Written a
 
 Transcripts of responses from a small subset of non-conversation tasks can be found in the `data/completions` directory. You can also save your own completions while using the app.
 
-## Usage Notes
+### Usage Notes
 
 The first time you speak, the speech transcription back end will take a few seconds to calibrate to the level of ambient noise in your environment. You will know it's ready for transcription when you see a "Listening..." message appear below the Record button. Calibration only occurs once to save time.
 
