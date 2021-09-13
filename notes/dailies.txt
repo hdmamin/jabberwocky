@@ -1783,23 +1783,24 @@ X -update readme hotkey section depending on whether hotkeys are ultimately incl
 X -update record button tooltip w/ or w/out hotkey
     X -update query button tooltip w/ or w/out hotkey
     UPDATE: decided to remove tooltips for hotkeys. Just specify in readme.
-
-9/13/21
--------
--record new Add Persona example
-    -update readme
--fix new bug: no error msg if we try to save to a path that exists
--decide what to do about docker and setup dirs (keep for potential changes later? Or del to keep things tidy?)
--update and finalize postmortem
+X -record new Add Persona example
+    X -update main readme
+    X -update pypi readme
+X -update pypi readme w/ other recent readme changes
+X -decide what to do about docker and setup dirs (keep for potential changes later? Or del to keep things tidy?)
+    UPDATE: leave in but add note in readme that they're not working.
+_ -fix new bug: no error msg if we try to save to a path that exists
+    UPDATE: failed to reproduce. Maybe the error msg actually did appear last time and I didn't notice?
+X -check: can we force text input to auto focus on the bottom portion when there's a lot to scroll through?
+   UPDATE: no. dearpygui 0.7 feature. 
+X -update and finalize postmortem
+-make sure this can actually be installed on another computer
 
 
 -------------------------------------------------------------------------------
 
 backlog
 -------
--consider updating typing to occur w/ every new char rather than every new tok (simplest way is just to re-chunk after every char but that seems excessive. Also, for long convs the live typing quickly loses visibility anyway).
-    -can we force text input to auto focus on the bottom portion when there's a lot to scroll through?
--update personal site w/ quick summary, things learned, etc.?
 
 easy tasks for low energy days
 ------------------------------
@@ -1807,6 +1808,7 @@ easy tasks for low energy days
 
 Won't Do (things I considered doing but ultimately decided to skip, at least in this project)
 ---------------------------------------------------------------------------------------------
+-update typing to occur w/ every new char rather than every new tok (simplest way would require re-chunking after every char but that seems excessive, esp since long convs lose site of live typing anyway since dearpygui didn't add support for updating focus w/ scrollbar until 0.7).
 -prototype cover letter writer from job posting
 -consider image task tie-ins [already allowed a ton of scope creep. At the very least leave this for a later project.]
     -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
@@ -1829,3 +1831,4 @@ Future Extensions
     -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
     -look more into pyoxidizer and/or nuitka instead
 -look into new nvidia package which might be a good alternative for transcription and/or TTS (sentdex has a video on it which might help)
+-update personal site w/ quick summary, things learned, etc.? (Not sure there's that much interesting/useful stuff for me to document really. Couldn't get packaging working, dearpygui API looks totally different now, haven't really spent much time USING the thing so don't have much interesting to say about gpt3. Maybe after talking to gpt3 for a few weeks or months I'll have more interesting insights here.)

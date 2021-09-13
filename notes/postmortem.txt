@@ -1,6 +1,6 @@
 Start date: 4/9/21
 Soft end date: 7/1/21 (12 weeks; gpt3 trial ends 5pm the night before)
-	UPDATE: 
+	UPDATE: 9/12/21 (22.5 weeks; wrote most of this around the 14 week mark when I thought I was basically done but somehow I kept finding more things I wanted to add)
 
 Final Product
 -------------
@@ -55,12 +55,16 @@ A little bit but not too bad. There was no model training which might have helpe
 
 Overall, not the biggest problem. I think one key is to look at my tasks for the day before I plan on starting (e.g. when I start my 1focus session). Usually they sound more manageable than I expected and it makes starting a lot less intimidating. For the same reason, try to put easiest task as first bullet point to minimize this "starting friction".
 
+Also, I think the fact that this is something I might actually use probably helped - I kept wanting to add 1 more feature, and then thinking of something else I wanted. Excitement is a good shield against burnout.
+
 2. run out of gpt3 quota/time
 [SOLUTION]
 -This is a perfectly acceptable use of learning funds. Don't hesitate to buy more queries.
 
 [UPDATE]
 I did go past the end of my trial (only used ~half my credits but sadly they expired with the trial). But they introduced a pay as you go tier so it's really quite cheap, and I still think it's fair game for reimbursement later.
+
+Also eventually got codex access which provided some extra credits.
 
 3. Frustration at custom GAN experiments not working
 [SOLUTION]
@@ -94,6 +98,8 @@ No GANs, but I did end up mostly working on GUI things or youtube transcript int
 [UPDATE]
 It did go on very long (technically I cheated and am writing this before I'm 100% done - I could wrap up now but at the very least should do some more documentation/reorganization and add gifs to the readme). But it wasn't so much the degree of technical challenge, more that I kept finding new features I wanted or new tasks I wanted to support. Skipped the mid-way checkin which I think is okay - was still a good reminder that I should have a direction locked in by that point, which I did. Ended up postponing art/gan work for another time which I think was fine.
 
+(This actually went way longer than I could have guessed - the above was written in mid July and I'm only now wrapping up ~8 weeks later. But the sentiment remains the same.)
+
 7. Project is too poorly defined and I can't decide which direction to pursue, resulting in several poorly done partial projects.
 [SOLUTION]
 -Add reminder at the 6 week mark to commit to something.
@@ -110,7 +116,7 @@ Lessons from last time
 -Pay close attention to what aspects you enjoy. I had trouble choosing a project after finishing webgraph, and it would be nice if that process is easier next time.
 	UPDATE: I kind of already knew this but a lot of my enjoyment comes from getting my computer to interact with different mediums (e.g. audio) and automate things (e.g. simple heuristic for inferring gender based on wiki bio). Also enjoyed some of the non-GUI things I did with the youtube Transcript interfaces or the ConversationManager interface - standard OOP things.
 -Make some time for a 100% break afterwards (not even project research) and make that mandatory. This time, I ended up only halfway committing to the break and it ended up being both longer and less relaxing than would be ideal.
-	UPDATE: Haven't done this yet but I'll try to. May be tough to enforce.
+	UPDATE: Haven't done this yet but I'll try to. May be tough to enforce. Sept update: this probably won't happen. Whoops.
 
 What went well
 --------------
@@ -118,7 +124,7 @@ What went well
 -end product is something I might actually use
 -finally satisfied GUI curiosity (although I somehow feel a bit underwhelmed? Not sure what I was expecting, maybe desktop just isn't the most relevant medium these days. Or maybe dash/streamlit work is sufficiently similar that this didn't feel that new after all)
 -The fact that I chose to extend this project past the 3 month mark is probably a good sign in terms of enjoyment.
--Used threads to produce a clear, tangible improvement (granted in a pretty simple way and don't know if it was an ideal solution, but they definitely feel less intimidating now, at least for basic use cases).
+-Used threads to produce a clear, tangible improvement (granted in a pretty simple way and don't know if it was an ideal solution, but they definitely feel less intimidating now, at least for basic use cases). Sept update: got way deeper into threads than when I first wrote this, to the point that I think it may have been the biggest win from this project. Adds to the theme that this is my year of getting comfortable w/ various approaches to concurrency.
 -Getting a feel for working with large language models is good. Reading about the mechanics or even coding them up is one thing but using them seems to provide a sort of intuition that is kind of complementary. Before, I understood temperature mostly via the equation, and if I hadn't done anything with it recently it might take me a minute to triangulate my way to remembering what increasing vs. decreasing did. After using the model a bunch, it's now instantaneous: low temperature for less variable outputs.
 -Tried some sort of creative ideas: improving transcription quality, generating complementary color schemes (doesn't work amazingly but that is a cool way to test the limitations of the text-only interface), predicting sports outcomes (not so creative in itself, but I tried to provide sample analyses that were particularly prescient - thereby encouraging the model to seek out "good at predicting future events" in its compressed knowledge base (using that term very loosely).
 
@@ -127,6 +133,7 @@ What went poorly
 -Project pivot from GAN things -> audio interface meant I didn't get the research exercise or deepening of GAN understanding that I'd hoped for initially. Turned into more of a straightforward "implement this engineering thing" task. Not the kind of super ambitious technical growth I'd like to aim for with these projects.
 -Still reluctant to internalize 30 min goal - 60 just feels kind of necessary to make a good chunk of progress.
 -Coding standards/organization were a little messy with the app. May still clean that up a bit and partly that may be due to the library (couldn't find any examples of large, well-organized apps w/ this framework).
+-the interface itself isn't particularly creative. Loom (another project I found on github) is a much better example of experimenting with interesting ways to interact w/ large language models. 
 
 Last project's "Thing to do differently next time"
 --------------------------------------------------
@@ -145,5 +152,8 @@ Thing to do differently next time
 	2. Is an absolute delight to work on.
 	3. Produces something I use after the project is done.
 -Novelty (gui programming) is good but maybe shouldn't be overly valued in and of itself. Still a bit torn with this one - I do think it's fine to stay in the exploratory-heavy phase at this point - but maybe the point is to pay attention to HOW novel something really is. GUI programming doesn't feel all that different from web app programming, probably because on a local dev level it's not.
+-Be on the lookout for unexpected opportunities for creativity. Even if 1 area of a project isn't particularly creative/challenging/innovative, there's always potential to do interesting new things in other areas (e.g. Loom doesn't provide any innovation in model arch/training and even the prompt engineering isn't particularly unique, but the UI turns gpt3 into something pretty different from other applications I've seen).
 
 Final thoughts: Once this is 100% done I should take a good long COMPLETE break and only return to side projects when I feel excited to do so. A more writing-heavy (as opposed to coding-heavy) one might be a good choice, but I'll leave that decision for later. This quarter's work projects are providing an opportunity for the kind of technical growth I initially designed these side projects for so maybe there's not a pressing need to rush into the next one.
+
+Final final thoughts: Oddly, I think I feel more energized and less burned out now than I did when I first wrote this postmortem nearly 2 months ago. I have several extensions in mind (alexa, sms) and it's tempting to line those up as my next project but I think it might be good to set this aside for a while in favor of something totally different. I still like the idea of the type of work introduced to me by those coursera gan courses - researchy projects that involve ML but don't necessarily involve training new models (or if they do, it's just for some downstream application - we don't really care about making the model itself get strong performance metrics, we just want to run get_trained_model() so we can do something with it).

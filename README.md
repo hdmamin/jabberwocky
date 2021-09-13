@@ -27,9 +27,9 @@ We also provide Task Mode containing built-in prompts for a number of sample tas
 git clone https://github.com/hdmamin/jabberwocky.git
 ```
 
-2. Install the necessary packages. I recommend using a conda environment or virtual environment.
+2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc).
 ```
-pip install jabberwocky
+pip install -r requirements.txt
 ```
 
 3. Add your openai API key somewhere the program can access it. There are two ways to do this:
@@ -99,3 +99,5 @@ jabberwocky/
 ├── gui          # GUI scripts. The main script should be run from the project root directory. 
 └── lib          # Python package. Code can be imported in analysis notebooks, py scripts, etc.
 ```
+
+The `docker` and `setup` dirs contain remnants from previous attempts to package the app. While I ultimately decided to go with a simpler approach, I left them in the repo so I have the option of picking up where I left off if I decide to work on a new version.
