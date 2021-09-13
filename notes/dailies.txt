@@ -1794,7 +1794,13 @@ _ -fix new bug: no error msg if we try to save to a path that exists
 X -check: can we force text input to auto focus on the bottom portion when there's a lot to scroll through?
    UPDATE: no. dearpygui 0.7 feature. 
 X -update and finalize postmortem
--make sure this can actually be installed on another computer
+~ -make sure this can actually be installed on another computer
+    UPDATE: 2 issues remain: need to download nltk.punkt and need to investigate segfault 11 (maybe due to lib/core.py?).
+
+9/13/21
+-------
+-try to update lib/setup.py to install nltk punkt module
+-investigate "segfault 11" error (maybe due to lib/core.py? Only occurs on work machine)
 
 
 -------------------------------------------------------------------------------
