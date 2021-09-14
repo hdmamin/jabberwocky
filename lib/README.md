@@ -29,13 +29,22 @@ We also provide Task Mode containing built-in prompts for a number of sample tas
 ## Getting Started
 
 1. Clone the repo.
+
 ```
 git clone https://github.com/hdmamin/jabberwocky.git
 ```
 
 2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc).
+
 ```
 pip install -r requirements.txt
+python -m nltk.downloader punkt
+```
+
+If you have `make` installed you can simply use the command:
+
+```
+make install
 ```
 
 3. Add your openai API key somewhere the program can access it. There are two ways to do this:
@@ -58,7 +67,7 @@ export OPENAI_API_KEY=your_openai_api_key
 python gui/main.py
 ```
 
-If you have `make` installed you can also use the command:
+Or with `make`:
 
 ```
 make run

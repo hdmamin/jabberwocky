@@ -1799,8 +1799,12 @@ X -update and finalize postmortem
 
 9/13/21
 -------
--try to update lib/setup.py to install nltk punkt module
+X -try to update lib/setup.py to install nltk punkt module
+    UPDATE: added makefile install cmd. Didn't like the idea of installing on import and overriding installer cls in setup.py sounds unreliable based on stack comments.
+    X -update readme w/ install instructions for nltk
+    X -update lib/readme
 -investigate "segfault 11" error (maybe due to lib/core.py? Only occurs on work machine)
+    UPDATE: segault triggered by line "start_dearpygui(primary_window='primary_window')". That's the window with everything so with that commented out the script runs w/out error but nothing happens (no gui pops up). 
 
 
 -------------------------------------------------------------------------------
