@@ -4,9 +4,7 @@
 </p>
 
 
-<video src='https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4'>
-Your browser doesn't support embedded videos. View demo here: https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4
-</video>
+Video demo: https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4
 <p></p>
 
 This was not really designed to be used as a standalone library - it was mostly used as a convenient way to structure and import code in other parts of the [project](https://github.com/hdmamin/jabberwocky). Some components may be reusable for other projects combining GPT-3 with audio, however.

@@ -87,7 +87,7 @@ In task mode, you can ask GPT-3 to perform a number pre-defined tasks. Written a
 ![](data/clips/demo/punctuation.gif)
 Transcripts of responses from a small subset of non-conversation tasks can be found in the `data/completions` directory. You can also save your own completions while using the app.
 
-## Usage Notes
+### Usage Notes
 
 The first time you speak, the speech transcription back end will take a few seconds to calibrate to the level of ambient noise in your environment. You will know it's ready for transcription when you see a "Listening..." message appear below the Record button. Calibration only occurs once to save time.
 
