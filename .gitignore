@@ -6,7 +6,7 @@ data/*
 !data/prompts
 !data/completions
 !data/clips/demo/
-data/fonts
+!data/fonts
 # Getting gitignore exception to work on 1 file is a little tricky.
 !data/icons/
 data/icons/*
