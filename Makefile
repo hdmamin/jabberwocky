@@ -18,6 +18,10 @@ pypi: lib
 
 readmes:
 	htools update_readmes "['gui', 'notebooks', 'lib/jabberwocky']"
+
+make install:
+	pip install -r requirements.txt
+	python -m nltk.downloader punkt
  
 run:
 	python gui/main.py
