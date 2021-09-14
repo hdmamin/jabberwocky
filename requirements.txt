@@ -2,4 +2,5 @@
 dearpygui==0.6.415
 jabberwocky
 pandas_flavor==0.1.2
+pyaudio==0.2.11
 speechrecognition==3.8.1
