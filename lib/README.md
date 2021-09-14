@@ -34,9 +34,10 @@ We also provide Task Mode containing built-in prompts for a number of sample tas
 git clone https://github.com/hdmamin/jabberwocky.git
 ```
 
-2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc).
+2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're not using Mac OS, you could try installing portaudio with whatever package manager you're using, but app behavior on other systems is unknown.
 
 ```
+brew install portaudio
 pip install -r requirements.txt
 python -m nltk.downloader punkt
 ```
