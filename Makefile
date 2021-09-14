@@ -20,6 +20,7 @@ readmes:
 	htools update_readmes "['gui', 'notebooks', 'lib/jabberwocky']"
 
 install:
+	brew install portaudio
 	pip install -r requirements.txt
 	python -m nltk.downloader punkt
  
