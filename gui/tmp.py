@@ -21,7 +21,7 @@ def prompt_until_valid(valid_responses, msg,
     while True:
         cmd = sess.prompt(msg)
         cmd = postprocess(cmd)
-        if cmd in valid_responses:
+        if cmd in valid:
             return cmd
         else:
             print(error_msg.format(cmd))

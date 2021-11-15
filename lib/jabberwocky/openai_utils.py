@@ -435,7 +435,7 @@ class ConversationManager:
 
     def __init__(self, names=(), custom_names=(), data_dir='./data',
                  backup_image='data/misc/unknown_person.png',
-                 turn_window=3):
+                 turn_window=3, verbose=True):
 
         """
         Parameters
@@ -464,6 +464,7 @@ class ConversationManager:
             but I wanted to start with something relatively simple.
         """
         assert 1 <= turn_window <= 20, 'turn_window should be in [1, 20].'
+        self.verbose = verbose
 
         # We'll be adding in the user's newest turn separately from accessing
         # their historical turns so we need to subtract 1 from both of these.
@@ -498,7 +499,7 @@ class ConversationManager:
         self.gpt3_turns = []
 
         # Load prompt, default query kwargs, and existing personas.
-        self._kwargs = load_prompt('conversation')
+        self._kwargs = load_prompt('conversation', verbose=self.verbose)
         self._base_prompt = self._kwargs.pop('prompt')
 
         # Populated by _load_personas().
@@ -682,7 +683,8 @@ class ConversationManager:
         """Helper to update our various name2{something} dicts."""
         dir_ = self.persona_dir[is_custom]/processed_name
         summary = load(dir_/'summary.txt')
-        self.name2gender[processed_name] = load(dir_/'gender.json')
+        self.name2gender[processed_name] = load(dir_/'gender.json',
+                                                verbose=self.verbose)
         self.name2img_path[processed_name] = [p for p in dir_.iterdir()
                                               if p.stem == 'profile'][0]
         self.name2base[processed_name] = self._base_prompt.format(
