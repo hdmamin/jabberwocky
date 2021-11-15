@@ -1,38 +1,57 @@
 import os
 from pathlib import Path
 
-from jabberwocky.openai_utils import ConversationManager
+from jabberwocky.openai_utils import ConversationManager, PromptManager
 from htools.cli import fire
 from htools.core import eprint
 
 
 os.chdir(Path('~/jabberwocky').expanduser())
-conv = ConversationManager()
 
 
 # TODO
-def talk(name, model):
-    query = None
-    with conv.converse():
-        while query != '/quit':
-            query = input('\n>>> ')
-            res = conv.query(query)
-            print(res)
-        while True:
-            cmd = input('Would you like to save that conversation? [y/n]')
-            if cmd not in ('y', 'n', 'Y', 'N'):
-                print(f'Unrecognized command "{cmd}"')
-                continue
+def talk(name, model, download=False):
+	conv = ConversationManager()
+    sess = PromptSession(vi_mode=True)
+    conv.start_conversation(name, download_if_necessary=download)
+	query = None
+    while True:
+        query = sess.prompt('Me: ').strip()
+        print('-' * 79)
+        print('COMMAND:')
+        print(query)
+        print('-' * 79)
+        if query == '/quit':
+            cmd = prompt_until_valid(
+                {'y', 'n'}, 'Would you like to save this conversation? [y/n]',
+                postprocess=strip_and_lower, sess=sess
+            )
             if cmd == 'y':
-                path = input('Output file name (not full path; just press '
-                             '<ENTER> for default):')
-            elif cmd == 'n':
-                pass
-            break
+                fname = sess.prompt('Enter file name to save to (not full '
+                                    'path). Just press <ENTER> for default.')
+				conv.end_conversation(fname=fname)
+            else:
+				conv.end_conversation()
+                return
+		else:
+			input_, resp = conv.query(cmd)
+			print(resp)
 
 
-def ls(pretty=True):
-    eprint(conv.personas(pretty=pretty))
+def task():
+	pass
+
+def code():
+	pass
+
+
+def ls(mode=None, pretty=True):
+	if not mode or mode == 'conv':
+		conv = ConversationManager()
+		eprint(conv.personas(pretty=pretty))
+	if not mode or mode == 'task':
+		manager = PromptManager()
+		eprint(list(manager.prompts))
 
 
 if __name__ == '__main__':
