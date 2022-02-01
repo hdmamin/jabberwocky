@@ -1,0 +1,31 @@
+Context: been fiddling around with this project again lately but I'm not quite ready to restart daily contributions. Documenting where I'm at here for now so it's easier to pick up when I come back.
+
+11/15/21 mon
+------------
+Left off
+-talk() now prints responses with pretty formatted persona name.
+
+Next Steps
+-adjust query_kwargs so that we don't pass the wrong ones to gptj or gpt-neo mock funcs (maybe something like drop keys in query_kwargs that aren't in the func signature? Might not work if they take kwargs).
+-write new mock funcs to support:
+    -codex
+    -new open source gpt-like model on modelhub (name is something about "sci" IIRC)
+-live typing effect?
+-consider a "choose from 1 of k responses" mode. Would need to think about how this would work w/ live typing and how it would work w/ conv manager (usually query() updates the conv history).
+-maybe replace save/quit options w/ prompt_toolkit menus?
+
+Context: picking up on this again for part 2 (Alexa skill).
+
+1/31/22 mon
+-----------
+X -write premortem
+
+2/2/22 tues
+-----------
+-look through sample alexa conversation skeleton repo
+    -decide whether to use that template or "start from scratch"
+-create alexa skill in AWS UI
+-figure out how code will be structured locally (will alexa reference a separate repo if I use the conversation template? Will a single file basically be sufficient? Maybe an `alexa` subdir which can contain whatever I need it to?)
+-follow UI instructions to determine next steps
+
+

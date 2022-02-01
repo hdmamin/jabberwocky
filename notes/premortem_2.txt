@@ -1,0 +1,48 @@
+Start date: 1/31/22
+Soft end date: 4/11/22 (10 weeks; hoping this could be much shorter, especially if I forego the CLI)
+
+Final Product
+-------------
+Required:
+- 1 chatbot in the form of an Alexa skill using some kind of GPT-esque model (can be free or paid)
+
+Optional:
+- 1 CLI for similar chats (one is already in progress; however, might be preferable to use loom for text-based interaction since it natively supports n>1 completions, which I think will be key to my intended use case)
+- [probably skip] add ML-powered text to speech to replace the default Mac "say" command
+
+Concepts
+--------
+-Large language models
+-HCI (audio interfaces in particular)
+
+Tech
+----
+-Alexa
+
+What could go wrong?
+--------------------
+1. Burnout
+[SOLUTION]
+-leave coursera gans courses on hold
+-official target is down to 20 minutes, with some room to adjust (I'd like to aim for 1 nice long session a week, e.g. ~2 hours on Sat - if I can get 1 of those in, the weekly time will be pretty solid even if the other days are really short. Considering 1 "sabbath" day, perhaps Sunday - but if it's flexible, I worry the straightforward routine of "a little bit every day" will be replaced by the indecision of "should I use my sabbath day today?". I'll monitor this.)
+-rule: if I find myself dreading this or clock watching excessively, it's okay to consider changing my routine to be weekend-only (perhaps 1 long session a week and 0 required short ones).
+-keep edu reading requirements low. Maybe pre-work or while brushing teeth, or just on weekends?
+-try to maintain a few small cognitively lazy tasks at all times (e.g. writing a docstring) so I can choose an extra light day if necessary.
+
+2. Alexa has a bunch of hidden charges which discourage me from pursuing this further.
+[SOLUTION]
+-As long as it's not crazy, this shouldn't be a concern. I can use the cheapest engine or gptj or mocks for testing so dev should be extremely cheap. If it gets expensive in "prod" (when I'm done), then that means I'm using it (and presumably enjoying it) which is the goal.
+
+3. Project is boring since it's just a continuation of the last one.
+[SOLUTION]
+-Low-ish risk IMO since I think this sounds pretty cool.
+-Should be possible to keep this pretty short if I want to move on. CLI part is optional.
+
+4. Scope creep
+[SOLUTION]
+-Commit to doing alexa first and leaving CLI til after. If I finish the alexa part and we're >= 6 weeks in, just cut it off and leave the CLI as a possible future project. Don't want to repeat last year where I went ~8-9 months where every day had some non-work DS obligation.
+
+Lessons from last time
+----------------------
+-Beware of scope creep. This project in particular is meant to be fairly short: I want to churn out an alexa skill so I can use it. If not for that, there are lots of other technical areas I'd like to explore, but I made a calculated decision that this is worth doing now (sort of like the "2 minute rule": if you can do something in 2 minutes, just do it now. This will take longer than 2 minutes obviously, but relative to most projects I think this should be doable in a pretty short time period.)
+-Be on the lookout for unexpected opportunities for learning. (Recall: missed chance to learn more about declarative programming because I wasn't expecting that to be my learning focus. In the end, a different but also unexpected subject (multithreading) ended up being the big win from the project.)

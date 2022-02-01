@@ -69,6 +69,7 @@ def talk(name, model='gptj', download_persona=False,
 def task():
     pass
 
+
 def code():
     pass
 
