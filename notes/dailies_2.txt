@@ -22,10 +22,29 @@ X -write premortem
 
 2/2/22 tues
 -----------
--look through sample alexa conversation skeleton repo
-    -decide whether to use that template or "start from scratch"
--create alexa skill in AWS UI
+X -look through sample alexa conversation skeleton repo
+    X -decide whether to use that template or "start from scratch"
+        UPDATE: start by trying template.
+X -create alexa skill in AWS UI
+X -change invocation name
+    UPDATE: needed to be 2 words and I wanted it to be short. Jabberwocky -> Voice Chat.
+~ -start adding intents
+    ~ -start adding slots
+        UPDATE: wrote list of possible slots. added Person slot and Model slot.
+    UPDATE: wrote list of possible intents in misc.txt. Added choosePersona intent.
 -figure out how code will be structured locally (will alexa reference a separate repo if I use the conversation template? Will a single file basically be sufficient? Maybe an `alexa` subdir which can contain whatever I need it to?)
 -follow UI instructions to determine next steps
 
+2/3/22 wed
+----------
+-read up on dialog delegations trategy (do I want this?)
+    -add to choosePersona if necessary
+-read up on intent confirmation (do I want this?)
+    -add to choosePersona if necessary
+-create more slots (see misc.txt)
+-create more intents (see misc.txt)
+-see backlog
 
+Backlog
+-follow UI instructions to determine next steps
+-figure out how code will be structured locally (will alexa reference a separate repo if I use the conversation template? Will a single file basically be sufficient? Maybe an `alexa` subdir which can contain whatever I need it to?)
