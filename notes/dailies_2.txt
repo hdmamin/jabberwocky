@@ -37,13 +37,29 @@ X -change invocation name
 
 2/3/22 wed
 ----------
--read up on dialog delegations trategy (do I want this?)
-    -add to choosePersona if necessary
--read up on intent confirmation (do I want this?)
-    -add to choosePersona if necessary
--create more slots (see misc.txt)
--create more intents (see misc.txt)
--see backlog
+~ -read up on dialog delegations strategy (do I want this?)
+    _ -add to choosePersona if necessary
+        UPDATE: alexa auto-determines next thing to ask? Most of my interactions should require minimal scaffolding so I don't think we need this.
+~ -read up on intent confirmation (do I want this?)
+    _ -add to choosePersona if necessary
+        UPDATE: unnecessary at least for now. Consider adding later for Model or settings or choosePersona, maybe.
+X -create more slots (see misc.txt)
+X -create more intents (see misc.txt)
+~ -see backlog
+    X -fix incorrect usage of intents/slots 
+        UPDATE: intents should use a var name and then you set the var type in the section below. Previously I was using the var type in the intent itself. I.e. "call {amazon.Person}" -> "call {Person}", where Person has type amazon.Person
+    ~ -start testing interactions
+        UPDATE: lots of failures. I realized my code has been filled in with their conv template but I need to make a lot of changes.
+
+2/4/22 thurs
+-------------
+-look through code tab to see how expected interactions look
+    -try out in Test tab
+-update code to use my new intents
+    -regular conversation
+    -choose person
+    -change max length
+    -change temperature
 
 Backlog
 -follow UI instructions to determine next steps
