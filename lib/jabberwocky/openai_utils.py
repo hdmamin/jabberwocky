@@ -440,7 +440,7 @@ class ConversationManager:
         """
         Parameters
         ----------
-        names: str
+        names: Iterble[str]
             Optionally specify 1 or more personas to load. These should be
             pretty-formatted, e.g. "Barack Obama" rather than "barack_obama".
             If None are provided, all available personas will be loaded.

@@ -53,13 +53,31 @@ X -create more intents (see misc.txt)
 
 2/4/22 thurs
 -------------
--look through code tab to see how expected interactions look
-    -try out in Test tab
+~ -look through code tab to see how expected interactions look
+    X -try out in Test tab
+        UPDATE: still having trouble getting this to work. Found docs for ask_sdk and decided to try to follow those locally.
+~ -explore possibility of local ngrok
+    UPDATE: not sure if this is compatible with lamda style app code. Table this for now and return to amazon hosted endpoint.
+X -add code locally
+    UPDATE: created new alexa dir.
+-start following ask_sdk tutorial
+    X -write launch handler
+    ~ -write choose model handler
+    ~ -write choose person handler
 -update code to use my new intents
     -regular conversation
     -choose person
     -change max length
     -change temperature
+
+2/4/22 fri
+----------
+-continue following ask_sdk tutorial
+    -finish choose person handler
+        -figure out best way to make conv manager available globally
+    -finish choose model handler
+-confirm stackoverflow-suggested method of extracting slots works (unclear - pycharm code completion stopped finding it)
+
 
 Backlog
 -follow UI instructions to determine next steps
