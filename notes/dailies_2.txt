@@ -74,7 +74,8 @@ X -add code locally
 ----------
 -continue following ask_sdk tutorial
     -finish choose person handler
-        -figure out best way to make conv manager available globally
+        X -figure out best way to make conv manager available globally
+            UPDATE: wrote wrapper class that delegates to an attr where is stores the manager.
     -finish choose model handler
 -confirm stackoverflow-suggested method of extracting slots works (unclear - pycharm code completion stopped finding it)
 

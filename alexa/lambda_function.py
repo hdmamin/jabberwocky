@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 import ask_sdk_core.utils as ask_utils, is_request_type, is_intent_name
 from ask_sdk_core.skill_builder import SkillBuilder
@@ -11,12 +12,23 @@ from ask_sdk_model import Response
 from ask_sdk_model.dialog import DelegateRequestDirective, \
     DelegationPeriodUntil
 
+from htools.meta import delegate
 from jabberwocky.openai_utils import ConversationManager
-
 import util
+from util import slot, respond
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+@delegate('manager', iter_magics=True, getattr_=True)
+class ConversationManagerWrapper:
+
+    def __init__(self, **kwargs):
+        self.manager = ConversationManager(**kwargs)
+
+    def update_kwargs(self, **kwargs):
+        self.manager.kwargs.update(**kwargs)
 
 
 class LaunchRequestHandler(AbstractRequestHandler):
@@ -27,21 +39,21 @@ class LaunchRequestHandler(AbstractRequestHandler):
         return is_request_type('LaunchRequest')(handler_input)
 
     def handle(self, handler_input):
-        handler_input.response_builder.speak(self.on_start_text)
-        return handler_input.response_builder.response
+        respond(self.on_start_text)
 
 
 class ChoosePersonHander(AbstractRequestHandler):
 
-    def can_handle(self):
-        # TODO
-        pass
+    def can_handle(self, handler_input):
+        return is_intent_name('choosePerson')(handler_input)
 
-    def handle(self):
-        # TODO: consider how to make this persist (if possible? Sounds like
-        # lamda is intended to be stateless to unsure how this works).
-        # MANAGER = ConversationManager([person])
-        pass
+    def handle(self, handler_input):
+        person = slot('Person')
+        if person not in manager:
+            return respond('I don\'t see anyone named in your contacts. '
+                           'Would you like to create a new contact?')
+        manager.start_conversation(person)
+        return respond(f'I\'ve connected you with {person}.')
 
 
 class ChooseModelHandler(AbstractRequestHandler):
@@ -50,18 +62,17 @@ class ChooseModelHandler(AbstractRequestHandler):
         return is_intent_name('chooseModel')(handler_input)
 
     def handle(self, handler_input):
-        # TODO: change model using jabberwocky.
-        model = handler_input.request_envelope.request.intent.slots\
-            .get('Model')
+        model = slot('Model')
         if model is None:
-            handler_input.response.builder.speak(
-                'I didn\'t understand that model type. You are still using '
-                f'{MANAGER._kwargs["model_i"]}'
-            )
+            return respond('I didn\'t understand that model type. You are '
+                           f'still using {manager._kwargs["model_i"]}')
+        if model.isdigit():
+            manager.update_kwargs(model_i=int(model))
+            response = respond(f'You are now using model {model}.')
         else:
-            handler_input.response_builder.speak('You are now using model ' +
-                                                 model + '.')
-        return handler_input.response_builder.response
+            # TODO: handle other model engines
+            response = respond(f'Model {model} is not yet implemented.')
+        return response
 
 
 class RecordColorApiHandler(AbstractRequestHandler):
@@ -183,33 +194,11 @@ class SessionEndedRequestHandler(AbstractRequestHandler):
         return handler_input.response_builder.response
 
 
-class IntentReflectorHandler(AbstractRequestHandler):
-    """The intent reflector is used for interaction model testing and debugging.
-    It will simply repeat the intent the user said. You can create custom handlers
-    for your intents by defining them above, then also adding them to the request
-    handler chain below.
-    """
-    def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
-        return ask_utils.is_request_type("IntentRequest")(handler_input)
-
-    def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
-        intent_name = ask_utils.get_intent_name(handler_input)
-        speak_output = "You just triggered " + intent_name + "."
-
-        return (
-            handler_input.response_builder
-            .speak(speak_output)
-            # .ask("add a reprompt if you want to keep the session open for the user to respond")
-            .response
-        )
-
-
 class CatchAllExceptionHandler(AbstractExceptionHandler):
-    """Generic error handling to capture any syntax or routing errors. If you receive an error
-    stating the request handler chain is not found, you have not implemented a handler for
-    the intent being invoked or included it in the skill builder below.
+    """Generic error handling to capture any syntax or routing errors. If you
+    receive an error stating the request handler chain is not found, you have
+    not implemented a handler for the intent being invoked or included it in
+    the skill builder below.
     """
 
     def can_handle(self, handler_input, exception):
@@ -219,9 +208,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
     def handle(self, handler_input, exception):
         # type: (HandlerInput, Exception) -> Response
         logger.error(exception, exc_info=True)
-
-        speak_output = "Sorry, I had trouble doing what you asked. Please try again."
-
+        speak_output = "Sorry, could you repeat that?"
         return (
             handler_input.response_builder
             .speak(speak_output)
@@ -245,17 +232,18 @@ class LoggingResponseInterceptor(AbstractResponseInterceptor):
         logger.info("Response: {}".format(response))
 
 
-# The SkillBuilder object acts as the entry point for your skill, routing all request and response
-# payloads to the handlers above. Make sure any new handlers or interceptors you've
-# defined are included below. The order matters - they're processed top to bottom.
+# The SkillBuilder object acts as the entry point for your skill,
+# routing all request and response payloads to the handlers above. Make sure
+# any new handlers or interceptors you've defined are included below. The order
+# matters - they're processed top to bottom.
 sb = SkillBuilder()
+manager = ConversationManagerWrapper()
 
 # register request / intent handlers
 sb.add_request_handler(RecordColorApiHandler())
 sb.add_request_handler(GetFavoriteColorApiHandler())
 sb.add_request_handler(IntroToAlexaConversationsButtonEventHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
-sb.add_request_handler(IntentReflectorHandler())
 
 # register exception handlers
 sb.add_exception_handler(CatchAllExceptionHandler())
