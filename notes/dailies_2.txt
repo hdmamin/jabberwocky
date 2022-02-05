@@ -73,11 +73,28 @@ X -add code locally
 2/4/22 fri
 ----------
 -continue following ask_sdk tutorial
-    -finish choose person handler
+    X -finish choose person handler
         X -figure out best way to make conv manager available globally
-            UPDATE: wrote wrapper class that delegates to an attr where is stores the manager.
-    -finish choose model handler
--confirm stackoverflow-suggested method of extracting slots works (unclear - pycharm code completion stopped finding it)
+            UPDATE: initially wrote wrapper class that delegates to an attr where is stores the manager, then realized it didn't seem to be doing anything useful. Just load the manager as a global var in the global scope. Can adjust strategy later if needed.
+        UPDATE: tentatively done, though will likely need some troubleshooting/extra functionality/logging/error handling once I start testing.
+    ~ -finish choose model handler
+        UPDATE: tentatively mostly done, though need to figure out how to handle changing model to gptj or other non-int version. I think a better strategy than updating kwargs may be to store some session-level kwargs (I believe handler_input has some kind of session object that may be appropriate for this), then always pass that in to the query method.
+X -write convenience func to access slots
+X -write convenience func to speak/respond
+~ -clean up template file a bit (delete unused classes)
+_ -confirm stackoverflow-suggested method of extracting slots works (unclear - pycharm code completion stopped finding it)
+    UPDATE: prob need to wait until I figure out how to run this thing. Template has a helper method that does something similar so that's an option too.
+
+2/5/22 sat
+----------
+[DON'T LET THIS GET PUSHED BACK TOO FAR - don't want to end up having to rewrite a ton of code if something is incompatible.]
+-figure out how to get this running on lambda (if possible: reliance on local files might be a problem)
+    -how hard would it be to convert this to something we can run with ngrok? Is lambda_function.py still compatible or is it totally different locally?
+-look into handler_input session object
+    -try using this to update kwargs (e.g. model, max len, etc.)
+-more handler classes:
+    -set max length
+    -set temperature
 
 
 Backlog

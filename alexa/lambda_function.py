@@ -12,23 +12,12 @@ from ask_sdk_model import Response
 from ask_sdk_model.dialog import DelegateRequestDirective, \
     DelegationPeriodUntil
 
-from htools.meta import delegate
 from jabberwocky.openai_utils import ConversationManager
 import util
 from util import slot, respond
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
-@delegate('manager', iter_magics=True, getattr_=True)
-class ConversationManagerWrapper:
-
-    def __init__(self, **kwargs):
-        self.manager = ConversationManager(**kwargs)
-
-    def update_kwargs(self, **kwargs):
-        self.manager.kwargs.update(**kwargs)
 
 
 class LaunchRequestHandler(AbstractRequestHandler):
@@ -67,7 +56,7 @@ class ChooseModelHandler(AbstractRequestHandler):
             return respond('I didn\'t understand that model type. You are '
                            f'still using {manager._kwargs["model_i"]}')
         if model.isdigit():
-            manager.update_kwargs(model_i=int(model))
+            manager._kwargs.update(model_i=int(model))
             response = respond(f'You are now using model {model}.')
         else:
             # TODO: handle other model engines
@@ -237,7 +226,7 @@ class LoggingResponseInterceptor(AbstractResponseInterceptor):
 # any new handlers or interceptors you've defined are included below. The order
 # matters - they're processed top to bottom.
 sb = SkillBuilder()
-manager = ConversationManagerWrapper()
+manager = ConversationManager()
 
 # register request / intent handlers
 sb.add_request_handler(RecordColorApiHandler())
