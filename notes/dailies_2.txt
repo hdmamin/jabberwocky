@@ -88,13 +88,35 @@ _ -confirm stackoverflow-suggested method of extracting slots works (unclear - p
 2/5/22 sat
 ----------
 [DON'T LET THIS GET PUSHED BACK TOO FAR - don't want to end up having to rewrite a ton of code if something is incompatible.]
--figure out how to get this running on lambda (if possible: reliance on local files might be a problem)
-    -how hard would it be to convert this to something we can run with ngrok? Is lambda_function.py still compatible or is it totally different locally?
+~ -figure out how to get this running on lambda (if possible: reliance on local files might be a problem)
+    X -how hard would it be to convert this to something we can run with ngrok? Is lambda_function.py still compatible or is it totally different locally?
+        UPDATE: decided to try rewriting with flask-ask. We're still early and it seems like dev/testing will be far easier (hopefully avoid slow build time for every change).
+X -write new template app with flask-ask
+X -try running flask app w/ ngrok
+    UPDATE: accessible via generic url.
+X -rebuild model 
+    ~ -see if I can access flask-ask app through aws console
+        UPDATE: no errors but still references console code rather than flask ask local code.
 -look into handler_input session object
     -try using this to update kwargs (e.g. model, max len, etc.)
--more handler classes:
-    -set max length
-    -set temperature
+-more intent functions/endpoints:
+    X -set temperature
+    ~ -set max length
+        UPDATE: added skeleton func.
+
+2/6/22 sun
+----------
+-troubleshoot model build (no errors but still references console code rather than flask ask local code)
+    -try new flask-ask version in Alexa console (Test tab)
+-more endpoints:
+    -set max_length endpoint
+    -conversation end (add extra question offering to email transcript to user?)
+    -generic conv response endpoint
+-read up on flask-ask session vs. context (readthedocs.io tab)
+    -update it to store default _kwargs attr from conv manager
+    -update chooseModel to use this
+    -update chooseMaxLength to use this
+    -update chooseTemperature to use this
 
 
 Backlog

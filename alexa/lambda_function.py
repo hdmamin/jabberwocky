@@ -1,5 +1,4 @@
 import logging
-import warnings
 
 import ask_sdk_core.utils as ask_utils, is_request_type, is_intent_name
 from ask_sdk_core.skill_builder import SkillBuilder
