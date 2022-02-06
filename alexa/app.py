@@ -7,18 +7,18 @@ so it might be more convenient to run locally with ngrok anyway.
 from functools import wraps
 import logging
 
-from flask import Flask, render_template
-from flask_ask import Ask, statement, question, session
+from flask import Flask
+from flask_ask import Ask, statement, question, session, context, request
 
 from htools import params
 from jabberwocky.openai_utils import ConversationManager
 
 
-print('>>> Loading globals') # TODO: rm
+logging.getLogger().setLevel(logging.INFO)
 app = Flask(__name__)
 ask = Ask(app, '/')
 conv = ConversationManager(['Albert Einstein']) # TODO: load all personas?
-logging.getLogger().setLevel(logging.DEBUG)
+app.logger.warning('>>> Loading globals') # TODO: rm
 
 
 def intent(name, **ask_kwargs):
@@ -45,14 +45,29 @@ def intent(name, **ask_kwargs):
     return decorator
 
 
+# TODO rm
+@app.route('/')
+def home():
+    app.logger.warning('>>> IN HOME')
+    print('IN HOME')
+    return 'home'
+
+
 @app.route('/health')
 def health():
+    print('IN HEALTH')
     return 'Jabberwocky is running.'
 
 
 @ask.launch
 def launch():
-    return question('Who would you like to speak to?')
+    app.logger.warning('>>> IN LAUNCH')
+    session.attributes['kwargs'] = conv._kwargs
+    # return question('Who would you like to speak to?')
+    # TODO
+    tmp = question('Who would you like to speak to?')
+    print(tmp)
+    return tmp
 
 
 @intent('choosePerson')
@@ -73,7 +88,8 @@ def choose_model(model):
         return statement('I didn\'t recognize that model type. You\'re '
                          f'still using {conv._kwargs["model_i"]}')
     if model.isdigit():
-        conv._kwargs.update(model_i=int(model))
+        # conv._kwargs.update(model_i=int(model)) # TODO: rm
+        session.attributes['kwargs']['model_i'] = int(model)
         return statement(f'I\'ve switched your service to model {model}.')
     else:
         # TODO: handle other model engines
@@ -82,7 +98,8 @@ def choose_model(model):
 
 @intent('changeMaxLength')
 def change_max_length(length):
-    # TODO: change max length
+    # TODO: error handling
+    session.attributes['kwargs']['max_tokens'] = int(length)
     return statement(f'Choose length {length}.')
 
 
@@ -99,7 +116,7 @@ def change_temperature(temperature):
                          error_msg)
         return statement(error_msg)
 
-    # TODO: adjust temperature
+    session.attributes['kwargs']['temperature'] = temperature
     return statement(f'I\'ve adjusted your temperature to {temperature}.')
 
 
@@ -109,5 +126,5 @@ def end_session():
 
 
 if __name__ == '__main__':
-    print(f'>>> MAIN: {conv.personas()}') # TODO: rm
+    app.logger.warning(f'>>> MAIN: {conv.personas()}') # TODO: rm
     app.run(debug=True)

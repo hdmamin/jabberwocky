@@ -106,17 +106,31 @@ X -rebuild model
 
 2/6/22 sun
 ----------
--troubleshoot model build (no errors but still references console code rather than flask ask local code)
-    -try new flask-ask version in Alexa console (Test tab)
+~ -troubleshoot model build (no errors but still references console code rather than flask ask local code)
+    ~ -try new flask-ask version in Alexa console (Test tab)
+        UPDATE: spent most of time troubleshooting w/ minimal progress. Seems like the test console knows about the right URL (I think) but the api call is failing so it falls back to some generic message. Sample flask-ask code from aws tutorial has the same problem - possible that flask-ask is just no longer compatible 😬. When using test console, I see failed requests show up in app (not to any specific endpoint, looks like?).
 -more endpoints:
-    -set max_length endpoint
+    ~ -set max_length endpoint
+        UPDATE: still need error handling though.
     -conversation end (add extra question offering to email transcript to user?)
     -generic conv response endpoint
--read up on flask-ask session vs. context (readthedocs.io tab)
-    -update it to store default _kwargs attr from conv manager
-    -update chooseModel to use this
-    -update chooseMaxLength to use this
-    -update chooseTemperature to use this
+X -fix logger (wasn't printing to stdout)
+    UPDATE: unsure if fix was related to changing logging level or just restarting app, but it works now.
+X -read up on flask-ask session vs. context (readthedocs.io tab)
+    X -update it to store default _kwargs attr from conv manager
+    X -update chooseModel to use this
+    X -update chooseMaxLength to use this
+    X -update chooseTemperature to use this
+
+2/7/22 mon
+----------
+-add error handling to max_length endpoint
+-add more endpoints:
+    -conversation end (add extra question offering to email transcript to user?)
+    -generic conv response endpoint
+    -generic fallback endpoint?
+-brainstorm: what else could possibly cause these alexa issues? How to troubleshoot and eventually fix?
+
 
 
 Backlog
