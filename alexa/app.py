@@ -4,21 +4,33 @@ of if that's even possible. App relies on local filesystem a lot at the moment
 so it might be more convenient to run locally with ngrok anyway.
 """
 
+from datetime import datetime
 from functools import wraps
 import logging
 
 from flask import Flask
 from flask_ask import Ask, statement, question, session, context, request
 
-from htools import params
+from htools import params, quickmail
 from jabberwocky.openai_utils import ConversationManager
 
 
-logging.getLogger().setLevel(logging.INFO)
+logging.getLogger('flask_ask').setLevel(logging.DEBUG)
 app = Flask(__name__)
 ask = Ask(app, '/')
 conv = ConversationManager(['Albert Einstein']) # TODO: load all personas?
 app.logger.warning('>>> Loading globals') # TODO: rm
+
+
+def save_conversation(conv, user_email) -> bool:
+    if not conv.user_turns:
+        return False
+    date = datetime.today().strftime('%m/%d/%Y')
+    # TODO: maybe send as attachment instead?
+    quickmail(f'Your conversation with {conv.current_persona} ({date}).',
+              message=conv.full_conversation(),
+              to_email=user_email)
+    return True
 
 
 def intent(name, **ask_kwargs):
@@ -48,6 +60,7 @@ def intent(name, **ask_kwargs):
 # TODO rm
 @app.route('/')
 def home():
+    # TODO: docs
     app.logger.warning('>>> IN HOME')
     print('IN HOME')
     return 'home'
@@ -55,12 +68,14 @@ def home():
 
 @app.route('/health')
 def health():
+    # TODO: docs
     print('IN HEALTH')
     return 'Jabberwocky is running.'
 
 
 @ask.launch
 def launch():
+    # TODO: docs
     app.logger.warning('>>> IN LAUNCH')
     session.attributes['kwargs'] = conv._kwargs
     # return question('Who would you like to speak to?')
@@ -72,18 +87,19 @@ def launch():
 
 @intent('choosePerson')
 def choose_person(person):
-    return statement(f'Choose person {person}.')
-
+    # TODO: docs
     if person not in conv:
+        # TODO: new endpoint needed to handle answer to this case?
         return question(f'I don\'t see anyone named {person} in your '
                         f'contacts. Would you like to create a new contact?')
 
     conv.start_conversation(person)
-    return statement(f'I\'ve connected you with {person}.')
+    return question(f'I\'ve connected you with {person}.')
 
 
 @intent('chooseModel')
 def choose_model(model):
+    # TODO: docs
     if model is None:
         return statement('I didn\'t recognize that model type. You\'re '
                          f'still using {conv._kwargs["model_i"]}')
@@ -98,13 +114,26 @@ def choose_model(model):
 
 @intent('changeMaxLength')
 def change_max_length(length):
-    # TODO: error handling
-    session.attributes['kwargs']['max_tokens'] = int(length)
-    return statement(f'Choose length {length}.')
+    # TODO: docs
+    try:
+        length = int(length)
+        assert 0 < length < 2048
+    except (TypeError, AssertionError) as e:
+        error_msg = 'Please choose a number greater than zero and less than ' \
+                    'or equal to 2048.'
+        if isinstance(e, TypeError):
+            error_msg = 'I didn\'t recognize that value.' + error_msg
+        return question(error_msg)
+
+    session.attributes['kwargs']['max_tokens'] = length
+    return question(f'Choose length {length}.')
 
 
 @intent('changeTemperature')
 def change_temperature(temperature):
+    """Allow user to change model temperature. Lower values (near 0) are often
+    better for formal or educational contexts, e.g. a science tutor.
+    """
     error_msg = 'Please choose a number greater than zero and ' \
                 'less than or equal to one.'
     try:
@@ -114,15 +143,41 @@ def change_temperature(temperature):
         if isinstance(e, TypeError):
             error_msg = ('I didn\'t recognize that temperature value. ' +
                          error_msg)
-        return statement(error_msg)
+        return question(error_msg)
 
     session.attributes['kwargs']['temperature'] = temperature
-    return statement(f'I\'ve adjusted your temperature to {temperature}.')
+    return question(f'I\'ve adjusted your temperature to {temperature}.')
+
+
+@intent('response')
+def reply(response):
+    """Generic conversation reply. I anticipate this endpoint making up the
+    bulk of conversations.
+    """
+    text, _ = conv.query(response, **session.attributes['kwargs'])
+    return question(text)
+
+
+@intent('debug')
+def debug(response):
+    """For debugging purposes, simple endpoint that just repeats back what the
+    user said last.
+    """
+    return question(f'I\'m in debug mode. You just said: {response}.')
 
 
 @ask.session_ended
 def end_session():
     return '{}', 200
+
+
+def exit():
+    saved = False
+    if session.attributes.get('should_end') and \
+                session.attributes.get('should_save'):
+            # TODO: have user configure this at some point earlier?
+            saved = save_conversation(conv, session.attributes['email'])
+    return saved
 
 
 if __name__ == '__main__':

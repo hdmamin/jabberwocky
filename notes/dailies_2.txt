@@ -124,15 +124,27 @@ X -read up on flask-ask session vs. context (readthedocs.io tab)
 
 2/7/22 mon
 ----------
--add error handling to max_length endpoint
+X -add error handling to max_length endpoint
 -add more endpoints:
-    -conversation end (add extra question offering to email transcript to user?)
-    -generic conv response endpoint
-    -generic fallback endpoint?
+    ~ -conversation end (add extra question offering to email transcript to user?)
+        UPDATE: started writing but it's a bit tricky with optional saving.
+    X -generic conv response endpoint
+    X -debugging intent (repeat user response back)
+X -first draft of func to save conv (want it emailed rather than local)
 -brainstorm: what else could possibly cause these alexa issues? How to troubleshoot and eventually fix?
+-see if there are places I should add reprompt (chained method after question)
 
-
+2/8/22 tues
+-----------
+-new endpoint for user to set email
+    -add intent in console
+-update other endpoints to check if should_exit
+-incorporate check for exit into other endpoints
+-rename `exit` function to avoid clobbering builtin
+-brainstorm: what else could possibly cause these alexa issues? How to troubleshoot and eventually fix?
+-see if there are places I should add reprompt (chained method after question)
 
 Backlog
+-misc docstrings in app.py
 -follow UI instructions to determine next steps
 -figure out how code will be structured locally (will alexa reference a separate repo if I use the conversation template? Will a single file basically be sufficient? Maybe an `alexa` subdir which can contain whatever I need it to?)
