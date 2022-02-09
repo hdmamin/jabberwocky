@@ -10,9 +10,11 @@ import logging
 
 from flask import Flask
 from flask_ask import Ask, statement, question, session, context, request
+import requests
 
 from htools import params, quickmail
 from jabberwocky.openai_utils import ConversationManager
+from config import EMAIL
 
 
 logging.getLogger('flask_ask').setLevel(logging.DEBUG)
@@ -22,14 +24,40 @@ conv = ConversationManager(['Albert Einstein']) # TODO: load all personas?
 app.logger.warning('>>> Loading globals') # TODO: rm
 
 
-def save_conversation(conv, user_email) -> bool:
+def get_user_email():
+    """Get user's email using Amazon-provided API. Obviously only works if
+    they've approved access to this information.
+
+    Returns
+    -------
+    str: User email if user gave permission and everything worked, empty string
+    otherwise.
+    """
+    system = context.System
+    token = system.get("apiAccessToken")
+    endpoint = system.get('apiEndpoint')
+    if not (token and endpoint):
+        return ''
+    headers = {'Authorization': f'Bearer: {token}'}
+    r = requests.get(f'{endpoint}/v2/accounts/~current/settings/Profile.email',
+                     headers=headers)
+    if r.status_code != 200:
+        return ''
+    return r.json().get('emailAddress', '')
+
+
+def save_conversation(conv, user_email=None) -> bool:
     if not conv.user_turns:
+        return False
+    user_email = user_email or get_user_email()
+    if not user_email:
         return False
     date = datetime.today().strftime('%m/%d/%Y')
     # TODO: maybe send as attachment instead?
     quickmail(f'Your conversation with {conv.current_persona} ({date}).',
               message=conv.full_conversation(),
-              to_email=user_email)
+              to_email=user_email,
+              from_email=EMAIL)
     return True
 
 
