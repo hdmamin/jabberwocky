@@ -148,17 +148,23 @@ _ -new endpoint for user to set email
 
 2/9/22 wed
 ----------
--rename `exit` function to avoid clobbering builtin
--see if we can easily update htools.quickmail to include text attachment
--make new jabberwocky email to send transcripts
-    -add info to htools creds file
+X -rename `exit` function to avoid clobbering builtin
+~ -see if we can easily update htools.quickmail to include text attachment
+    UPDATE: can't fully test yet bc of freedom app, but seems to send without error at least. Though worryingly, text never arrives to phone when I tried that using {phonenumber}@vtext.com.
+X -make new jabberwocky email for sending transcripts
+    X -add info to htools creds file
+    X -enable unsafe app access
+    X -update email_user func to send transcript as attachment
 -see if there are places I should add reprompt (chained method after question)
+
+2/10/22 thurs
+-------------
+-check hmamin2 email to see if quickmail works as expected (did emails arrive? did image attachment work? Did text attachment work? What is attached text file named?)
+-look in alexa dev forum for how to direct 1 intent to another (prob need to use session to set temporary key)
+    -update other endpoints to check if should_exit
 
 
 Backlog
--look in alexa dev forum for how to direct 1 intent to another (prob need to use session to set temporary key)
--update other endpoints to check if should_exit
--brainstorm: what else could possibly cause these alexa issues? How to troubleshoot and eventually fix?
+-see if there are places I should add reprompt (chained method after question)
+-brainstorm: what else could possibly cause these http/alexa issues? How to troubleshoot and eventually fix?
 -misc docstrings in app.py
--follow UI instructions to determine next steps
--figure out how code will be structured locally (will alexa reference a separate repo if I use the conversation template? Will a single file basically be sufficient? Maybe an `alexa` subdir which can contain whatever I need it to?)

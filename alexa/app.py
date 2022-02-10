@@ -7,12 +7,13 @@ so it might be more convenient to run locally with ngrok anyway.
 from datetime import datetime
 from functools import wraps
 import logging
+from pathlib import Path
 
 from flask import Flask
 from flask_ask import Ask, statement, question, session, context, request
 import requests
 
-from htools import params, quickmail
+from htools import params, quickmail, save
 from jabberwocky.openai_utils import ConversationManager
 from config import EMAIL
 
@@ -46,18 +47,41 @@ def get_user_email():
     return r.json().get('emailAddress', '')
 
 
-def save_conversation(conv, user_email=None) -> bool:
+def send_transcript(conv, user_email=''):
+    """Email user a transcript of their conversation.
+
+    Parameters
+    ----------
+    conv: ConversationManager
+    user_email: str
+        Email to send transcript to. If not provided, we retrieve it using
+        an AWS api (prior user permission is required for this to work, of
+        course). Could also retrieve this once, store it globally, and pass it
+        in to prevent additional API calls and save a little time, but that's
+        not a big priority since this isn't required every conversational turn.
+
+    Returns
+    -------
+    bool: True if email was sent successfully, False otherwise (e.g. if no
+    conversation has taken place yet or if the user has not provided us with
+    their email).
+    """
     if not conv.user_turns:
         return False
     user_email = user_email or get_user_email()
     if not user_email:
         return False
     date = datetime.today().strftime('%m/%d/%Y')
-    # TODO: maybe send as attachment instead?
+    tmp_path = Path('/tmp/jabberwocky-transcript.txt')
+    save(conv.full_conversation(), tmp_path)
+    message = 'A transcript of your conversation with ' \
+              f'{conv.current_persona}  is attached.'
     quickmail(f'Your conversation with {conv.current_persona} ({date}).',
-              message=conv.full_conversation(),
+              message=message,
               to_email=user_email,
-              from_email=EMAIL)
+              from_email=EMAIL,
+              attach_path=tmp_path)
+    tmp_path.unlink()
     return True
 
 
@@ -199,12 +223,12 @@ def end_session():
     return '{}', 200
 
 
-def exit():
+def exit_():
     saved = False
     if session.attributes.get('should_end') and \
                 session.attributes.get('should_save'):
             # TODO: have user configure this at some point earlier?
-            saved = save_conversation(conv, session.attributes['email'])
+            saved = send_transcript(conv, session.attributes['email'])
     return saved
 
 
