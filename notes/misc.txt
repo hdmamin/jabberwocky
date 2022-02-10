@@ -179,3 +179,8 @@ Possible slots:
 - model (e.g. GPT-J)
 - temperature
 - length
+
+2/9/22 wed
+----------
+In case I need to revisit email attachment stuff:
+https://datamakessense.com/easy-scheduled-emailing-with-python-for-typical-bi-needs/
