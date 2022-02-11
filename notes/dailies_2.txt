@@ -159,8 +159,26 @@ X -make new jabberwocky email for sending transcripts
 
 2/10/22 thurs
 -------------
+X -check hmamin2 email to see if quickmail works as expected (did emails arrive? did image attachment work? Did text attachment work? What is attached text file named?)
+    UPDATE: email worked, sms didn't. Text just got appended to body though, not a real attachment.
+    -update to allow multiple attachments
+    X -investigate lack of sms showing up in text mode
+        UPDATE: do not use leading 1 in phone number email.
+    X -look for solution to lack of image attachments in text
+        UPDATE: you need to use a different phone number email domain than vtex.com for mms, but it looks like it may not be supported anymore.
+    X -update docs to reflect new signature
+    -[BLOCKED: check emailed results first to see if attachment worked. Consider adding option to attach vs. embed.] bump version and upload to pypi
+~ -look in alexa dev forum for how to direct 1 intent to another (prob need to use session to set temporary key)
+    UPDATE: sdk does support "intent chaining". Unclear if flask-ask does, either natively or via compatibility w/ sdk.
+    -update other endpoints to check if should_exit
+
+2/11/22 fri
+-----------
 -check hmamin2 email to see if quickmail works as expected (did emails arrive? did image attachment work? Did text attachment work? What is attached text file named?)
--look in alexa dev forum for how to direct 1 intent to another (prob need to use session to set temporary key)
+    -fix as needed
+    -[BLOCKED: check emailed results first to see if attachment worked. Consider adding option to attach vs. embed.] bump version and upload to pypi
+-read more of intent chaining tutorial
+    -look for how to implement this w/ flask-ask
     -update other endpoints to check if should_exit
 
 
