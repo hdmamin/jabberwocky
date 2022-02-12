@@ -174,15 +174,37 @@ X -check hmamin2 email to see if quickmail works as expected (did emails arrive?
 
 2/11/22 fri
 -----------
--check hmamin2 email to see if quickmail works as expected (did emails arrive? did image attachment work? Did text attachment work? What is attached text file named?)
-    -fix as needed
-    -[BLOCKED: check emailed results first to see if attachment worked. Consider adding option to attach vs. embed.] bump version and upload to pypi
--read more of intent chaining tutorial
-    -look for how to implement this w/ flask-ask
+X -check hmamin2 email to see if quickmail works as expected (did emails arrive? did image attachment work? Did text attachment work? What is attached text file named?)
+    _ -fix as needed
+    X -[BLOCKED: check emailed results first to see if attachment worked. Consider adding option to attach vs. embed.] bump version and upload to pypi
+    UPDATE: emails arrived, image attachment worked, no diff between image attach vs. inline, text attachment worked, text file is named same as source file as intended.
+X -update curl to have verbose/non-verbose option
+~ -read more of intent chaining tutorial
+    UPDATE: not worth getting too far into this yet - wanted to make sure flask-ask provided some way to do this first.
+    X -look for how to implement this w/ flask-ask
+        UPDATE: can import delegate just like question or statement, but still figuring out how to use it.
     -update other endpoints to check if should_exit
+~ -figure out how to test flask-ask locally
+    UPDATE: still no progress. Think I need to figure this out before going any further - hard enough to build a hello world app without any mechanism for testing, but impossible for a complex skill w/ intent chaining.
+X -brainstorm: what else could possibly cause these http/alexa issues? How to troubleshoot and eventually fix?
+    UPDATE: some thoughts below
+    -wrong AWS account?
+    -start totally new skill in console and try again
+    -pare app down to most bare-bones version and see if I can get it working in console (comment out new endpoints that might not have intents defined for them. Also might get rid of some boilerplate, like the "what's your fav color?" intro which I don't know the source of)
+    -flask-ask is deprecated (sort of doubtful, since found a tutorial from not that long ago still using it)
+    -alexa dev console is broken (sounds like it was at some point, but that was years ago - surely it's not still broken. Could create new skill w/ old console maybe? Forget if that's an option.)
+
+2/12/22 sat
+-----------
+-work through troubleshooting ideas 1 by 1
+    -wrong AWS account?
+    -start totally new skill in console and try again
+    -pare app down to most bare-bones version and see if I can get it working in console (comment out new endpoints that might not have intents defined for them. Also might get rid of some boilerplate, like the "what's your fav color?" intro which I don't know the source of)
+    -flask-ask is deprecated (sort of doubtful, since found a tutorial from not that long ago still using it)
+    -alexa dev console is broken (sounds like it was at some point, but that was years ago - surely it's not still broken. Could create new skill w/ old console maybe? Forget if that's an option.)
 
 
 Backlog
 -see if there are places I should add reprompt (chained method after question)
--brainstorm: what else could possibly cause these http/alexa issues? How to troubleshoot and eventually fix?
+-update other endpoints to check if should_exit
 -misc docstrings in app.py

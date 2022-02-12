@@ -103,7 +103,11 @@ def intent(name, **ask_kwargs):
 
         @wraps(func)
         def wrapper(*args, **kwargs):
+            # TODO: rm prints. For debugging only.
+            print('Cur intent:', func.__name__)
+            print('Prev intent:', session.attributes.get('prev_intent'))
             deco = ask.intent(name, mapping=mapping, **ask_kwargs)
+            session.attributes['prev_intent'] = func.__name__
             return deco(func)(*args, **kwargs)
         return wrapper
     return decorator
@@ -114,7 +118,6 @@ def intent(name, **ask_kwargs):
 def home():
     # TODO: docs
     app.logger.warning('>>> IN HOME')
-    print('IN HOME')
     return 'home'
 
 
