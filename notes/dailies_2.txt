@@ -184,6 +184,7 @@ X -update curl to have verbose/non-verbose option
     X -look for how to implement this w/ flask-ask
         UPDATE: can import delegate just like question or statement, but still figuring out how to use it.
     -update other endpoints to check if should_exit
+X -update intent decorator to always store prev intent in session
 ~ -figure out how to test flask-ask locally
     UPDATE: still no progress. Think I need to figure this out before going any further - hard enough to build a hello world app without any mechanism for testing, but impossible for a complex skill w/ intent chaining.
 X -brainstorm: what else could possibly cause these http/alexa issues? How to troubleshoot and eventually fix?
@@ -196,15 +197,30 @@ X -brainstorm: what else could possibly cause these http/alexa issues? How to tr
 
 2/12/22 sat
 -----------
--work through troubleshooting ideas 1 by 1
-    -wrong AWS account?
-    -start totally new skill in console and try again
-    -pare app down to most bare-bones version and see if I can get it working in console (comment out new endpoints that might not have intents defined for them. Also might get rid of some boilerplate, like the "what's your fav color?" intro which I don't know the source of)
-    -flask-ask is deprecated (sort of doubtful, since found a tutorial from not that long ago still using it)
-    -alexa dev console is broken (sounds like it was at some point, but that was years ago - surely it's not still broken. Could create new skill w/ old console maybe? Forget if that's an option.)
+X -fill in some docstrings in app.py
+~ -work through troubleshooting ideas 1 by 1
+    ~ -wrong AWS account?
+        UPDATE: think this is correct (name Harrison and initial H; couldn't figure out how to easily confirm email but I'm pretty sure it's the right one)
+    ~ -pare app down to most bare-bones version and see if I can get it working in console (comment out new endpoints that might not have intents defined for them. Also might get rid of some boilerplate, like the "what's your fav color?" intro which I don't know the source of)
+        UPDATE: got launch intent working on dummy app! Still haven't gotten other intents working though.
+    _ -flask-ask is deprecated (sort of doubtful, since found a tutorial from not that long ago still using it)
+        UPDATE: seems doubtful since bare bones app shows signs of working. Possible question/statement json is no longer compatible, I suppose.
+    X -start totally new skill in console and try again
+        UPDATE: combined this with bare bones app strategy.
+    _ -alexa dev console is broken (sounds like it was at some point, but that was years ago - surely it's not still broken. Could create new skill w/ old console maybe? Forget if that's an option.)
+        UPDATE: seems unlikely given positive signs with bare bones app.
+
+2/13/22 sun
+-----------
+-continue trying to get dummy app to work
+    -debug YesIntent endpoint (first expected response after launch. Error seems to be with recognizing the right intent, not with the response, based on terminal logs.)
+-look at jabberwocky launch endpoint and see if I can find any differences that would cause it to fail when dummy app launch endpoint works (see misc.txt for promising idea)
+    [IF theory of name clobbering is correct]
+    -rename Voice Chat to something less likely to have duplicates
+    -rebuild model
+    -test launch intent for jabberwocky
 
 
 Backlog
 -see if there are places I should add reprompt (chained method after question)
 -update other endpoints to check if should_exit
--misc docstrings in app.py

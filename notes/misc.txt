@@ -184,3 +184,7 @@ Possible slots:
 ----------
 In case I need to revisit email attachment stuff:
 https://datamakessense.com/easy-scheduled-emailing-with-python-for-typical-bi-needs/
+
+2/12/22 sat
+-----------
+Thought: maybe Voice Chat name is being clobbered by an existing skill (either user-built or default). Thought of this because when building dummy app, I forgot I used the name "skill debugger" and tried to launch the skill "memory game" in the dev console since that's what the tutorial used. Rather than failing, it just calls an actual Memory Game skill that's not related to my app. Same thing could be happening with voice chat.
