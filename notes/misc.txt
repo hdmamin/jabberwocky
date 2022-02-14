@@ -188,3 +188,16 @@ https://datamakessense.com/easy-scheduled-emailing-with-python-for-typical-bi-ne
 2/12/22 sat
 -----------
 Thought: maybe Voice Chat name is being clobbered by an existing skill (either user-built or default). Thought of this because when building dummy app, I forgot I used the name "skill debugger" and tried to launch the skill "memory game" in the dev console since that's what the tutorial used. Rather than failing, it just calls an actual Memory Game skill that's not related to my app. Same thing could be happening with voice chat.
+
+2/13/22 sun
+-----------
+Observations about skill naming
+-when trying to start Fake Chat/Quick Chat/Voice Chat from Skill Debugger test console, it doesn't find anything. When I try to from Jabberwocky, I get a msg like "I have a few skills that can help" followed by questions of if I mean PetChatz, BrandChat, etc.
+-when trying to start it from jabberwocky, I get some conversation template.
+
+Conclusion: 
+-probably configured jabberwocky differently in console and there's some boilerplate it's falling back to.
+
+Try:
+1. Try non-intent response to see if fallback handler works on jabberwocky (maybe don't even try to actively start app? Could try both ways.)
+2. If that doesn't work, switch to make skill debugger console the main one and deprecate/delete jabberwocky in console. Choice of vanilla skill rather than conv template might fix things.

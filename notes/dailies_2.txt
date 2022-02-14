@@ -212,13 +212,36 @@ X -fill in some docstrings in app.py
 
 2/13/22 sun
 -----------
--continue trying to get dummy app to work
-    -debug YesIntent endpoint (first expected response after launch. Error seems to be with recognizing the right intent, not with the response, based on terminal logs.)
--look at jabberwocky launch endpoint and see if I can find any differences that would cause it to fail when dummy app launch endpoint works (see misc.txt for promising idea)
+~ -continue trying to get dummy app to work
+    X -add HelloWorld endpoint
+        UPDATE: This works! 
+    ~ -debug YesIntent endpoint (first expected response after launch. Error seems to be with recognizing the right intent, not with the response, based on terminal logs.)
+        UPDATE: Still no success. Sincce HelloWorld works, my guess is YesIntent sample words are too short/generic ("yes", "sure"). Maybe AnswerIntent fails for the same reason.
+~ -look at jabberwocky launch endpoint and see if I can find any differences that would cause it to fail when dummy app launch endpoint works (see misc.txt for promising idea)
     [IF theory of name clobbering is correct]
-    -rename Voice Chat to something less likely to have duplicates
-    -rebuild model
-    -test launch intent for jabberwocky
+    X -rename Voice Chat to something less likely to have duplicates
+        UPDATE: trying "Quick Chat". Tested this in dev console and it doesn't seem to be a built-in, unlike Voice Chat.
+    X -rebuild model
+    X -test launch intent for jabberwocky
+        UPDATE: still failing. Think we may need to change template. See misc.txt.
+    X -Try non-intent response to see if fallback handler works on jabberwocky (maybe don't even try to actively start app? Could try both ways.)
+        UPDATE: no, just no response or built in default of some kind.
+    X -If that doesn't work, switch to make skill debugger console the main one and deprecate/delete jabberwocky in console. Choice of vanilla skill rather than conv template might fix things.
+        UPDATE: Created new skill since I can't figure out how to rename skill (can change name in invocation but not how it shows up in console, it seems)
+-test new skill intents
+    X -launch
+        UPDATE: Yes! First working endpoint for jabberwocky. Needed to use name "Quick Chat" as alexa interprets "Voice Chat" as some kind of existing functionality which I haven't enabled, apparently.
+    ~ -fallback intent
+        UPDATE: not working yet. It did in dummy app so need to figure out what the difference is here.
+X -map out conv flow model
+    UPDATE: Drew out basic flowchart of interactions. See notebook.
+
+2/14/22 mon
+-----------
+-troubleshoot fallbackIntent in new skill (worked in dummy app, so why not here?)
+-add intents to console for new skill
+-add slots to console for new skill
+-think more about how chaining/delegation will work
 
 
 Backlog
