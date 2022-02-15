@@ -13,7 +13,7 @@ from flask import Flask
 from flask_ask import Ask, statement, question, session, context, request
 import requests
 
-from htools import params, quickmail, save
+from htools import params, quickmail, save, MultiLogger
 from jabberwocky.openai_utils import ConversationManager
 from config import EMAIL
 
@@ -22,7 +22,8 @@ logging.getLogger('flask_ask').setLevel(logging.DEBUG)
 app = Flask(__name__)
 ask = Ask(app, '/')
 conv = ConversationManager(['Albert Einstein']) # TODO: load all personas?
-app.logger.debug('>>> Loading globals') # TODO: rm
+app.logger.info('>>> Loading globals') # TODO: rm
+logger = MultiLogger('alexa/app.log', fmode='a')
 
 
 def get_user_email():
@@ -100,15 +101,17 @@ def intent(name, **ask_kwargs):
     """
     def decorator(func):
         mapping = {k: k.title() for k in params(func)}
+        deco = ask.intent(name, mapping=mapping, **ask_kwargs)
+        wrapped = deco(func)
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # TODO: rm prints. For debugging only.
-            app.logger.debug('Cur intent:', func.__name__)
-            app.logger.debug('Prev intent:', session.attributes.get('prev_intent'))
-            deco = ask.intent(name, mapping=mapping, **ask_kwargs)
+            # app.logger.error('Cur intent: ' + func.__name__)
+            # app.logger.error('Prev intent: ' + session.attributes.get('prev_intent', ''))
+            logger.error('Cur intent: ')
+            logger.error('Prev intent: ')
             session.attributes['prev_intent'] = func.__name__
-            return deco(func)(*args, **kwargs)
+            return wrapped(*args, **kwargs)
         return wrapper
     return decorator
 
@@ -118,7 +121,7 @@ def intent(name, **ask_kwargs):
 def home():
     """For debugging purposes.
     """
-    app.logger.debug('>>> IN HOME')
+    app.logger.info('>>> IN HOME')
     return 'home'
 
 
@@ -134,7 +137,7 @@ def health():
 def launch():
     """Runs when user starts skill with command like 'Alexa, start Voice Chat'.
     """
-    app.logger.debug('>>> IN LAUNCH')
+    app.logger.info('>>> IN LAUNCH')
     session.attributes['kwargs'] = conv._kwargs
     return question('Who would you like to speak to?')
 
@@ -236,12 +239,23 @@ def debug(response):
     return question(f'I\'m in debug mode. You just said: {response}.')
 
 
+# TODO
 @intent('AMAZON.FallbackIntent')
 def fallback():
     # TODO: maybe direct every request here and use this as a delegator of
     # sorts?
-    app.logger.debug('>>> FALLBACK INTENT')
+    # TODO: rm loggin, session stuff.
+    logger.info('>>> FALLBACK INTENT')
+    logger.info(session.attributes.get('prev_intent', 'NO PREV INTENT'))
+    session.attributes['prev_intent'] = 'abc'
     return question('Could you repeat that?')
+
+
+@intent('readContacts')
+def read_contacts():
+    msg = f'Here are all of your contacts: {",".join(conv.personas)}. ' \
+          f'Now, who would you like to speak to?'
+    return question(msg)
 
 
 @ask.session_ended
@@ -259,5 +273,5 @@ def exit_():
 
 
 if __name__ == '__main__':
-    app.logger.debug(f'>>> MAIN: {conv.personas()}') # TODO: rm
+    app.logger.info(f'>>> MAIN: {conv.personas()}') # TODO: rm
     app.run(debug=True)

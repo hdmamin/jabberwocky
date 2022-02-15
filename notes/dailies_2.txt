@@ -238,12 +238,18 @@ X -map out conv flow model
 
 2/14/22 mon
 -----------
--troubleshoot fallbackIntent in new skill (worked in dummy app, so why not here?)
--add intents to console for new skill
+~ -troubleshoot fallbackIntent in new skill (worked in dummy app, so why not here?)
+    UPDATE: my intent deco was implemented wrong. After fixing it, the fallback endpoint does work as far as reading the right response. However, while logging inside the fallback endpoint wokrs, logging inside deco does not. Unsure if this means the deco is somehow going unused (seems unlikely given recent behavior) or if this is a matter of logging output being hidden. Tried using diff logger than the default app one but this didn't resolve the issue. Tried checking prev_intent and it's not being updated either (supposed to be done in deco). However, if I manually update it in the func itself, it works.
+X -add endpoint to list out all personas
+
+2/15/22 tues
+------------
+-add sys.exit in various stages of intent deco to try to get to the bottom of whether it's being called
+-add intents to console for new skill (jabberwocky-voice-chat, not jabberwocky)
 -add slots to console for new skill
--think more about how chaining/delegation will work
 
 
 Backlog
+-think more about how chaining/delegation will work
 -see if there are places I should add reprompt (chained method after question)
 -update other endpoints to check if should_exit
