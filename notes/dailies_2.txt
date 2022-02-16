@@ -254,6 +254,9 @@ X -write new ask subclass and redefine intent deco
 -----------
 -add intents to console for new skill (jabberwocky-voice-chat, not jabberwocky)
 -add slots to console for new skill
+-test app in test console and see what doesn't work (sure there will be something)
+    -write next steps based on observed errors
+-start updating endpoints in py file based on observed errors (see above)
 
 
 Backlog

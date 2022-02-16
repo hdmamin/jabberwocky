@@ -136,39 +136,6 @@ def send_transcript(conv, user_email=''):
     return True
 
 
-# def intent(name, **ask_kwargs):
-#     """Decorator that replaces built-in ask.intent decorator. Only difference
-#     is it automatically maps lowercase function parameter names to uppercase
-#     slot names, since AWS seems to enforce that convention in the Alexa
-#     console.
-#
-#     Parameters
-#     ----------
-#     name: str
-#         Intent name as defined in Alexa console.
-#     ask_kwargs: any
-#         Additional kwargs to pass to ask.intent().
-#     """
-#     def decorator(func):
-#         mapping = {k: k.title() for k in params(func)}
-#         deco = ask.intent(name, mapping=mapping, **ask_kwargs)
-#         wrapped = deco(func)
-#         logger.error('IN DECORATOR ' + func.__name__ + ' ' + str(wrapped))
-#
-#         # @wraps(func)
-#         # def wrapper(*args, **kwargs):
-#             # app.logger.error('Cur intent: ' + func.__name__)
-#             # app.logger.error('Prev intent: ' + session.attributes.get('prev_intent', ''))
-#             # logger.error('Cur intent: ')
-#             # logger.error('Prev intent: ')
-#             # session.attributes['prev_intent'] = func.__name__
-#             # return wrapped(*args, **kwargs)
-#         # logger.error('returning wrapper')
-#         # return wrapper
-#     # logger.error('returning decorator')
-#     return decorator
-
-
 # TODO rm
 @app.route('/')
 def home():
@@ -227,7 +194,6 @@ def choose_model(model):
         return statement('I didn\'t recognize that model type. You\'re '
                          f'still using {conv._kwargs["model_i"]}')
     if model.isdigit():
-        # conv._kwargs.update(model_i=int(model)) # TODO: rm
         session.attributes['kwargs']['model_i'] = int(model)
         return statement(f'I\'ve switched your service to model {model}.')
     else:
