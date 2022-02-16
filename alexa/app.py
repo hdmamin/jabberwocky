@@ -13,17 +13,67 @@ from flask import Flask
 from flask_ask import Ask, statement, question, session, context, request
 import requests
 
-from htools import params, quickmail, save, MultiLogger
+from htools import params, quickmail, save, MultiLogger, Callback, callbacks
 from jabberwocky.openai_utils import ConversationManager
 from config import EMAIL
 
 
+class IntentCallback(Callback):
+    # TODO: docs
+
+    def __init__(self, ask):
+        self.ask = ask
+
+    def setup(self, func):
+        pass
+
+    def on_begin(self, func, inputs, output=None):
+        self.ask.logger.info('Cur intent: ' + self.ask.intent_name(func))
+        self.ask.logger.info(
+            'Prev intent: ' + session.attributes.get('prev_intent', '<NONE>')
+        )
+
+    def on_end(self, func, inputs, output=None):
+        session.attributes['prev_intent'] = self.ask.intent_name(func)
+
+
+class CustomAsk(Ask):
+    # TODO: docs
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.logger = MultiLogger('alexa/app.log', fmode='a')
+        self._callbacks = callbacks([IntentCallback(self)])
+        self._func2name = {}
+
+    def intent_name(self, func):
+        return self._func2name[func.__name__]
+
+    def attach_callbacks(self, func):
+        return self._callbacks(func)
+
+    def intent(self, name, **ask_kwargs):
+        def decorator(func):
+            func = self.attach_callbacks(func)
+            self._func2name[func.__name__] = name
+            mapping = {k: k.title() for k in params(func)}
+            self._intent_view_funcs[name] = func
+            self._intent_mappings[name] = {**mapping,
+                                           **ask_kwargs.get('mapping', {})}
+            self._intent_converts[name] = ask_kwargs.get('convert', {})
+            self._intent_defaults[name] = ask_kwargs.get('default', {})
+
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                self._flask_view_func(*args, **kwargs)
+            return func
+        return decorator
+
+
 logging.getLogger('flask_ask').setLevel(logging.DEBUG)
 app = Flask(__name__)
-ask = Ask(app, '/')
+ask = CustomAsk(app, '/')
 conv = ConversationManager(['Albert Einstein']) # TODO: load all personas?
-app.logger.info('>>> Loading globals') # TODO: rm
-logger = MultiLogger('alexa/app.log', fmode='a')
 
 
 def get_user_email():
@@ -86,34 +136,37 @@ def send_transcript(conv, user_email=''):
     return True
 
 
-def intent(name, **ask_kwargs):
-    """Decorator that replaces built-in ask.intent decorator. Only difference
-    is it automatically maps lowercase function parameter names to uppercase
-    slot names, since AWS seems to enforce that convention in the Alexa
-    console.
-
-    Parameters
-    ----------
-    name: str
-        Intent name as defined in Alexa console.
-    ask_kwargs: any
-        Additional kwargs to pass to ask.intent().
-    """
-    def decorator(func):
-        mapping = {k: k.title() for k in params(func)}
-        deco = ask.intent(name, mapping=mapping, **ask_kwargs)
-        wrapped = deco(func)
-
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            # app.logger.error('Cur intent: ' + func.__name__)
-            # app.logger.error('Prev intent: ' + session.attributes.get('prev_intent', ''))
-            logger.error('Cur intent: ')
-            logger.error('Prev intent: ')
-            session.attributes['prev_intent'] = func.__name__
-            return wrapped(*args, **kwargs)
-        return wrapper
-    return decorator
+# def intent(name, **ask_kwargs):
+#     """Decorator that replaces built-in ask.intent decorator. Only difference
+#     is it automatically maps lowercase function parameter names to uppercase
+#     slot names, since AWS seems to enforce that convention in the Alexa
+#     console.
+#
+#     Parameters
+#     ----------
+#     name: str
+#         Intent name as defined in Alexa console.
+#     ask_kwargs: any
+#         Additional kwargs to pass to ask.intent().
+#     """
+#     def decorator(func):
+#         mapping = {k: k.title() for k in params(func)}
+#         deco = ask.intent(name, mapping=mapping, **ask_kwargs)
+#         wrapped = deco(func)
+#         logger.error('IN DECORATOR ' + func.__name__ + ' ' + str(wrapped))
+#
+#         # @wraps(func)
+#         # def wrapper(*args, **kwargs):
+#             # app.logger.error('Cur intent: ' + func.__name__)
+#             # app.logger.error('Prev intent: ' + session.attributes.get('prev_intent', ''))
+#             # logger.error('Cur intent: ')
+#             # logger.error('Prev intent: ')
+#             # session.attributes['prev_intent'] = func.__name__
+#             # return wrapped(*args, **kwargs)
+#         # logger.error('returning wrapper')
+#         # return wrapper
+#     # logger.error('returning decorator')
+#     return decorator
 
 
 # TODO rm
@@ -142,7 +195,7 @@ def launch():
     return question('Who would you like to speak to?')
 
 
-@intent('choosePerson')
+@ask.intent('choosePerson')
 def choose_person(person):
     """Allow the user to choose which person to talk to. If the user isn't
     recognized in their "contacts", we can autogenerate the persona for them
@@ -161,7 +214,7 @@ def choose_person(person):
     return question(f'I\'ve connected you with {person}.')
 
 
-@intent('chooseModel')
+@ask.intent('chooseModel')
 def choose_model(model):
     """Change the model (gpt3 davinci, gpt3 curie, gpt-j, etc.) being used to
     generate responses.
@@ -182,7 +235,7 @@ def choose_model(model):
         return statement(f'Model {model} is not yet implemented.')
 
 
-@intent('changeMaxLength')
+@ask.intent('changeMaxLength')
 def change_max_length(length):
     """Change the max number of tokens in a generated response. The max is
     2048. There are roughly 1.33 tokens per word. I've set the default to
@@ -202,7 +255,7 @@ def change_max_length(length):
     return question(f'Choose length {length}.')
 
 
-@intent('changeTemperature')
+@ask.intent('changeTemperature')
 def change_temperature(temperature):
     """Allow user to change model temperature. Lower values (near 0) are often
     better for formal or educational contexts, e.g. a science tutor.
@@ -222,7 +275,7 @@ def change_temperature(temperature):
     return question(f'I\'ve adjusted your temperature to {temperature}.')
 
 
-@intent('response')
+@ask.intent('response')
 def reply(response):
     """Generic conversation reply. I anticipate this endpoint making up the
     bulk of conversations.
@@ -231,7 +284,7 @@ def reply(response):
     return question(text)
 
 
-@intent('debug')
+@ask.intent('debug')
 def debug(response):
     """For debugging purposes, simple endpoint that just repeats back what the
     user said last.
@@ -240,18 +293,14 @@ def debug(response):
 
 
 # TODO
-@intent('AMAZON.FallbackIntent')
+@ask.intent('AMAZON.FallbackIntent')
 def fallback():
     # TODO: maybe direct every request here and use this as a delegator of
     # sorts?
-    # TODO: rm loggin, session stuff.
-    logger.info('>>> FALLBACK INTENT')
-    logger.info(session.attributes.get('prev_intent', 'NO PREV INTENT'))
-    session.attributes['prev_intent'] = 'abc'
     return question('Could you repeat that?')
 
 
-@intent('readContacts')
+@ask.intent('readContacts')
 def read_contacts():
     msg = f'Here are all of your contacts: {",".join(conv.personas)}. ' \
           f'Now, who would you like to speak to?'

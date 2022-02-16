@@ -244,12 +244,21 @@ X -add endpoint to list out all personas
 
 2/15/22 tues
 ------------
--add sys.exit in various stages of intent deco to try to get to the bottom of whether it's being called
+X -add sys.exit in various stages of intent deco to try to get to the bottom of whether it's being called
+    UPDATE: it wasn't. ask.intent deco is quite unusual and overriding it is confusing. Took a different approach.
+X -write new ask subclass and redefine intent deco
+    X -write custom IntentCallback
+    UPDATE: ask.intent wrapper is odd, appears to never actually be called but it must be sometime. Must do some weird registration magic or something on the ask object. Managed to get my prev_intent tracking working by writing custom callback and having custom ask class wrap the input function when it's passed in (rather than explicitly defining on start/end behavior in decorator, define it via callback methods).
+
+2/16/22 wed
+-----------
 -add intents to console for new skill (jabberwocky-voice-chat, not jabberwocky)
 -add slots to console for new skill
 
 
 Backlog
+-docs for custom ask (in particular: note to self not to delete seemingly useless wrapper inside intent deco. Flask-ask version uses that so I don't know what else is reliant on it)
+    -docs for intentcallback
 -think more about how chaining/delegation will work
 -see if there are places I should add reprompt (chained method after question)
 -update other endpoints to check if should_exit
