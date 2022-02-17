@@ -252,16 +252,27 @@ X -write new ask subclass and redefine intent deco
 
 2/16/22 wed
 -----------
--add intents to console for new skill (jabberwocky-voice-chat, not jabberwocky)
--add slots to console for new skill
--test app in test console and see what doesn't work (sure there will be something)
-    -write next steps based on observed errors
+X -add intents to console for new skill (jabberwocky-voice-chat, not jabberwocky)
+X -add slots to console for new skill
+X -test app in test console and see what doesn't work (sure there will be something)
+    UPDATE: looks like it can send a request to choosePerson and changeTemperature endpoints but they receive no arguments (e.g. slots aren't working, or at least not how I expected them to).
+    X -write next steps based on observed errors
+        UPDATE: see tomorrow's to do list.
+X -docs for custom ask (in particular: note to self not to delete seemingly useless wrapper inside intent deco. Flask-ask version uses that so I don't know what else is reliant on it)
+-start updating endpoints in py file based on observed errors (see above)
+
+2/17/22 thurs
+-------------
+-fix missing slots issue with choosePerson
+    -replace actual logic w/ debugging/logging to figure out what (if any) arg(s) func is receiving
+    -update parsing to get correct object
+    -reintroduce actual logic and test
+    -update other endpoints accordingly
 -start updating endpoints in py file based on observed errors (see above)
 
 
 Backlog
--docs for custom ask (in particular: note to self not to delete seemingly useless wrapper inside intent deco. Flask-ask version uses that so I don't know what else is reliant on it)
-    -docs for intentcallback
+-docs for intentcallback
 -think more about how chaining/delegation will work
 -see if there are places I should add reprompt (chained method after question)
 -update other endpoints to check if should_exit

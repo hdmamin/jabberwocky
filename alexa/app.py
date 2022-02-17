@@ -38,21 +38,54 @@ class IntentCallback(Callback):
 
 
 class CustomAsk(Ask):
-    # TODO: docs
+    """Slightly customized version of flask-ask's Ask object. See `intent`
+    method for a summary of main changes.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Unlike flask app.logger, this writes to both stdout and a log file.
         self.logger = MultiLogger('alexa/app.log', fmode='a')
+        # Decorator that we use on each intent endpoint.
         self._callbacks = callbacks([IntentCallback(self)])
         self._func2name = {}
 
-    def intent_name(self, func):
+    def intent_name(self, func) -> str:
+        """Given a flask endpoint function, return the name of the intent
+        associated with it.
+        """
         return self._func2name[func.__name__]
 
     def attach_callbacks(self, func):
+        """Prettier way to wrap an intent function with callbacks. This adds
+        logging showing what the current and previous intent are/were and also
+        updates session state to allow for this kind of tracking.
+
+        Returns
+        -------
+        FunctionType: A decorated intent endpoint function.
+        """
         return self._callbacks(func)
 
     def intent(self, name, **ask_kwargs):
+        """My version of ask.intent decorator, overriding the default
+        implementation. Changes:
+        - Automatically map map slot names from title case to lowercase. AWS
+        console seems to enforce some level of capitalization that I'd prefer
+        not to use in all my python code.
+        - Populate a dict mapping endpoint function -> intent name. These are
+        usually similar but not identical (often just a matter of
+        capitalization but not always).
+
+        Parameters
+        ----------
+        name: str
+            Name of intent.
+        ask_kwargs: dict(s)
+            Additional kwargs for ask.intent (effectively - we don't explicitly
+            call it, but rather reproduce its functionality below). E.g.
+            `mapping`, `convert`, or `default`.
+        """
         def decorator(func):
             func = self.attach_callbacks(func)
             self._func2name[func.__name__] = name
@@ -65,6 +98,12 @@ class CustomAsk(Ask):
 
             @wraps(func)
             def wrapper(*args, **kwargs):
+                """This looks useless - we don't return wrapper and we never
+                seemed to reach this part of the code when I added logging -
+                but it's in the built-in implementation of `intent` in
+                flask-ask so I don't know what other library logic might rely
+                on it. Just keep it.
+                """
                 self._flask_view_func(*args, **kwargs)
             return func
         return decorator
