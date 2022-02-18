@@ -9,13 +9,14 @@ from functools import wraps
 import logging
 from pathlib import Path
 
-from flask import Flask
-from flask_ask import Ask, statement, question, session, context, request
+from flask import Flask, request
+from flask_ask import Ask, statement, question, session, context
 import requests
 
+from config import EMAIL
 from htools import params, quickmail, save, MultiLogger, Callback, callbacks
 from jabberwocky.openai_utils import ConversationManager
-from config import EMAIL
+from utils import slot
 
 
 class IntentCallback(Callback):
@@ -201,16 +202,26 @@ def launch():
     return question('Who would you like to speak to?')
 
 
+@ask.intent('debug')
+def debug(response):
+    """For debugging purposes, simple endpoint that just repeats back what the
+    user said last.
+    """
+    return question(f'I\'m in debug mode. You just said: {response}.')
+
+
 @ask.intent('choosePerson')
-def choose_person(person):
+def choose_person():
     """Allow the user to choose which person to talk to. If the user isn't
     recognized in their "contacts", we can autogenerate the persona for them
     if the person is relatively well known.
 
-    Parameters
-    ----------
-    person: str
+    Slots
+    -----
+    Person: str
+        Name of a person to chat with.
     """
+    person = slot(request.get_json(), 'Person')
     if person not in conv:
         # TODO: new endpoint needed to handle answer to this case?
         return question(f'I don\'t see anyone named {person} in your '
@@ -220,8 +231,8 @@ def choose_person(person):
     return question(f'I\'ve connected you with {person}.')
 
 
-@ask.intent('chooseModel')
-def choose_model(model):
+@ask.intent('changeModel')
+def choose_model():
     """Change the model (gpt3 davinci, gpt3 curie, gpt-j, etc.) being used to
     generate responses.
 
@@ -229,11 +240,21 @@ def choose_model(model):
     ----------
     model: str
     """
-    if model is None:
-        return statement('I didn\'t recognize that model type. You\'re '
-                         f'still using {conv._kwargs["model_i"]}')
+    model = slot(request.get_json(), 'Model')
+    str2int = {
+        'zero': 0,
+        'one': 1,
+        'two': 2,
+        'three': 3
+    }
+    model = str2int.get(model, model)
+    # TODO: might need to move, change, or remove error handling. Might occur
+    # in slot parsing now.
+    # if model is None:
+    #     return statement('I didn\'t recognize that model type. You\'re '
+    #                      f'still using {conv._kwargs["model_i"]}')
     if model.isdigit():
-        session.attributes['kwargs']['model_i'] = int(model)
+        session.attributes['kwargs']['model_i'] = model
         return statement(f'I\'ve switched your service to model {model}.')
     else:
         # TODO: handle other model engines
@@ -261,10 +282,16 @@ def change_max_length(length):
 
 
 @ask.intent('changeTemperature')
-def change_temperature(temperature):
+# def change_temperature(temperature):
+def change_temperature():
     """Allow user to change model temperature. Lower values (near 0) are often
     better for formal or educational contexts, e.g. a science tutor.
     """
+    # TODO rm. Also might need to change signature back to include temp arg.
+    res = slot(request.get_json())#, 'Temperature')
+    print(res)
+    return
+
     error_msg = 'Please choose a number greater than zero and ' \
                 'less than or equal to one.'
     try:
@@ -289,20 +316,26 @@ def reply(response):
     return question(text)
 
 
-@ask.intent('debug')
-def debug(response):
-    """For debugging purposes, simple endpoint that just repeats back what the
-    user said last.
-    """
-    return question(f'I\'m in debug mode. You just said: {response}.')
-
-
 # TODO
 @ask.intent('AMAZON.FallbackIntent')
 def fallback():
     # TODO: maybe direct every request here and use this as a delegator of
     # sorts?
     return question('Could you repeat that?')
+
+
+@ask.intent('AMAZON.YesIntent')
+def yes():
+    # TODO: action depends on prev intent.
+    prev = session.attributes.get('prev_intent')
+    pass
+
+
+@ask.intent('AMAZON.NoIntent')
+def no():
+    # TODO: action depends on prev intent.
+    prev = session.attributes.get('prev_intent')
+    pass
 
 
 @ask.intent('readContacts')

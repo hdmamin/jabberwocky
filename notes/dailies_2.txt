@@ -264,15 +264,40 @@ X -docs for custom ask (in particular: note to self not to delete seemingly usel
 2/17/22 thurs
 -------------
 -fix missing slots issue with choosePerson
-    -replace actual logic w/ debugging/logging to figure out what (if any) arg(s) func is receiving
-    -update parsing to get correct object
-    -reintroduce actual logic and test
-    -update other endpoints accordingly
--start updating endpoints in py file based on observed errors (see above)
+    _ -replace actual logic w/ debugging/logging to figure out what (if any) arg(s) func is receiving
+        UPDATE: looked at existing logs and error indicatded no arg of any kind was received.
+    X -update parsing to get correct object
+        UPDATE: found blog post implying custom slot might have to be extracted from request manually. Wrote new code to do that and it works for choosePerson (successfully selected an existing persona!).
+    X -reintroduce actual logic and test
+        UPDATE: new persona doesn't work yet (relies on YesIntent, which I added now, but much more new logic is needed).
+~ -start updating endpoints in py file based on observed errors (see above)
+    ~ -changeModel
+        X -rename chooseModel -> changeModel (forgot I chose diff name in console for this skill)
+        X -fix ModelType slot (4 -> 0)
+        UPDATE: added some str handling to chooseModel endpoint. Model is currently rebuilding in console.
+    -changeTemp
+        UPDATE: brief testing reminded me of issue where alexa thinks I'm trying to change temperature of an actual device. Will need to consider options for how to handle this.
+    -changeMaxLen
+
+2/18/22 fri
+-----------
+-continue updating endpoints in py file based on observed errors (see above)
+    -changeModel
+        -check that build succeeded
+        -try out zero, one, two, three
+        -try out j
+        -try out neo
+    -changeTemp
+        -consider how to deal with issue noted in prev day's notes (could rename to Temp/something else, or maybe there's a way to override default commands when in a custom skill)
+    -changeMaxLen
+    -reply
 
 
 Backlog
+-clean up some dummy endpoints in app.py
+-rm some old files in alexa dir from abandoned appraoches
 -docs for intentcallback
 -think more about how chaining/delegation will work
 -see if there are places I should add reprompt (chained method after question)
 -update other endpoints to check if should_exit
+
