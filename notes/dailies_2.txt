@@ -281,19 +281,35 @@ X -docs for custom ask (in particular: note to self not to delete seemingly usel
 
 2/18/22 fri
 -----------
--continue updating endpoints in py file based on observed errors (see above)
+~ -continue updating endpoints in py file based on observed errors (see above)
     -changeModel
-        -check that build succeeded
-        -try out zero, one, two, three
-        -try out j
-        -try out neo
+        X -check that build succeeded
+        X -try out zero, one, two, three
+        _ -try out j
+        _ -try out neo
+        UPDATE: might want to rewrite j/neo query funcs w/ availability of new open source models (and possible deprecation of old gpt-j api? Unclear.) Do this later.
     -changeTemp
-        -consider how to deal with issue noted in prev day's notes (could rename to Temp/something else, or maybe there's a way to override default commands when in a custom skill)
+        ~ -consider how to deal with issue noted in prev day's notes (could rename to Temp/something else, or maybe there's a way to override default commands when in a custom skill)
+            UPDATE: tentatively seems okay now - I think maybe before I was saying this after returning a Statement rather than a Question so we had exited the skill?
+        ~ -figure out how to convert str to num
+            UPDATE: considered requiring an int in [0, 99] and hardcoding list of strings. Was curious though and decided to try gpt way - got this working reasonably well but only with a disappointingly big model (smaller ones prob could do well with more prompt tuning but I didn't quite get there yet). Added prompt text and config files and added API call to app script. However, still having some trouble parsing decimals.
     -changeMaxLen
     -reply
 
+2/19/22 sat
+-----------
+-continue fleshing out endpoint logic
+    -changeTemp
+        -consider options for improving number parsing and choose one (i.e. require int from 0-99 and divide answer by 100, or update slotes to expect "point {number}".)
+            -make necessary changes in console and/or script
+            -update gpt word2number prompt files accordingly (e.g. maybe no decimals needed after all, could just be word2int)
+    -changeMaxLen
+    -reply
 
+    
 Backlog
+-update query_gpt3 to support goose.ai models (e.g. neo 20b)
+    -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -clean up some dummy endpoints in app.py
 -rm some old files in alexa dir from abandoned appraoches
 -docs for intentcallback

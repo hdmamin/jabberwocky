@@ -15,7 +15,8 @@ import requests
 
 from config import EMAIL
 from htools import params, quickmail, save, MultiLogger, Callback, callbacks
-from jabberwocky.openai_utils import ConversationManager
+from jabberwocky.openai_utils import ConversationManager, query_gpt3, \
+    load_prompt
 from utils import slot
 
 
@@ -248,17 +249,18 @@ def choose_model():
         'three': 3
     }
     model = str2int.get(model, model)
+    print('MODEL', model)
     # TODO: might need to move, change, or remove error handling. Might occur
     # in slot parsing now.
     # if model is None:
     #     return statement('I didn\'t recognize that model type. You\'re '
     #                      f'still using {conv._kwargs["model_i"]}')
-    if model.isdigit():
+    if isinstance(model, int):
         session.attributes['kwargs']['model_i'] = model
-        return statement(f'I\'ve switched your service to model {model}.')
+        return question(f'I\'ve switched your backend to model {model}.')
     else:
         # TODO: handle other model engines
-        return statement(f'Model {model} is not yet implemented.')
+        return question(f'Model {model} is not yet implemented.')
 
 
 @ask.intent('changeMaxLength')
@@ -282,21 +284,23 @@ def change_max_length(length):
 
 
 @ask.intent('changeTemperature')
-# def change_temperature(temperature):
 def change_temperature():
     """Allow user to change model temperature. Lower values (near 0) are often
     better for formal or educational contexts, e.g. a science tutor.
     """
-    # TODO rm. Also might need to change signature back to include temp arg.
-    res = slot(request.get_json())#, 'Temperature')
-    print(res)
-    return
-
     error_msg = 'Please choose a number greater than zero and ' \
-                'less than or equal to one.'
+                'less than or equal to 1.'  # TODO: maybe change to out of 100?
+    temperature = slot(request.get_json(), 'Temperature')
+
     try:
+        print('PRE GPT:', temperature)
+        assert temperature, 'Alexa parsing failed (slots converts "?" to "").'
+        kwargs = load_prompt('word2number')
+        prompt = kwargs.pop('prompt').format(temperature)
+        _, temperature = query_gpt3(prompt, **kwargs)
+        print('GPT RESPONSE:', temperature)
         temperature = float(temperature)
-        assert 0 < temperature <= 1
+        assert 0 < temperature <= 1  # TODO: maybe change to out of 100?
     except (TypeError, AssertionError) as e:
         if isinstance(e, TypeError):
             error_msg = ('I didn\'t recognize that temperature value. ' +
