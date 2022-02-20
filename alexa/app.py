@@ -17,11 +17,13 @@ from config import EMAIL
 from htools import params, quickmail, save, MultiLogger, Callback, callbacks
 from jabberwocky.openai_utils import ConversationManager, query_gpt3, \
     load_prompt
-from utils import slot
+from utils import slot, word2int, SessionState
 
 
 class IntentCallback(Callback):
     # TODO: docs
+    # TODO: maybe move to utils? But relies on state var. Could pass that to
+    # init maybe?
 
     def __init__(self, ask):
         self.ask = ask
@@ -32,16 +34,21 @@ class IntentCallback(Callback):
     def on_begin(self, func, inputs, output=None):
         self.ask.logger.info('Cur intent: ' + self.ask.intent_name(func))
         self.ask.logger.info(
-            'Prev intent: ' + session.attributes.get('prev_intent', '<NONE>')
+            # 'Prev intent: ' + session.attributes.get('prev_intent', '<NONE>')  # TODO: rm
+            'Prev intent: ' + state.get('prev_intent', '<NONE>')
         )
 
     def on_end(self, func, inputs, output=None):
-        session.attributes['prev_intent'] = self.ask.intent_name(func)
+        # session.attributes['prev_intent'] = self.ask.intent_name(func)  # TODO: rm
+        state['prev_intent'] = self.ask.intent_name(func)
 
 
 class CustomAsk(Ask):
     """Slightly customized version of flask-ask's Ask object. See `intent`
     method for a summary of main changes.
+
+    # TODO: move to utils? Depends on if we can move IntentCallback (see its
+    docstring).
     """
 
     def __init__(self, *args, **kwargs):
@@ -113,8 +120,11 @@ class CustomAsk(Ask):
 
 logging.getLogger('flask_ask').setLevel(logging.DEBUG)
 app = Flask(__name__)
+# Necessary to make session accessible outside endpoint functions.
+app.app_context().push()
 ask = CustomAsk(app, '/')
 conv = ConversationManager(['Albert Einstein']) # TODO: load all personas?
+# state = SessionState(session)
 
 
 def get_user_email():
@@ -199,7 +209,8 @@ def launch():
     """Runs when user starts skill with command like 'Alexa, start Voice Chat'.
     """
     app.logger.info('>>> IN LAUNCH')
-    session.attributes['kwargs'] = conv._kwargs
+    session.attributes['kwargs'] = conv._kwargs # TODO: rm
+    # state['kwargs'] = conv._kwargs
     return question('Who would you like to speak to?')
 
 
@@ -256,7 +267,8 @@ def choose_model():
     #     return statement('I didn\'t recognize that model type. You\'re '
     #                      f'still using {conv._kwargs["model_i"]}')
     if isinstance(model, int):
-        session.attributes['kwargs']['model_i'] = model
+        session.attributes['kwargs']['model_i'] = model   # TODO: rm
+        # state['kwargs']['model_i'] = model
         return question(f'I\'ve switched your backend to model {model}.')
     else:
         # TODO: handle other model engines
@@ -270,6 +282,7 @@ def change_max_length(length):
     50 tokens, which equates to roughly 2-3 sentences.
     """
     try:
+        # TODO: need to do gpt parsing here probably.
         length = int(length)
         assert 0 < length < 2048
     except (TypeError, AssertionError) as e:
@@ -279,7 +292,8 @@ def change_max_length(length):
             error_msg = 'I didn\'t recognize that value.' + error_msg
         return question(error_msg)
 
-    session.attributes['kwargs']['max_tokens'] = length
+    session.attributes['kwargs']['max_tokens'] = length  # TODO: rm
+    # state['kwargs']['max_tokens'] = length
     return question(f'Choose length {length}.')
 
 
@@ -288,27 +302,23 @@ def change_temperature():
     """Allow user to change model temperature. Lower values (near 0) are often
     better for formal or educational contexts, e.g. a science tutor.
     """
-    error_msg = 'Please choose a number greater than zero and ' \
-                'less than or equal to 1.'  # TODO: maybe change to out of 100?
-    temperature = slot(request.get_json(), 'Temperature')
+    error_msg = 'Please choose an integer greater than zero and ' \
+                'less than or equal to 100.'
+    temp = slot(request.get_json(), 'Temperature')
 
     try:
-        print('PRE GPT:', temperature)
-        assert temperature, 'Alexa parsing failed (slots converts "?" to "").'
-        kwargs = load_prompt('word2number')
-        prompt = kwargs.pop('prompt').format(temperature)
-        _, temperature = query_gpt3(prompt, **kwargs)
-        print('GPT RESPONSE:', temperature)
-        temperature = float(temperature)
-        assert 0 < temperature <= 1  # TODO: maybe change to out of 100?
+        assert temp, 'Alexa parsing failed (slots converts "?" to "").'
+        temp = word2int[temp]
+        assert 0 < temp <= 100
     except (TypeError, AssertionError) as e:
         if isinstance(e, TypeError):
             error_msg = ('I didn\'t recognize that temperature value. ' +
                          error_msg)
         return question(error_msg)
 
-    session.attributes['kwargs']['temperature'] = temperature
-    return question(f'I\'ve adjusted your temperature to {temperature}.')
+    session.attributes['kwargs']['temperature'] = temp / 100  # TODO: rm
+    # state['kwargs']['temperature'] = temp / 100
+    return question(f'I\'ve adjusted your temperature to {temp}.')
 
 
 @ask.intent('response')
@@ -316,7 +326,8 @@ def reply(response):
     """Generic conversation reply. I anticipate this endpoint making up the
     bulk of conversations.
     """
-    text, _ = conv.query(response, **session.attributes['kwargs'])
+    text, _ = conv.query(response, **session.attributes['kwargs'])  # TODO: rm
+    # text, _ = conv.query(response, **state['kwargs'])
     return question(text)
 
 
@@ -324,21 +335,24 @@ def reply(response):
 @ask.intent('AMAZON.FallbackIntent')
 def fallback():
     # TODO: maybe direct every request here and use this as a delegator of
-    # sorts?
+    # sorts? Or should I make the reply function correspond to the
+    # FallbackIntent?
     return question('Could you repeat that?')
 
 
 @ask.intent('AMAZON.YesIntent')
 def yes():
     # TODO: action depends on prev intent.
-    prev = session.attributes.get('prev_intent')
+    prev = session.attributes.get('prev_intent')  # TODO: rm
+    # prev = state.get('prev_intent')
     pass
 
 
 @ask.intent('AMAZON.NoIntent')
 def no():
     # TODO: action depends on prev intent.
-    prev = session.attributes.get('prev_intent')
+    prev = session.attributes.get('prev_intent')  # TODO: rm
+    # prev = state.get('prev_intent')
     pass
 
 
@@ -356,10 +370,16 @@ def end_session():
 
 def exit_():
     saved = False
+    # TODO: rm
     if session.attributes.get('should_end') and \
-                session.attributes.get('should_save'):
-            # TODO: have user configure this at some point earlier?
-            saved = send_transcript(conv, session.attributes['email'])
+            session.attributes.get('should_save'):
+        # TODO: have user configure this at some point earlier?
+        saved = send_transcript(conv, session.attributes['email'])
+
+    # if state.get('should_end') and state.get('should_save'):
+    #     # TODO: have user configure this at some point earlier?
+    #     saved = send_transcript(conv, session.attributes['email'])
+
     return saved
 
 

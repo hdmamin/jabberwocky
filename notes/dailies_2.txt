@@ -299,15 +299,34 @@ X -docs for custom ask (in particular: note to self not to delete seemingly usel
 2/19/22 sat
 -----------
 -continue fleshing out endpoint logic
-    -changeTemp
-        -consider options for improving number parsing and choose one (i.e. require int from 0-99 and divide answer by 100, or update slotes to expect "point {number}".)
-            -make necessary changes in console and/or script
-            -update gpt word2number prompt files accordingly (e.g. maybe no decimals needed after all, could just be word2int)
+    ~ -changeTemp
+        X -consider options for improving number parsing and choose one (i.e. require int from 0-99 and divide answer by 100, or update slots to expect "point {number}".)
+            X -make necessary changes in console and/or script
+            _ -update gpt word2number prompt files accordingly (e.g. maybe no decimals needed after all, could just be word2int)
+                UPDATE: unused now so not important. For general purpose future use, better to leave it more broadly capable.
+        UPDATE: changed to use hard-coded dict with some fuzzy matching. Couldn't test yet since I accidentally blocked dev console w/ Freedom.
     -changeMaxLen
     -reply
+~ -planning re maintaining settings
+    UPDATE: initially started as just trying to alias session.attributes with something shorter since it's used so much. Surprisingly trick. Ended up causing me to think about settings and realizing we really want 3 diff levels (see misc.txt notes from today). Started building new class to maintain this.
+
+2/20/22 sun
+-----------
+-continue fleshing out endpoint logic
+    -changeTemp
+        UPDATE: test new changes in console.
+    -changeMaxLen
+        -look more if there's a better way to do this with alexa (surely yes, but seems like no???)
+        -add gpt3 parsing (too many ints to hardcode cleanly)
+-Settings class
+    -think more about desired interface (important - need to know what I'm trying to implement)
+    -continue fleshing out attr access methods
+    -write resolve() method
+    -update app.py accordingly
 
     
 Backlog
+-`reply` endpoint
 -update query_gpt3 to support goose.ai models (e.g. neo 20b)
     -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -clean up some dummy endpoints in app.py

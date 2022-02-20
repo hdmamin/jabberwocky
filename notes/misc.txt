@@ -201,3 +201,19 @@ Conclusion:
 Try:
 1. Try non-intent response to see if fallback handler works on jabberwocky (maybe don't even try to actively start app? Could try both ways.)
 2. If that doesn't work, switch to make skill debugger console the main one and deprecate/delete jabberwocky in console. Choice of vanilla skill rather than conv template might fix things.
+
+2/19/22 sat
+-----------
+Thoughts on session and kwargs persistence:
+
+-If I change model_i during a session, I think I'd expect it to persist even if I change personas.
+-If I change temperature, maybe that would be more persona-specific?
+-If I change max_length, that could go either way.
+
+-If I start a new conv with the same persona, I'd expect all my settings to persist.
+
+Maybe track user-specified settings AND current persona settings. When a user starts a new conv, check if they've previously changed settings. If yes, ask what they'd like to do.
+
+Or when setting settings, ask if they'd like them to persist.
+
+Or could have a Global Settings centralized location and a Conv Settings centralized location and a Persona settings centralized location.
