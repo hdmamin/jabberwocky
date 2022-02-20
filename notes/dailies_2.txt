@@ -312,21 +312,31 @@ X -docs for custom ask (in particular: note to self not to delete seemingly usel
 
 2/20/22 sun
 -----------
--continue fleshing out endpoint logic
-    -changeTemp
-        UPDATE: test new changes in console.
-    -changeMaxLen
-        -look more if there's a better way to do this with alexa (surely yes, but seems like no???)
-        -add gpt3 parsing (too many ints to hardcode cleanly)
--Settings class
-    -think more about desired interface (important - need to know what I'm trying to implement)
-    -continue fleshing out attr access methods
-    -write resolve() method
-    -update app.py accordingly
+X -continue fleshing out endpoint logic
+    X -changeTemp
+        X -test new changes in console.
+            UPDATE: updating temperature works for valid integers. Non-number word rightfully raised an error which was handled gracefully.
+    X -changeMaxLen
+        X -look more if there's a better way to do this with alexa (surely yes, but seems like no???)
+        _ -add gpt3 parsing (too many ints to hardcode cleanly)
+            UPDATE: Turns out it does this automatically after all. Previous failures might have been due to flask ask argument issue. Tested this on both valid and invalid values.
+X -update settings intents to accept optional slot for scope (global/person/conversation)
+    UPDATE: still need to fully make use of this in app.py.
+X -Settings class
+    X -think more about desired interface (important - need to know what I'm trying to implement)
+    X -continue fleshing out attr access methods
+    X -write resolve() method
+    X -update app.py accordingly
+
+2/21/22 mon
+-----------
+-consider: should Settings include kwargs only or also things like prev_intent/should_end/should_save?
+    -update app.py and/or utils.py accordingly
+-test new changes in test console
+-flesh out `reply` endpoint
 
     
 Backlog
--`reply` endpoint
 -update query_gpt3 to support goose.ai models (e.g. neo 20b)
     -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -clean up some dummy endpoints in app.py

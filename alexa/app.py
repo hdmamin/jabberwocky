@@ -17,7 +17,7 @@ from config import EMAIL
 from htools import params, quickmail, save, MultiLogger, Callback, callbacks
 from jabberwocky.openai_utils import ConversationManager, query_gpt3, \
     load_prompt
-from utils import slot, word2int, SessionState
+from utils import slot, word2int, Settings
 
 
 class IntentCallback(Callback):
@@ -34,13 +34,13 @@ class IntentCallback(Callback):
     def on_begin(self, func, inputs, output=None):
         self.ask.logger.info('Cur intent: ' + self.ask.intent_name(func))
         self.ask.logger.info(
-            # 'Prev intent: ' + session.attributes.get('prev_intent', '<NONE>')  # TODO: rm
-            'Prev intent: ' + state.get('prev_intent', '<NONE>')
+            'Prev intent: ' + session.attributes.get('prev_intent', '<NONE>')  # TODO: rm
+            # 'Prev intent: ' + state.get('prev_intent', '<NONE>')
         )
 
     def on_end(self, func, inputs, output=None):
-        # session.attributes['prev_intent'] = self.ask.intent_name(func)  # TODO: rm
-        state['prev_intent'] = self.ask.intent_name(func)
+        session.attributes['prev_intent'] = self.ask.intent_name(func)  # TODO: rm
+        # state['prev_intent'] = self.ask.intent_name(func)
 
 
 class CustomAsk(Ask):
@@ -124,7 +124,7 @@ app = Flask(__name__)
 app.app_context().push()
 ask = CustomAsk(app, '/')
 conv = ConversationManager(['Albert Einstein']) # TODO: load all personas?
-# state = SessionState(session)
+state = Settings()
 
 
 def get_user_email():
@@ -209,8 +209,8 @@ def launch():
     """Runs when user starts skill with command like 'Alexa, start Voice Chat'.
     """
     app.logger.info('>>> IN LAUNCH')
-    session.attributes['kwargs'] = conv._kwargs # TODO: rm
-    # state['kwargs'] = conv._kwargs
+    # session.attributes['kwargs'] = conv._kwargs # TODO: rm
+    state.set('global', **conv._kwargs)
     return question('Who would you like to speak to?')
 
 
@@ -244,7 +244,7 @@ def choose_person():
 
 
 @ask.intent('changeModel')
-def choose_model():
+def change_model():
     """Change the model (gpt3 davinci, gpt3 curie, gpt-j, etc.) being used to
     generate responses.
 
@@ -252,6 +252,8 @@ def choose_model():
     ----------
     model: str
     """
+    # TODO: make use of scope.
+    scope = slot(request.get_json(), 'Scope')
     model = slot(request.get_json(), 'Model')
     str2int = {
         'zero': 0,
@@ -267,8 +269,8 @@ def choose_model():
     #     return statement('I didn\'t recognize that model type. You\'re '
     #                      f'still using {conv._kwargs["model_i"]}')
     if isinstance(model, int):
-        session.attributes['kwargs']['model_i'] = model   # TODO: rm
-        # state['kwargs']['model_i'] = model
+        # session.attributes['kwargs']['model_i'] = model   # TODO: rm
+        state.set(scope, model_i=model)
         return question(f'I\'ve switched your backend to model {model}.')
     else:
         # TODO: handle other model engines
@@ -276,25 +278,34 @@ def choose_model():
 
 
 @ask.intent('changeMaxLength')
-def change_max_length(length):
+def change_max_length():
     """Change the max number of tokens in a generated response. The max is
     2048. There are roughly 1.33 tokens per word. I've set the default to
     50 tokens, which equates to roughly 2-3 sentences.
     """
-    try:
-        # TODO: need to do gpt parsing here probably.
-        length = int(length)
-        assert 0 < length < 2048
-    except (TypeError, AssertionError) as e:
-        error_msg = 'Please choose a number greater than zero and less than ' \
-                    'or equal to 2048.'
-        if isinstance(e, TypeError):
-            error_msg = 'I didn\'t recognize that value.' + error_msg
-        return question(error_msg)
+    error_msg = 'Please choose a number greater than zero and less than ' \
+                'or equal to 2048. It sounded like you said "{}".'
+    parse_error_msg = 'I didn\'t recognize that length value. ' \
+                      + error_msg.partition('.')[0]
 
-    session.attributes['kwargs']['max_tokens'] = length  # TODO: rm
-    # state['kwargs']['max_tokens'] = length
-    return question(f'Choose length {length}.')
+    # TODO: make use of scope
+    scope = slot(request.get_json(), 'Scope')
+    length = slot(request.get_json(), 'MaxLength')
+
+    try:
+        # First check if Alexa parsing failed (slots converts "?" to "").
+        # This occurs for both decimals and non-numeric words.
+        # Then check that user provided a valid value. Error messages are
+        # different depending on the problem.
+        assert length, parse_error_msg
+        length = int(length)
+        assert 0 < length < 2048, error_msg
+    except (TypeError, AssertionError) as e:
+        return question(str(e).format(length))
+
+    # session.attributes['kwargs']['max_tokens'] = length  # TODO: rm
+    state.set(scope, max_tokens=length)
+    return question(f'I\'ve changed your max response length to {length}.')
 
 
 @ask.intent('changeTemperature')
@@ -302,23 +313,33 @@ def change_temperature():
     """Allow user to change model temperature. Lower values (near 0) are often
     better for formal or educational contexts, e.g. a science tutor.
     """
-    error_msg = 'Please choose an integer greater than zero and ' \
-                'less than or equal to 100.'
+    # Alexa's speech to text makes parsing decimals kind of difficult, so we
+    # ask the user to set temperature out of 100 and rescale it behind the
+    # scenes. E.g. a value of 10 becomes 0.1, i.e. low levels of surprise.
+    error_msg = 'Your conversation temperature must be an integer greater ' \
+                'than zero and less than or equal to 100. It sounded like ' \
+                'you said "{}".'
+    parse_error_msg = 'I didn\'t recognize that temperature value. ' \
+                      + error_msg.partition('.')[0]
+
+    # TODO: make use of scope
+    scope = slot(request.get_json(), 'Scope')
     temp = slot(request.get_json(), 'Temperature')
 
     try:
-        assert temp, 'Alexa parsing failed (slots converts "?" to "").'
-        temp = word2int[temp]
-        assert 0 < temp <= 100
+        # First check if Alexa parsing failed (slots converts "?" to "").
+        # This occurs for both decimals and non-numeric words.
+        # Then check that user provided a valid value. Error messages are
+        # different depending on the problem.
+        assert temp, parse_error_msg
+        temp = int(temp)
+        assert 0 < temp <= 100, error_msg
     except (TypeError, AssertionError) as e:
-        if isinstance(e, TypeError):
-            error_msg = ('I didn\'t recognize that temperature value. ' +
-                         error_msg)
-        return question(error_msg)
+        return question(str(e).format(temp))
 
-    session.attributes['kwargs']['temperature'] = temp / 100  # TODO: rm
-    # state['kwargs']['temperature'] = temp / 100
-    return question(f'I\'ve adjusted your temperature to {temp}.')
+    # session.attributes['kwargs']['temperature'] = temp / 100  # TODO: rm
+    state.set(scope, temperature=temp / 100)
+    return question(f'I\'ve adjusted your temperature to {temp} percent.')
 
 
 @ask.intent('response')
@@ -326,8 +347,7 @@ def reply(response):
     """Generic conversation reply. I anticipate this endpoint making up the
     bulk of conversations.
     """
-    text, _ = conv.query(response, **session.attributes['kwargs'])  # TODO: rm
-    # text, _ = conv.query(response, **state['kwargs'])
+    text, _ = conv.query(response, **state)
     return question(text)
 
 
@@ -344,7 +364,7 @@ def fallback():
 def yes():
     # TODO: action depends on prev intent.
     prev = session.attributes.get('prev_intent')  # TODO: rm
-    # prev = state.get('prev_intent')
+    # prev = state['prev_intent']  # TODO: rm
     pass
 
 

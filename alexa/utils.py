@@ -1,4 +1,5 @@
-from htools.meta import delegate
+from collections import Mapping
+
 from htools.structures import FuzzyKeyDict, DotDict
 
 
@@ -108,32 +109,63 @@ word2int = FuzzyKeyDict(
 )
 
 
-class Settings:
+class Settings(Mapping):
     """
     # TODO: docs
+
+    state.set(scope, max_tokens=6)
+    X state[scope].max_tokens = 6
+    X state[scope]['max_tokens'] = 6
+    X state[scope, 'max_tokens'] = 6
+    X state.global.max_tokens = 6
+
+    state['max_tokens']
+    state.max_tokens
     """
-    def __init__(self, sess):
-        # print('sess', sess)
-        # self._attrs = sess.attributes
+    def __init__(self, global_=None, person_=None, conversation_=None):
+        self._global = dict(global_) or {}
+        self._person = dict(person_) or {}
+        self._conversation = dict(conversation_) or {}
+
+        # Cleaner interface than using getattr all the time.
         self._states = {
-            'global': {},
-            'person': {},
-            'conversation': {}
+            'global': self._global,
+            'person': self._person,
+            'conversation': self._conversation
         }
         self.state = DotDict()
+        self._resolve_state()
 
-    def resolve_states(self):
-        # TODO
-        pass
+    @classmethod
+    def clone(cls, settings):
+        return cls(settings._global.copy(),
+                   settings._person.copy(),
+                   settings._conversation.copy())
+
+    def _resolve_state(self):
+        # Order matters here: we want global settings to take priority over
+        # person-level settings, and both of those to take priority over
+        # conversation level settings.
+        self.state = DotDict({
+            **self._states['conversation'],
+            **self._states['person'],
+            ** self._states['global']
+        })
 
     def __getitem__(self, key):
         return self.state[key]
+
+    def __iter__(self):
+        return iter(self.state)
+
+    def __len__(self):
+        return len(self.state)
 
     # TODO: maybe redo all logic to make getitem/setitem/delitem work with
     # multiple dispatch or passing in a tuple. This does work (even w/out
     # parentheses) but we can't use keyword args.
     def get(self, key, default=None):
-        return self.state.get(key, default=default)
+        return self.state.get(key, default)
 
     def __setitem__(self, key, val):
         raise RuntimeError('You cannot use __setitem__ on a Settings object. '
@@ -143,14 +175,25 @@ class Settings:
         raise RuntimeError('You cannot use __delitem__ on a Settings object. '
                            'Instead, use the `delete` method.')
 
-    def set(self, key, val, level):
-        self._states[level][key] = val
+    def _set(self, scope, key, val, lazy=False):
+        self._states[scope][key] = val
+        if not lazy:
+            self._resolve_state()
 
-    def delete(self, key, level):
-        del self._states[level][key]
+    def set(self, scope, **kwargs):
+        # Set multiple kwargs but only resolve once. Slightly more efficient
+        # than resolving once for every kwarg.
+        for k, v in kwargs.items():
+            self._set(scope, k, v, lazy=True)
+        self._resolve_state()
+
+    def pop(self, scope, key, default=None):
+        res = self._states[scope].pop(key, default)
+        self._resolve_state()
+        return res
 
     def __repr__(self):
-        return f'SessionState({self.state})'
+        return f'Settings({self.state})'
 
 
 def slot(request, name, lower=True):
@@ -162,16 +205,19 @@ def slot(request, name, lower=True):
     request
     name
     lower
-
-    Returns
-    -------
-
     """
+    failed_parse_symbol = '?'
     slots_ = request['request']['intent']['slots']
     if name in slots_:
-        resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
-        res = resolved[0]['values'][0]['value']['name']
+        print('SLOTS', slots_)
+        try:
+            resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
+            res = resolved[0]['values'][0]['value']['name']
+        except KeyError:
+            # Some intents have optional slots. If the user excludes one slot,
+            # 'resolutions' will be missing.
+            res = failed_parse_symbol
     else:
         res = list(slots_.values())[0]['value']
     if lower: res = res.lower()
-    return '' if res == '?' else res
+    return '' if res == failed_parse_symbol else res
