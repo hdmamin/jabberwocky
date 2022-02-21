@@ -196,7 +196,7 @@ def query_content_filter(text):
     )
     label = res.choices[0].text
     cls2logp = {x: res.choices[0].logprobs.top_logprobs[0]
-        .get(x, float('-inf'))
+                      .get(x, float('-inf'))
                 for x in ['0', '1', '2']}
     logp = cls2logp.pop(label)
     # If model is not confident in prediction of 2, choose the next most

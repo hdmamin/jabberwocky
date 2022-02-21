@@ -327,16 +327,30 @@ X -Settings class
     X -continue fleshing out attr access methods
     X -write resolve() method
     X -update app.py accordingly
+X -start building query_gpt_j variant using banana.dev backend (prob smallish version, but good to have another free option in case random git one gets deprecated)
+    UPDATE: need to add support for 'stop' param, maybe better arg validation to ensure no nnaming issues around topK vs top_k, etc.
 
 2/21/22 mon
 -----------
--consider: should Settings include kwargs only or also things like prev_intent/should_end/should_save?
-    -update app.py and/or utils.py accordingly
--test new changes in test console
+X -consider: should Settings include kwargs only or also things like prev_intent/should_end/should_save?
+    X -update app.py and/or utils.py accordingly
+    X -document Settings
+    UPDATE: include both in Settings. Make kwargs accessible via bracket notation and general settings accessible via dot notation. Also try to cut down on number of general (non model query) settings - rely more on prev_intent and yes/no. Might have to change yes/no intent endpoints to not update prev_intent though.
+X -test new changes in test console
 -flesh out `reply` endpoint
+
+2/22/22 tues
+------------
+-debug/fix: choose person intent seems to soak up any reply containing a name (or at least sometimes). Can try:
+    -adjusting sample utterances for choosePerson intent in console and re-test
+    -add some logic using prev_intent to infer when a reply has mistakenly been identified as choosePerson
+-consider yes/no intent logic: need to prevent them from updating prevIntent? Consider tracking a longer intent history list rather than just prev.
+    -make updates accordingly
+-see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
 
     
 Backlog
+-add support for banana.dev version of gptj 
 -update query_gpt3 to support goose.ai models (e.g. neo 20b)
     -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -clean up some dummy endpoints in app.py

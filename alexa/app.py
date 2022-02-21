@@ -32,15 +32,11 @@ class IntentCallback(Callback):
         pass
 
     def on_begin(self, func, inputs, output=None):
-        self.ask.logger.info('Cur intent: ' + self.ask.intent_name(func))
-        self.ask.logger.info(
-            'Prev intent: ' + session.attributes.get('prev_intent', '<NONE>')  # TODO: rm
-            # 'Prev intent: ' + state.get('prev_intent', '<NONE>')
-        )
+        self.ask.logger.info('\nCur intent: ' + self.ask.intent_name(func))
+        self.ask.logger.info(f'Prev intent: {state.prev_intent}\n')
 
     def on_end(self, func, inputs, output=None):
-        session.attributes['prev_intent'] = self.ask.intent_name(func)  # TODO: rm
-        # state['prev_intent'] = self.ask.intent_name(func)
+        state.prev_intent = self.ask.intent_name(func)
 
 
 class CustomAsk(Ask):
@@ -209,7 +205,6 @@ def launch():
     """Runs when user starts skill with command like 'Alexa, start Voice Chat'.
     """
     app.logger.info('>>> IN LAUNCH')
-    # session.attributes['kwargs'] = conv._kwargs # TODO: rm
     state.set('global', **conv._kwargs)
     return question('Who would you like to speak to?')
 
@@ -234,6 +229,7 @@ def choose_person():
         Name of a person to chat with.
     """
     person = slot(request.get_json(), 'Person')
+    print('PERSON', person) # TODO rm
     if person not in conv:
         # TODO: new endpoint needed to handle answer to this case?
         return question(f'I don\'t see anyone named {person} in your '
@@ -269,7 +265,6 @@ def change_model():
     #     return statement('I didn\'t recognize that model type. You\'re '
     #                      f'still using {conv._kwargs["model_i"]}')
     if isinstance(model, int):
-        # session.attributes['kwargs']['model_i'] = model   # TODO: rm
         state.set(scope, model_i=model)
         return question(f'I\'ve switched your backend to model {model}.')
     else:
@@ -303,7 +298,6 @@ def change_max_length():
     except (TypeError, AssertionError) as e:
         return question(str(e).format(length))
 
-    # session.attributes['kwargs']['max_tokens'] = length  # TODO: rm
     state.set(scope, max_tokens=length)
     return question(f'I\'ve changed your max response length to {length}.')
 
@@ -337,7 +331,6 @@ def change_temperature():
     except (TypeError, AssertionError) as e:
         return question(str(e).format(temp))
 
-    # session.attributes['kwargs']['temperature'] = temp / 100  # TODO: rm
     state.set(scope, temperature=temp / 100)
     return question(f'I\'ve adjusted your temperature to {temp} percent.')
 
@@ -363,16 +356,15 @@ def fallback():
 @ask.intent('AMAZON.YesIntent')
 def yes():
     # TODO: action depends on prev intent.
-    prev = session.attributes.get('prev_intent')  # TODO: rm
-    # prev = state['prev_intent']  # TODO: rm
+    # prev = session.attributes.get('prev_intent')  # TODO: rm
+    prev = state.prev_intent  # TODO: rm
     pass
 
 
 @ask.intent('AMAZON.NoIntent')
 def no():
     # TODO: action depends on prev intent.
-    prev = session.attributes.get('prev_intent')  # TODO: rm
-    # prev = state.get('prev_intent')
+    prev = state.prev_intent  # TODO: rm
     pass
 
 
@@ -391,14 +383,14 @@ def end_session():
 def exit_():
     saved = False
     # TODO: rm
-    if session.attributes.get('should_end') and \
-            session.attributes.get('should_save'):
-        # TODO: have user configure this at some point earlier?
-        saved = send_transcript(conv, session.attributes['email'])
-
-    # if state.get('should_end') and state.get('should_save'):
+    # if session.attributes.get('should_end') and \
+    #         session.attributes.get('should_save'):
     #     # TODO: have user configure this at some point earlier?
     #     saved = send_transcript(conv, session.attributes['email'])
+
+    # if state.should_end and state.should_save:
+    #     TODO: have user configure this at some point earlier?
+        # saved = send_transcript(conv, session.attributes['email'])
 
     return saved
 
