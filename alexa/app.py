@@ -206,6 +206,7 @@ def launch():
     """
     app.logger.info('>>> IN LAUNCH')
     state.set('global', **conv._kwargs)
+    # TODO: auto set to use free model initially? At least for development.
     return question('Who would you like to speak to?')
 
 
@@ -228,7 +229,13 @@ def choose_person():
     Person: str
         Name of a person to chat with.
     """
-    person = slot(request.get_json(), 'Person')
+    person = slot(request, 'Person')
+    if conv.current_persona:
+        # TODO: try to get full user text and call _reply().
+        # Currently this cuts off the first since it thinks the pattern is
+        # {any one word} {name}.
+        return question(person)
+
     print('PERSON', person) # TODO rm
     if person not in conv:
         # TODO: new endpoint needed to handle answer to this case?
@@ -248,9 +255,8 @@ def change_model():
     ----------
     model: str
     """
-    # TODO: make use of scope.
-    scope = slot(request.get_json(), 'Scope')
-    model = slot(request.get_json(), 'Model')
+    scope = slot(request, 'Scope')
+    model = slot(request, 'Model')
     str2int = {
         'zero': 0,
         'one': 1,
@@ -283,9 +289,8 @@ def change_max_length():
     parse_error_msg = 'I didn\'t recognize that length value. ' \
                       + error_msg.partition('.')[0]
 
-    # TODO: make use of scope
-    scope = slot(request.get_json(), 'Scope')
-    length = slot(request.get_json(), 'MaxLength')
+    scope = slot(request, 'Scope')
+    length = slot(request, 'MaxLength')
 
     try:
         # First check if Alexa parsing failed (slots converts "?" to "").
@@ -316,9 +321,8 @@ def change_temperature():
     parse_error_msg = 'I didn\'t recognize that temperature value. ' \
                       + error_msg.partition('.')[0]
 
-    # TODO: make use of scope
-    scope = slot(request.get_json(), 'Scope')
-    temp = slot(request.get_json(), 'Temperature')
+    scope = slot(request, 'Scope')
+    temp = slot(request, 'Temperature')
 
     try:
         # First check if Alexa parsing failed (slots converts "?" to "").

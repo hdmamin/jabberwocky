@@ -1,5 +1,6 @@
 from collections import Mapping
 from flask_ask import session
+from werkzeug.local import LocalProxy
 
 from htools.structures import FuzzyKeyDict, DotDict
 
@@ -257,14 +258,15 @@ def slot(request, name, lower=True):
 
     Parameters
     ----------
-    request
+    request: werkzeug.local.LocalProxy or dict
     name
     lower
     """
+    if isinstance(request, LocalProxy): request = request.get_json()
     failed_parse_symbol = '?'
     slots_ = request['request']['intent']['slots']
     if name in slots_:
-        print('SLOTS', slots_)
+        print('SLOTS', slots_)   # TODO: maybe rm
         try:
             resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
             res = resolved[0]['values'][0]['value']['name']

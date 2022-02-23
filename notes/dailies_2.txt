@@ -342,11 +342,25 @@ X -test new changes in test console
 2/22/22 tues
 ------------
 -debug/fix: choose person intent seems to soak up any reply containing a name (or at least sometimes). Can try:
-    -adjusting sample utterances for choosePerson intent in console and re-test
-    -add some logic using prev_intent to infer when a reply has mistakenly been identified as choosePerson
+    X -adjusting sample utterances for choosePerson intent in console and re-test
+        UPDATE: found "Call {person}" no longer is clobbered by default behavior. Guessing I previously exited the skill session w/out realizing it before trying to trigger that intent.
+    ~ -add some logic using prev_intent to infer when a reply has mistakenly been identified as choosePerson
+        UPDATE: added check in choose_person if conv is active but this still chops off the first word of the response  we can't recover the full text.
+    X -Add new `reply` endpoint w/ AMAZON.SearchQuery slot (this is supposed to soak up the whole text response)
+        UPDATE: had to use leading space to avoid errors.
+-try refactoring out base functionality of endpoint funcs (bc flask_ask not passing args to intent funcs, we need to get slots inside func, which makes it hard for one intent to call another)
+    UPDATE: Ended up being unnecessary so far but might have to reintroduce at some point. Another option is to make endpoint accept an optional arg and then use it if provided and extract slot if not.
+
+2/23/22 wed
+-----------
+-try updating reply intent to match what I made in console
+    -test in console
+    -update/rm fallback intent in code
+        -and rm in console if necessary
 -consider yes/no intent logic: need to prevent them from updating prevIntent? Consider tracking a longer intent history list rather than just prev.
     -make updates accordingly
 -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
+-make use of Scope var in settings intents
 
     
 Backlog
