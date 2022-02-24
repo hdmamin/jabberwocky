@@ -353,17 +353,31 @@ X -test new changes in test console
 
 2/23/22 wed
 -----------
--try updating reply intent to match what I made in console
-    -test in console
-    -update/rm fallback intent in code
-        -and rm in console if necessary
+X -try updating reply intent to match what I made in console
+    X -test in console
+    _ -update/rm fallback intent in code
+        _ -and rm in console if necessary
+        UPDATE: decided keep for now. Might need an extra layer of fallback beyond SearchQuery.
+    UPDATE: works, though identified possible bug on second query (I also called changeModel in between). Conv didn't think a conv was in progress - does conv object get recreated after each skill call? Need to investigate. Also found possible bug where sessionstate str appeared empty in console even though mock_func should have been set.
+X -update ask deco to log settings state on each intent call
 -consider yes/no intent logic: need to prevent them from updating prevIntent? Consider tracking a longer intent history list rather than just prev.
     -make updates accordingly
 -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
--make use of Scope var in settings intents
+X -make use of Scope var in settings intents
+    UPDATE: also added `default` option to slots func to make this work better when user doesn't specify level.
 
+2/24/22 thurs
+-------------
+-investigate issue where second reply causes error due to "conv not in progress". (see yesterday's notes documenting this error and the one below)
+-investigate bug where Settings obj __str__ appears empty in logged message
+-update end of conv to erase conv-level settings
+    -update change of person to change person-level settings
+    -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
     
+
 Backlog
+-consider yes/no intent logic: need to prevent them from updating prevIntent? Consider tracking a longer intent history list rather than just prev.
+-see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
 -add support for banana.dev version of gptj 
 -update query_gpt3 to support goose.ai models (e.g. neo 20b)
     -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)

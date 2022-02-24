@@ -249,7 +249,7 @@ class Settings(Mapping):
         return f'Settings({self.state})'
 
 
-def slot(request, name, lower=True):
+def slot(request, name, lower=True, default=''):
     """
     # TODO: docs
 
@@ -262,19 +262,19 @@ def slot(request, name, lower=True):
     if isinstance(request, LocalProxy): request = request.get_json()
     failed_parse_symbol = '?'
     slots_ = request['request']['intent']['slots']
-    if name in slots_:
-        print('SLOTS', slots_)   # TODO: maybe rm
+    print('SLOTS', slots_)   # TODO: maybe rm
+    try:
+        resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
+        res = resolved[0]['values'][0]['value']['name']
+    except (KeyError, IndexError):
+        # Some intents have optional slots. If the user excludes one slot,
+        # 'resolutions' will be missing.
         try:
-            resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
-            res = resolved[0]['values'][0]['value']['name']
-        except KeyError:
-            # Some intents have optional slots. If the user excludes one slot,
-            # 'resolutions' will be missing.
+            res = list(slots_.values())[0]['value']
+        except Exception as e:
             res = failed_parse_symbol
-    else:
-        res = list(slots_.values())[0]['value']
     if lower: res = res.lower()
-    return '' if res == failed_parse_symbol else res
+    return default if res == failed_parse_symbol else res
 
 
 def model_type(state):

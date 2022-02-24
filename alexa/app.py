@@ -35,6 +35,7 @@ class IntentCallback(Callback):
     def on_begin(self, func, inputs, output=None):
         self.ask.logger.info('\nCur intent: ' + self.ask.intent_name(func))
         self.ask.logger.info(f'Prev intent: {state.prev_intent}\n')
+        self.ask.logger.info(state)
 
     def on_end(self, func, inputs, output=None):
         state.prev_intent = self.ask.intent_name(func)
@@ -258,7 +259,7 @@ def change_model():
     ----------
     model: str
     """
-    scope = slot(request, 'Scope')
+    scope = slot(request, 'Scope', default='global')
     model = slot(request, 'Model')
     # Conversion is not automatic here because we're not using a built-in
     # AMAZON.Number slot (because some values aren't numbers).
@@ -270,7 +271,7 @@ def change_model():
     }
     model = str2int.get(model, model)
     print('MODEL', model)
-    msg = f'I\'ve switched your backend to model {model}.'
+    msg = f'I\'ve switched your {scope} backend to model {model}.'
     if isinstance(model, int):
         state.set(scope, model_i=model)
     elif model == 'j':
@@ -296,7 +297,7 @@ def change_max_length():
     parse_error_msg = 'I didn\'t recognize that length value. ' \
                       + error_msg.partition('.')[0]
 
-    scope = slot(request, 'Scope')
+    scope = slot(request, 'Scope', default='global')
     length = slot(request, 'MaxLength')
 
     try:
@@ -328,7 +329,7 @@ def change_temperature():
     parse_error_msg = 'I didn\'t recognize that temperature value. ' \
                       + error_msg.partition('.')[0]
 
-    scope = slot(request, 'Scope')
+    scope = slot(request, 'Scope', default='global')
     temp = slot(request, 'Temperature')
 
     try:
