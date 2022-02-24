@@ -212,9 +212,6 @@ class Settings(Mapping):
     def __len__(self):
         return len(self.state)
 
-    # TODO: maybe redo all logic to make getitem/setitem/delitem work with
-    # multiple dispatch or passing in a tuple. This does work (even w/out
-    # parentheses) but we can't use keyword args.
     def get(self, key, default=None):
         return self.state.get(key, default)
 
@@ -278,3 +275,21 @@ def slot(request, name, lower=True):
         res = list(slots_.values())[0]['value']
     if lower: res = res.lower()
     return '' if res == failed_parse_symbol else res
+
+
+def model_type(state):
+    """Identify ModelType from session state. Mostly used when communicating
+    failed model change to user.
+
+    Parameters
+    ----------
+    state
+
+    Returns
+    -------
+    str or int: 0, 1, 2, 3, 'neo', or 'j'.
+    """
+    mock_func = state.get('mock_func', None)
+    if mock_func:
+        return mock_func.__name__.split('_')[-1]
+    return state['model_i']

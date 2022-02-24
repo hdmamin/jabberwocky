@@ -5,7 +5,7 @@ so it might be more convenient to run locally with ngrok anyway.
 """
 
 from datetime import datetime
-from functools import wraps
+from functools import wraps, partial
 import logging
 from pathlib import Path
 
@@ -16,8 +16,9 @@ import requests
 from config import EMAIL
 from htools import params, quickmail, save, MultiLogger, Callback, callbacks
 from jabberwocky.openai_utils import ConversationManager, query_gpt3, \
-    load_prompt
-from utils import slot, word2int, Settings
+    query_gpt_j, query_gpt_neo
+from jabberwocky.utils import load_huggingface_api_key
+from utils import slot, word2int, Settings, model_type
 
 
 class IntentCallback(Callback):
@@ -206,7 +207,9 @@ def launch():
     """
     app.logger.info('>>> IN LAUNCH')
     state.set('global', **conv._kwargs)
-    # TODO: auto set to use free model initially? At least for development.
+    # TODO: might want to change this eventually, but for now use free model
+    # by default.
+    state.set('global', mock_func=query_gpt_j)
     return question('Who would you like to speak to?')
 
 
@@ -257,6 +260,8 @@ def change_model():
     """
     scope = slot(request, 'Scope')
     model = slot(request, 'Model')
+    # Conversion is not automatic here because we're not using a built-in
+    # AMAZON.Number slot (because some values aren't numbers).
     str2int = {
         'zero': 0,
         'one': 1,
@@ -265,17 +270,19 @@ def change_model():
     }
     model = str2int.get(model, model)
     print('MODEL', model)
-    # TODO: might need to move, change, or remove error handling. Might occur
-    # in slot parsing now.
-    # if model is None:
-    #     return statement('I didn\'t recognize that model type. You\'re '
-    #                      f'still using {conv._kwargs["model_i"]}')
+    msg = f'I\'ve switched your backend to model {model}.'
     if isinstance(model, int):
         state.set(scope, model_i=model)
-        return question(f'I\'ve switched your backend to model {model}.')
+    elif model == 'j':
+        state.set(scope, mock_func=query_gpt_j)
+    elif model == 'neo':
+        state.set(scope, mock_func=partial(query_gpt_neo, api_key=HF_API_KEY))
     else:
-        # TODO: handle other model engines
-        return question(f'Model {model} is not yet implemented.')
+        msg = f'It sounded like you asked for model ' \
+              f'{model or "no choice specified"}, but the only ' \
+              'valid options are: 0, 1, 2, 3, J, and Neo. You are currently ' \
+              f'still using model {model_type(state)}.'
+    return question(msg)
 
 
 @ask.intent('changeMaxLength')
@@ -339,12 +346,15 @@ def change_temperature():
     return question(f'I\'ve adjusted your temperature to {temp} percent.')
 
 
-@ask.intent('response')
-def reply(response):
+@ask.intent('reply')
+def reply():
     """Generic conversation reply. I anticipate this endpoint making up the
     bulk of conversations.
     """
-    text, _ = conv.query(response, **state)
+    prompt = slot(request, 'response', lower=False)
+    if not prompt:
+        return question('Did you say something? I didn\'t catch that.')
+    _, text = conv.query(prompt, **state)
     return question(text)
 
 
@@ -360,16 +370,15 @@ def fallback():
 @ask.intent('AMAZON.YesIntent')
 def yes():
     # TODO: action depends on prev intent.
-    # prev = session.attributes.get('prev_intent')  # TODO: rm
     prev = state.prev_intent  # TODO: rm
-    pass
+    return question('Yes (placeholder).')
 
 
 @ask.intent('AMAZON.NoIntent')
 def no():
     # TODO: action depends on prev intent.
     prev = state.prev_intent  # TODO: rm
-    pass
+    return question('No (placeholder).')
 
 
 @ask.intent('readContacts')
@@ -400,5 +409,6 @@ def exit_():
 
 
 if __name__ == '__main__':
+    HF_API_KEY = load_huggingface_api_key()
     app.logger.info(f'>>> MAIN: {conv.personas()}') # TODO: rm
     app.run(debug=True)
