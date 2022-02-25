@@ -368,14 +368,31 @@ X -make use of Scope var in settings intents
 
 2/24/22 thurs
 -------------
--investigate issue where second reply causes error due to "conv not in progress". (see yesterday's notes documenting this error and the one below)
--investigate bug where Settings obj __str__ appears empty in logged message
+X -investigate issue where second reply causes error due to "conv not in progress". (see yesterday's notes documenting this error and the one below)
+    UPDATE: rewrote slots func a bit (I think I was doing several things wrong - list(values())[0] logic was not safe, changeTemp func passed wrong slot name to slots for Temperature). Seems to work now.
+~ -investigate bug where Settings obj __str__ appears empty in logged message
+    UPDATE: could not reproduce. Keep an eye out for this.
+X -add readContacts intent in console
+    X -test in test console
 -update end of conv to erase conv-level settings
     -update change of person to change person-level settings
     -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
+
+2/25/22 fri
+-----------
+-add readSettings intent to console
+    -add code endpoint
+    -launch rebuild
+    -test in console
+-update end of conv to erase conv-level settings
+    -update change of person to change person-level settings
+    -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
+-consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
+-tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)
     
 
 Backlog
+-allow fuzzy match for choosePerson (e.g. einstein -> albert einstein)?
 -consider yes/no intent logic: need to prevent them from updating prevIntent? Consider tracking a longer intent history list rather than just prev.
 -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
 -add support for banana.dev version of gptj 

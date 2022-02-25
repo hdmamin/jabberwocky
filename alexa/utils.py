@@ -262,15 +262,15 @@ def slot(request, name, lower=True, default=''):
     if isinstance(request, LocalProxy): request = request.get_json()
     failed_parse_symbol = '?'
     slots_ = request['request']['intent']['slots']
-    print('SLOTS', slots_)   # TODO: maybe rm
     try:
+        print('SLOTS', name, slots_)   # TODO: maybe rm
         resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
         res = resolved[0]['values'][0]['value']['name']
     except (KeyError, IndexError):
-        # Some intents have optional slots. If the user excludes one slot,
-        # 'resolutions' will be missing.
+        # I think AMAZON.Number slots don't have resolutions so we also check
+        # this backup key.
         try:
-            res = list(slots_.values())[0]['value']
+            res = slots_[name]['value']
         except Exception as e:
             res = failed_parse_symbol
     if lower: res = res.lower()

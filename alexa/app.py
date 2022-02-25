@@ -327,10 +327,10 @@ def change_temperature():
                 'than zero and less than or equal to 100. It sounded like ' \
                 'you said "{}".'
     parse_error_msg = 'I didn\'t recognize that temperature value. ' \
-                      + error_msg.partition('.')[0]
+                      + error_msg
 
     scope = slot(request, 'Scope', default='global')
-    temp = slot(request, 'Temperature')
+    temp = slot(request, 'Number')
 
     try:
         # First check if Alexa parsing failed (slots converts "?" to "").
@@ -344,7 +344,8 @@ def change_temperature():
         return question(str(e).format(temp))
 
     state.set(scope, temperature=temp / 100)
-    return question(f'I\'ve adjusted your temperature to {temp} percent.')
+    return question(f'I\'ve adjusted your {scope}-level temperature to {temp} '
+                    f'percent.')
 
 
 @ask.intent('reply')
@@ -384,7 +385,7 @@ def no():
 
 @ask.intent('readContacts')
 def read_contacts():
-    msg = f'Here are all of your contacts: {",".join(conv.personas)}. ' \
+    msg = f'Here are all of your contacts: {", ".join(conv.personas())}. ' \
           f'Now, who would you like to speak to?'
     return question(msg)
 
