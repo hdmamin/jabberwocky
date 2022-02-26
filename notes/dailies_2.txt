@@ -398,14 +398,24 @@ X -add endChat endpoint
 2/26/22 sat
 -----------
 [LEAVE EMAIL UNBLOCKED - testing email sending]
--try adjusting end_chat utterances since curr ones aren't getting recognized
+X -try adjusting end_chat utterances since curr ones aren't getting recognized
     X -maybe adjust other settings intent sample utterances to be prefixed by something distinctive. Looks like 'alexa' might not have been the best choice.
         UPDATE: noticed my attempt to trigger end_chat was getting sent to SearchQuery WITHOUT the leading "Alexa", adding to my theory that this word is treated differently. Decided on the name "Lou" for the skill "assistant" (one syllable, inspired by Lewis Carroll, gender neutral) and prefixed sample utterances for all settings-related commands with it.
--continue testing end_chat intent + prompt chaining
-    -troubleshoot transcript sending as needed
--look into EndSession more
-    -When is it called? I.e. is it triggered by "stop" or something else?
-    -What should it return? I think this is correct based on an official tutorial but should confirm.
+~ -continue testing end_chat intent + prompt chaining
+    ~ -troubleshoot transcript sending as needed
+        UPDATE: initially was getting 401 status code due to 'Bearer: {token}' instead of 'Bearer {token}'. Fixing this now gives me a 403 status code (also added permission for user first name and email in console, and gave my personal permission in iphone app and alexa website). Still not working though.
+X -look into EndSession more
+    _ -When is it called? I.e. is it triggered by "stop" or something else?
+    X -What should it return? I think this is correct based on an official tutorial but should confirm.
+    UPDATE: every example I've seen handles this identically, so I think there's no need to look into this any more.
+
+2/27/22 sun
+-----------
+-try sending transcript w/ hardcoded email (need break from debugging permissions issues)
+    -debug formatting, etc.
+-look into email access issues (api returns 403 Forbidden status)
+    -maybe need to add card/audio asking for permission in the skill itself?
+-write choose_person followup func (do you want to download new persona?)
 
 
 Backlog
