@@ -152,7 +152,7 @@ class Settings(Mapping):
     """
 
     def __init__(self, global_=None, person_=None, conversation_=None,
-                 reserved_keys=('prev_intent',)):
+                 reserved_keys=('prev_intent', 'email')):
         # Alter underlying dict directly to avoid recursion errors. Custom
         # __setattr__ method relies on custom __getattr__ so we run into
         # problems otherwise.
@@ -293,5 +293,3 @@ def model_type(state):
     if mock_func:
         return mock_func.__name__.split('_')[-1]
     return state['model_i']
-
-

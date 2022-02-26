@@ -399,7 +399,8 @@ X -add endChat endpoint
 -----------
 [LEAVE EMAIL UNBLOCKED - testing email sending]
 -try adjusting end_chat utterances since curr ones aren't getting recognized
-    -maybe adjust other settings intent sample utterances to be prefixed by something distinctive. Looks like 'alexa' might not have been the best choice.
+    X -maybe adjust other settings intent sample utterances to be prefixed by something distinctive. Looks like 'alexa' might not have been the best choice.
+        UPDATE: noticed my attempt to trigger end_chat was getting sent to SearchQuery WITHOUT the leading "Alexa", adding to my theory that this word is treated differently. Decided on the name "Lou" for the skill "assistant" (one syllable, inspired by Lewis Carroll, gender neutral) and prefixed sample utterances for all settings-related commands with it.
 -continue testing end_chat intent + prompt chaining
     -troubleshoot transcript sending as needed
 -look into EndSession more

@@ -158,12 +158,14 @@ def get_user_email():
     system = context.System
     token = system.get("apiAccessToken")
     endpoint = system.get('apiEndpoint')
+    print(f'token={token}', f'endpoint={endpoint}')  # TODO rm
     if not (token and endpoint):
         return ''
-    headers = {'Authorization': f'Bearer: {token}'}
+    headers = {'Authorization': f'Bearer {token}'}
     r = requests.get(f'{endpoint}/v2/accounts/~current/settings/Profile.email',
                      headers=headers)
     if r.status_code != 200:
+        print('status code', r.status_code, r.reason)
         return ''
     return r.json().get('emailAddress', '')
 
@@ -227,11 +229,12 @@ def health():
 def launch():
     """Runs when user starts skill with command like 'Alexa, start Voice Chat'.
     """
-    app.logger.info('>>> IN LAUNCH')
     state.set('global', **conv._kwargs)
     # TODO: might want to change this eventually, but for now use free model
     # by default.
     state.set('global', mock_func=query_gpt_j)
+    state.email = get_user_email()
+    print('LAUNCH email', state.email) # TODO rm
     return question('Welcome to Quick Chat. Who would you like to speak to?')
 
 
@@ -375,6 +378,7 @@ def reply():
     bulk of conversations.
     """
     prompt = slot(request, 'response', lower=False)
+    print('REPLY prompt', prompt) # TODO rm
     if not prompt:
         return question('Did you say something? I didn\'t catch that.')
     _, text = conv.query(prompt, **state)
@@ -424,7 +428,7 @@ def read_settings():
     """Read the user their query settings.
 
     Sample utterance:
-    "Alexa, what are my settings?"
+    "Lou, what are my settings?"
     """
     strings = []
     for k, v in dict(state).items():
@@ -440,40 +444,42 @@ def end_chat():
     """Read the user their query settings.
 
     Sample utterance:
-    "Alexa, end chat."
-    "Alexa, hang up."
+    "Lou, end chat."
+    "Lou, hang up."
     """
-    return question('Would you like me to sed you a transcript of your '
+    return question('Would you like me to send you a transcript of your '
                     'conversation?')
 
 
 @ask.session_ended
 def end_session():
+    """Called when user exits the skill."""
     return '{}', 200
 
 
 def _end_chat(choice):
-    """
-    # TODO: docs
+    """End conversation and optionally send transcript to user.
 
     Parameters
     ----------
-    choice
-
-    Returns
-    -------
-
+    choice: bool
+        If True, email transcript to user.
     """
     if choice:
-        sent = send_transcript(conv, session.attributes['email'])
-        if sent:
-            return question('I\'ve emailed you a transcript of your '
-                            'conversation. Would you like to talk to someone '
-                            'else?')
-        return question('Something went wrong and I wasn\'t able to send you '
-                        'a transcript. Sorry about that. Would you like to '
-                        'talk to someone else?')
-    return question('Okay. Would you like to talk to someone else?')
+        if state.email:
+            sent = send_transcript(conv, state.email)
+            if sent:
+                msg = 'I\'ve emailed you a transcript of your conversation. '
+            else:
+                msg = 'Something went wrong and I wasn\'t able to send you ' \
+                      'a transcript. Sorry about that.'
+        # Defaults to empty str when no email is provided.
+        else:
+            msg = 'I don\'t have your email on file.'
+    else:
+        msg = 'Okay.'
+    conv.end_conversation()
+    return question(msg + ' Would you like to talk to someone else?')
 
 
 if __name__ == '__main__':
