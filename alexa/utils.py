@@ -200,7 +200,7 @@ class Settings(Mapping):
         self.state = {
             **self._states['conversation'],
             **self._states['person'],
-            ** self._states['global']
+            **self._states['global']
         }
 
     def __getitem__(self, key):
@@ -293,3 +293,5 @@ def model_type(state):
     if mock_func:
         return mock_func.__name__.split('_')[-1]
     return state['model_i']
+
+

@@ -8,13 +8,15 @@ from datetime import datetime
 from functools import wraps, partial
 import logging
 from pathlib import Path
+import sys
 
 from flask import Flask, request
 from flask_ask import Ask, statement, question, session, context
 import requests
 
 from config import EMAIL
-from htools import params, quickmail, save, MultiLogger, Callback, callbacks
+from htools import params, quickmail, save, MultiLogger, Callback, callbacks, \
+    listlike
 from jabberwocky.openai_utils import ConversationManager, query_gpt3, \
     query_gpt_j, query_gpt_neo
 from jabberwocky.utils import load_huggingface_api_key
@@ -55,13 +57,31 @@ class CustomAsk(Ask):
         self.logger = MultiLogger('alexa/app.log', fmode='a')
         # Decorator that we use on each intent endpoint.
         self._callbacks = callbacks([IntentCallback(self)])
-        self._func2name = {}
+        self._func2intent = {}
+        self._intent2funcname = {}
+
+    def followup_func(self, prev_intent):
+        """Some endpoints ask a followup question and we need to direct their
+        response to a different function. This function maps from an intent
+        name to the function (not the name, the actual function) that should
+        be called next.
+
+        Parameters
+        ----------
+        prev_intent: str
+
+        Returns
+        -------
+        FunctionType
+        """
+        prev_funcname = self._intent2funcname[prev_intent]
+        return getattr(sys.modules['__main__'], f'_{prev_funcname}')
 
     def intent_name(self, func) -> str:
         """Given a flask endpoint function, return the name of the intent
         associated with it.
         """
-        return self._func2name[func.__name__]
+        return self._func2intent[func.__name__]
 
     def attach_callbacks(self, func):
         """Prettier way to wrap an intent function with callbacks. This adds
@@ -95,7 +115,8 @@ class CustomAsk(Ask):
         """
         def decorator(func):
             func = self.attach_callbacks(func)
-            self._func2name[func.__name__] = name
+            self._func2intent[func.__name__] = name
+            self._intent2funcname[name] = func.__name__
             mapping = {k: k.title() for k in params(func)}
             self._intent_view_funcs[name] = func
             self._intent_mappings[name] = {**mapping,
@@ -211,7 +232,7 @@ def launch():
     # TODO: might want to change this eventually, but for now use free model
     # by default.
     state.set('global', mock_func=query_gpt_j)
-    return question('Who would you like to speak to?')
+    return question('Welcome to Quick Chat. Who would you like to speak to?')
 
 
 @ask.intent('debug')
@@ -373,14 +394,22 @@ def fallback():
 def yes():
     # TODO: action depends on prev intent.
     prev = state.prev_intent  # TODO: rm
-    return question('Yes (placeholder).')
+    func = ask.followup_func(prev)
+    print('Yes (placeholder).')
+    # TODO: might need to pass kwargs in, not just True/False, if some
+    # followups take more complex/different slots.
+    return func(True)
 
 
 @ask.intent('AMAZON.NoIntent')
 def no():
     # TODO: action depends on prev intent.
     prev = state.prev_intent  # TODO: rm
-    return question('No (placeholder).')
+    func = ask.followup_func(prev)
+    print('No (placeholder).')
+    # TODO: might need to pass kwargs in, not just True/False, if some
+    # followups take more complex/different slots.
+    return func(False)
 
 
 @ask.intent('readContacts')
@@ -390,24 +419,61 @@ def read_contacts():
     return question(msg)
 
 
+@ask.intent('readSettings')
+def read_settings():
+    """Read the user their query settings.
+
+    Sample utterance:
+    "Alexa, what are my settings?"
+    """
+    strings = []
+    for k, v in dict(state).items():
+        if k == 'mock_func': continue
+        if listlike(v):
+            v = f'a list containing the following items: {v}'
+        strings.append(f'{k.replace("_", " ")} is {v}')
+    return question(f'Here are your settings: {"; ".join(strings)}.')
+
+
+@ask.intent('endChat')
+def end_chat():
+    """Read the user their query settings.
+
+    Sample utterance:
+    "Alexa, end chat."
+    "Alexa, hang up."
+    """
+    return question('Would you like me to sed you a transcript of your '
+                    'conversation?')
+
+
 @ask.session_ended
 def end_session():
     return '{}', 200
 
 
-def exit_():
-    saved = False
-    # TODO: rm
-    # if session.attributes.get('should_end') and \
-    #         session.attributes.get('should_save'):
-    #     # TODO: have user configure this at some point earlier?
-    #     saved = send_transcript(conv, session.attributes['email'])
+def _end_chat(choice):
+    """
+    # TODO: docs
 
-    # if state.should_end and state.should_save:
-    #     TODO: have user configure this at some point earlier?
-        # saved = send_transcript(conv, session.attributes['email'])
+    Parameters
+    ----------
+    choice
 
-    return saved
+    Returns
+    -------
+
+    """
+    if choice:
+        sent = send_transcript(conv, session.attributes['email'])
+        if sent:
+            return question('I\'ve emailed you a transcript of your '
+                            'conversation. Would you like to talk to someone '
+                            'else?')
+        return question('Something went wrong and I wasn\'t able to send you '
+                        'a transcript. Sorry about that. Would you like to '
+                        'talk to someone else?')
+    return question('Okay. Would you like to talk to someone else?')
 
 
 if __name__ == '__main__':

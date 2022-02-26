@@ -380,18 +380,41 @@ X -add readContacts intent in console
 
 2/25/22 fri
 -----------
--add readSettings intent to console
-    -add code endpoint
-    -launch rebuild
-    -test in console
+X -add readSettings intent to console
+    X -add code endpoint
+    X -launch rebuild
+    X -test in console
+X -add endChat endpoint
+    UPDATE: also had idea to prefix settings commands with "Alexa" to distinguish them from replies. But when testing, alexa did not recognize these utterances (just fell back to reply intent). Need to work on this more.
 -update end of conv to erase conv-level settings
+    ~ -consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
+        UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.
     -update change of person to change person-level settings
     -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
--consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
+~ -start prototyping prompt routing system (a way to implement intent chaining, basically)
+    UPDATE: some progress here. Plan is to have an endpoint func's follow up func by named identically except with a leading underscore. Could become problematic if we need multiple followups though. Started testing on end_chat but ran into utterance problems (see above).
 -tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)
     
+2/26/22 sat
+-----------
+[LEAVE EMAIL UNBLOCKED - testing email sending]
+-try adjusting end_chat utterances since curr ones aren't getting recognized
+    -maybe adjust other settings intent sample utterances to be prefixed by something distinctive. Looks like 'alexa' might not have been the best choice.
+-continue testing end_chat intent + prompt chaining
+    -troubleshoot transcript sending as needed
+-look into EndSession more
+    -When is it called? I.e. is it triggered by "stop" or something else?
+    -What should it return? I think this is correct based on an official tutorial but should confirm.
+
 
 Backlog
+-------
+-update end of conv to erase conv-level settings
+    ~ -consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
+        UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.
+    -update change of person to change person-level settings
+    -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
+-tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)
 -allow fuzzy match for choosePerson (e.g. einstein -> albert einstein)?
 -consider yes/no intent logic: need to prevent them from updating prevIntent? Consider tracking a longer intent history list rather than just prev.
 -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
