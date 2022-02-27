@@ -4,6 +4,7 @@ of if that's even possible. App relies on local filesystem a lot at the moment
 so it might be more convenient to run locally with ngrok anyway.
 """
 
+from collections import deque
 from datetime import datetime
 from functools import wraps, partial
 import logging
@@ -59,23 +60,56 @@ class CustomAsk(Ask):
         self._callbacks = callbacks([IntentCallback(self)])
         self._func2intent = {}
         self._intent2funcname = {}
+        self._queue = deque()
 
-    def followup_func(self, prev_intent):
-        """Some endpoints ask a followup question and we need to direct their
-        response to a different function. This function maps from an intent
-        name to the function (not the name, the actual function) that should
-        be called next.
+    def func_push(self, *funcs):
+        """Schedule a function to call later.
 
         Parameters
         ----------
-        prev_intent: str
+        funcs: FunctionType(s)
+            These can be intents or not - either way should work. Non-intents
+            are useful if we want to say something to prompt the user to
+            provide a value (guessing this is related to what elicit_slot in
+            flask-ask does, but I couldn't figure out that interface). Intents
+            should be recognized anyway by alexa, but this provides a backup
+            plan in case it goes to delegate().
+        """
+        self._queue.extend(funcs)
+
+    def func_pop(self):
+        """
 
         Returns
         -------
-        FunctionType
+
         """
-        prev_funcname = self._intent2funcname[prev_intent]
-        return getattr(sys.modules['__main__'], f'_{prev_funcname}')
+        try:
+            return self._queue.popleft()
+        except IndexError:
+            self.logger.warning('Tried to pop chained function from empty '
+                                'queue.')
+
+    def func_clear(self):
+        """Call this at the end of a chain of intents."""
+        self._queue.clear()
+
+    # def followup_func(self, prev_intent):
+    #     """Some endpoints ask a followup question and we need to direct their
+    #     response to a different function. This function maps from an intent
+    #     name to the function (not the name, the actual function) that should
+    #     be called next.
+    #
+    #     Parameters
+    #     ----------
+    #     prev_intent: str
+    #
+    #     Returns
+    #     -------
+    #     FunctionType
+    #     """
+    #     prev_funcname = self._intent2funcname[prev_intent]
+    #     return getattr(sys.modules['__main__'], f'_{prev_funcname}')
 
     def intent_name(self, func) -> str:
         """Given a flask endpoint function, return the name of the intent
@@ -226,8 +260,9 @@ def launch():
     # by default.
     state.set('global', mock_func=query_gpt_j)
     state.email = get_user_email()
-    print('LAUNCH email', state.email) # TODO rm
-    return question('Welcome to Quick Chat. Who would you like to speak to?')
+    print('LAUNCH, email=', state.email) # TODO rm
+    question_txt = _choose_person()
+    return question(f'Welcome to Quick Chat. {question_txt}')
 
 
 @ask.intent('debug')
@@ -238,8 +273,13 @@ def debug(response):
     return question(f'I\'m in debug mode. You just said: {response}.')
 
 
+def _choose_person(msg='Who would you like to speak to?'):
+    ask.func_push(choose_person)
+    return msg
+
+
 @ask.intent('choosePerson')
-def choose_person():
+def choose_person(**kwargs):
     """Allow the user to choose which person to talk to. If the user isn't
     recognized in their "contacts", we can autogenerate the persona for them
     if the person is relatively well known.
@@ -249,29 +289,34 @@ def choose_person():
     Person: str
         Name of a person to chat with.
     """
-    person = slot(request, 'Person')
+    person = kwargs.get('response', slot(request, 'Person'))
+    # Handle case where conversation is already ongoing. This should have been
+    # a reply.
     if conv.current_persona:
-        # TODO: try to get full user text and call _reply().
-        # Currently this cuts off the first since it thinks the pattern is
-        # {any one word} {name}.
+        # TODO: call reply instead. For now just repeat back to user.
         return question(person)
 
     print('PERSON', person) # TODO rm
     if person not in conv:
         state.kwargs = {'person': person}
+        ask.func_push(generate_person)
         return question(f'I don\'t see anyone named {person} in your '
                         f'contacts. Would you like to create a new contact?')
 
     conv.start_conversation(person)
+    ask.func_clear()
     return question(f'I\'ve connected you with {person}.')
 
 
-def _choose_person(choice, **kwargs):
+def generate_person(choice, **kwargs):
     if choice:
         try:
-            conv.start_conversation(kwargs['person'],
-                                    download_if_necessary=True)
-            msg = f'I\'ve connected you with {kwargs["person"]}.'
+            conv.add_persona(kwargs['person'])
+            return choose_person(response=kwargs['person'])
+            # TODO: test and cleanup
+            # conv.start_conversation(kwargs['person'],
+            #                         download_if_necessary=True)
+            # msg = f'I\'ve connected you with {kwargs["person"]}.'
         except Exception as e:
             ask.logger.error(f'Failed to generate {kwargs["person"]}.\n{e}')
             msg = f'I\'m sorry, I wasn\'t able to add {kwargs["person"]} ' \
@@ -279,7 +324,7 @@ def _choose_person(choice, **kwargs):
     else:
         # Case: user declines to auto-generate. Maybe they misspoke or changed
         # their mind.
-        msg = 'Okay. Who would you like to speak too, then?'
+        msg = f'Okay. {_choose_person()}'
     return question(msg)
 
 
@@ -381,8 +426,7 @@ def change_temperature():
                     f'percent.')
 
 
-@ask.intent('reply')
-def reply():
+def _reply():
     """Generic conversation reply. I anticipate this endpoint making up the
     bulk of conversations.
     """
@@ -394,34 +438,48 @@ def reply():
     return question(text)
 
 
-# TODO
-@ask.intent('AMAZON.FallbackIntent')
-def fallback():
-    # TODO: maybe direct every request here and use this as a delegator of
-    # sorts? Or should I make the reply function correspond to the
-    # FallbackIntent?
-    return question('Could you repeat that?')
+@ask.intent('delegate')
+def delegate():
+    """Delegate to the right function when no intent is detected.
+    """
+    func = ask.func_pop()
+    response = slot(request, 'response', lower=False)
+    if not func:
+        # TODO: what should this message be? This is when no chained intents
+        # are in the queue.
+        return question('Fill in later. Unsure of what this should say.')
+    return func(response=response, **state.kwargs or {})
+
+
+# # TODO
+# @ask.intent('AMAZON.FallbackIntent')
+# def fallback():
+#     # TODO: maybe direct every request here and use this as a delegator of
+#     # sorts? Or should I make the reply function correspond to the
+#     # FallbackIntent?
+#     return question('Could you repeat that?')
 
 
 @ask.intent('AMAZON.YesIntent')
 def yes():
-    # TODO: may need to handle case where user says Yes as a reply, not as a
-    # YesIntent.
-    # TODO: action depends on prev intent.
-    func = ask.followup_func(state.prev_intent)
-    print('Yes (placeholder).')
-    # TODO: might need to pass kwargs in, not just True/False, if some
-    # followups take more complex/different slots.
+    func = ask.func_pop()
+    if not func:
+        # TODO: better validation to ensure the user meant to send this as a
+        # reply, not just bc the queue is empty.
+        # TODO: what to do when nothing in queue? Maybe send to reply()?
+        return question('Placeholder: YesIntent, no func in chain')
     return func(choice=True, **state.kwargs)
 
 
 @ask.intent('AMAZON.NoIntent')
 def no():
-    # TODO: action depends on prev intent.
-    func = ask.followup_func(state.prev_intent)
-    print('No (placeholder).')
-    # TODO: might need to pass kwargs in, not just True/False, if some
-    # followups take more complex/different slots.
+    func = ask.func_pop()
+    if not func:
+        # TODO: better validation to ensure the user meant to send this as a
+        # reply, not just bc the queue is empty.
+        # TODO: what to do when nothing in queue? Maybe send to reply()?
+        # TODO: what to do when nothing in queue? Maybe send to reply()?
+        return question('Placeholder: NoIntent, no func in chain')
     return func(choice=False, **state.kwargs)
 
 

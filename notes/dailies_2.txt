@@ -415,11 +415,28 @@ X -look into EndSession more
     -debug formatting, etc.
 -look into email access issues (api returns 403 Forbidden status)
     -maybe need to add card/audio asking for permission in the skill itself?
--write choose_person followup func (do you want to download new persona?)
+X -write choose_person followup func (do you want to download new persona?)
+~ -deep dive into intent chaining
+    UPDATE: flask-ask does have delegate() and elicit_slot() functionality which seems to be related to what I want, but I couldn't quite figure out how to use it do what I want (no docs :( ). Instead, started overhauling this process in new `chain` branch. Renamed searchIntent intent from reply -> delegate and have that point to enqueued funcs. Made Ask object handle this enqueue/deque process. Still need to test this more.
+
+2/28/22 mon
+-----------
+-test new chain workflow
+    -selecting a user that exists
+    -selecting a user that does NOT exist and downloading them
+    -selecting a user that does NOT exist and NOT downloading them
+-rm remnants of old chaining system (followup_func, check for other '_' prefixed funcs, etc.)
+    -consider if I should remove/update prev_func state attr? Maybe it should store func name instead of intent name since we're now often calling non-intent funcs.
+-look for other intent chains that need to be implemented and document below
+    -implement the following intent chains:
 
 
 Backlog
 -------
+-try sending transcript w/ hardcoded email (need break from debugging permissions issues)
+    -debug formatting, etc.
+-look into email access issues (api returns 403 Forbidden status)
+    -maybe need to add card/audio asking for permission in the skill itself?
 -update end of conv to erase conv-level settings
     ~ -consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
         UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.
