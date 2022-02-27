@@ -152,7 +152,7 @@ class Settings(Mapping):
     """
 
     def __init__(self, global_=None, person_=None, conversation_=None,
-                 reserved_keys=('prev_intent', 'email')):
+                 reserved_keys=('prev_intent', 'email', 'kwargs')):
         # Alter underlying dict directly to avoid recursion errors. Custom
         # __setattr__ method relies on custom __getattr__ so we run into
         # problems otherwise.
@@ -177,7 +177,7 @@ class Settings(Mapping):
             super().__setattr__(key, value)
 
     def __getattr__(self, key):
-        # Made a slightly unusual choice: non-reserved keys always just return
+        # Made a slightly unusual choice: reserved keys always just return
         # None if user tries to access them before they're set. We can't
         # explicitly initialize them to None (which would probably be ideal)
         # because session.attributes is initially set to None and flask seems

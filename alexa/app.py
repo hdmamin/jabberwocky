@@ -217,14 +217,6 @@ def home():
     return 'home'
 
 
-@app.route('/health')
-def health():
-    """For debugging purposes (lets us check that the app is accessible).
-    """
-    print('IN HEALTH')
-    return 'Jabberwocky is running.'
-
-
 @ask.launch
 def launch():
     """Runs when user starts skill with command like 'Alexa, start Voice Chat'.
@@ -266,12 +258,29 @@ def choose_person():
 
     print('PERSON', person) # TODO rm
     if person not in conv:
-        # TODO: new endpoint needed to handle answer to this case?
+        state.kwargs = {'person': person}
         return question(f'I don\'t see anyone named {person} in your '
                         f'contacts. Would you like to create a new contact?')
 
     conv.start_conversation(person)
     return question(f'I\'ve connected you with {person}.')
+
+
+def _choose_person(choice, **kwargs):
+    if choice:
+        try:
+            conv.start_conversation(kwargs['person'],
+                                    download_if_necessary=True)
+            msg = f'I\'ve connected you with {kwargs["person"]}.'
+        except Exception as e:
+            ask.logger.error(f'Failed to generate {kwargs["person"]}.\n{e}')
+            msg = f'I\'m sorry, I wasn\'t able to add {kwargs["person"]} ' \
+                  f'as a contact. Who would you like to speak to instead?'
+    else:
+        # Case: user declines to auto-generate. Maybe they misspoke or changed
+        # their mind.
+        msg = 'Okay. Who would you like to speak too, then?'
+    return question(msg)
 
 
 @ask.intent('changeModel')
@@ -396,24 +405,24 @@ def fallback():
 
 @ask.intent('AMAZON.YesIntent')
 def yes():
+    # TODO: may need to handle case where user says Yes as a reply, not as a
+    # YesIntent.
     # TODO: action depends on prev intent.
-    prev = state.prev_intent  # TODO: rm
-    func = ask.followup_func(prev)
+    func = ask.followup_func(state.prev_intent)
     print('Yes (placeholder).')
     # TODO: might need to pass kwargs in, not just True/False, if some
     # followups take more complex/different slots.
-    return func(True)
+    return func(choice=True, **state.kwargs)
 
 
 @ask.intent('AMAZON.NoIntent')
 def no():
     # TODO: action depends on prev intent.
-    prev = state.prev_intent  # TODO: rm
-    func = ask.followup_func(prev)
+    func = ask.followup_func(state.prev_intent)
     print('No (placeholder).')
     # TODO: might need to pass kwargs in, not just True/False, if some
     # followups take more complex/different slots.
-    return func(False)
+    return func(choice=False, **state.kwargs)
 
 
 @ask.intent('readContacts')
