@@ -421,10 +421,23 @@ X -write choose_person followup func (do you want to download new persona?)
 
 2/28/22 mon
 -----------
+~ -test new chain workflow
+    -selecting a user that exists
+    -selecting a user that does NOT exist and NOT downloading them
+    -selecting a user that does NOT exist and downloading them
+    UPDATE: made some major changes and saw some positive signs but haven't thoroughly validated that any of the above cases work post-changes.
+X -auto avoid duplicate calls from queue (realized alexa often matches intents without help of queue/delegate, so enqueueing intents was problematic)
+-rm remnants of old chaining system (followup_func, check for other '_' prefixed funcs, etc.)
+    -consider if I should remove/update prev_func state attr? Maybe it should store func name instead of intent name since we're now often calling non-intent funcs.
+-look for other intent chains that need to be implemented and document below
+    -implement the following intent chains:
+
+3/1/22 tues
+-----------
 -test new chain workflow
     -selecting a user that exists
-    -selecting a user that does NOT exist and downloading them
     -selecting a user that does NOT exist and NOT downloading them
+    -selecting a user that does NOT exist and downloading them
 -rm remnants of old chaining system (followup_func, check for other '_' prefixed funcs, etc.)
     -consider if I should remove/update prev_func state attr? Maybe it should store func name instead of intent name since we're now often calling non-intent funcs.
 -look for other intent chains that need to be implemented and document below

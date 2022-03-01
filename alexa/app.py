@@ -17,7 +17,7 @@ import requests
 
 from config import EMAIL
 from htools import params, quickmail, save, MultiLogger, Callback, callbacks, \
-    listlike
+    listlike, func_name
 from jabberwocky.openai_utils import ConversationManager, query_gpt3, \
     query_gpt_j, query_gpt_neo
 from jabberwocky.utils import load_huggingface_api_key
@@ -36,9 +36,12 @@ class IntentCallback(Callback):
         pass
 
     def on_begin(self, func, inputs, output=None):
-        self.ask.logger.info('\nCur intent: ' + self.ask.intent_name(func))
-        self.ask.logger.info(f'Prev intent: {state.prev_intent}\n')
-        self.ask.logger.info(state)
+        self.ask.logger.info('\n' + '-' * 79)
+        self.ask.func_dedupe(func)
+        self.ask.logger.info(f'Cur intent: {self.ask.intent_name(func)}')
+        self.ask.logger.info(f'Prev intent: {state.prev_intent}')
+        self.ask.logger.info(f'State: {state}')
+        self.ask.logger.info(f'Queue: {self.ask._queue}\n')
 
     def on_end(self, func, inputs, output=None):
         state.prev_intent = self.ask.intent_name(func)
@@ -63,17 +66,24 @@ class CustomAsk(Ask):
         self._queue = deque()
 
     def func_push(self, *funcs):
-        """Schedule a function to call later.
+        """Schedule a function (usually NOT an intent - that should be
+        recognized automatically) to call after a user response. We push
+        functions so that delegate(), yes() and no() know where to direct the
+        flow to.
 
         Parameters
         ----------
         funcs: FunctionType(s)
-            These can be intents or not - either way should work. Non-intents
-            are useful if we want to say something to prompt the user to
-            provide a value (guessing this is related to what elicit_slot in
-            flask-ask does, but I couldn't figure out that interface). Intents
-            should be recognized anyway by alexa, but this provides a backup
-            plan in case it goes to delegate().
+            These should usually not be intents because those should already be
+            recognized by Alexa. Pushing non-intents into the queue is useful
+            if we want to say something to prompt the user to provide a value
+            (guessing this is related to what elicit_slot in
+            flask-ask does, but I couldn't figure out that interface).
+
+            Pushing intents into the queue is only useful as a fallback - if
+            the user utterance mistakenly is not matched with any intent and
+            falls through to delegate(), it should then be forwarded to the
+            correct intent.
         """
         self._queue.extend(funcs)
 
@@ -93,6 +103,22 @@ class CustomAsk(Ask):
     def func_clear(self):
         """Call this at the end of a chain of intents."""
         self._queue.clear()
+        state.kwargs.clear()
+
+    def func_dedupe(self, func):
+        """If we enqueue an intent and Alexa recognizes it by itself
+        (without the help of delegate()),the intent function remains in the
+        queue and would be called the next time we hit delegate()
+        (not what we want). This method is auto-called before each intent is
+        executed so we don't call it twice in a row by accident.
+
+        Warning: this means you should NEVER have a function push itself into
+        the queue.
+        """
+        # Slightly hacky by this way if one or both functions is decorated,
+        # we should still be able to identify duplicates.
+        if self._queue and func_name(self._queue[0]) == func_name(func):
+            self.func_pop()
 
     # def followup_func(self, prev_intent):
     #     """Some endpoints ask a followup question and we need to direct their
@@ -171,7 +197,9 @@ class CustomAsk(Ask):
         return decorator
 
 
-logging.getLogger('flask_ask').setLevel(logging.DEBUG)
+# TODO: maybe change back to debug eventually? Trying to unclutter terminal
+# output bc it's making it harder to debug.
+logging.getLogger('flask_ask').setLevel(logging.WARNING)
 app = Flask(__name__)
 # Necessary to make session accessible outside endpoint functions.
 app.app_context().push()
@@ -261,7 +289,7 @@ def launch():
     state.set('global', mock_func=query_gpt_j)
     state.email = get_user_email()
     print('LAUNCH, email=', state.email) # TODO rm
-    question_txt = _choose_person()
+    question_txt = _choose_person_text()
     return question(f'Welcome to Quick Chat. {question_txt}')
 
 
@@ -273,7 +301,9 @@ def debug(response):
     return question(f'I\'m in debug mode. You just said: {response}.')
 
 
-def _choose_person(msg='Who would you like to speak to?'):
+def _choose_person_text(msg='Who would you like to speak to?'):
+    # This is jsut a backup measure in case the user's next response gets sent
+    # to delegate().
     ask.func_push(choose_person)
     return msg
 
@@ -289,17 +319,22 @@ def choose_person(**kwargs):
     Person: str
         Name of a person to chat with.
     """
-    person = kwargs.get('response', slot(request, 'Person'))
+    # Don't put slot call as the default value in get because that would cause
+    # it to be executed before checking if kwargs contains the value we want.
+    # When the name is passed in, there will likely be no slots and that call
+    # would raise an error.
+    person = kwargs.get('response') or slot(request, 'Person')
     # Handle case where conversation is already ongoing. This should have been
     # a reply.
     if conv.current_persona:
-        # TODO: call reply instead. For now just repeat back to user.
-        return question(person)
+        # Assume this is a regular reply in the midst of a conversation that
+        # just happens to consist of only a name.
+        return _reply(prompt=person)
 
     print('PERSON', person) # TODO rm
     if person not in conv:
         state.kwargs = {'person': person}
-        ask.func_push(generate_person)
+        ask.func_push(_generate_person)
         return question(f'I don\'t see anyone named {person} in your '
                         f'contacts. Would you like to create a new contact?')
 
@@ -308,7 +343,7 @@ def choose_person(**kwargs):
     return question(f'I\'ve connected you with {person}.')
 
 
-def generate_person(choice, **kwargs):
+def _generate_person(choice, **kwargs):
     if choice:
         try:
             conv.add_persona(kwargs['person'])
@@ -318,13 +353,14 @@ def generate_person(choice, **kwargs):
             #                         download_if_necessary=True)
             # msg = f'I\'ve connected you with {kwargs["person"]}.'
         except Exception as e:
-            ask.logger.error(f'Failed to generate {kwargs["person"]}.\n{e}')
+            ask.logger.error(f'Failed to generate {kwargs["person"]}. '
+                             f'\nError: {e}')
             msg = f'I\'m sorry, I wasn\'t able to add {kwargs["person"]} ' \
                   f'as a contact. Who would you like to speak to instead?'
     else:
         # Case: user declines to auto-generate. Maybe they misspoke or changed
         # their mind.
-        msg = f'Okay. {_choose_person()}'
+        msg = f'Okay. {_choose_person_text()}'
     return question(msg)
 
 
@@ -426,11 +462,11 @@ def change_temperature():
                     f'percent.')
 
 
-def _reply():
+def _reply(prompt=None):
     """Generic conversation reply. I anticipate this endpoint making up the
     bulk of conversations.
     """
-    prompt = slot(request, 'response', lower=False)
+    prompt = prompt or slot(request, 'response', lower=False)
     print('REPLY prompt', prompt) # TODO rm
     if not prompt:
         return question('Did you say something? I didn\'t catch that.')
@@ -445,9 +481,9 @@ def delegate():
     func = ask.func_pop()
     response = slot(request, 'response', lower=False)
     if not func:
-        # TODO: what should this message be? This is when no chained intents
-        # are in the queue.
-        return question('Fill in later. Unsure of what this should say.')
+        # No chained intents are in the queue so we assume this is just another
+        # turn in the conversation.
+        return _reply(response)
     return func(response=response, **state.kwargs or {})
 
 
@@ -467,7 +503,7 @@ def yes():
         # TODO: better validation to ensure the user meant to send this as a
         # reply, not just bc the queue is empty.
         # TODO: what to do when nothing in queue? Maybe send to reply()?
-        return question('Placeholder: YesIntent, no func in chain')
+        return _reply(prompt='Yes.')
     return func(choice=True, **state.kwargs)
 
 
@@ -479,7 +515,7 @@ def no():
         # reply, not just bc the queue is empty.
         # TODO: what to do when nothing in queue? Maybe send to reply()?
         # TODO: what to do when nothing in queue? Maybe send to reply()?
-        return question('Placeholder: NoIntent, no func in chain')
+        return _reply(prompt='No.')
     return func(choice=False, **state.kwargs)
 
 
@@ -514,14 +550,9 @@ def end_chat():
     "Lou, end chat."
     "Lou, hang up."
     """
+    ask.func_push(_end_chat)
     return question('Would you like me to send you a transcript of your '
                     'conversation?')
-
-
-@ask.session_ended
-def end_session():
-    """Called when user exits the skill."""
-    return '{}', 200
 
 
 def _end_chat(choice):
@@ -546,7 +577,16 @@ def _end_chat(choice):
     else:
         msg = 'Okay.'
     conv.end_conversation()
-    return question(msg + ' Would you like to talk to someone else?')
+    ask.func_clear()
+    return question(
+        msg + _choose_person_text(' Would you like to talk to someone else?')
+    )
+
+
+@ask.session_ended
+def end_session():
+    """Called when user exits the skill."""
+    return '{}', 200
 
 
 if __name__ == '__main__':
