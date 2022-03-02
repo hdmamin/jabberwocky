@@ -438,16 +438,30 @@ X -test new chain workflow
     X -selecting a user that exists
     X -selecting a user that does NOT exist and NOT downloading them
     X -selecting a user that does NOT exist and downloading them
--rm remnants of old chaining system (followup_func, check for other '_' prefixed funcs, etc.)
-    -consider if I should remove/update prev_func state attr? Maybe it should store func name instead of intent name since we're now often calling non-intent funcs.
+X -rm remnants of old chaining system (followup_func, check for other '_' prefixed funcs, etc.)
+    X -consider if I should remove/update prev_func state attr? Maybe it should store func name instead of intent name since we're now often calling non-intent funcs.
+        UPDATE: fine for now, not causing any problems. Maybe revisit later if I find a good reason to store more steps.
+X -try sending transcript w/ hardcoded email (need break from debugging permissions issues)
+    X -debug formatting, etc.
+    UPDATE: Had wrong email in alexa config. Once I fixed that and updated htools.quickmail to allow Paths for attach files, no problems with email or formatting.
 -look for other intent chains that need to be implemented and document below
     -implement the following intent chains:
+~ -debug issues where changing settings wasn't working
+    UPDATE: 1 issue was that MaxLength had wrong slot name (should be Number, not maxLength). Another was that "change model" sample utterances didn't include the exact order I was saying and I guess they're pretty rigid, so I added a couple more variants. Also changed to debug mode using htools deco to print when any func is called, bc I'm still finding it hard to follow flow sometimes.
+
+3/2/22 wed
+----------
+-look into ask.logger log file (is it just continually growing longer and longer? Maybe reset.)
+-maybe update deco to print queue/state etc. on function end as well. Sometimes confusing not having this info.
+-look for other intent chains that need to be implemented and document below
+    -implement the following intent chains:
+-maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
 
 
 Backlog
 -------
--try sending transcript w/ hardcoded email (need break from debugging permissions issues)
-    -debug formatting, etc.
+-investigate: possible to get alexa to maintain casing/punctuation?
+    -if no, consider running punctuate on transcriptions before sending to gpt3. All lowercase may change results (more casual vibe?).
 -look into email access issues (api returns 403 Forbidden status)
     -maybe need to add card/audio asking for permission in the skill itself?
 -update end of conv to erase conv-level settings
@@ -455,7 +469,6 @@ Backlog
         UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.
     -update change of person to change person-level settings
     -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
--tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)
 -allow fuzzy match for choosePerson (e.g. einstein -> albert einstein)?
 -consider yes/no intent logic: need to prevent them from updating prevIntent? Consider tracking a longer intent history list rather than just prev.
 -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)

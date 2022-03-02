@@ -1,1 +1,1 @@
-EMAIL = 'alexa-jabberwocky@gmail.com'
+EMAIL = 'jabberwocky.alexa@gmail.com'

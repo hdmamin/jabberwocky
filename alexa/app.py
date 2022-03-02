@@ -16,7 +16,7 @@ import requests
 
 from config import EMAIL
 from htools import params, quickmail, save, MultiLogger, Callback, callbacks, \
-    listlike, func_name
+    listlike, func_name, decorate_functions, debug as debug_decorator
 from jabberwocky.openai_utils import ConversationManager, query_gpt3, \
     query_gpt_j, query_gpt_neo
 from jabberwocky.utils import load_huggingface_api_key
@@ -249,7 +249,7 @@ def send_transcript(conv, user_email=''):
               message=message,
               to_email=user_email,
               from_email=EMAIL,
-              attach_path=tmp_path)
+              attach_paths=tmp_path)
     tmp_path.unlink()
     return True
 
@@ -263,7 +263,8 @@ def launch():
     # TODO: might want to change this eventually, but for now use free model
     # by default.
     state.set('global', mock_func=query_gpt_j)
-    state.email = get_user_email()
+    # state.email = get_user_email() # TODO: revert from hardcoded to real
+    state.email = 'hmamin55@gmail.com'
     print('LAUNCH, email=', state.email) # TODO rm
     question_txt = _choose_person_text()
     return question(f'Welcome to Quick Chat. {question_txt}')
@@ -383,7 +384,7 @@ def change_max_length():
                       + error_msg.partition('.')[0]
 
     scope = slot(request, 'Scope', default='global')
-    length = slot(request, 'MaxLength')
+    length = slot(request, 'Number')
 
     try:
         # First check if Alexa parsing failed (slots converts "?" to "").
@@ -553,5 +554,6 @@ def end_session():
 
 if __name__ == '__main__':
     HF_API_KEY = load_huggingface_api_key()
+    decorate_functions(debug_decorator)
     app.logger.info(f'>>> MAIN: {conv.personas()}') # TODO: rm
     app.run(debug=True)

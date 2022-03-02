@@ -263,7 +263,7 @@ def slot(request, name, lower=True, default=''):
     failed_parse_symbol = '?'
     slots_ = request['request']['intent']['slots']
     try:
-        print('SLOTS', name, slots_, '\n')   # TODO: maybe rm
+        print('SLOTS\n', name, slots_, '\n')   # TODO: maybe rm
         resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
         res = resolved[0]['values'][0]['value']['name']
     except (KeyError, IndexError):
@@ -274,6 +274,7 @@ def slot(request, name, lower=True, default=''):
         except Exception as e:
             res = failed_parse_symbol
     if lower: res = res.lower()
+    print('SLOT RESOLVED:', res)
     return default if res == failed_parse_symbol else res
 
 
