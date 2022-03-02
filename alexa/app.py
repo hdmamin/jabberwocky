@@ -9,7 +9,6 @@ from datetime import datetime
 from functools import wraps, partial
 import logging
 from pathlib import Path
-import sys
 
 from flask import Flask, request
 from flask_ask import Ask, statement, question, session, context
@@ -103,6 +102,8 @@ class CustomAsk(Ask):
     def func_clear(self):
         """Call this at the end of a chain of intents."""
         self._queue.clear()
+        # We set this to an empty dict in launch so we shouldn't need to check
+        # if it's None.
         state.kwargs.clear()
 
     def func_dedupe(self, func):
@@ -119,23 +120,6 @@ class CustomAsk(Ask):
         # we should still be able to identify duplicates.
         if self._queue and func_name(self._queue[0]) == func_name(func):
             self.func_pop()
-
-    # def followup_func(self, prev_intent):
-    #     """Some endpoints ask a followup question and we need to direct their
-    #     response to a different function. This function maps from an intent
-    #     name to the function (not the name, the actual function) that should
-    #     be called next.
-    #
-    #     Parameters
-    #     ----------
-    #     prev_intent: str
-    #
-    #     Returns
-    #     -------
-    #     FunctionType
-    #     """
-    #     prev_funcname = self._intent2funcname[prev_intent]
-    #     return getattr(sys.modules['__main__'], f'_{prev_funcname}')
 
     def intent_name(self, func) -> str:
         """Given a flask endpoint function, return the name of the intent
@@ -270,20 +254,12 @@ def send_transcript(conv, user_email=''):
     return True
 
 
-# TODO rm
-@app.route('/')
-def home():
-    """For debugging purposes.
-    """
-    app.logger.info('>>> IN HOME')
-    return 'home'
-
-
 @ask.launch
 def launch():
     """Runs when user starts skill with command like 'Alexa, start Voice Chat'.
     """
     state.set('global', **conv._kwargs)
+    state.kwargs = {}
     # TODO: might want to change this eventually, but for now use free model
     # by default.
     state.set('global', mock_func=query_gpt_j)
@@ -331,7 +307,6 @@ def choose_person(**kwargs):
         # just happens to consist of only a name.
         return _reply(prompt=person)
 
-    print('PERSON', person) # TODO rm
     if person not in conv:
         state.kwargs = {'person': person}
         ask.func_push(_generate_person)
@@ -348,10 +323,6 @@ def _generate_person(choice, **kwargs):
         try:
             conv.add_persona(kwargs['person'])
             return choose_person(response=kwargs['person'])
-            # TODO: test and cleanup
-            # conv.start_conversation(kwargs['person'],
-            #                         download_if_necessary=True)
-            # msg = f'I\'ve connected you with {kwargs["person"]}.'
         except Exception as e:
             ask.logger.error(f'Failed to generate {kwargs["person"]}. '
                              f'\nError: {e}')
@@ -485,15 +456,6 @@ def delegate():
         # turn in the conversation.
         return _reply(response)
     return func(response=response, **state.kwargs or {})
-
-
-# # TODO
-# @ask.intent('AMAZON.FallbackIntent')
-# def fallback():
-#     # TODO: maybe direct every request here and use this as a delegator of
-#     # sorts? Or should I make the reply function correspond to the
-#     # FallbackIntent?
-#     return question('Could you repeat that?')
 
 
 @ask.intent('AMAZON.YesIntent')

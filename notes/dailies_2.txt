@@ -434,10 +434,10 @@ X -auto avoid duplicate calls from queue (realized alexa often matches intents w
 
 3/1/22 tues
 -----------
--test new chain workflow
-    -selecting a user that exists
-    -selecting a user that does NOT exist and NOT downloading them
-    -selecting a user that does NOT exist and downloading them
+X -test new chain workflow
+    X -selecting a user that exists
+    X -selecting a user that does NOT exist and NOT downloading them
+    X -selecting a user that does NOT exist and downloading them
 -rm remnants of old chaining system (followup_func, check for other '_' prefixed funcs, etc.)
     -consider if I should remove/update prev_func state attr? Maybe it should store func name instead of intent name since we're now often calling non-intent funcs.
 -look for other intent chains that need to be implemented and document below

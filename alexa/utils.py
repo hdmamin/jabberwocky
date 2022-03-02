@@ -263,7 +263,7 @@ def slot(request, name, lower=True, default=''):
     failed_parse_symbol = '?'
     slots_ = request['request']['intent']['slots']
     try:
-        print('SLOTS', name, slots_)   # TODO: maybe rm
+        print('SLOTS', name, slots_, '\n')   # TODO: maybe rm
         resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
         res = resolved[0]['values'][0]['value']['name']
     except (KeyError, IndexError):
