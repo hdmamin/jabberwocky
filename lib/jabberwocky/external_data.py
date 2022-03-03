@@ -248,6 +248,24 @@ def download_image(url, out_path, verbose=False, **request_kwargs):
 def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
               fname=None, truncate_summary_lines=2, verbose=True,
               **page_kwargs):
+    """Warning: I think name may require title case (may fail for names with
+    unusual capitalization though).
+
+    Parameters
+    ----------
+    name
+    tags
+    img_dir
+    exts
+    fname
+    truncate_summary_lines
+    verbose
+    page_kwargs
+
+    Returns
+    -------
+
+    """
     try:
         page = wiki_page(name, *tolist(tags), **page_kwargs)
     except RuntimeError as e:

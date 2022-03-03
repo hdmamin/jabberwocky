@@ -21,3 +21,4 @@ main.spec
 output/
 tmp/
 alexa/*.log
+alexa/conversations/*

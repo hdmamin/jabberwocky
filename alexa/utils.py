@@ -263,16 +263,31 @@ def slot(request, name, lower=True, default=''):
     failed_parse_symbol = '?'
     slots_ = request['request']['intent']['slots']
     try:
-        print('SLOTS\n', name, slots_, '\n')   # TODO: maybe rm
-        resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
-        res = resolved[0]['values'][0]['value']['name']
+        # I think AMAZON.Number slots don't have 'resolutions' key. Also,
+        # starting to think maybe 'value' is more reliable anyway? Observed one
+        # instance where 'value' was the right match but first resolution was
+        # wrong.
+        print('SLOTS\n', name, slots_, '\n')
+        res = slots_[name]['value']
     except (KeyError, IndexError):
-        # I think AMAZON.Number slots don't have resolutions so we also check
-        # this backup key.
         try:
-            res = slots_[name]['value']
+            resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
+            res = resolved[0]['values'][0]['value']['name']
         except Exception as e:
             res = failed_parse_symbol
+
+    # TODO: rm if above works well. Switched order we try to parse slots in.
+    # try:
+    #     print('SLOTS\n', name, slots_, '\n')   # TODO: maybe rm
+    #     resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
+    #     res = resolved[0]['values'][0]['value']['name']
+    # except (KeyError, IndexError):
+    #     # I think AMAZON.Number slots don't have resolutions so we also check
+    #     # this backup key.
+    #     try:
+    #         res = slots_[name]['value']
+    #     except Exception as e:
+    #         res = failed_parse_symbol
     if lower: res = res.lower()
     print('SLOT RESOLVED:', res)
     return default if res == failed_parse_symbol else res

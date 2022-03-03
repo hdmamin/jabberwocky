@@ -11,16 +11,15 @@ import logging
 from pathlib import Path
 
 from flask import Flask, request
-from flask_ask import Ask, statement, question, session, context
+from flask_ask import Ask, question, context
 import requests
 
-from config import EMAIL
+from config import EMAIL, LOG_FILE, HF_API_KEY
 from htools import params, quickmail, save, MultiLogger, Callback, callbacks, \
     listlike, func_name, decorate_functions, debug as debug_decorator
-from jabberwocky.openai_utils import ConversationManager, query_gpt3, \
-    query_gpt_j, query_gpt_neo
-from jabberwocky.utils import load_huggingface_api_key
-from utils import slot, word2int, Settings, model_type
+from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
+    query_gpt_neo
+from utils import slot, Settings, model_type
 
 
 class IntentCallback(Callback):
@@ -36,14 +35,21 @@ class IntentCallback(Callback):
 
     def on_begin(self, func, inputs, output=None):
         self.ask.logger.info('\n' + '-' * 79)
+        self.ask.logger.info('ON BEGIN')
         self.ask.func_dedupe(func)
-        self.ask.logger.info(f'Cur intent: {self.ask.intent_name(func)}')
-        self.ask.logger.info(f'Prev intent: {state.prev_intent}')
-        self.ask.logger.info(f'State: {state}')
-        self.ask.logger.info(f'Queue: {self.ask._queue}\n')
+        self._print_state(func)
 
     def on_end(self, func, inputs, output=None):
         state.prev_intent = self.ask.intent_name(func)
+        self.ask.logger.info('\nON END')
+        self._print_state()
+
+    def _print_state(self, func=None):
+        if func:
+            self.ask.logger.info(f'Cur intent: {self.ask.intent_name(func)}')
+            self.ask.logger.info(f'Prev intent: {state.prev_intent}')
+        self.ask.logger.info(f'State: {state}')
+        self.ask.logger.info(f'Queue: {self.ask._queue}\n')
 
 
 class CustomAsk(Ask):
@@ -57,7 +63,9 @@ class CustomAsk(Ask):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Unlike flask app.logger, this writes to both stdout and a log file.
-        self.logger = MultiLogger('alexa/app.log', fmode='a')
+        # We ensure it's empty at the start of each session.
+        Path(LOG_FILE).unlink()
+        self.logger = MultiLogger(LOG_FILE, fmode='a')
         # Decorator that we use on each intent endpoint.
         self._callbacks = callbacks([IntentCallback(self)])
         self._func2intent = {}
@@ -216,7 +224,7 @@ def get_user_email():
     return r.json().get('emailAddress', '')
 
 
-def send_transcript(conv, user_email=''):
+def send_transcript(conv, user_email='', cleanup=False):
     """Email user a transcript of their conversation.
 
     Parameters
@@ -228,6 +236,9 @@ def send_transcript(conv, user_email=''):
         course). Could also retrieve this once, store it globally, and pass it
         in to prevent additional API calls and save a little time, but that's
         not a big priority since this isn't required every conversational turn.
+    cleanup: bool
+        If True, delete the file after sending the transcript. Otherwise, leave
+        it in alexa/conversations.
 
     Returns
     -------
@@ -241,7 +252,10 @@ def send_transcript(conv, user_email=''):
     if not user_email:
         return False
     date = datetime.today().strftime('%m/%d/%Y')
-    tmp_path = Path('/tmp/jabberwocky-transcript.txt')
+    datetime_ = datetime.today().strftime('%Y.%m.%d__%H.%M.%S')
+    tmp_path = Path(
+        f'alexa/conversations/{conv.current_persona}__{datetime_}.txt'
+    )
     save(conv.full_conversation(), tmp_path)
     message = 'A transcript of your conversation with ' \
               f'{conv.current_persona}  is attached.'
@@ -250,7 +264,7 @@ def send_transcript(conv, user_email=''):
               to_email=user_email,
               from_email=EMAIL,
               attach_paths=tmp_path)
-    tmp_path.unlink()
+    if cleanup: tmp_path.unlink()
     return True
 
 
@@ -279,7 +293,7 @@ def debug(response):
 
 
 def _choose_person_text(msg='Who would you like to speak to?'):
-    # This is jsut a backup measure in case the user's next response gets sent
+    # This is just a backup measure in case the user's next response gets sent
     # to delegate().
     ask.func_push(choose_person)
     return msg
@@ -322,7 +336,7 @@ def choose_person(**kwargs):
 def _generate_person(choice, **kwargs):
     if choice:
         try:
-            conv.add_persona(kwargs['person'])
+            conv.add_persona(kwargs['person'].title())
             return choose_person(response=kwargs['person'])
         except Exception as e:
             ask.logger.error(f'Failed to generate {kwargs["person"]}. '
@@ -507,7 +521,7 @@ def read_settings():
 
 @ask.intent('endChat')
 def end_chat():
-    """Read the user their query settings.
+    """End conversation with the current person.
 
     Sample utterance:
     "Lou, end chat."
@@ -542,18 +556,18 @@ def _end_chat(choice):
     conv.end_conversation()
     ask.func_clear()
     return question(
-        msg + _choose_person_text(' Would you like to talk to someone else?')
+        msg + _choose_person_text(' Who would you like to speak to next?')
     )
 
 
 @ask.session_ended
 def end_session():
-    """Called when user exits the skill."""
+    """Called when user exits the skill. Note: I tried adding a goodbye message
+    but it looks like that's not supported.
+    """
     return '{}', 200
 
 
 if __name__ == '__main__':
-    HF_API_KEY = load_huggingface_api_key()
     decorate_functions(debug_decorator)
-    app.logger.info(f'>>> MAIN: {conv.personas()}') # TODO: rm
     app.run(debug=True)

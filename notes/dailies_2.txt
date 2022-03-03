@@ -451,17 +451,31 @@ X -try sending transcript w/ hardcoded email (need break from debugging permissi
 
 3/2/22 wed
 ----------
--look into ask.logger log file (is it just continually growing longer and longer? Maybe reset.)
--maybe update deco to print queue/state etc. on function end as well. Sometimes confusing not having this info.
+X -look into ask.logger log file (is it just continually growing longer and longer? Maybe reset.)
+    UPDATE: reset each time we instantiate Ask so it's just one session's worth of logs.
+X -update send_transcript() to leave file in alexa/conversations by default rather than deleting.
+X -maybe update deco to print queue/state etc. on function end as well. Sometimes confusing not having this info.
+X -move some constants to config
+X -clean up imports a bit
+X -fix casing bug when generating a person
+    UPDATE: prob should update wiki func itself to handle this, but for now just passed in a titlecased name instead to avoid updating lib.
+X -adjust slots strategy to only use "resolutions" as a backup (saw some cases where resolutions worked worse than "value")
+X -rm some old files in alexa dir from abandoned appraoches
+    UPDATE: just moved to trash in case I need to recover later.
 -look for other intent chains that need to be implemented and document below
     -implement the following intent chains:
+-maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
+
+3/3/22 thurs
+------------
+-investigate: possible to get alexa to maintain casing/punctuation?
+    -if no, consider running punctuate on transcriptions before sending to gpt3. All lowercase may change results (more casual vibe?).
+-look into flask-ask reprompt (does this exist and where can I apply it if so?)
 -maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
 
 
 Backlog
 -------
--investigate: possible to get alexa to maintain casing/punctuation?
-    -if no, consider running punctuate on transcriptions before sending to gpt3. All lowercase may change results (more casual vibe?).
 -look into email access issues (api returns 403 Forbidden status)
     -maybe need to add card/audio asking for permission in the skill itself?
 -update end of conv to erase conv-level settings
@@ -470,15 +484,9 @@ Backlog
     -update change of person to change person-level settings
     -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
 -allow fuzzy match for choosePerson (e.g. einstein -> albert einstein)?
--consider yes/no intent logic: need to prevent them from updating prevIntent? Consider tracking a longer intent history list rather than just prev.
 -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
 -add support for banana.dev version of gptj 
 -update query_gpt3 to support goose.ai models (e.g. neo 20b)
     -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
--clean up some dummy endpoints in app.py
--rm some old files in alexa dir from abandoned appraoches
 -docs for intentcallback
--think more about how chaining/delegation will work
--see if there are places I should add reprompt (chained method after question)
--update other endpoints to check if should_exit
 
