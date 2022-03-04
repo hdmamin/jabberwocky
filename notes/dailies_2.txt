@@ -468,9 +468,19 @@ X -rm some old files in alexa dir from abandoned appraoches
 
 3/3/22 thurs
 ------------
--investigate: possible to get alexa to maintain casing/punctuation?
-    -if no, consider running punctuate on transcriptions before sending to gpt3. All lowercase may change results (more casual vibe?).
--look into flask-ask reprompt (does this exist and where can I apply it if so?)
+X -investigate: possible to get alexa to maintain casing/punctuation?
+    X -if no, consider running punctuate on transcriptions before sending to gpt3. All lowercase may change results (more casual vibe?).
+        UPDATE: no native support. I copied my punctuate_transcription prompt to punctuate_alexa and lowercased the first letter of each transcription, then added this to reply(). Seems to be working as expected so far.
+X -tweak logging to be a bit easier to grok.
+    UPDATE: some intent calls are nested and it was hard to tell which ON END log statement corresponded to which intent. Updated on_end call to print prev intent as well.
+X -look into flask-ask reprompt (does this exist and where can I apply it if so?)
+    UPDATE: added reprompts to all question() uses that seemed appropriate. Still need to test this in UI. Also updated some of the settings reading options to auto redirect to choose_person if the user's not in the midst of a conversation already.
+-maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
+
+3/4/22 fri
+----------
+-add intent to change settings to auto-punctuate or not
+-add support for banana.dev version of gptj 
 -maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
 
 
@@ -485,7 +495,6 @@ Backlog
     -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
 -allow fuzzy match for choosePerson (e.g. einstein -> albert einstein)?
 -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
--add support for banana.dev version of gptj 
 -update query_gpt3 to support goose.ai models (e.g. neo 20b)
     -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -docs for intentcallback

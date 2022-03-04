@@ -1,0 +1,8 @@
+engine_i: 1
+temperature: 0.2
+stop: 
+- 'Raw transcription:'
+- 'Punctuated transcription:'
+- 'Add any missing punctuation and fix any small'
+reminder: 'You should probably adjust max_tokens based on the length of the input or just set max length high and let stop phrases do the rest. Bumping up to engine 2 or 3 might help a little, but engine 1 is serviceable (probably best to avoid 0 though). We use a separate prompt for alexa because its transcriptions seem to handle casing a bit differently than the python speech_recognition package I use in the GUI.'
+strip_output: true

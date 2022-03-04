@@ -18,7 +18,7 @@ from config import EMAIL, LOG_FILE, HF_API_KEY
 from htools import params, quickmail, save, MultiLogger, Callback, callbacks, \
     listlike, func_name, decorate_functions, debug as debug_decorator
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
-    query_gpt_neo
+    query_gpt_neo, PromptManager
 from utils import slot, Settings, model_type
 
 
@@ -47,7 +47,7 @@ class IntentCallback(Callback):
     def _print_state(self, func=None):
         if func:
             self.ask.logger.info(f'Cur intent: {self.ask.intent_name(func)}')
-            self.ask.logger.info(f'Prev intent: {state.prev_intent}')
+        self.ask.logger.info(f'Prev intent: {state.prev_intent}')
         self.ask.logger.info(f'State: {state}')
         self.ask.logger.info(f'Queue: {self.ask._queue}\n')
 
@@ -197,6 +197,7 @@ app = Flask(__name__)
 app.app_context().push()
 ask = CustomAsk(app, '/')
 conv = ConversationManager(['Albert Einstein']) # TODO: load all personas?
+gpt = PromptManager(['punctuate_alexa'], verbose=False)
 state = Settings()
 
 
@@ -281,15 +282,8 @@ def launch():
     state.email = 'hmamin55@gmail.com'
     print('LAUNCH, email=', state.email) # TODO rm
     question_txt = _choose_person_text()
-    return question(f'Welcome to Quick Chat. {question_txt}')
-
-
-@ask.intent('debug')
-def debug(response):
-    """For debugging purposes, simple endpoint that just repeats back what the
-    user said last.
-    """
-    return question(f'I\'m in debug mode. You just said: {response}.')
+    return question(f'Welcome to Quick Chat. {question_txt}')\
+        .reprompt('I didn\'t get that. Who would you like to speak to next?')
 
 
 def _choose_person_text(msg='Who would you like to speak to?'):
@@ -347,7 +341,8 @@ def _generate_person(choice, **kwargs):
         # Case: user declines to auto-generate. Maybe they misspoke or changed
         # their mind.
         msg = f'Okay. {_choose_person_text()}'
-    return question(msg)
+    return question(msg) \
+        .reprompt('I didn\'t get that. Who would you like to speak to next?')
 
 
 @ask.intent('changeModel')
@@ -456,6 +451,15 @@ def _reply(prompt=None):
     print('REPLY prompt', prompt) # TODO rm
     if not prompt:
         return question('Did you say something? I didn\'t catch that.')
+    # Set max tokens conservatively. Openai docs estimate n_tokens:n_words
+    # ratio is roughly 1.33 on average.
+    # TODO: maybe add setting to make punctuation optional? Prob slows things
+    # down significantly, but potentially could improve completions a lot.
+    ask.logger.info('BEFORE PUNCTUATION', prompt)
+    _, prompt = gpt.query(task='punctuate_alexa', text=prompt,
+                          mock_func=query_gpt_j, strip_output=True,
+                          max_tokens=2 * len(prompt.split()))
+    ask.logger.info('AFTER PUNCTUATION', prompt)
     _, text = conv.query(prompt, **state)
     return question(text)
 
@@ -498,8 +502,16 @@ def no():
 
 @ask.intent('readContacts')
 def read_contacts():
-    msg = f'Here are all of your contacts: {", ".join(conv.personas())}. ' \
-          f'Now, who would you like to speak to?'
+    """
+    Sample utterance:
+    "Lou, read me my contacts."
+    "Lou, who are my contacts?"
+    """
+    msg = f'Here are all of your contacts: {", ".join(conv.personas())}. '
+    # If they're in the middle of a conversation, don't ask anything - just let
+    # them get back to it.
+    if not conv.current_persona:
+        msg += _choose_person_text(f'Now, who would you like to speak to?')
     return question(msg)
 
 
@@ -516,7 +528,10 @@ def read_settings():
         if listlike(v):
             v = f'a list containing the following items: {v}'
         strings.append(f'{k.replace("_", " ")} is {v}')
-    return question(f'Here are your settings: {"; ".join(strings)}.')
+    msg = f'Here are your settings: {"; ".join(strings)}.'
+    if not conv.current_persona:
+        msg += _choose_person_text()
+    return question(msg)
 
 
 @ask.intent('endChat')
@@ -557,7 +572,7 @@ def _end_chat(choice):
     ask.func_clear()
     return question(
         msg + _choose_person_text(' Who would you like to speak to next?')
-    )
+    ).reprompt('I didn\'t get that. Who would you like to speak to next?')
 
 
 @ask.session_ended
