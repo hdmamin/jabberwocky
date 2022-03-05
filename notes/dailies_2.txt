@@ -483,6 +483,7 @@ X -add intent to change settings to auto-punctuate or not
     UPDATE: realized adding separate enable/disable endpoints was easier.
 X -convenience func to maybe prompt user to choose_person depending on if in active conv
 X -fix bug in _reply logger (can't pass multiple strings unlike print)
+X -fix bug w/ func queue not being cleared on launch
 -add support for banana.dev version of gptj 
 -maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
 
