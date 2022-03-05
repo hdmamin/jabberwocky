@@ -479,15 +479,24 @@ X -look into flask-ask reprompt (does this exist and where can I apply it if so?
 
 3/4/22 fri
 ----------
--add intent to change settings to auto-punctuate or not
+X -add intent to change settings to auto-punctuate or not
+    UPDATE: realized adding separate enable/disable endpoints was easier.
+X -convenience func to maybe prompt user to choose_person depending on if in active conv
+X -fix bug in _reply logger (can't pass multiple strings unlike print)
+-add support for banana.dev version of gptj 
+-maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
+
+3/5/22 sat
+----------
+-look into email access issues (api returns 403 Forbidden status)
+    -maybe need to add card/audio asking for permission in the skill itself?
 -add support for banana.dev version of gptj 
 -maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
 
 
+
 Backlog
 -------
--look into email access issues (api returns 403 Forbidden status)
-    -maybe need to add card/audio asking for permission in the skill itself?
 -update end of conv to erase conv-level settings
     ~ -consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
         UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.

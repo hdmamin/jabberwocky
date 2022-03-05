@@ -70,6 +70,11 @@ class CustomAsk(Ask):
         self._callbacks = callbacks([IntentCallback(self)])
         self._func2intent = {}
         self._intent2funcname = {}
+        # Deque of functions probably can't/shouldn't be sent back and forth
+        # in http responses, which I think `session` is, so we store this here
+        # instead of in settings object. We must clear it with func_clear()
+        # method when launching the skill because previously pushed functions
+        # can persist otherwise.
         self._queue = deque()
 
     def func_push(self, *funcs):
@@ -77,6 +82,13 @@ class CustomAsk(Ask):
         recognized automatically) to call after a user response. We push
         functions so that delegate(), yes() and no() know where to direct the
         flow to.
+
+        A function can only occur in the queue once at any given time.
+        Duplicates will not be added - we simply log a warning and continue.
+        This is to handle situations like the following:
+        1. Skill launch pushes choose_person into the queue.
+        2. User ignores this and changes a setting instead, thereby attempting
+        to push another choose_person call into the queue.
 
         Parameters
         ----------
@@ -92,7 +104,12 @@ class CustomAsk(Ask):
             falls through to delegate(), it should then be forwarded to the
             correct intent.
         """
-        self._queue.extend(funcs)
+        for func in funcs:
+            if func in self._queue:
+                self.logger.warning(f'Tried to add function {func} to the '
+                                    f'queue when it is alread present.')
+            else:
+                self._queue.extend(funcs)
 
     def func_pop(self):
         """
@@ -274,10 +291,13 @@ def launch():
     """Runs when user starts skill with command like 'Alexa, start Voice Chat'.
     """
     state.set('global', **conv._kwargs)
-    state.kwargs = {}
     # TODO: might want to change this eventually, but for now use free model
     # by default.
     state.set('global', mock_func=query_gpt_j)
+    state.kwargs = {}
+    state.auto_punct = True
+    # Make sure to clear queue after setting state.kwargs.
+    ask.func_clear()
     # state.email = get_user_email() # TODO: revert from hardcoded to real
     state.email = 'hmamin55@gmail.com'
     print('LAUNCH, email=', state.email) # TODO rm
@@ -443,23 +463,61 @@ def change_temperature():
                     f'percent.')
 
 
+@ask.intent('enableAutoPunctuation')
+def enable_punctuation():
+    state.auto_punct = True
+    return _maybe_choose_person('I\'ve enabled automatic punctuation.',
+                                'Now, who would you like to speak to?')
+
+
+@ask.intent('disableAutoPunctuation')
+def disable_punctuation():
+    state.auto_punct = False
+    return _maybe_choose_person('I\'ve disabled automatic punctuation.',
+                                'Now, who would you like to speak to?')
+
+
+def _maybe_choose_person(msg='', choose_msg=''):
+    """Check if a conversation is already in progress and if not, prompt the
+    user to choose someone to talk to. Just a little convenience function to
+    use after changing settings or the like.
+
+    Parameters
+    ----------
+    msg: str
+        Task-specific text unrelated to choosing a person.
+    choose_msg: str
+        Text that will only be appended to msg if a current conversation is not
+        in progress.
+
+    Returns
+    -------
+    str
+    """
+    assert msg or choose_msg, \
+        'You must provide at least one of msg or choose_msg.'
+
+    if not conv.current_persona:
+        msg = msg.rstrip(' ') + ' ' + _choose_person_text(choose_msg)
+    return question(msg)
+
+
 def _reply(prompt=None):
     """Generic conversation reply. I anticipate this endpoint making up the
     bulk of conversations.
     """
     prompt = prompt or slot(request, 'response', lower=False)
-    print('REPLY prompt', prompt) # TODO rm
     if not prompt:
         return question('Did you say something? I didn\'t catch that.')
     # Set max tokens conservatively. Openai docs estimate n_tokens:n_words
     # ratio is roughly 1.33 on average.
     # TODO: maybe add setting to make punctuation optional? Prob slows things
     # down significantly, but potentially could improve completions a lot.
-    ask.logger.info('BEFORE PUNCTUATION', prompt)
+    ask.logger.info('BEFORE PUNCTUATION: ' + prompt)
     _, prompt = gpt.query(task='punctuate_alexa', text=prompt,
                           mock_func=query_gpt_j, strip_output=True,
                           max_tokens=2 * len(prompt.split()))
-    ask.logger.info('AFTER PUNCTUATION', prompt)
+    ask.logger.info('AFTER PUNCTUATION: ' + prompt)
     _, text = conv.query(prompt, **state)
     return question(text)
 
@@ -510,9 +568,9 @@ def read_contacts():
     msg = f'Here are all of your contacts: {", ".join(conv.personas())}. '
     # If they're in the middle of a conversation, don't ask anything - just let
     # them get back to it.
-    if not conv.current_persona:
-        msg += _choose_person_text(f'Now, who would you like to speak to?')
-    return question(msg)
+    return _maybe_choose_person(
+        choose_msg='Now, who would you like to speak to?'
+    )
 
 
 @ask.intent('readSettings')
@@ -528,10 +586,10 @@ def read_settings():
         if listlike(v):
             v = f'a list containing the following items: {v}'
         strings.append(f'{k.replace("_", " ")} is {v}')
-    msg = f'Here are your settings: {"; ".join(strings)}.'
-    if not conv.current_persona:
-        msg += _choose_person_text()
-    return question(msg)
+    msg = f'Here are your settings: {"; ".join(strings)}. You are ' \
+          f'{"" if state.auto_punct else "not"} using automatic punctuation ' \
+          f'to improve transcription quality.'
+    return _maybe_choose_person(msg, 'Now, who would you like to speak to?')
 
 
 @ask.intent('endChat')

@@ -151,8 +151,10 @@ class Settings(Mapping):
     >>> res = query_gpt3(prompt, **state)
     """
 
-    def __init__(self, global_=None, person_=None, conversation_=None,
-                 reserved_keys=('prev_intent', 'email', 'kwargs')):
+    def __init__(
+            self, global_=None, person_=None, conversation_=None,
+            reserved_keys=('prev_intent', 'email', 'kwargs', 'auto_punct')
+    ):
         # Alter underlying dict directly to avoid recursion errors. Custom
         # __setattr__ method relies on custom __getattr__ so we run into
         # problems otherwise.
