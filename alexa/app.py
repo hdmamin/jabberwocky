@@ -11,12 +11,12 @@ import logging
 from pathlib import Path
 
 from flask import Flask, request
-from flask_ask import Ask, question, context
+from flask_ask import Ask, question, context, statement
 import requests
 
 from config import EMAIL, LOG_FILE, HF_API_KEY
 from htools import params, quickmail, save, MultiLogger, Callback, callbacks, \
-    listlike, func_name, decorate_functions, debug as debug_decorator
+    tolist, listlike, func_name, decorate_functions, debug as debug_decorator
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
     query_gpt_neo, PromptManager
 from utils import slot, Settings, model_type
@@ -218,7 +218,7 @@ gpt = PromptManager(['punctuate_alexa'], verbose=False)
 state = Settings()
 
 
-def get_user_email():
+def get_user_info(attrs=('name', 'email')):
     """Get user's email using Amazon-provided API. Obviously only works if
     they've approved access to this information.
 
@@ -227,19 +227,39 @@ def get_user_email():
     str: User email if user gave permission and everything worked, empty string
     otherwise.
     """
+    attrs = tolist(attrs)
     system = context.System
     token = system.get("apiAccessToken")
     endpoint = system.get('apiEndpoint')
-    print(f'token={token}', f'endpoint={endpoint}')  # TODO rm
+    # ask.logger.info(f'token={token}', f'endpoint={endpoint}')  # TODO rm
     if not (token and endpoint):
         return ''
+    res = dict.fromkeys(attrs, '')
+    attr2suff = {
+        'name': '/v2/accounts/~current/settings/Profile.givenName',
+        'email': '/v2/accounts/~current/settings/Profile.email'
+    }
     headers = {'Authorization': f'Bearer {token}'}
-    r = requests.get(f'{endpoint}/v2/accounts/~current/settings/Profile.email',
-                     headers=headers)
-    if r.status_code != 200:
-        print('status code', r.status_code, r.reason)
-        return ''
-    return r.json().get('emailAddress', '')
+    for attr in attrs:
+        r = requests.get(f'{endpoint}{attr2suff[attr]}', headers=headers)
+        if r.status_code != 200:
+            ask.logger.error(f'Failed to retrieve {attr}. Status code='
+                             f'{r.status_code}, reason={r.reason}')
+        res[attr] = r.json()
+    return res
+
+
+# TODO: do I need to ask this somewhere? I enabled permission for MY account
+# in alexa app and alexa site already but this is probably needed if I want to
+# let someone else use it. Right now, the card is displayed after returning
+# this (good) but if I respond Yes or No I just get an "audio response" (beep)
+# from alexa. Unsure what this means.
+@ask.intent('emailMe')
+def tmp_email_me():
+    return statement(
+        'Do you mind if I access your name and email address? This will let '
+        'me send you transcripts of your conversations.'
+    ).consent_card('alexa::profile:email:read')
 
 
 def send_transcript(conv, user_email='', cleanup=False):
@@ -266,7 +286,7 @@ def send_transcript(conv, user_email='', cleanup=False):
     """
     if not conv.user_turns:
         return False
-    user_email = user_email or get_user_email()
+    user_email = user_email or get_user_info('email')['email']
     if not user_email:
         return False
     date = datetime.today().strftime('%m/%d/%Y')
@@ -293,13 +313,17 @@ def launch():
     state.set('global', **conv._kwargs)
     # TODO: might want to change this eventually, but for now use free model
     # by default.
+    conv.end_conversation()
     state.set('global', mock_func=query_gpt_j)
     state.kwargs = {}
     state.auto_punct = True
     # Make sure to clear queue after setting state.kwargs.
     ask.func_clear()
-    # state.email = get_user_email() # TODO: revert from hardcoded to real
-    state.email = 'hmamin55@gmail.com'
+    # state.email = get_user_info() # TODO: revert from hardcoded to real
+    for k, v in get_user_info().items():
+        print('k,v =', k, v)
+        setattr(state, k, v)
+    # state.email = 'hmamin55@gmail.com'
     print('LAUNCH, email=', state.email) # TODO rm
     question_txt = _choose_person_text()
     return question(f'Welcome to Quick Chat. {question_txt}')\

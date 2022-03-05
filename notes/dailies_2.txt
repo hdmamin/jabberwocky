@@ -489,21 +489,31 @@ X -fix bug w/ func queue not being cleared on launch
 
 3/5/22 sat
 ----------
--look into email access issues (api returns 403 Forbidden status)
-    -maybe need to add card/audio asking for permission in the skill itself?
+~ -look into email access issues (api returns 403 Forbidden status)
+    ~ -maybe need to add card/audio asking for permission in the skill itself?
+    UPDATE: got personal email working via manual access and got consent card to display, but no haven't figured out how to process response yet. Included more notes in app.py (search tmp_email_me; eventually prob need to delete or change this, both in code and in UI. Just used a dummy intent triggered by "email me" for testing purposes.)
+X -update get_user_email func to get name too
 -add support for banana.dev version of gptj 
 -maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
 
+3/6/22 sun
+----------
+-consider refactoring to make it cleaner to reset all state (queue, attrs, query kwargs, etc.). Periodically finding new things that aren't reset when I update code and flask reloads.
+-look for ways to integrate user name into skill
+    -any time Lou speaks, e.g. welcome message?
+    -maybe edit transcript to replace '\n\nMe: ' with '\n\n{name}: '?
+-allow fuzzy match for choosePerson, or at least catch last names (e.g. einstein -> albert einstein; felt like a questionably useful feature initially but even just for dev purposes it would be nice to not have to type out the full name each time)
 
 
 Backlog
 -------
+-add support for banana.dev version of gptj 
+-maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
 -update end of conv to erase conv-level settings
     ~ -consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
         UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.
     -update change of person to change person-level settings
     -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
--allow fuzzy match for choosePerson (e.g. einstein -> albert einstein)?
 -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
 -update query_gpt3 to support goose.ai models (e.g. neo 20b)
     -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
