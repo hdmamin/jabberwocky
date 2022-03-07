@@ -127,9 +127,10 @@ class CustomAsk(Ask):
     def func_clear(self):
         """Call this at the end of a chain of intents."""
         self._queue.clear()
-        # We set this to an empty dict in launch so we shouldn't need to check
-        # if it's None.
-        state.kwargs.clear()
+        # Place default value outside of getattr since it is auto-initialized
+        # to None.
+        kwargs = getattr(state, 'kwargs') or {}
+        kwargs.clear()
 
     def func_dedupe(self, func):
         """If we enqueue an intent and Alexa recognizes it by itself
@@ -245,7 +246,8 @@ def get_user_info(attrs=('name', 'email')):
         if r.status_code != 200:
             ask.logger.error(f'Failed to retrieve {attr}. Status code='
                              f'{r.status_code}, reason={r.reason}')
-        res[attr] = r.json()
+        else:
+            res[attr] = r.json()
     return res
 
 
@@ -306,27 +308,48 @@ def send_transcript(conv, user_email='', cleanup=False):
     return True
 
 
+def reset_app_state(end_conv=True, clear_queue=True, use_gpt_j=True,
+                    auto_punct=True, attrs=('name', 'email')):
+    """Reset some app-level attributes in `state`, `ask`, and `conv` objects.
+    This does NOT reset gpt3 query kwargs aside from replacing all gpt3 calls
+    with gptj calls by default.
+
+    Parameters
+    ----------
+    end_conv: bool
+        If True, end the conversation in our ConversationManager. Useful
+        because we often check its current_persona attribute to determine if
+        a conversation is underway.
+    clear_queue: bool
+        If True, clear Ask's queue of functions to call later.
+    use_gpt_j: bool
+        If true, replace gpt3 calls with free gpt-j calls.
+    auto_punct: bool
+        If True, use gpt-j to auto-punctuate/capitalize alexa's transcriptions
+        before using them as prompts for a reply.
+    attrs: Iterable[str]
+        User attributes to retrieve if permission has been granted.
+    """
+    if end_conv:
+        conv.end_conversation()
+    if clear_queue:
+        ask.func_clear()
+    state.kwargs = {}
+    # TODO: might want to change this eventually, but for now use free model
+    # by default.
+    if use_gpt_j: state.set('global', mock_func=query_gpt_j)
+    state.auto_punct = auto_punct
+    for k, v in get_user_info(attrs).items():
+        setattr(state, k, v)
+
+
 @ask.launch
 def launch():
     """Runs when user starts skill with command like 'Alexa, start Voice Chat'.
     """
-    state.set('global', **conv._kwargs)
-    # TODO: might want to change this eventually, but for now use free model
-    # by default.
-    conv.end_conversation()
-    state.set('global', mock_func=query_gpt_j)
-    state.kwargs = {}
-    state.auto_punct = True
-    # Make sure to clear queue after setting state.kwargs.
-    ask.func_clear()
-    # state.email = get_user_info() # TODO: revert from hardcoded to real
-    for k, v in get_user_info().items():
-        print('k,v =', k, v)
-        setattr(state, k, v)
-    # state.email = 'hmamin55@gmail.com'
-    print('LAUNCH, email=', state.email) # TODO rm
+    reset_app_state()
     question_txt = _choose_person_text()
-    return question(f'Welcome to Quick Chat. {question_txt}')\
+    return question(f'Hi {state.name}! Welcome to Quick Chat. {question_txt}')\
         .reprompt('I didn\'t get that. Who would you like to speak to next?')
 
 

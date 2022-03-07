@@ -498,7 +498,7 @@ X -update get_user_email func to get name too
 
 3/6/22 sun
 ----------
--consider refactoring to make it cleaner to reset all state (queue, attrs, query kwargs, etc.). Periodically finding new things that aren't reset when I update code and flask reloads.
+X -consider refactoring to make it cleaner to reset all state (queue, attrs, query kwargs, etc.). Periodically finding new things that aren't reset when I update code and flask reloads.
 -look for ways to integrate user name into skill
     -any time Lou speaks, e.g. welcome message?
     -maybe edit transcript to replace '\n\nMe: ' with '\n\n{name}: '?

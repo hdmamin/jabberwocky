@@ -435,7 +435,7 @@ class ConversationManager:
 
     def __init__(self, names=(), custom_names=(), data_dir='./data',
                  backup_image='data/misc/unknown_person.png',
-                 turn_window=3, verbose=True):
+                 turn_window=3, me='me', verbose=True):
 
         """
         Parameters
@@ -462,9 +462,13 @@ class ConversationManager:
             we must do something to allow long conversations. Some have
             reported success with summarizing past portions of the conversation
             but I wanted to start with something relatively simple.
+        me: str
+            What to call the user in the conversation. This will be title-cased
+            for you automatically.
         """
         assert 1 <= turn_window <= 20, 'turn_window should be in [1, 20].'
         self.verbose = verbose
+        self.me = me
 
         # We'll be adding in the user's newest turn separately from accessing
         # their historical turns so we need to subtract 1 from both of these.
@@ -901,7 +905,7 @@ class ConversationManager:
                 f'Mismatched turn counts: user has {len(user_turns)} and gpt3'
                 f' has {len(gpt3_turns)} turns.'
             )
-        user_turns = [f'Me: {turn}' for turn in user_turns]
+        user_turns = [f'{self.me}: {turn}' for turn in user_turns]
         # Strip gpt3 turns to be safe since streaming mode only strips them
         # once the full query completes, and GUI uses full_conversation
         # property while query is still in progress.
@@ -950,6 +954,19 @@ class ConversationManager:
         return self._format_prompt(do_full=True, include_trailing_name=False,
                                    include_summary=include_summary)
 
+    @property
+    def me(self):
+        return self._me
+
+    @me.setter
+    def me(self, me):
+        self._me = me.title()
+
+    @me.deleter
+    def me(self):
+        raise RuntimeError('ConversationPersona attribute `me` cannot be '
+                           'deleted.')
+
     @contextmanager
     def converse(self, name, fname='', download_if_necessary=False):
         """Wanted to provide context manager even though we can't easily use it
@@ -972,11 +989,14 @@ class ConversationManager:
             self.end_conversation(fname=fname)
 
     @staticmethod
-    def format_conversation(text, gpt_color='black'):
+    def format_conversation(text, gpt_color='black', me='me'):
         """Add some string formatting to a conversation: display names and
         initial summary in bold and optionally change the color of
         gpt3-generated responses. This doesn't print anything - it just
         returns an updated string.
+
+        Warning: because this is a static method, the `me` attribute must be
+        manually specified if you want to set it to something other than "me".
 
         Parameters
         ----------
@@ -1005,14 +1025,14 @@ class ConversationManager:
         name = [name for name, n in
                 Counter(line.split(':')[0]
                         for line in lines if ':' in line).most_common(2)
-                if name != 'Me'][0]
+                if name != me.title()][0]
         formatted_lines = [bold(summary)]
         prev_is_me = True
         for line in lines:
             if line.startswith(name + ':'):
                 line = _format(line, gpt_color)
                 prev_is_me = False
-            elif line.startswith('Me: ') or prev_is_me:
+            elif line.startswith(f'{me.title()}: ') or prev_is_me:
                 line = _format(line)
                 prev_is_me = True
             formatted_lines.append(line)
