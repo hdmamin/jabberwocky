@@ -499,9 +499,15 @@ X -update get_user_email func to get name too
 3/6/22 sun
 ----------
 X -consider refactoring to make it cleaner to reset all state (queue, attrs, query kwargs, etc.). Periodically finding new things that aren't reset when I update code and flask reloads.
--look for ways to integrate user name into skill
-    -any time Lou speaks, e.g. welcome message?
-    -maybe edit transcript to replace '\n\nMe: ' with '\n\n{name}: '?
+X -look for ways to integrate user name into skill
+    X -any time Lou speaks, e.g. welcome message?
+    X -maybe edit transcript to replace '\n\nMe: ' with '\n\n{name}: '?
+        UPDATE: better to change ConversationPersona itself to use name in prompts. That way, generated responses can actually refer to you by name.
+-allow fuzzy match for choosePerson, or at least catch last names (e.g. einstein -> albert einstein; felt like a questionably useful feature initially but even just for dev purposes it would be nice to not have to type out the full name each time)
+
+3/7/22 mon
+----------
+-look into user email/name access issues (worked on sat but on sunday, had to provide access in alexa app again (i.e. it revoked access at some point?). Might be related to consent card, i.e. user has to provide consent for every new conv?)
 -allow fuzzy match for choosePerson, or at least catch last names (e.g. einstein -> albert einstein; felt like a questionably useful feature initially but even just for dev purposes it would be nice to not have to type out the full name each time)
 
 
