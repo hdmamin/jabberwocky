@@ -468,7 +468,6 @@ class ConversationManager:
         """
         assert 1 <= turn_window <= 20, 'turn_window should be in [1, 20].'
         self.verbose = verbose
-        self.me = me
 
         # We'll be adding in the user's newest turn separately from accessing
         # their historical turns so we need to subtract 1 from both of these.
@@ -502,9 +501,11 @@ class ConversationManager:
         self.user_turns = []
         self.gpt3_turns = []
 
-        # Load prompt, default query kwargs, and existing personas.
+        # Load prompt, default query kwargs, and existing personas. Set self.me
+        # after loading _kwargs since the setter must update them.
         self._kwargs = load_prompt('conversation', verbose=self.verbose)
         self._base_prompt = self._kwargs.pop('prompt')
+        self.me = me
 
         # Populated by _load_personas().
         self.name2img_path = {}
@@ -960,7 +961,16 @@ class ConversationManager:
 
     @me.setter
     def me(self, me):
+        # Make sure to get old value before setting new one.
+        try:
+            old = self.me
+        except AttributeError:
+            # Dummy value since _kwargs doesn't really need to be updated in
+            # this case.
+            old = me
         self._me = me.title()
+        self._kwargs['stop'] = [text if text != f'{old}:' else f'{self.me}:'
+                                for text in self._kwargs['stop']]
 
     @me.deleter
     def me(self):

@@ -341,6 +341,7 @@ def reset_app_state(end_conv=True, clear_queue=True, use_gpt_j=True,
     state.auto_punct = auto_punct
     for k, v in get_user_info(attrs).items():
         setattr(state, k, v)
+        if k == 'name': conv.me = v
 
 
 @ask.launch
