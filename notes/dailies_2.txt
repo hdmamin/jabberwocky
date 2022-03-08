@@ -508,7 +508,9 @@ X -look for ways to integrate user name into skill
 3/7/22 mon
 ----------
 -look into user email/name access issues (worked on sat but on sunday, had to provide access in alexa app again (i.e. it revoked access at some point?). Might be related to consent card, i.e. user has to provide consent for every new conv?)
--allow fuzzy match for choosePerson, or at least catch last names (e.g. einstein -> albert einstein; felt like a questionably useful feature initially but even just for dev purposes it would be nice to not have to type out the full name each time)
+    UPDATE: permissions were revoked again.
+X -allow fuzzy match for choosePerson, or at least catch last names (e.g. einstein -> albert einstein; felt like a questionably useful feature initially but even just for dev purposes it would be nice to not have to type out the full name each time)
+    UPDATE: for simplicity, just check for str equality w/ last name. Don't want any crazy assumptions being made and choosing the wrong person.
 
 
 Backlog

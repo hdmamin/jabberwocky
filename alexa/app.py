@@ -350,7 +350,8 @@ def launch():
     """
     reset_app_state()
     question_txt = _choose_person_text()
-    return question(f'Hi {state.name}! Welcome to Quick Chat. {question_txt}')\
+    return question(f'Hi {state.name or "there"}! Welcome to Quick Chat. '
+                    f'{question_txt}')\
         .reprompt('I didn\'t get that. Who would you like to speak to next?')
 
 
@@ -378,17 +379,26 @@ def choose_person(**kwargs):
     # would raise an error.
     person = kwargs.get('response') or slot(request, 'Person')
     # Handle case where conversation is already ongoing. This should have been
-    # a reply.
+    # a reply - it just happened to consist of only a name.
     if conv.current_persona:
-        # Assume this is a regular reply in the midst of a conversation that
-        # just happens to consist of only a name.
         return _reply(prompt=person)
 
     if person not in conv:
-        state.kwargs = {'person': person}
-        ask.func_push(_generate_person)
-        return question(f'I don\'t see anyone named {person} in your '
-                        f'contacts. Would you like to create a new contact?')
+        matches = [p for p in map(str.lower, conv.personas())
+                   if person == p.split()[-1]]
+        # Allows us to just say "Einstein" rather than "Albert Einstein". If
+        # we have multiple matches, don't try to guess (e.g. "Armstrong" could
+        # refer to either Neil Armstrong or Louis Armstrong). Considered fuzzy
+        # matching but I don't think that's desirable here.
+        if len(matches) == 1:
+            person = matches[0]
+        else:
+            state.kwargs = {'person': person}
+            ask.func_push(_generate_person)
+            return question(
+                f'I don\'t see anyone named {person} in your contacts. '
+                'Would you like to create a new contact?'
+            )
 
     conv.start_conversation(person)
     ask.func_clear()
