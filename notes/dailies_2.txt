@@ -507,23 +507,31 @@ X -look for ways to integrate user name into skill
 
 3/7/22 mon
 ----------
--look into user email/name access issues (worked on sat but on sunday, had to provide access in alexa app again (i.e. it revoked access at some point?). Might be related to consent card, i.e. user has to provide consent for every new conv?)
+~ -look into user email/name access issues (worked on sat but on sunday, had to provide access in alexa app again (i.e. it revoked access at some point?). Might be related to consent card, i.e. user has to provide consent for every new conv?)
     UPDATE: permissions were revoked again.
+    X -add privacy policy (necessary for skills that request name/email)
+        UPDATE: Also filled in some other details like skill description and sample utterances.
 X -allow fuzzy match for choosePerson, or at least catch last names (e.g. einstein -> albert einstein; felt like a questionably useful feature initially but even just for dev purposes it would be nice to not have to type out the full name each time)
     UPDATE: for simplicity, just check for str equality w/ last name. Don't want any crazy assumptions being made and choosing the wrong person.
+
+3/8/22 tues
+-----------
+-add small skill icon (128x128 px) to alexa Distribution tab
+    -add large skill icon (512x512 px) to alexa Distribution tab
+-maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
+-see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
 
 
 Backlog
 -------
--add support for banana.dev version of gptj 
--maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
+-update query_gpt3 to support goose.ai models (e.g. neo 20b)
+    -add support for banana.dev version of gptj 
+    -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
+-get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
 -update end of conv to erase conv-level settings
     ~ -consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
         UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.
     -update change of person to change person-level settings
     -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
--see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
--update query_gpt3 to support goose.ai models (e.g. neo 20b)
-    -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -docs for intentcallback
 
