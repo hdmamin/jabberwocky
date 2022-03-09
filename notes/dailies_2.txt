@@ -516,8 +516,9 @@ X -allow fuzzy match for choosePerson, or at least catch last names (e.g. einste
 
 3/8/22 tues
 -----------
--add small skill icon (128x128 px) to alexa Distribution tab
-    -add large skill icon (512x512 px) to alexa Distribution tab
+X -add small skill icon (128x128 px) to alexa Distribution tab
+    X -add large skill icon (512x512 px) to alexa Distribution tab
+    X -check that icon shows up in iphone app
 -maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
 -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
 
