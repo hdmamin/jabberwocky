@@ -19,192 +19,192 @@ from htools import params, quickmail, save, MultiLogger, Callback, callbacks, \
     tolist, listlike, func_name, decorate_functions, debug as debug_decorator
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
     query_gpt_neo, PromptManager
-from utils import slot, Settings, model_type
+from utils import slot, Settings, model_type, CustomAsk
 
 
-class IntentCallback(Callback):
-    # TODO: docs
-    # TODO: maybe move to utils? But relies on state var. Could pass that to
-    # init maybe?
-
-    def __init__(self, ask):
-        self.ask = ask
-
-    def setup(self, func):
-        pass
-
-    def on_begin(self, func, inputs, output=None):
-        self.ask.logger.info('\n' + '-' * 79)
-        self.ask.logger.info('ON BEGIN')
-        self.ask.func_dedupe(func)
-        self._print_state(func)
-
-    def on_end(self, func, inputs, output=None):
-        state.prev_intent = self.ask.intent_name(func)
-        self.ask.logger.info('\nON END')
-        self._print_state()
-
-    def _print_state(self, func=None):
-        if func:
-            self.ask.logger.info(f'Cur intent: {self.ask.intent_name(func)}')
-        self.ask.logger.info(f'Prev intent: {state.prev_intent}')
-        self.ask.logger.info(f'State: {state}')
-        self.ask.logger.info(f'Queue: {self.ask._queue}\n')
-
-
-class CustomAsk(Ask):
-    """Slightly customized version of flask-ask's Ask object. See `intent`
-    method for a summary of main changes.
-
-    # TODO: move to utils? Depends on if we can move IntentCallback (see its
-    docstring).
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Unlike flask app.logger, this writes to both stdout and a log file.
-        # We ensure it's empty at the start of each session.
-        Path(LOG_FILE).unlink()
-        self.logger = MultiLogger(LOG_FILE, fmode='a')
-        # Decorator that we use on each intent endpoint.
-        self._callbacks = callbacks([IntentCallback(self)])
-        self._func2intent = {}
-        self._intent2funcname = {}
-        # Deque of functions probably can't/shouldn't be sent back and forth
-        # in http responses, which I think `session` is, so we store this here
-        # instead of in settings object. We must clear it with func_clear()
-        # method when launching the skill because previously pushed functions
-        # can persist otherwise.
-        self._queue = deque()
-
-    def func_push(self, *funcs):
-        """Schedule a function (usually NOT an intent - that should be
-        recognized automatically) to call after a user response. We push
-        functions so that delegate(), yes() and no() know where to direct the
-        flow to.
-
-        A function can only occur in the queue once at any given time.
-        Duplicates will not be added - we simply log a warning and continue.
-        This is to handle situations like the following:
-        1. Skill launch pushes choose_person into the queue.
-        2. User ignores this and changes a setting instead, thereby attempting
-        to push another choose_person call into the queue.
-
-        Parameters
-        ----------
-        funcs: FunctionType(s)
-            These should usually not be intents because those should already be
-            recognized by Alexa. Pushing non-intents into the queue is useful
-            if we want to say something to prompt the user to provide a value
-            (guessing this is related to what elicit_slot in
-            flask-ask does, but I couldn't figure out that interface).
-
-            Pushing intents into the queue is only useful as a fallback - if
-            the user utterance mistakenly is not matched with any intent and
-            falls through to delegate(), it should then be forwarded to the
-            correct intent.
-        """
-        for func in funcs:
-            if func in self._queue:
-                self.logger.warning(f'Tried to add function {func} to the '
-                                    f'queue when it is alread present.')
-            else:
-                self._queue.extend(funcs)
-
-    def func_pop(self):
-        """
-
-        Returns
-        -------
-
-        """
-        try:
-            return self._queue.popleft()
-        except IndexError:
-            self.logger.warning('Tried to pop chained function from empty '
-                                'queue.')
-
-    def func_clear(self):
-        """Call this at the end of a chain of intents."""
-        self._queue.clear()
-        # Place default value outside of getattr since it is auto-initialized
-        # to None.
-        kwargs = getattr(state, 'kwargs') or {}
-        kwargs.clear()
-
-    def func_dedupe(self, func):
-        """If we enqueue an intent and Alexa recognizes it by itself
-        (without the help of delegate()),the intent function remains in the
-        queue and would be called the next time we hit delegate()
-        (not what we want). This method is auto-called before each intent is
-        executed so we don't call it twice in a row by accident.
-
-        Warning: this means you should NEVER have a function push itself into
-        the queue.
-        """
-        # Slightly hacky by this way if one or both functions is decorated,
-        # we should still be able to identify duplicates.
-        if self._queue and func_name(self._queue[0]) == func_name(func):
-            self.func_pop()
-
-    def intent_name(self, func) -> str:
-        """Given a flask endpoint function, return the name of the intent
-        associated with it.
-        """
-        return self._func2intent[func.__name__]
-
-    def attach_callbacks(self, func):
-        """Prettier way to wrap an intent function with callbacks. This adds
-        logging showing what the current and previous intent are/were and also
-        updates session state to allow for this kind of tracking.
-
-        Returns
-        -------
-        FunctionType: A decorated intent endpoint function.
-        """
-        return self._callbacks(func)
-
-    def intent(self, name, **ask_kwargs):
-        """My version of ask.intent decorator, overriding the default
-        implementation. Changes:
-        - Automatically map map slot names from title case to lowercase. AWS
-        console seems to enforce some level of capitalization that I'd prefer
-        not to use in all my python code.
-        - Populate a dict mapping endpoint function -> intent name. These are
-        usually similar but not identical (often just a matter of
-        capitalization but not always).
-
-        Parameters
-        ----------
-        name: str
-            Name of intent.
-        ask_kwargs: dict(s)
-            Additional kwargs for ask.intent (effectively - we don't explicitly
-            call it, but rather reproduce its functionality below). E.g.
-            `mapping`, `convert`, or `default`.
-        """
-        def decorator(func):
-            func = self.attach_callbacks(func)
-            self._func2intent[func.__name__] = name
-            self._intent2funcname[name] = func.__name__
-            mapping = {k: k.title() for k in params(func)}
-            self._intent_view_funcs[name] = func
-            self._intent_mappings[name] = {**mapping,
-                                           **ask_kwargs.get('mapping', {})}
-            self._intent_converts[name] = ask_kwargs.get('convert', {})
-            self._intent_defaults[name] = ask_kwargs.get('default', {})
-
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                """This looks useless - we don't return wrapper and we never
-                seemed to reach this part of the code when I added logging -
-                but it's in the built-in implementation of `intent` in
-                flask-ask so I don't know what other library logic might rely
-                on it. Just keep it.
-                """
-                self._flask_view_func(*args, **kwargs)
-            return func
-        return decorator
+# class IntentCallback(Callback):
+#     # TODO: docs
+#     # TODO: maybe move to utils? But relies on state var. Could pass that to
+#     # init maybe?
+#
+#     def __init__(self, ask):
+#         self.ask = ask
+#
+#     def setup(self, func):
+#         pass
+#
+#     def on_begin(self, func, inputs, output=None):
+#         self.ask.logger.info('\n' + '-' * 79)
+#         self.ask.logger.info('ON BEGIN')
+#         self.ask.func_dedupe(func)
+#         self._print_state(func)
+#
+#     def on_end(self, func, inputs, output=None):
+#         state.prev_intent = self.ask.intent_name(func)
+#         self.ask.logger.info('\nON END')
+#         self._print_state()
+#
+#     def _print_state(self, func=None):
+#         if func:
+#             self.ask.logger.info(f'Cur intent: {self.ask.intent_name(func)}')
+#         self.ask.logger.info(f'Prev intent: {state.prev_intent}')
+#         self.ask.logger.info(f'State: {state}')
+#         self.ask.logger.info(f'Queue: {self.ask._queue}\n')
+#
+#
+# class CustomAsk(Ask):
+#     """Slightly customized version of flask-ask's Ask object. See `intent`
+#     method for a summary of main changes.
+#
+#     # TODO: move to utils? Depends on if we can move IntentCallback (see its
+#     docstring).
+#     """
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         # Unlike flask app.logger, this writes to both stdout and a log file.
+#         # We ensure it's empty at the start of each session.
+#         Path(LOG_FILE).unlink()
+#         self.logger = MultiLogger(LOG_FILE, fmode='a')
+#         # Decorator that we use on each intent endpoint.
+#         self._callbacks = callbacks([IntentCallback(self)])
+#         self._func2intent = {}
+#         self._intent2funcname = {}
+#         # Deque of functions probably can't/shouldn't be sent back and forth
+#         # in http responses, which I think `session` is, so we store this here
+#         # instead of in settings object. We must clear it with func_clear()
+#         # method when launching the skill because previously pushed functions
+#         # can persist otherwise.
+#         self._queue = deque()
+#
+#     def func_push(self, *funcs):
+#         """Schedule a function (usually NOT an intent - that should be
+#         recognized automatically) to call after a user response. We push
+#         functions so that delegate(), yes() and no() know where to direct the
+#         flow to.
+#
+#         A function can only occur in the queue once at any given time.
+#         Duplicates will not be added - we simply log a warning and continue.
+#         This is to handle situations like the following:
+#         1. Skill launch pushes choose_person into the queue.
+#         2. User ignores this and changes a setting instead, thereby attempting
+#         to push another choose_person call into the queue.
+#
+#         Parameters
+#         ----------
+#         funcs: FunctionType(s)
+#             These should usually not be intents because those should already be
+#             recognized by Alexa. Pushing non-intents into the queue is useful
+#             if we want to say something to prompt the user to provide a value
+#             (guessing this is related to what elicit_slot in
+#             flask-ask does, but I couldn't figure out that interface).
+#
+#             Pushing intents into the queue is only useful as a fallback - if
+#             the user utterance mistakenly is not matched with any intent and
+#             falls through to delegate(), it should then be forwarded to the
+#             correct intent.
+#         """
+#         for func in funcs:
+#             if func in self._queue:
+#                 self.logger.warning(f'Tried to add function {func} to the '
+#                                     f'queue when it is alread present.')
+#             else:
+#                 self._queue.extend(funcs)
+#
+#     def func_pop(self):
+#         """
+#
+#         Returns
+#         -------
+#
+#         """
+#         try:
+#             return self._queue.popleft()
+#         except IndexError:
+#             self.logger.warning('Tried to pop chained function from empty '
+#                                 'queue.')
+#
+#     def func_clear(self):
+#         """Call this at the end of a chain of intents."""
+#         self._queue.clear()
+#         # Place default value outside of getattr since it is auto-initialized
+#         # to None.
+#         kwargs = getattr(state, 'kwargs') or {}
+#         kwargs.clear()
+#
+#     def func_dedupe(self, func):
+#         """If we enqueue an intent and Alexa recognizes it by itself
+#         (without the help of delegate()),the intent function remains in the
+#         queue and would be called the next time we hit delegate()
+#         (not what we want). This method is auto-called before each intent is
+#         executed so we don't call it twice in a row by accident.
+#
+#         Warning: this means you should NEVER have a function push itself into
+#         the queue.
+#         """
+#         # Slightly hacky by this way if one or both functions is decorated,
+#         # we should still be able to identify duplicates.
+#         if self._queue and func_name(self._queue[0]) == func_name(func):
+#             self.func_pop()
+#
+#     def intent_name(self, func) -> str:
+#         """Given a flask endpoint function, return the name of the intent
+#         associated with it.
+#         """
+#         return self._func2intent[func.__name__]
+#
+#     def attach_callbacks(self, func):
+#         """Prettier way to wrap an intent function with callbacks. This adds
+#         logging showing what the current and previous intent are/were and also
+#         updates session state to allow for this kind of tracking.
+#
+#         Returns
+#         -------
+#         FunctionType: A decorated intent endpoint function.
+#         """
+#         return self._callbacks(func)
+#
+#     def intent(self, name, **ask_kwargs):
+#         """My version of ask.intent decorator, overriding the default
+#         implementation. Changes:
+#         - Automatically map map slot names from title case to lowercase. AWS
+#         console seems to enforce some level of capitalization that I'd prefer
+#         not to use in all my python code.
+#         - Populate a dict mapping endpoint function -> intent name. These are
+#         usually similar but not identical (often just a matter of
+#         capitalization but not always).
+#
+#         Parameters
+#         ----------
+#         name: str
+#             Name of intent.
+#         ask_kwargs: dict(s)
+#             Additional kwargs for ask.intent (effectively - we don't explicitly
+#             call it, but rather reproduce its functionality below). E.g.
+#             `mapping`, `convert`, or `default`.
+#         """
+#         def decorator(func):
+#             func = self.attach_callbacks(func)
+#             self._func2intent[func.__name__] = name
+#             self._intent2funcname[name] = func.__name__
+#             mapping = {k: k.title() for k in params(func)}
+#             self._intent_view_funcs[name] = func
+#             self._intent_mappings[name] = {**mapping,
+#                                            **ask_kwargs.get('mapping', {})}
+#             self._intent_converts[name] = ask_kwargs.get('convert', {})
+#             self._intent_defaults[name] = ask_kwargs.get('default', {})
+#
+#             @wraps(func)
+#             def wrapper(*args, **kwargs):
+#                 """This looks useless - we don't return wrapper and we never
+#                 seemed to reach this part of the code when I added logging -
+#                 but it's in the built-in implementation of `intent` in
+#                 flask-ask so I don't know what other library logic might rely
+#                 on it. Just keep it.
+#                 """
+#                 self._flask_view_func(*args, **kwargs)
+#             return func
+#         return decorator
 
 
 # TODO: maybe change back to debug eventually? Trying to unclutter terminal
@@ -213,10 +213,10 @@ logging.getLogger('flask_ask').setLevel(logging.WARNING)
 app = Flask(__name__)
 # Necessary to make session accessible outside endpoint functions.
 app.app_context().push()
-ask = CustomAsk(app, '/')
+state = Settings()
+ask = CustomAsk(state, app, '/')
 conv = ConversationManager(['Albert Einstein']) # TODO: load all personas?
 gpt = PromptManager(['punctuate_alexa'], verbose=False)
-state = Settings()
 
 
 def get_user_info(attrs=('name', 'email')):
