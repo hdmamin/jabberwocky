@@ -519,12 +519,14 @@ X -allow fuzzy match for choosePerson, or at least catch last names (e.g. einste
 X -add small skill icon (128x128 px) to alexa Distribution tab
     X -add large skill icon (512x512 px) to alexa Distribution tab
     X -check that icon shows up in iphone app
--maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
+X -maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
+    UPDATE: mostl converted some print statements to log statements with the help of a slightly hacky getattr-inspired function that works with nested attributes and globals.
 -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
 
 
 Backlog
 -------
+-should conv prompt config be updated to use "\n\nMe:" instead of "Me:"? More robust if we replace w/ name. Would need to update ConversationManager as well, probably.
 -update query_gpt3 to support goose.ai models (e.g. neo 20b)
     -add support for banana.dev version of gptj 
     -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)

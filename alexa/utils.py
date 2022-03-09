@@ -1,5 +1,6 @@
 from collections import Mapping
 from flask_ask import session
+import sys
 from werkzeug.local import LocalProxy
 
 from htools.structures import FuzzyKeyDict, DotDict
@@ -251,6 +252,19 @@ class Settings(Mapping):
         return f'Settings({self.state})'
 
 
+def getglobal(attr):
+    """Basically getattr where the object is the __main__ module and we can
+    specify nested attributes (e.g. getglobal('ask.logger') works). This is
+    intended for globals defined in the file that imports this function, which
+    would not be available if we used globals().
+    """
+    parts = attr.split('.')
+    obj = sys.modules['__main__']
+    for part in parts:
+        obj = getattr(obj, part)
+    return obj
+
+
 def slot(request, name, lower=True, default=''):
     """
     # TODO: docs
@@ -264,34 +278,24 @@ def slot(request, name, lower=True, default=''):
     if isinstance(request, LocalProxy): request = request.get_json()
     failed_parse_symbol = '?'
     slots_ = request['request']['intent']['slots']
+    logger = getglobal('ask.logger')
     try:
         # I think AMAZON.Number slots don't have 'resolutions' key. Also,
         # starting to think maybe 'value' is more reliable anyway? Observed one
         # instance where 'value' was the right match but first resolution was
         # wrong.
-        print('SLOTS\n', name, slots_, '\n')
+        logger.info(f'SLOTS\nname={name}\nslots_={slots_}\n')
         res = slots_[name]['value']
     except (KeyError, IndexError):
         try:
             resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
             res = resolved[0]['values'][0]['value']['name']
         except Exception as e:
+            logger.error(f'Slot parsing failed due to {e}.')
             res = failed_parse_symbol
 
-    # TODO: rm if above works well. Switched order we try to parse slots in.
-    # try:
-    #     print('SLOTS\n', name, slots_, '\n')   # TODO: maybe rm
-    #     resolved = slots_[name]['resolutions']['resolutionsPerAuthority']
-    #     res = resolved[0]['values'][0]['value']['name']
-    # except (KeyError, IndexError):
-    #     # I think AMAZON.Number slots don't have resolutions so we also check
-    #     # this backup key.
-    #     try:
-    #         res = slots_[name]['value']
-    #     except Exception as e:
-    #         res = failed_parse_symbol
     if lower: res = res.lower()
-    print('SLOT RESOLVED:', res)
+    logger.info(f'SLOT RESOLVED: {res}')
     return default if res == failed_parse_symbol else res
 
 

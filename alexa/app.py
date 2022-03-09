@@ -341,7 +341,8 @@ def reset_app_state(end_conv=True, clear_queue=True, use_gpt_j=True,
     state.auto_punct = auto_punct
     for k, v in get_user_info(attrs).items():
         setattr(state, k, v)
-        if k == 'name': conv.me = v
+        if k == 'name' and v:
+            conv.me = v
 
 
 @ask.launch
@@ -658,9 +659,12 @@ def end_chat():
     "Lou, end chat."
     "Lou, hang up."
     """
-    ask.func_push(_end_chat)
-    return question('Would you like me to send you a transcript of your '
-                    'conversation?')
+    # Only offer this option if user has chosen to share their email.
+    if state.email:
+        ask.func_push(_end_chat)
+        return question('Would you like me to send you a transcript of your '
+                        'conversation?')
+    return _end_chat(False)
 
 
 def _end_chat(choice):
@@ -672,18 +676,31 @@ def _end_chat(choice):
         If True, email transcript to user.
     """
     if choice:
-        if state.email:
-            sent = send_transcript(conv, state.email)
-            if sent:
-                msg = 'I\'ve emailed you a transcript of your conversation. '
-            else:
-                msg = 'Something went wrong and I wasn\'t able to send you ' \
-                      'a transcript. Sorry about that.'
-        # Defaults to empty str when no email is provided.
+        if send_transcript(conv, state.email):
+            msg = 'I\'ve emailed you a transcript of your conversation. '
         else:
-            msg = 'I don\'t have your email on file.'
+            msg = 'Something went wrong and I wasn\'t able to send you ' \
+                  'a transcript. Sorry about that.'
     else:
         msg = 'Okay.'
+
+    # TODO: prob rm. Just wait to see what user consent for email looks like
+    # (IE is there any chane someone could forget to give consent and not
+    # realize it until now? Prob should design experience so that
+    # doesn't happen).
+    # if choice:
+    #     if state.email:
+    #         sent = send_transcript(conv, state.email)
+    #         if sent:
+    #             msg = 'I\'ve emailed you a transcript of your conversation. '
+    #         else:
+    #             msg = 'Something went wrong and I wasn\'t able to send you ' \
+    #                   'a transcript. Sorry about that.'
+    #     # Defaults to empty str when no email is provided.
+    #     else:
+    #         msg = 'Sorry, I can\'t because I don\'t have your email on file.'
+    # else:
+    #     msg = 'Okay.'
     conv.end_conversation()
     ask.func_clear()
     return question(
