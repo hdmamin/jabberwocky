@@ -521,14 +521,18 @@ X -add small skill icon (128x128 px) to alexa Distribution tab
     X -check that icon shows up in iphone app
 X -maybe tweak slots() interface so we can get more informative error messages (right now all errors are read back to user as empty strings)? Or just change print statement to log before returning final value.
     UPDATE: mostl converted some print statements to log statements with the help of a slightly hacky getattr-inspired function that works with nested attributes and globals.
--see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
+X -see if we can move IntentCallback and CustomAsk to utils (bit tricky w/ reliance on session?)
+X -update end_chat flow to not ask about sending transcript if no email has been provided
+
+3/9/22 wed
+----------
+-should conv prompt config be updated to use "\n\nMe:" instead of "Me:"? More robust if we replace w/ name. Would need to update ConversationManager as well, probably.
+-update query_gpt3 to support goose.ai models (e.g. neo 20b)
+    -add support for banana.dev version of gptj (see ipy in tab 1)
 
 
 Backlog
 -------
--should conv prompt config be updated to use "\n\nMe:" instead of "Me:"? More robust if we replace w/ name. Would need to update ConversationManager as well, probably.
--update query_gpt3 to support goose.ai models (e.g. neo 20b)
-    -add support for banana.dev version of gptj 
     -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
 -update end of conv to erase conv-level settings
@@ -536,5 +540,8 @@ Backlog
         UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.
     -update change of person to change person-level settings
     -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
--docs for intentcallback
+
+Easy Backlog
+------------
+-docs (intentcallback, probably a bunch of others too)
 

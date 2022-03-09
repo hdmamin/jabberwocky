@@ -118,8 +118,6 @@ word2int = FuzzyKeyDict(
 
 class IntentCallback(Callback):
     # TODO: docs
-    # TODO: maybe move to utils? But relies on state var. Could pass that to
-    # init maybe?
 
     def __init__(self, ask, state):
         self.ask = ask
@@ -150,9 +148,6 @@ class IntentCallback(Callback):
 class CustomAsk(Ask):
     """Slightly customized version of flask-ask's Ask object. See `intent`
     method for a summary of main changes.
-
-    # TODO: move to utils? Depends on if we can move IntentCallback (see its
-    docstring).
     """
 
     def __init__(self, state, *args, **kwargs):
