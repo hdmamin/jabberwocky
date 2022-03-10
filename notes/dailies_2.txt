@@ -526,7 +526,7 @@ X -update end_chat flow to not ask about sending transcript if no email has been
 
 3/9/22 wed
 ----------
--should conv prompt config be updated to use "\n\nMe:" instead of "Me:"? More robust if we replace w/ name. Would need to update ConversationManager as well, probably.
+X -should conv prompt config be updated to use "\n\nMe:" instead of "Me:"? More robust if we replace w/ name. Would need to update ConversationManager as well, probably.
 -update query_gpt3 to support goose.ai models (e.g. neo 20b)
     -add support for banana.dev version of gptj (see ipy in tab 1)
 

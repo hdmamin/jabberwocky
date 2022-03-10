@@ -969,7 +969,8 @@ class ConversationManager:
             # this case.
             old = me
         self._me = me.title()
-        self._kwargs['stop'] = [text if text != f'{old}:' else f'{self.me}:'
+        self._kwargs['stop'] = [text if text != f'\n\n{old}:'
+                                else f'\n\n{self.me}:'
                                 for text in self._kwargs['stop']]
 
     @me.deleter

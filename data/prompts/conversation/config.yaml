@@ -3,6 +3,6 @@ temperature: .5
 max_tokens: 250
 frequency_penalty: 0.1
 stop: 
-- "Me:"
+- "\n\nMe:"
 - "This is a conversation with"
 reminder: "Might want to try tweaking frequency penalty."
