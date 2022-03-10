@@ -20,7 +20,8 @@ from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
-    load_huggingface_api_key, hooked_generator
+    load_huggingface_api_key, hooked_generator, load_goose_api_key, \
+    load_api_key
 
 
 class MockFunctionException(Exception):
@@ -148,8 +149,15 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
                 elif mock_mode == 'warn':
                     warnings.warn(str(e))
     else:
+        # TODO: might end up changing this. Still have to decide best way to
+        # use gooseai.
+        # Updated to allow passing in ints or strs here because gooseai has
+        # a different set of models and there's not as straightforward a way
+        # to map them to ints.
+        if isinstance(engine_i, int):
+            engine_i = C.engines[engine_i]
         res = openai.Completion.create(
-            engine=C.engines[engine_i],
+            engine=engine_i,
             prompt=prompt,
             temperature=temperature,
             frequency_penalty=frequency_penalty,
@@ -1142,6 +1150,73 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
     msg = kwargs.pop('reminder', None)
     if msg and verbose: print(f'{name}: {msg}{spacer()}')
     return kwargs
+
+
+@contextmanager
+def gooseai_backend(cleanup=True):
+    """Context manager that switches us from openai API to gooseai API
+    (cheaper, though no open source equivalent of DaVinci yet. GPT-J 20B is
+    close-ish though).
+
+    Note that engine_i will now have to be a string, not an integer, if you're
+    using `query_gpt3`.
+
+    Parameters
+    ----------
+    cleanup: bool
+        If True, on exit we reset the openai key and base to whatever it was
+        before the context manager. If False, we leave it as gooseai.
+    """
+    # Need to retrieve openai module this way because this code executes in
+    # the scope of the code that imports this. So the library won't necessarily
+    # be available just because we import it in this module.
+    try:
+        openai = sys.modules['openai']
+    except KeyError:
+        raise RuntimeError('Library `openai` has not been imported.')
+    try:
+        old_key, openai.api_key = openai.api_key, load_goose_api_key()
+        old_base, openai.api_base = openai.api_base, 'https://api.goose.ai/v1'
+        yield
+    finally:
+        if cleanup:
+            openai.api_key = old_key
+            openai.api_base = old_base
+
+
+# TODO: in progress. Trying to make backend switching more generic. Maybe will
+# find other backends I can use in the future. Also, this makes it a little
+# cleaner if we do want change to persist: can use backend.start() instead of
+# context manager.
+# Still need to test this - might need an init func or to clear some attrs on
+# exit.
+class openai_backend:
+
+    name2base = {
+        'openai': 'https://api.openai.com',
+        'gooseai': 'https://api.goose.ai/v1'
+    }
+    base2name = {v: k for k, v in name2base.items()}
+
+    def __enter__(self, name='goose', persist=False):
+        warnings.warn(f'Switching openai backend to {name}.')
+        self.persist = persist
+        new_key = load_api_key(name)
+        self.old_key, openai.api_key = openai.api_key, new_key
+        self.old_base, openai.api_base = openai.api_base, self.name2base[name]
+        self.old_name = self.base2name[self.old_base]
+
+    def __exit__(self):
+        if not self.persist:
+            warnings.warn(f'Switching openai backend back to {self.old_base}.')
+            openai.api_key = self.old_key
+            openai.api_base = self.old_base
+
+    def start(self, name='goose', persist=False):
+        return self.__enter__(name=name, persist=persist)
+
+    def stop(self):
+        return self.__exit__()
 
 
 def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,

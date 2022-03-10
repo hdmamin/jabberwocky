@@ -1,7 +1,7 @@
 """General purpose utilities."""
 
 from colorama import Fore
-from functools import update_wrapper
+from functools import update_wrapper, partial
 from inspect import _empty, Parameter, signature
 from pathlib import Path
 from PIL import Image
@@ -34,8 +34,10 @@ def load_booste_api_key():
     -------
     str
     """
-    with open(Path('~/.booste').expanduser(), 'r') as f:
-        return f.read().strip()
+    raise DeprecationWarning('Booste.ai no longer exists. It was resurrected '
+                             '(or at least rebranded) as free.banana.dev. '
+                             'Try using `load_banana_api_key`.')
+    return load_api_key('booste')
 
 
 def load_huggingface_api_key():
@@ -43,8 +45,27 @@ def load_huggingface_api_key():
     in the headers for a post request like
     {'Authorization': f'Bearer api_{my_api_key}'}.
     """
-    with open(Path('~/.huggingface').expanduser(), 'r') as f:
+    return load_api_key('huggingface')
+
+
+def load_api_key(name):
+    """Generic api key loader. Assumes you store the key as a text file
+    containing only one key in a file called ~/.{name}.
+
+    Parameters
+    ----------
+    name: str
+        Examples: 'booste', 'hggingface', 'gooseai'.
+
+    Returns
+    -------
+    str
+    """
+    with open(Path(f'~/.{name}').expanduser(), 'r') as f:
         return f.read().strip()
+
+
+load_goose_api_key = partial(load_api_key, name='gooseai')
 
 
 def load_yaml(path, section=None):

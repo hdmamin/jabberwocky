@@ -527,9 +527,26 @@ X -update end_chat flow to not ask about sending transcript if no email has been
 3/9/22 wed
 ----------
 X -should conv prompt config be updated to use "\n\nMe:" instead of "Me:"? More robust if we replace w/ name. Would need to update ConversationManager as well, probably.
--update query_gpt3 to support goose.ai models (e.g. neo 20b)
-    -add support for banana.dev version of gptj (see ipy in tab 1)
+~ -update query_gpt3 to support goose.ai models (e.g. neo 20b)
+    UPDATE: wrote gooseai_backend contextmanager func and started openai_backend contextmanager class. The latter still needs some work and might end up replacing the former.
+X -sign up for banana.dev and store api key
+-add support for banana.dev version of gptj (see ipy in tab 1)
 
+3/10/22 thurs
+-------------
+-investigate issue where gpt3 (davinci model 😱) seems to be used by alexa when I thought I set it to use gptj mock func. (See openai costs tab.)
+-flesh out openai_backend support
+    -test openai_backend class in ipython
+        -switch from openai to gooseai
+        -switch from gooseai to openai
+        -persist mode works
+        -no persist mode works
+    -can this replace my gooseai_backend contextmanager func?
+-figure out best interface to use gooseai (just use query_gpt3 w/ diff backend? Kind of annoying that I have to pass mock_func in some cases, but in this I change the backend.)
+    -look into docs on api_backend and api_key. Maybe all my mock_funcs could use this? Would be nice to avoid passing in mock_func.
+    -make sure we can still track (via kwargs or other attr, perhaps) what backend is being used. Don't want this to be assumed.
+-[BLOCKED: confirm possible redesign of backend switching and/or mock funcs] make dist and upload to pypi w/ new query_gpt3 changes?
+-add support for banana.dev version of gptj (see ipy in tab 1)
 
 Backlog
 -------
