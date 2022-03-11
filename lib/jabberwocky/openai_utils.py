@@ -81,7 +81,8 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
         section as the output is slightly different. I believe each chunk
         returns one token when stream is True.
     mock: bool
-        If True, return a saved sample response instead of hitting the API
+        If True and no mock_func is provided, return a saved sample response
+        instead of hitting the API
         in order to save tokens. Note that your other gpt3 kwargs
         (max_tokens, logprobs, kwargs) will be ignored. return_full will be
         respected since it affects the number of items returned - it's not a
@@ -96,8 +97,9 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
         leading space and/or trailing newlines due to the way examples are
         formatted.
     mock_func: None or function
-        When mock=True, you can provide a function here that accepts the prompt
-        and returns something which will be used as the mock text. Sample use
+        You can provide a function here that accepts the prompt
+        and returns something which will be used as the mock text.
+        As of version 1.1.0, this automatically sets mock=True. Sample use
         case: when punctuating a transcript, the text realignment process may
         raise an error when loading a saved mock response. Therefore, we may
         want to write a mock_func that extracts the new input portion of the
@@ -126,6 +128,9 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
         warnings.warn('strip_output is automatically set to False when stream '
                       'is True. It would be impossible to correctly '
                       'reconstruct outputs otherwise.')
+    # Realized GPT-J was often being called without setting mock=True, leading
+    # to unexpected charges 😬. Trying to prevent this in the future.
+    mock = mock or bool(mock_func)
     if mock:
         res = load(C.mock_stream_paths[stream])
         if mock_func:

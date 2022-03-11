@@ -788,7 +788,7 @@ def update_query_kwargs_from_model_name(model, query_kwargs):
                             size=model.split()[-1].upper(),
                             mock=True)
     elif model == 'gpt-j':
-        query_kwargs.update(mock_func=query_gpt_j)
+        query_kwargs.update(mock=True, mock_func=query_gpt_j)
     elif model == 'naive':
         query_kwargs.update(mock=True, mock_func=None)
     else:
