@@ -534,23 +534,37 @@ X -sign up for banana.dev and store api key
 
 3/10/22 thurs
 -------------
--investigate issue where gpt3 (davinci model 😱) seems to be used by alexa when I thought I set it to use gptj mock func. (See openai costs tab.)
--flesh out openai_backend support
-    -test openai_backend class in ipython
-        -switch from openai to gooseai
-        -switch from gooseai to openai
-        -persist mode works
-        -no persist mode works
-    -can this replace my gooseai_backend contextmanager func?
+X -investigate issue where gpt3 (davinci model 😱) seems to be used by alexa when I thought I set it to use gptj mock func. (See openai costs tab.)
+    UPDATE: failed to set mock=True, both in alexa and gui, for gpt-j usage. Updated query_gpt3 to automatically do that when mock_func is not none. Still concerned that func's interface might need to change dramatically.
+X -flesh out openai_backend support
+    X -test openai_backend class in ipython
+        X -switch from openai to gooseai
+        X -switch from gooseai to openai
+        X -persist mode works
+        X -no persist mode works
+    X -can this replace my gooseai_backend contextmanager func?
+    UPDATE: major rewrite -> BackendHandler class. Deleted old contextmanager func.
 -figure out best interface to use gooseai (just use query_gpt3 w/ diff backend? Kind of annoying that I have to pass mock_func in some cases, but in this I change the backend.)
     -look into docs on api_backend and api_key. Maybe all my mock_funcs could use this? Would be nice to avoid passing in mock_func.
     -make sure we can still track (via kwargs or other attr, perhaps) what backend is being used. Don't want this to be assumed.
 -[BLOCKED: confirm possible redesign of backend switching and/or mock funcs] make dist and upload to pypi w/ new query_gpt3 changes?
 -add support for banana.dev version of gptj (see ipy in tab 1)
 
+3/11/22 fri
+-----------
+-easy option: write docs for...
+    -IntentCallback
+    -look in alexa/utils and alexa/app for others
+-figure out best interface to use gooseai (just use query_gpt3 w/ diff backend? Kind of annoying that I have to pass mock_func in some cases, but in this version I change the backend. Maybe can adjust BackendHandler and/or other query_gpt_{x} funcs to handle everything automatically.)
+    -look into docs on api_backend and api_key. Maybe all my mock_funcs could use this? Would be nice to avoid passing in mock_func.
+    -make sure we can still track (via kwargs or other attr, perhaps) what backend is being used. Don't want this to be assumed.
+    -[BLOCKED: confirm possible redesign of backend switching and/or mock funcs] make dist and upload to pypi w/ new query_gpt3 changes
+-add support for banana.dev version of gptj (see ipy in tab 1)
+
+
 Backlog
 -------
-    -update to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
+-update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
 -update end of conv to erase conv-level settings
     ~ -consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)

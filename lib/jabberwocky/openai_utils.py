@@ -1157,45 +1157,27 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
     return kwargs
 
 
-@contextmanager
-def gooseai_backend(cleanup=True):
-    """Context manager that switches us from openai API to gooseai API
-    (cheaper, though no open source equivalent of DaVinci yet. GPT-J 20B is
-    close-ish though).
-
-    Note that engine_i will now have to be a string, not an integer, if you're
-    using `query_gpt3`.
-
-    Parameters
-    ----------
-    cleanup: bool
-        If True, on exit we reset the openai key and base to whatever it was
-        before the context manager. If False, we leave it as gooseai.
+class BackendHandler:
     """
-    # Need to retrieve openai module this way because this code executes in
-    # the scope of the code that imports this. So the library won't necessarily
-    # be available just because we import it in this module.
-    try:
-        openai = sys.modules['openai']
-    except KeyError:
-        raise RuntimeError('Library `openai` has not been imported.')
-    try:
-        old_key, openai.api_key = openai.api_key, load_goose_api_key()
-        old_base, openai.api_base = openai.api_base, 'https://api.goose.ai/v1'
-        yield
-    finally:
-        if cleanup:
-            openai.api_key = old_key
-            openai.api_base = old_base
+    Examples
+    --------
+    backend = BackendHandler()
 
+    # Default backend is openai.
+    openai_res = query_gpt3()
 
-# TODO: in progress. Trying to make backend switching more generic. Maybe will
-# find other backends I can use in the future. Also, this makes it a little
-# cleaner if we do want change to persist: can use backend.start() instead of
-# context manager.
-# Still need to test this - might need an init func or to clear some attrs on
-# exit.
-class openai_backend:
+    with backend('gooseai'):
+        # Now we're using the gooseai backend.
+        gooseai_res = query_gpt3()
+
+    # Now we're back to using openai.
+    openai_res_2 = query_gpt3()
+
+    # Now we'll switch to gooseai and changes will persist since we're not
+    # using a context manager.
+    backend.switch('gooseai')
+    gooseai_res_2 = query_gpt3()
+    """
 
     name2base = {
         'openai': 'https://api.openai.com',
@@ -1203,25 +1185,50 @@ class openai_backend:
     }
     base2name = {v: k for k, v in name2base.items()}
 
-    def __enter__(self, name='goose', persist=False):
-        warnings.warn(f'Switching openai backend to {name}.')
-        self.persist = persist
-        new_key = load_api_key(name)
-        self.old_key, openai.api_key = openai.api_key, new_key
-        self.old_base, openai.api_base = openai.api_base, self.name2base[name]
-        self.old_name = self.base2name[self.old_base]
+    def __init__(self):
+        self.new_name = ''
+        self.old_name = ''
+        self.old_key = ''
 
-    def __exit__(self):
-        if not self.persist:
-            warnings.warn(f'Switching openai backend back to {self.old_base}.')
-            openai.api_key = self.old_key
-            openai.api_base = self.old_base
+    def __call__(self, name):
+        """__enter__ can't take arguments so we need to specify this here."""
+        self.new_name = name
+        return self
 
-    def start(self, name='goose', persist=False):
-        return self.__enter__(name=name, persist=persist)
+    def __enter__(self):
+        """Change backend to the one specified in __call__, which is
+        automatically called first when using `with` syntax.
+        """
+        print(f'Switching openai backend to "{self.new_name}"')
+        self.old_key, openai.api_key = openai.api_key,\
+                                       load_api_key(self.new_name)
+        self.old_name = self.base2name[openai.api_base]
+        openai.api_base = self.name2base[self.new_name]
 
-    def stop(self):
-        return self.__exit__()
+    def __exit__(self, exc_type, exc_val, traceback):
+        """Revert to previously used backend on contextmanager exit."""
+        print(f'Switching openai backend back to "{self.old_name}".')
+        openai.api_key = self.old_key
+        openai.api_base = self.name2base[self.old_name]
+        self.clear()
+
+    def clear(self):
+        """Reset instance variables tracking that were used to restore
+        previous backend.
+        """
+        self.old_key = self.old_name = self.new_name = ''
+
+    def switch(self, name):
+        """Switch backend and make changes persist, unlike in context manager
+        where we reset them on exit.
+
+        Parameters
+        ----------
+        name: str
+            One of (openai, gooseai).
+        """
+        self(name=name).__enter__()
+        self.clear()
 
 
 def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
@@ -1375,7 +1382,8 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
     if stop: params['stop_sequence'] = stop[0]
 
     # Must keep this after the block of stop-related logic above.
-    if kwargs: warnings.warn('GPT-J api does not support other kwargs.')
+    if kwargs:
+        warnings.warn(f'GPT-J api does not support other kwargs: {kwargs}')
 
     try:
         res = requests.post('http://api.vicgalle.net:5000/generate',
