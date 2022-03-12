@@ -4,7 +4,6 @@ of if that's even possible. App relies on local filesystem a lot at the moment
 so it might be more convenient to run locally with ngrok anyway.
 """
 
-from collections import deque
 from datetime import datetime
 from functools import partial
 import logging
@@ -18,10 +17,11 @@ from config import EMAIL, HF_API_KEY
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
-    query_gpt_neo, PromptManager
+    query_gpt_neo, PromptManager, BackendSelector
 from utils import slot, Settings, model_type, CustomAsk
 
 
+# Define these before functions since endpoints use ask method as decorators.
 # Unclutter terminal output because it's hard to debug otherwise.
 logging.getLogger('flask_ask').setLevel(logging.WARNING)
 app = Flask(__name__)
@@ -29,8 +29,6 @@ app = Flask(__name__)
 app.app_context().push()
 state = Settings()
 ask = CustomAsk(state, app, '/')
-conv = ConversationManager(['Albert Einstein']) # TODO: load all personas?
-gpt = PromptManager(['punctuate_alexa'], verbose=False)
 
 
 def get_user_info(attrs=('name', 'email')):
@@ -122,7 +120,7 @@ def send_transcript(conv, user_email='', cleanup=False):
     return True
 
 
-def reset_app_state(end_conv=True, clear_queue=True, use_gpt_j=True,
+def reset_app_state(end_conv=True, clear_queue=True, backend_='j',
                     auto_punct=True, attrs=('name', 'email')):
     """Reset some app-level attributes in `state`, `ask`, and `conv` objects.
     This does NOT reset gpt3 query kwargs aside from replacing all gpt3 calls
@@ -151,7 +149,10 @@ def reset_app_state(end_conv=True, clear_queue=True, use_gpt_j=True,
     state.kwargs = {}
     # TODO: might want to change this eventually, but for now use free model
     # by default.
-    if use_gpt_j: state.set('global', mock_func=query_gpt_j)
+    if backend_ == 'j':
+        state.set('global', mock_func=query_gpt_j)
+    if backend_ in ('gooseai', 'openai'):
+        backend.switch(backend_)
     state.auto_punct = auto_punct
     for k, v in get_user_info(attrs).items():
         setattr(state, k, v)
@@ -243,25 +244,33 @@ def change_model():
     """Change the model (gpt3 davinci, gpt3 curie, gpt-j, etc.) being used to
     generate responses.
 
-    Parameters
-    ----------
-    model: str
+    Sample Utterances
+    -----------------
+    "Lou, use model j."
+    "Lou, change global model to 2."
     """
     scope = slot(request, 'Scope', default='global')
     model = slot(request, 'Model')
-    # Conversion is not automatic here because we're not using a built-in
-    # AMAZON.Number slot (because some values aren't numbers).
+    # Conversion is not always automatic here, I think because we're not using
+    # a built-in AMAZON.Number slot (because some values aren't numbers).
+    # Or maybe it's that saying "two", typing "two", or typing "2" give
+    # different transcriptions - unsure.
     str2int = {
         'zero': 0,
         'one': 1,
         'two': 2,
-        'three': 3
+        'three': 3,
+        '0': 0,
+        '1': 1,
+        '2': 2,
+        '3': 3
     }
     model = str2int.get(model, model)
-    print('MODEL', model)
+    print('MODEL', model, 'type:', type(model))
     msg = f'I\'ve switched your {scope} backend to model {model}.'
     if isinstance(model, int):
         state.set(scope, model_i=model)
+        state.set(scope, mock_func=None)
     elif model == 'j':
         state.set(scope, mock_func=query_gpt_j)
     elif model == 'neo':
@@ -271,7 +280,7 @@ def change_model():
               f'{model or "no choice specified"}, but the only ' \
               'valid options are: 0, 1, 2, 3, J, and Neo. You are currently ' \
               f'still using model {model_type(state)}.'
-    return question(msg)
+    return _maybe_choose_person(msg)
 
 
 @ask.intent('changeMaxLength')
@@ -300,7 +309,9 @@ def change_max_length():
         return question(str(e).format(length))
 
     state.set(scope, max_tokens=length)
-    return question(f'I\'ve changed your max response length to {length}.')
+    return _maybe_choose_person(
+        f'I\'ve changed your max response length to {length}.'
+    )
 
 
 @ask.intent('changeTemperature')
@@ -332,25 +343,25 @@ def change_temperature():
         return question(str(e).format(temp))
 
     state.set(scope, temperature=temp / 100)
-    return question(f'I\'ve adjusted your {scope}-level temperature to {temp} '
-                    f'percent.')
+    return _maybe_choose_person(
+        f'I\'ve adjusted your {scope}-level temperature to {temp} percent.'
+    )
 
 
 @ask.intent('enableAutoPunctuation')
 def enable_punctuation():
     state.auto_punct = True
-    return _maybe_choose_person('I\'ve enabled automatic punctuation.',
-                                'Now, who would you like to speak to?')
+    return _maybe_choose_person('I\'ve enabled automatic punctuation.')
 
 
 @ask.intent('disableAutoPunctuation')
 def disable_punctuation():
     state.auto_punct = False
-    return _maybe_choose_person('I\'ve disabled automatic punctuation.',
-                                'Now, who would you like to speak to?')
+    return _maybe_choose_person('I\'ve disabled automatic punctuation.')
 
 
-def _maybe_choose_person(msg='', choose_msg=''):
+def _maybe_choose_person(msg='',
+                         choose_msg='Now, who would you like to speak to?'):
     """Check if a conversation is already in progress and if not, prompt the
     user to choose someone to talk to. Just a little convenience function to
     use after changing settings or the like.
@@ -441,9 +452,7 @@ def read_contacts():
     msg = f'Here are all of your contacts: {", ".join(conv.personas())}. '
     # If they're in the middle of a conversation, don't ask anything - just let
     # them get back to it.
-    return _maybe_choose_person(
-        choose_msg='Now, who would you like to speak to?'
-    )
+    return _maybe_choose_person(msg)
 
 
 @ask.intent('readSettings')
@@ -462,7 +471,7 @@ def read_settings():
     msg = f'Here are your settings: {"; ".join(strings)}. You are ' \
           f'{"" if state.auto_punct else "not"} using automatic punctuation ' \
           f'to improve transcription quality.'
-    return _maybe_choose_person(msg, 'Now, who would you like to speak to?')
+    return _maybe_choose_person(msg)
 
 
 @ask.intent('endChat')
@@ -531,5 +540,12 @@ def end_session():
 
 
 if __name__ == '__main__':
+    conv = ConversationManager(['Albert Einstein'])  # TODO: load all personas?
+    gpt = PromptManager(['punctuate_alexa'], verbose=False)
+    backend = BackendSelector()
     decorate_functions(debug_decorator)
-    app.run(debug=True)
+    # Set false because otherwise weird things happen to app state in the
+    # middle of a conversation. Tried calling reset_app_state() in this if
+    # block but it seems to need to be called after run() so session is not
+    # None, but we can't explicitly call it there because app.run call blocks.
+    app.run(debug=False)

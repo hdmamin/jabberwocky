@@ -117,7 +117,14 @@ word2int = FuzzyKeyDict(
 
 
 class IntentCallback(Callback):
-    # TODO: docs
+    """Add some extra functionality at start and end of each intent function.
+    Initially tried to implement this by decorating ask.intent but that seems
+    to use some python black magic that makes that approach very tricky.
+
+    Specifically, this logs the current intent and the previous intent both
+    before and after execution, and handles updating and deduplicating the
+    previous intent attribute as well.
+    """
 
     def __init__(self, ask, state):
         self.ask = ask
@@ -315,7 +322,7 @@ class Settings(Mapping):
     ```
 
     ```
-    if session.attributes['prev_intent' == 'quit' \
+    if session.attributes['prev_intent'] == 'quit' \
             and session.attributes['should_email']:
     ```
 

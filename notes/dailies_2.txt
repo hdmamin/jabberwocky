@@ -552,18 +552,31 @@ X -flesh out openai_backend support
 
 3/11/22 fri
 -----------
--easy option: write docs for...
-    -IntentCallback
+~ -easy option: write docs for...
+    X -IntentCallback
     -look in alexa/utils and alexa/app for others
 -figure out best interface to use gooseai (just use query_gpt3 w/ diff backend? Kind of annoying that I have to pass mock_func in some cases, but in this version I change the backend. Maybe can adjust BackendHandler and/or other query_gpt_{x} funcs to handle everything automatically.)
-    -look into docs on api_backend and api_key. Maybe all my mock_funcs could use this? Would be nice to avoid passing in mock_func.
+    ~ -look into docs on api_backend and api_key. Maybe all my mock_funcs could use this? Would be nice to avoid passing in mock_func.
+        UPDATE: didn't find any formal docs besides a mention of some azure endpoints - nothing with huggingface.
     -make sure we can still track (via kwargs or other attr, perhaps) what backend is being used. Don't want this to be assumed.
     -[BLOCKED: confirm possible redesign of backend switching and/or mock funcs] make dist and upload to pypi w/ new query_gpt3 changes
 -add support for banana.dev version of gptj (see ipy in tab 1)
+X -add uses of _maybe_choose_person to other settings funcs
+X -add str(int) versions of model_i values for changeModel (observed some errors where model change failed or wrong intent was chosen because transcription used "2" instead of 2).
+X -debug new unexpected uses of gpt3 vs. gptj
+    UPDATE: realized when I change code, flask refreshes some things but doesn't call launch() automatically. So app state does not fully refresh. Set debug=False since refresh func doesn't work before app.run() is called and that call is blocking.
+X -make changeModel set mock_func=None when changing engine_i to an int (realized if prev was gpt-j, changing to engine_i=0 wasn't removing that and so we just queried gptj and igonred the engine_i arg)
+
+3/12/22 sat
+-----------
+-figure out best interface to use gooseai (just use query_gpt3 w/ diff backend? Kind of annoying that I have to pass mock_func in some cases, but in this version I change the backend. Maybe can adjust BackendHandler and/or other query_gpt_{x} funcs to handle everything automatically. Maybe need more separation between the concept of a backend (e.g. openai, gooseai, banana, huggingface) and model (e.g. openai-davinci, gptj-6b, gooseai-6b, huggingface-6b))
+-easier option: look for docs in app.py, utils.py
+
 
 
 Backlog
 -------
+-add support for banana.dev version of gptj (see ipy in tab 1)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
 -update end of conv to erase conv-level settings

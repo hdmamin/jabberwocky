@@ -20,8 +20,7 @@ from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
-    load_huggingface_api_key, hooked_generator, load_goose_api_key, \
-    load_api_key
+    load_huggingface_api_key, hooked_generator, load_api_key
 
 
 class MockFunctionException(Exception):
@@ -1157,11 +1156,11 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
     return kwargs
 
 
-class BackendHandler:
+class BackendSelector:
     """
     Examples
     --------
-    backend = BackendHandler()
+    backend = BackendSelector()
 
     # Default backend is openai.
     openai_res = query_gpt3()
