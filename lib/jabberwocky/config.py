@@ -13,6 +13,10 @@ class C:
 
     # OpenAI constants
     engines = ['ada', 'babbage', 'curie', 'davinci']
+    engines_goose = ['gpt-neo-2-7b', 'gpt-j-6b', 'fairseq-13b', 'gpt-neo-20b']
+    backend_engines = {'openai': engines,
+                       'gooseai': engines_goose}
+
     prices = IndexedDict(zip(engines, [.0008, .0012, .006, .06]))
 
     # Data

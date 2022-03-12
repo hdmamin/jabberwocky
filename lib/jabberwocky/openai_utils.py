@@ -23,6 +23,111 @@ from jabberwocky.utils import strip, bold, load_yaml, colored, \
     load_huggingface_api_key, hooked_generator, load_api_key
 
 
+class BackendSelector:
+    """
+    Examples
+    --------
+    backend = BackendSelector()
+
+    # Default backend is openai.
+    openai_res = query_gpt3()
+
+    with backend('gooseai'):
+        # Now we're using the gooseai backend.
+        gooseai_res = query_gpt3()
+
+    # Now we're back to using openai.
+    openai_res_2 = query_gpt3()
+
+    # Now we'll switch to gooseai and changes will persist since we're not
+    # using a context manager.
+    backend.switch('gooseai')
+    gooseai_res_2 = query_gpt3()
+    """
+
+    name2base = {
+        'openai': 'https://api.openai.com',
+        'gooseai': 'https://api.goose.ai/v1'
+    }
+    base2name = {v: k for k, v in name2base.items()}
+
+    def __init__(self):
+        self.new_name = ''
+        self.old_name = ''
+        self.old_key = ''
+
+    def __call__(self, name):
+        """__enter__ can't take arguments so we need to specify this here."""
+        self.new_name = name
+        return self
+
+    def __enter__(self):
+        """Change backend to the one specified in __call__, which is
+        automatically called first when using `with` syntax.
+        """
+        print(f'Switching openai backend to "{self.new_name}"')
+        self.old_key, openai.api_key = openai.api_key, \
+                                       load_api_key(self.new_name)
+        self.old_name = self.base2name[openai.api_base]
+        openai.api_base = self.name2base[self.new_name]
+
+    def __exit__(self, exc_type, exc_val, traceback):
+        """Revert to previously used backend on contextmanager exit."""
+        print(f'Switching openai backend back to "{self.old_name}".')
+        openai.api_key = self.old_key
+        openai.api_base = self.name2base[self.old_name]
+        self.clear()
+
+    def clear(self):
+        """Reset instance variables tracking that were used to restore
+        previous backend.
+        """
+        self.old_key = self.old_name = self.new_name = ''
+
+    def switch(self, name):
+        """Switch backend and make changes persist, unlike in context manager
+        where we reset them on exit.
+
+        Parameters
+        ----------
+        name: str
+            One of (openai, gooseai).
+        """
+        self(name=name).__enter__()
+        self.clear()
+
+    @classmethod
+    def current(cls):
+        """Get current backend name, e.g. "gooseai".
+
+        Returns
+        -------
+        str
+        """
+        return cls.base2name[openai.api_base]
+
+    @classmethod
+    def engine(cls, engine_i):
+        """Get appropriate engine name depending on current api backend and
+        selected engine_i.
+
+        Parameters
+        ----------
+        engine_i: int
+            Number from 0-3 (inclusive) specifying which model to use. The two
+            backends *should* perform similar for values of 0-2, but openai's
+            3 (davinci, 175 billion parameters) is a much bigger model than
+            gooseai's 3 (NEO-X, 20 billion parameters). Mostly used in
+            query_gpt3().
+
+        Returns
+        -------
+        str: Name of an engine, e.g. "davinci" if we're in openai mode or
+        "gpt-neo-20b" if we're in gooseai mode.
+        """
+        return C.backend_engines[cls.current()][engine_i]
+
+
 class MockFunctionException(Exception):
     """Allow all mock query functions to return a common exception."""
 
@@ -158,10 +263,10 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
         # Updated to allow passing in ints or strs here because gooseai has
         # a different set of models and there's not as straightforward a way
         # to map them to ints.
-        if isinstance(engine_i, int):
-            engine_i = C.engines[engine_i]
+        # if isinstance(engine_i, int):
+        #     engine_i = C.engines[engine_i]
         res = openai.Completion.create(
-            engine=engine_i,
+            engine=BackendSelector.engine(engine_i),
             prompt=prompt,
             temperature=temperature,
             frequency_penalty=frequency_penalty,
@@ -1156,80 +1261,6 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
     return kwargs
 
 
-class BackendSelector:
-    """
-    Examples
-    --------
-    backend = BackendSelector()
-
-    # Default backend is openai.
-    openai_res = query_gpt3()
-
-    with backend('gooseai'):
-        # Now we're using the gooseai backend.
-        gooseai_res = query_gpt3()
-
-    # Now we're back to using openai.
-    openai_res_2 = query_gpt3()
-
-    # Now we'll switch to gooseai and changes will persist since we're not
-    # using a context manager.
-    backend.switch('gooseai')
-    gooseai_res_2 = query_gpt3()
-    """
-
-    name2base = {
-        'openai': 'https://api.openai.com',
-        'gooseai': 'https://api.goose.ai/v1'
-    }
-    base2name = {v: k for k, v in name2base.items()}
-
-    def __init__(self):
-        self.new_name = ''
-        self.old_name = ''
-        self.old_key = ''
-
-    def __call__(self, name):
-        """__enter__ can't take arguments so we need to specify this here."""
-        self.new_name = name
-        return self
-
-    def __enter__(self):
-        """Change backend to the one specified in __call__, which is
-        automatically called first when using `with` syntax.
-        """
-        print(f'Switching openai backend to "{self.new_name}"')
-        self.old_key, openai.api_key = openai.api_key,\
-                                       load_api_key(self.new_name)
-        self.old_name = self.base2name[openai.api_base]
-        openai.api_base = self.name2base[self.new_name]
-
-    def __exit__(self, exc_type, exc_val, traceback):
-        """Revert to previously used backend on contextmanager exit."""
-        print(f'Switching openai backend back to "{self.old_name}".')
-        openai.api_key = self.old_key
-        openai.api_base = self.name2base[self.old_name]
-        self.clear()
-
-    def clear(self):
-        """Reset instance variables tracking that were used to restore
-        previous backend.
-        """
-        self.old_key = self.old_name = self.new_name = ''
-
-    def switch(self, name):
-        """Switch backend and make changes persist, unlike in context manager
-        where we reset them on exit.
-
-        Parameters
-        ----------
-        name: str
-            One of (openai, gooseai).
-        """
-        self(name=name).__enter__()
-        self.clear()
-
-
 def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
                         *args, **kwargs):
     """Mimic punctuate task by splitting a piece of unpunctuated text into
@@ -1327,6 +1358,7 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
                            'repetition_penalty': repetition_penalty,
                            'return_full_text': False}}
     url = 'https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-{}'
+    # TODO: support gpt-j-6b?
     try:
         # Put the request itself inside try too in case of timeout.
         r = requests.post(url.format(size), headers=headers,

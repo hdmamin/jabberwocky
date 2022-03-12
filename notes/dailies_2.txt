@@ -569,9 +569,27 @@ X -make changeModel set mock_func=None when changing engine_i to an int (realize
 
 3/12/22 sat
 -----------
--figure out best interface to use gooseai (just use query_gpt3 w/ diff backend? Kind of annoying that I have to pass mock_func in some cases, but in this version I change the backend. Maybe can adjust BackendHandler and/or other query_gpt_{x} funcs to handle everything automatically. Maybe need more separation between the concept of a backend (e.g. openai, gooseai, banana, huggingface) and model (e.g. openai-davinci, gptj-6b, gooseai-6b, huggingface-6b))
+~ -figure out best interface to use gooseai (just use query_gpt3 w/ diff backend? Kind of annoying that I have to pass mock_func in some cases, but in this version I change the backend. Maybe can adjust BackendHandler and/or other query_gpt_{x} funcs to handle everything automatically. Maybe need more separation between the concept of a backend (e.g. openai, gooseai, banana, huggingface) and model (e.g. openai-davinci, gptj-6b, gooseai-6b, huggingface-6b))
+    UPDATE: yes, keep backend and model separate. Maybe can adjust neo function to accept engine_i too (with gpt-j-6b, they technically have 4 solid options now too).
+    X -create new changeBackend intent in console
+    X -create changeBackend endpoint
+    ~ -test
+        UPDATE: initial attempt failed to recognize endpoint but can't remember if I built model since most recent changes. Launched build and can test tomorrow.
+    X -new backendselector functionality:
+        X -get current api name
+        X -get model name from user-specified engine_i and current api name
 -easier option: look for docs in app.py, utils.py
 
+3/13/22 sun
+-----------
+-test changeBackend endpoint in console
+-update query_gpt_neo function in jabberwocky.openai_utils
+    -support 6b param model
+    -see if we can adjust interface to use engine_i rather than size
+-gui updates?
+    -decide if that's within the scope of this project. Could always pin jabberwocky version for gui.
+    -if yes to prev point, adjust gui accordingly (cur offer different radio buttons for each neo size; could instead have 1 radio and have it actually use the engine_i slider)
+    -add gooseai backend option to gui?
 
 
 Backlog

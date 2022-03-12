@@ -11,6 +11,8 @@ from pathlib import Path
 
 from flask import Flask, request
 from flask_ask import question, context, statement
+from fuzzywuzzy import fuzz, process
+import openai
 import requests
 
 from config import EMAIL, HF_API_KEY
@@ -120,8 +122,9 @@ def send_transcript(conv, user_email='', cleanup=False):
     return True
 
 
-def reset_app_state(end_conv=True, clear_queue=True, backend_='j',
-                    auto_punct=True, attrs=('name', 'email')):
+def reset_app_state(end_conv=True, clear_queue=True, use_gpt_j=True,
+                    backend_='gooseai', auto_punct=True,
+                    attrs=('name', 'email')):
     """Reset some app-level attributes in `state`, `ask`, and `conv` objects.
     This does NOT reset gpt3 query kwargs aside from replacing all gpt3 calls
     with gptj calls by default.
@@ -149,7 +152,7 @@ def reset_app_state(end_conv=True, clear_queue=True, backend_='j',
     state.kwargs = {}
     # TODO: might want to change this eventually, but for now use free model
     # by default.
-    if backend_ == 'j':
+    if use_gpt_j:
         state.set('global', mock_func=query_gpt_j)
     if backend_ in ('gooseai', 'openai'):
         backend.switch(backend_)
@@ -176,6 +179,38 @@ def _choose_person_text(msg='Who would you like to speak to?'):
     # to delegate().
     ask.func_push(choose_person)
     return msg
+
+
+@ask.intent('changeBackend')
+def change_backend():
+    """Change the model backend (openai, gooseai, maybe others in the future)
+    being used to generate responses.
+
+    Sample Utterances
+    -----------------
+    "Lou, use gooseai backend."
+    "Lou, change backend to openai."
+    """
+    backend_name = slot(request, 'backend', default='gooseai').replace(' ', '')
+    msg = f'I\'ve switched your backend to {backend_name}.'
+    try:
+        if backend_name not in backend.name2base:
+            best_match, best_score = process.extractOne(
+                backend_name,
+                [name.replace('ai', ' ai') for name in backend.name2base],
+                scorer=fuzz.partial_token_set_ratio
+            )
+            if best_score >= 80:
+                backend_name = best_match
+            else:
+                raise RuntimeError('Invalid backend name.')
+        backend.switch(backend_name)
+    except RuntimeError:
+        msg = f'It sounded like you asked for backend ' \
+              f'{backend_name or "no choice specified"}, but the only ' \
+              'valid options are: "Open AI" and "Goose AI". You are ' \
+              f'currently still using backend {backend.current()}.'
+    return _maybe_choose_person(msg)
 
 
 @ask.intent('choosePerson')
@@ -468,9 +503,10 @@ def read_settings():
         if listlike(v):
             v = f'a list containing the following items: {v}'
         strings.append(f'{k.replace("_", " ")} is {v}')
-    msg = f'Here are your settings: {"; ".join(strings)}. You are ' \
-          f'{"" if state.auto_punct else "not"} using automatic punctuation ' \
-          f'to improve transcription quality.'
+    msg = f'Here are your settings: {"; ".join(strings)}.' \
+          f'Your api backend is {backend.current()}.' \
+          f' You are {"" if state.auto_punct else "not"} using automatic '\
+          'punctuation to improve transcription quality.'
     return _maybe_choose_person(msg)
 
 
