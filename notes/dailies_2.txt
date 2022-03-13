@@ -582,7 +582,10 @@ X -make changeModel set mock_func=None when changing engine_i to an int (realize
 
 3/13/22 sun
 -----------
--test changeBackend endpoint in console
+~ -test changeBackend endpoint in console
+    UPDATE: mixed results. Switching to openai works more reliably than gooseai, and typing works more reliably than speaking. Speaking gooseai never worked - always just defaulted to SearchIntent. Decided to write my own routing logic as a fallback in case alexa doesn't recognize certain intents.
+X -write function to convert json editor -> fuzzy dict mapping utterance to intent. (handle all combos of sample slot values for all sample utterances for each intent)
+    UPDATE: saved in data/alexa dir.
 -update query_gpt_neo function in jabberwocky.openai_utils
     -support 6b param model
     -see if we can adjust interface to use engine_i rather than size
@@ -591,9 +594,27 @@ X -make changeModel set mock_func=None when changing engine_i to an int (realize
     -if yes to prev point, adjust gui accordingly (cur offer different radio buttons for each neo size; could instead have 1 radio and have it actually use the engine_i slider)
     -add gooseai backend option to gui?
 
+3/14/22 mon
+-----------
+-continue testing changeBackend in console
+    -for diff utterances, see what matching intents are printed out by fuzzykeydict
+    -see what common similarity scores are
+    -determine a good way to map from similar intents to an actual choice (i.e. do all need to match? Do we just care that the top one is over some similarity threshold, and if so what? Do we take some weighted score, e.g. if top match is 80% changeBackend but #2 and #3 are both 79% changeModel?)
+        -what other logic (if any) do we need to implement to make this work? In some cases we may want to trust the queued function, in some maybe not? Might also be able to hardcode some logic, i.e. "startswith(Lou)".
+    -briefly examine fuzzykeydict examples and try to think of what common bugs could appear (e.g. very short sample utterances might be problematic? check what shortest ones are)
+    -try some other intents and assess routing logic quality.
+    -maybe assess whether n=3 is a good choice for similar keys
+
 
 Backlog
 -------
+-update query_gpt_neo function in jabberwocky.openai_utils
+    -support 6b param model
+    -see if we can adjust interface to use engine_i rather than size
+-gui updates?
+    -decide if that's within the scope of this project. Could always pin jabberwocky version for gui.
+    -if yes to prev point, adjust gui accordingly (cur offer different radio buttons for each neo size; could instead have 1 radio and have it actually use the engine_i slider)
+    -add gooseai backend option to gui?
 -add support for banana.dev version of gptj (see ipy in tab 1)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)

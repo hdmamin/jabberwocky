@@ -1,6 +1,7 @@
 from collections import Mapping, deque
 from flask_ask import session, Ask
 from functools import wraps
+from itertools import product
 from pathlib import Path
 import sys
 from werkzeug.local import LocalProxy
@@ -508,3 +509,56 @@ def model_type(state):
     if mock_func:
         return mock_func.__name__.split('_')[-1]
     return state['model_i']
+
+
+def build_utterance_map(model_json, fuzzy=True,
+                        exclude_types=('AMAZON.Person', 'AMAZON.SearchQuery')):
+    """Given a dictionary copied from Alexa's JSON Editor, return a
+    dict or FuzzyKeyDict mapping each possible sample utterance to its
+    corresponding intent. This allows our delegate() function to do some
+    utterance validation before blindly forwarding an utterance to _reply() or
+    the next queued function.
+
+    Warning: because each intent may have several utterances and
+    each utterance may contain multiple slots and each slot may have multiple
+    sample values, the dimensionality can blow up quickly here.
+
+    Parameters
+    ----------
+    model_json
+    exclude_types: Iterable[str]
+        One or more slot types where we want to exclude intents that contain
+        any of them from the output map. For example, AMAZON.SearchQuery is
+        meant to capture whole utterances matching no particular format as a
+        fallback intent, so it wouldn't make sense to try to fuzzy match
+        these utterances to an intent. I could see AMAZON.Person being included
+        in some contexts but in this skill, we only use it for the choosePerson
+        utterance which consists solely of a name. There really shouldn't be a
+        reason to fuzzy match that.
+
+    Returns
+    -------
+
+    """
+    exclude_types = set(exclude_types)
+    model = model_json['interactionModel']['languageModel']
+    type2vals = {type_['name']: [row['name']['value']
+                                 for row in type_['values']]
+                 for type_ in model['types']}
+    type2vals['AMAZON.NUMBER'] = list(map(str, range(10)))
+    utt2intent = {}
+    for intent in model['intents']:
+        slot2vals = {}
+        try:
+            for slot_ in intent.get('slots', []):
+                assert slot_['type'] not in exclude_types
+                slot2vals[slot_['name']] = type2vals[slot_['type']]
+        except AssertionError:
+            continue
+
+        # Replace all slot names with common slot values.
+        for row in intent['samples']:
+            utt2intent.update(
+                {row.format(**dict(zip(slot2vals, args))): intent['name']
+                 for args in product(*slot2vals.values())})
+    return FuzzyKeyDict(utt2intent) if fuzzy else utt2intent

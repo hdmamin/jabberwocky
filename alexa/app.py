@@ -17,7 +17,7 @@ import requests
 
 from config import EMAIL, HF_API_KEY
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
-    debug as debug_decorator
+    debug as debug_decorator, load, FuzzyKeyDict, vcounts
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
     query_gpt_neo, PromptManager, BackendSelector
 from utils import slot, Settings, model_type, CustomAsk
@@ -447,6 +447,12 @@ def delegate():
     """
     func = ask.func_pop()
     response = slot(request, 'response', lower=False)
+    # TODO start
+    tmp = utt2intent.similar(response, mode='keys_values_similarities')
+    print('>>> UTT2INTENT matches')
+    print(tmp)
+    print(vcounts([row[1] for row in tmp]))
+    # TODO end
     if not func:
         # No chained intents are in the queue so we assume this is just another
         # turn in the conversation.
@@ -579,6 +585,8 @@ if __name__ == '__main__':
     conv = ConversationManager(['Albert Einstein'])  # TODO: load all personas?
     gpt = PromptManager(['punctuate_alexa'], verbose=False)
     backend = BackendSelector()
+    utt2intent = load('data/alexa/utterance2intent.pkl')
+
     decorate_functions(debug_decorator)
     # Set false because otherwise weird things happen to app state in the
     # middle of a conversation. Tried calling reset_app_state() in this if

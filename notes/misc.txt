@@ -217,3 +217,14 @@ Maybe track user-specified settings AND current persona settings. When a user st
 Or when setting settings, ask if they'd like them to persist.
 
 Or could have a Global Settings centralized location and a Conv Settings centralized location and a Persona settings centralized location.
+
+3/13/22 sun
+-----------
+Problem:
+Unrecognized utterance gets sent to delegate() instead of the intended intent
+Delegate then delegates to whatever's in the queue or just replies
+
+Solution:
+Create some kind of key-value store of all my sample utterances -> corresponding endpoint.
+Have delegate check for close matches and if it finds one, redirect to that endpoint instead of _reply. Undecided yet if this should override queued functions.
+    -Can also have some stricter logic about things like "starts with Lou" which is a good indicator that this is a setting change and not a response. (Careful: check to make sure current persona, if exists, does not have first name lou)
