@@ -2,6 +2,7 @@ from collections import Mapping, deque
 from flask_ask import session, Ask
 from functools import wraps
 from itertools import product
+import pandas as pd
 from pathlib import Path
 import sys
 from werkzeug.local import LocalProxy
@@ -139,9 +140,12 @@ class IntentCallback(Callback):
         self.ask.logger.info('ON BEGIN')
         self.ask.func_dedupe(func)
         self._print_state(func)
+        # Update this after logging but before on_end. Sometimes an intent
+        # function calls other intent functions within it and it was getting
+        # confusing when prev_intent wasn't updated til afterwards.
+        self.state.prev_intent = self.ask.intent_name(func)
 
     def on_end(self, func, inputs, output=None):
-        self.state.prev_intent = self.ask.intent_name(func)
         self.ask.logger.info('\nON END')
         self._print_state()
 
@@ -175,6 +179,10 @@ class CustomAsk(Ask):
         # method when launching the skill because previously pushed functions
         # can persist otherwise.
         self._queue = deque()
+
+    def intent2func(self, intent_name):
+        return getattr(sys.modules['__main__'],
+                       self._intent2funcname[intent_name])
 
     def func_push(self, *funcs):
         """Schedule a function (usually NOT an intent - that should be
@@ -562,3 +570,56 @@ def build_utterance_map(model_json, fuzzy=True,
                 {row.format(**dict(zip(slot2vals, args))): intent['name']
                  for args in product(*slot2vals.values())})
     return FuzzyKeyDict(utt2intent) if fuzzy else utt2intent
+
+
+def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
+                 weighted_thresh=.8):
+    """Try to infer the user's intent from an utterance. Alexa should detect
+    this automatically but it sometimes messes up. This also helps if the user
+    gets the utterance slightly wrong, e.g. "Lou, set model to j" rather
+    than "Lou, switch model to j".
+
+    Parameters
+    ----------
+    utt
+    fuzzy_dict
+    n_keys
+    top_1_thresh
+    weighted_thresh
+
+    Returns
+    -------
+    dict: Contains keys "intent", "confidence", "reason", and "res".
+    Intent is the name of the closest matching intent if one was sufficiently
+    close (empty string otherwise), confidence is a float between 0 and 1
+    indicating our confidence in this being correct (sort of, not anything
+    rigorous though; -1 if no matching intent is found), and reason is a string
+    indicating our method for determining this ('top_1' means we found 1 sample
+    utterance that was very close to the input, 'weighted' means that most of
+    the nearest matching utterances tended to belong to the same intent, empty
+    string means no matching intent was found). Res is always just the raw
+    results of our fuzzy_dict similar() method call, a list of tuples
+    containing all n_keys matching utterances, their corresponding intents,
+    and similarity scores.
+    """
+    res = fuzzy_dict.similar(utt, n_keys=n_keys,
+                             mode='keys_values_similarities')
+    top_1_pct = res[0][-1] / 100
+    if top_1_pct >= top_1_thresh:
+        return {'intent': res[0][1],
+                'confidence': top_1_pct,
+                'reason': 'top_1',
+                'res': res}
+    df = pd.DataFrame(res, columns=['txt', 'intent', 'score'])
+    weighted = df.groupby('intent').score.sum()\
+        .to_frame()\
+        .assign(pct=lambda x: x / x.sum())
+    if weighted.pct.iloc[0] > weighted_thresh:
+        return {'intent': weighted.iloc[0].name,
+                'confidence': weighted.iloc[0].pct,
+                'reason': 'weighted',
+                'res': res}
+    return {'intent': '',
+            'confidence': -1,
+            'reason': '',
+            'res': res}

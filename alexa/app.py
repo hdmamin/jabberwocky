@@ -20,7 +20,7 @@ from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load, FuzzyKeyDict, vcounts
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
     query_gpt_neo, PromptManager, BackendSelector
-from utils import slot, Settings, model_type, CustomAsk
+from utils import slot, Settings, model_type, CustomAsk, infer_intent
 
 
 # Define these before functions since endpoints use ask method as decorators.
@@ -194,6 +194,8 @@ def change_backend():
     backend_name = slot(request, 'backend', default='gooseai').replace(' ', '')
     msg = f'I\'ve switched your backend to {backend_name}.'
     try:
+        # Try to guess backend because alexa has trouble transcribing
+        # 'gooseAI'.
         if backend_name not in backend.name2base:
             best_match, best_score = process.extractOne(
                 backend_name,
@@ -447,13 +449,18 @@ def delegate():
     """
     func = ask.func_pop()
     response = slot(request, 'response', lower=False)
-    # TODO start
-    tmp = utt2intent.similar(response, mode='keys_values_similarities')
-    print('>>> UTT2INTENT matches')
-    print(tmp)
-    print(vcounts([row[1] for row in tmp]))
-    # TODO end
+    matches = infer_intent(response, utt2intent)
+    ask.logger.info('\nInferred intent match scores:')
+    ask.logger.info(matches)
+    # TODO: should a matching intent override even when there IS a func in the
+    # queue waiting to be called? Have to consider tradeoffs.
     if not func:
+        if matches['intent']:
+            ask.logger.info(f'CALLING INFERRED INTENT: {matches["intent"]}')
+            # TODO: try to extract slot values from raw text? Or just have
+            # delegated function return error msg? For now calling without
+            # args.
+            return ask.intent2func(matches['intent'])()
         # No chained intents are in the queue so we assume this is just another
         # turn in the conversation.
         return _reply(response)
@@ -509,9 +516,9 @@ def read_settings():
         if listlike(v):
             v = f'a list containing the following items: {v}'
         strings.append(f'{k.replace("_", " ")} is {v}')
-    msg = f'Here are your settings: {"; ".join(strings)}.' \
-          f'Your api backend is {backend.current()}.' \
-          f' You are {"" if state.auto_punct else "not"} using automatic '\
+    msg = f'Here are your settings: {"; ".join(strings)}. ' \
+          f'Your api backend is {backend.current()}. ' \
+          f'You are {"" if state.auto_punct else "not"} using automatic '\
           'punctuation to improve transcription quality.'
     return _maybe_choose_person(msg)
 
