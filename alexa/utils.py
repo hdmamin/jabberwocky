@@ -623,3 +623,23 @@ def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
             'confidence': -1,
             'reason': '',
             'res': res}
+
+
+# TODO: maybe refactor these into 1 class or diff named func later? Want to
+# ensure we only tokenize once.
+# This extracts slots for choose_person.
+def names(text, nlp, skip={'Lou', 'lou'}):
+    return [ent.text for ent in nlp(text).ents
+            if ent.label_ == 'PERSON' and ent.text not in skip]
+
+
+def nums(text, nlp):
+    return [t.text for t in nlp(text) if t.like_num]
+
+
+def backends(sent, backends=('gooseai', 'openai')):
+    assert all(b[-2:] == 'ai' for b in backends)
+    for back in backends:
+        if back[:-2] in sent.lower():
+            return back
+    return ''

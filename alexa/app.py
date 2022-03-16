@@ -12,8 +12,10 @@ from pathlib import Path
 from flask import Flask, request
 from flask_ask import question, context, statement
 from fuzzywuzzy import fuzz, process
+# openai appears unused but is actually used by BackendSelector instance.
 import openai
 import requests
+import spacy
 
 from config import EMAIL, HF_API_KEY
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
@@ -593,6 +595,7 @@ if __name__ == '__main__':
     gpt = PromptManager(['punctuate_alexa'], verbose=False)
     backend = BackendSelector()
     utt2intent = load('data/alexa/utterance2intent.pkl')
+    nlp = spacy.load('en_core_web_sm', disable=['parser', 'tagger'])
 
     decorate_functions(debug_decorator)
     # Set false because otherwise weird things happen to app state in the
