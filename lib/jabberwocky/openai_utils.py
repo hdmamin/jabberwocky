@@ -23,6 +23,9 @@ from jabberwocky.utils import strip, bold, load_yaml, colored, \
     load_huggingface_api_key, hooked_generator, load_api_key
 
 
+HF_API_KEY = load_huggingface_api_key()
+
+
 class BackendSelector:
     """
     Examples
@@ -1293,15 +1296,24 @@ def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
 
 
 @valuecheck
-def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
-                  repetition_penalty=None, max_tokens=250, api_key=None,
-                  size:('125M', '1.3B', '2.7B')='2.7B',
-                  **kwargs):
+def query_gpt_neo(prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
+                  max_tokens=250, top_k=None, top_p=None, **kwargs):
     """Query gpt-Neo using Huggingface API.
 
     Parameters
     ----------
     prompt: str
+    engine_i: int
+        Determines which Huggingface model API to query. See
+        config.C.engines_neo. Those names refer to the number of
+        parameters in the model, where bigger models generally produce higher
+        quality results but may be slower (in addition to the actual inference
+        being slower to produce, the better models are also more popular so the
+        API is hit with more requests).
+    temperature: float
+        Between 0 and 1. 0-0.4 is good for straightforward informational
+        queries (e.g. reformatting, writing business emails) while 0.7-1 is
+        good for more creative works.
     top_k: None or int
         Kind of like top_p in that smaller values may produce more
         sensible but less creative responses. While top_p limits options to
@@ -1310,20 +1322,9 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
     top_p: None or float
         Value in [0.0, 1.0] if provided. Kind of like temperature in that
         smaller values may produce more sensible but less creative responses.
-    temperature: float
-        Between 0 and 1. 0-0.4 is good for straightforward informational
-        queries (e.g. reformatting, writing business emails) while 0.7-1 is
-        good for more creative works.
     repetition_penalty
     max_tokens: int
         Sets max response length. One token is ~.75 words.
-    api_key
-    size: str
-        Determines which Huggingface model API to query. Refers to number of
-        parameters in the model, where bigger models generally product better
-        quality results but may be slower (in addition to the actual inference
-        being slower to produce, the better models are also more popular so the
-        API is hit with more requests).
     kwargs: any
         Just lets us absorb extra kwargs when used in place of query_gpt3().
 
@@ -1341,10 +1342,16 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
     -------
     tuple[str]: Prompt, response tuple, just like query_gpt_3().
     """
+    valid_i = range(len(C.engines_neo))
+    if engine_i not in valid_i:
+        raise ValueError(f'Invalid engine_i {engine_i}. GPT-neo allows '
+                         f'values {set(valid_i)}.')
+    engine = C.engines_neo[engine_i]
+
     # Docs say we can return up to 256 tokens but API sometimes throws errors
     # if we go above 250.
     headers = {'Authorization':
-               f'Bearer api_{api_key or load_huggingface_api_key()}'}
+               f'Bearer api_{HF_API_KEY}'}
     # Notice the names don't always align with parameter names - I wanted
     # those to be more consistent with query_gpt3() function. Also notice
     # that types matter: if Huggingface expects a float but gets an int, we'll
@@ -1357,12 +1364,10 @@ def query_gpt_neo(prompt, top_k=None, top_p=None, temperature=1.0,
                            'max_new_tokens': min(max_tokens, 250),
                            'repetition_penalty': repetition_penalty,
                            'return_full_text': False}}
-    url = 'https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-{}'
-    # TODO: support gpt-j-6b?
+    url = f'https://api-inference.huggingface.co/models/EleutherAI/{engine}'
     try:
         # Put the request itself inside try too in case of timeout.
-        r = requests.post(url.format(size), headers=headers,
-                          data=json.dumps(data))
+        r = requests.post(url, headers=headers, data=json.dumps(data))
         r.raise_for_status()
     except requests.HTTPError as e:
         raise MockFunctionException(str(e)) from None

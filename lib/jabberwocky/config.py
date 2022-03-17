@@ -14,6 +14,7 @@ class C:
     # OpenAI constants
     engines = ['ada', 'babbage', 'curie', 'davinci']
     engines_goose = ['gpt-neo-2-7b', 'gpt-j-6b', 'fairseq-13b', 'gpt-neo-20b']
+    engines_neo = ['gpt-neo-125M', 'gpt-neo-1.3B', 'gpt-neo-2.7B', 'gpt-j-6B']
     backend_engines = {'openai': engines,
                        'gooseai': engines_goose}
 

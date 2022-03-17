@@ -28,7 +28,13 @@ We also provide Task Mode containing built-in prompts for a number of sample tas
 git clone https://github.com/hdmamin/jabberwocky.git
 ```
 
-2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're not using Mac OS, you could try installing portaudio with whatever package manager you're using, but app behavior on other systems is unknown.
+2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're not using Mac OS, you could try installing portaudio with whatever package manager you're using, but app behavior on other systems is unknown. If you have `make` installed, you can simply use the command (after activating your virtual environment):
+
+```
+make install
+```
+
+which is equivalent to:
 
 ```
 brew install portaudio
@@ -36,11 +42,7 @@ pip install -r requirements.txt
 python -m nltk.downloader punkt
 ```
 
-If you have `make` installed you can simply use the command:
-
-```
-make install
-```
+Note: this will install a slightly older version of Jabberwocky so you can run the GUI. The Alexa skill uses the latest version of the library. The command `make install_dev` should be used instead of `make install` when working on that.
 
 3. Add your openai API key somewhere the program can access it. There are two ways to do this:
 

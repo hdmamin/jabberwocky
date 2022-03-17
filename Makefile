@@ -23,6 +23,11 @@ install:
 	brew install portaudio
 	pip install -r requirements.txt
 	python -m nltk.downloader punkt
+
+install_dev:
+	brew install portaudio
+	pip install --upgrade --force-reinstall -r requirements-dev.txt
+	python -m nltk.downloader punkt
  
 run:
 	python gui/main.py
