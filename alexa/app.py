@@ -22,7 +22,8 @@ from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load, FuzzyKeyDict, vcounts
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
     query_gpt_neo, PromptManager, BackendSelector
-from utils import slot, Settings, model_type, CustomAsk, infer_intent
+from utils import slot, Settings, model_type, CustomAsk, infer_intent,\
+    get_backend, get_name, get_num
 
 
 # Define these before functions since endpoints use ask method as decorators.
@@ -183,8 +184,8 @@ def _choose_person_text(msg='Who would you like to speak to?'):
     return msg
 
 
-@ask.intent('changeBackend')
-def change_backend():
+@ask.intent('changeBackend', slot_func=get_backend)
+def change_backend(**kwargs):
     """Change the model backend (openai, gooseai, maybe others in the future)
     being used to generate responses.
 
@@ -193,7 +194,8 @@ def change_backend():
     "Lou, use gooseai backend."
     "Lou, change backend to openai."
     """
-    backend_name = slot(request, 'backend', default='gooseai').replace(' ', '')
+    backend_name = slot(request, 'backend', default='gooseai')\
+                        .replace(' ', '') or kwargs.get('backend')
     msg = f'I\'ve switched your backend to {backend_name}.'
     try:
         # Try to guess backend because alexa has trouble transcribing
@@ -217,7 +219,7 @@ def change_backend():
     return _maybe_choose_person(msg)
 
 
-@ask.intent('choosePerson')
+@ask.intent('choosePerson', slot_func=get_name)
 def choose_person(**kwargs):
     """Allow the user to choose which person to talk to. If the user isn't
     recognized in their "contacts", we can autogenerate the persona for them
@@ -278,18 +280,20 @@ def _generate_person(choice, **kwargs):
         .reprompt('I didn\'t get that. Who would you like to speak to next?')
 
 
-@ask.intent('changeModel')
+@ask.intent('changeModel', get_num)
 def change_model():
     """Change the model (gpt3 davinci, gpt3 curie, gpt-j, etc.) being used to
     generate responses.
 
     Sample Utterances
     -----------------
-    "Lou, use model j."
+    "Lou, use model 0."
     "Lou, change global model to 2."
     """
     scope = slot(request, 'Scope', default='global')
     model = slot(request, 'Model')
+    # TODO: update comment once behavior is confirmed. All models are
+    # numbers now.
     # Conversion is not always automatic here, I think because we're not using
     # a built-in AMAZON.Number slot (because some values aren't numbers).
     # Or maybe it's that saying "two", typing "two", or typing "2" give
@@ -304,16 +308,18 @@ def change_model():
         '2': 2,
         '3': 3
     }
+    print('MODEL pre-conversion:', model, 'type:', type(model))
     model = str2int.get(model, model)
-    print('MODEL', model, 'type:', type(model))
+    print('MODEL post-conversion:', model, 'type:', type(model))
     msg = f'I\'ve switched your {scope} backend to model {model}.'
     if isinstance(model, int):
         state.set(scope, model_i=model)
         state.set(scope, mock_func=None)
-    elif model == 'j':
-        state.set(scope, mock_func=query_gpt_j)
-    elif model == 'neo':
-        state.set(scope, mock_func=partial(query_gpt_neo, api_key=HF_API_KEY))
+    # TODO: rm
+    # elif model == 'j':
+    #     state.set(scope, mock_func=query_gpt_j)
+    # elif model == 'neo':
+    #     state.set(scope, mock_func=partial(query_gpt_neo, api_key=HF_API_KEY))
     else:
         msg = f'It sounded like you asked for model ' \
               f'{model or "no choice specified"}, but the only ' \
@@ -322,7 +328,7 @@ def change_model():
     return _maybe_choose_person(msg)
 
 
-@ask.intent('changeMaxLength')
+@ask.intent('changeMaxLength', slot_func=get_num)
 def change_max_length():
     """Change the max number of tokens in a generated response. The max is
     2048. There are roughly 1.33 tokens per word. I've set the default to
@@ -353,7 +359,7 @@ def change_max_length():
     )
 
 
-@ask.intent('changeTemperature')
+@ask.intent('changeTemperature', slot_func=get_num)
 def change_temperature():
     """Allow user to change model temperature. Lower values (near 0) are often
     better for formal or educational contexts, e.g. a science tutor.
@@ -387,12 +393,14 @@ def change_temperature():
     )
 
 
+# TODO: need slot func?
 @ask.intent('enableAutoPunctuation')
 def enable_punctuation():
     state.auto_punct = True
     return _maybe_choose_person('I\'ve enabled automatic punctuation.')
 
 
+# TODO: need slot func?
 @ask.intent('disableAutoPunctuation')
 def disable_punctuation():
     state.auto_punct = False
@@ -456,13 +464,15 @@ def delegate():
     ask.logger.info(matches)
     # TODO: should a matching intent override even when there IS a func in the
     # queue waiting to be called? Have to consider tradeoffs.
+    if matches['intent']:
+        ask.logger.info(f'CALLING INFERRED INTENT: {matches["intent"]}')
+        # TODO: try to extract slot values from raw text? Or just have
+        # delegated function return error msg? For now calling without
+        # args.
+        inferred_func = ask.intent2func(matches['intent'])
+        slot_vals = inferred_func.slot_func(response)
+        return inferred_func(**slot_vals)
     if not func:
-        if matches['intent']:
-            ask.logger.info(f'CALLING INFERRED INTENT: {matches["intent"]}')
-            # TODO: try to extract slot values from raw text? Or just have
-            # delegated function return error msg? For now calling without
-            # args.
-            return ask.intent2func(matches['intent'])()
         # No chained intents are in the queue so we assume this is just another
         # turn in the conversation.
         return _reply(response)

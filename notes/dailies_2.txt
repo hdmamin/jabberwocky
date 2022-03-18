@@ -654,16 +654,29 @@ _ -write slot extraction func for chooseModel (see bottom of alexa/utils.py for 
 3/17/22 thurs
 -------------
 -updates to reflect recharacterization of neo and j as backends rather than models
-    -in console, rm J and Neo as model options
-    -in console, add j and neo as backend options
-    -update saved fuzzy dict from new skill json (see func in alexa/utils)
-    -update app.py to account for changes
+    X -in console, rm J and Neo as model options
+    X -in console, add j and neo as backend options
+        UPDATE: renamed J to Vic since it specifically refers to the vicgalle api (I assumed this was a name Vic Galle but I don't actually know. Not important though.).
+    X -update saved fuzzy dict from new skill json (see func in alexa/utils)
+    ~ -update app.py to account for changes
 -consider how to support j and neo as backends in BackendSelector
     -implement
+
+3/18/22 fri
+-----------
+-consider if any intents should be removed from fuzzy dict of inferrable intents (e.g. Yes, No, ones without slots?)
+    -implement
+-consider how to handle intents w/ multiple slots (maybe need to compose funcs like get_num, get_scope)
+-work on new get_backend func (jump off of alexa/utils version) to handle new vals (see fuzzy dict "fd" in ipython sess below this pane)
+     -consider approaches: __contains__, fuzzywuzzy, fuzzyregex or spacy matcher, gpt infer
+     -implement
+-test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
 
 
 Backlog
 -------
+-consider how to support j and neo as backends in BackendSelector
+    -implement
 -consider slot extraction interface. Should this extraction occur w/in each func separately, or create 1 SlotExtractor that does this in delegates() after inferring a function?
     -implement chosen method
 -continue testing changeBackend in console

@@ -1,6 +1,7 @@
 from collections import Mapping, deque
 from flask_ask import session, Ask
 from functools import wraps
+import inspect
 from itertools import product
 import pandas as pd
 from pathlib import Path
@@ -118,6 +119,40 @@ word2int = FuzzyKeyDict(
 )
 
 
+# TODO: maybe refactor these into 1 class or diff named func later? Want to
+# ensure we only tokenize once.
+# This extracts slots for choose_person.
+def get_name(text, nlp, skip={'Lou', 'lou'}):
+    names = [ent.text for ent in nlp(text).ents
+             if ent.label_ == 'PERSON' and ent.text not in skip]
+    if len(names) == 1:
+        return {'name': names[0]}
+    return {'name': None,
+            'disambiguation': names}
+
+
+# TODO: make so text is only thing we need to pass in.
+def get_num(text, nlp):
+    nums = [t.text for t in nlp(text) if t.like_num]
+    if len(nums) == 1:
+        return {'num': nums[0]}
+    return {'num': None,
+            'disambiguation': nums}
+
+
+# TODO: basically need to start over. This is old.
+def get_backend(text, backends=('gooseai', 'openai', 'vic', 'hugging face')):
+    for back in backends:
+        if back[:-2] in text.lower():
+            return {'backend': back}
+    return {}
+
+
+def get_dummy(text):
+    # Must be defined before CustomAsk since it's a default argument there.
+    return {}
+
+
 class IntentCallback(Callback):
     """Add some extra functionality at start and end of each intent function.
     Initially tried to implement this by decorating ask.intent but that seems
@@ -171,6 +206,7 @@ class CustomAsk(Ask):
         # Decorator that we use on each intent endpoint.
         self.state = state
         self._callbacks = callbacks([IntentCallback(self, state=state)])
+        # str -> str
         self._func2intent = {}
         self._intent2funcname = {}
         # Deque of functions probably can't/shouldn't be sent back and forth
@@ -180,7 +216,7 @@ class CustomAsk(Ask):
         # can persist otherwise.
         self._queue = deque()
 
-    def intent2func(self, intent_name):
+    def intent2func(self, intent_name:str):
         return getattr(sys.modules['__main__'],
                        self._intent2funcname[intent_name])
 
@@ -271,12 +307,14 @@ class CustomAsk(Ask):
         """
         return self._callbacks(func)
 
-    def intent(self, name, **ask_kwargs):
+    def intent(self, name, slot_func=get_dummy, **ask_kwargs):
         """My version of ask.intent decorator, overriding the default
         implementation. Changes:
-        - Automatically map map slot names from title case to lowercase. AWS
+        - Automatically map slot names from title case to lowercase. AWS
         console seems to enforce some level of capitalization that I'd prefer
-        not to use in all my python code.
+        not to use in all my python code. (UPDATE: this doesn't seem to be true
+        now, not sure why I thought it was? Could get rid of this but I guess
+        it's fine.)
         - Populate a dict mapping endpoint function -> intent name. These are
         usually similar but not identical (often just a matter of
         capitalization but not always).
@@ -292,6 +330,7 @@ class CustomAsk(Ask):
         """
         def decorator(func):
             func = self.attach_callbacks(func)
+            func.slot_func = slot_func
             self._func2intent[func.__name__] = name
             self._intent2funcname[name] = func.__name__
             mapping = {k: k.title() for k in params(func)}
@@ -623,23 +662,3 @@ def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
             'confidence': -1,
             'reason': '',
             'res': res}
-
-
-# TODO: maybe refactor these into 1 class or diff named func later? Want to
-# ensure we only tokenize once.
-# This extracts slots for choose_person.
-def names(text, nlp, skip={'Lou', 'lou'}):
-    return [ent.text for ent in nlp(text).ents
-            if ent.label_ == 'PERSON' and ent.text not in skip]
-
-
-def nums(text, nlp):
-    return [t.text for t in nlp(text) if t.like_num]
-
-
-def backends(sent, backends=('gooseai', 'openai')):
-    assert all(b[-2:] == 'ai' for b in backends)
-    for back in backends:
-        if back[:-2] in sent.lower():
-            return back
-    return ''
