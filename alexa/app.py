@@ -23,7 +23,7 @@ from htools import quickmail, save, tolist, listlike, decorate_functions,\
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
     query_gpt_neo, PromptManager, BackendSelector
 from utils import slot, Settings, model_type, CustomAsk, infer_intent,\
-    get_backend, get_name, get_num
+    get_backend, get_name, get_number, SlotType, nlp
 
 
 # Define these before functions since endpoints use ask method as decorators.
@@ -184,8 +184,8 @@ def _choose_person_text(msg='Who would you like to speak to?'):
     return msg
 
 
-@ask.intent('changeBackend', slot_func=get_backend)
-def change_backend(**kwargs):
+@ask.intent('changeBackend')
+def change_backend(backend:SlotType.BACKEND=None):
     """Change the model backend (openai, gooseai, maybe others in the future)
     being used to generate responses.
 
@@ -194,8 +194,8 @@ def change_backend(**kwargs):
     "Lou, use gooseai backend."
     "Lou, change backend to openai."
     """
-    backend_name = slot(request, 'backend', default='gooseai')\
-                        .replace(' ', '') or kwargs.get('backend')
+    backend_name = backend or slot(request, 'backend', default='gooseai')\
+        .replace(' ', '')
     msg = f'I\'ve switched your backend to {backend_name}.'
     try:
         # Try to guess backend because alexa has trouble transcribing
@@ -219,8 +219,8 @@ def change_backend(**kwargs):
     return _maybe_choose_person(msg)
 
 
-@ask.intent('choosePerson', slot_func=get_name)
-def choose_person(**kwargs):
+@ask.intent('choosePerson')
+def choose_person(person:SlotType.NAME=None):
     """Allow the user to choose which person to talk to. If the user isn't
     recognized in their "contacts", we can autogenerate the persona for them
     if the person is relatively well known.
@@ -234,7 +234,9 @@ def choose_person(**kwargs):
     # it to be executed before checking if kwargs contains the value we want.
     # When the name is passed in, there will likely be no slots and that call
     # would raise an error.
-    person = kwargs.get('response') or slot(request, 'Person')
+    # TODO: rm after testing.
+    # person = kwargs.get('response') or slot(request, 'Person')
+    person = person or slot(request, 'Person')
     # Handle case where conversation is already ongoing. This should have been
     # a reply - it just happened to consist of only a name.
     if conv.current_persona:
@@ -266,7 +268,9 @@ def _generate_person(choice, **kwargs):
     if choice:
         try:
             conv.add_persona(kwargs['person'].title())
-            return choose_person(response=kwargs['person'])
+            # TODO: rm after testing
+            # return choose_person(response=kwargs['person'])
+            return choose_person(person=kwargs['person'])
         except Exception as e:
             ask.logger.error(f'Failed to generate {kwargs["person"]}. '
                              f'\nError: {e}')
@@ -280,8 +284,8 @@ def _generate_person(choice, **kwargs):
         .reprompt('I didn\'t get that. Who would you like to speak to next?')
 
 
-@ask.intent('changeModel', get_num)
-def change_model():
+@ask.intent('changeModel')
+def change_model(scope:SlotType.SCOPE=None, model:SlotType.NUMBER=None):
     """Change the model (gpt3 davinci, gpt3 curie, gpt-j, etc.) being used to
     generate responses.
 
@@ -290,8 +294,8 @@ def change_model():
     "Lou, use model 0."
     "Lou, change global model to 2."
     """
-    scope = slot(request, 'Scope', default='global')
-    model = slot(request, 'Model')
+    scope = scope or slot(request, 'Scope', default='global')
+    model = model or slot(request, 'Model')
     # TODO: update comment once behavior is confirmed. All models are
     # numbers now.
     # Conversion is not always automatic here, I think because we're not using
@@ -328,8 +332,8 @@ def change_model():
     return _maybe_choose_person(msg)
 
 
-@ask.intent('changeMaxLength', slot_func=get_num)
-def change_max_length():
+@ask.intent('changeMaxLength')
+def change_max_length(scope:SlotType.SCOPE=None, length:SlotType.NUMBER=None):
     """Change the max number of tokens in a generated response. The max is
     2048. There are roughly 1.33 tokens per word. I've set the default to
     50 tokens, which equates to roughly 2-3 sentences.
@@ -339,8 +343,8 @@ def change_max_length():
     parse_error_msg = 'I didn\'t recognize that length value. ' \
                       + error_msg.partition('.')[0]
 
-    scope = slot(request, 'Scope', default='global')
-    length = slot(request, 'Number')
+    scope = scope or slot(request, 'Scope', default='global')
+    length = length or slot(request, 'Number')
 
     try:
         # First check if Alexa parsing failed (slots converts "?" to "").
@@ -359,8 +363,8 @@ def change_max_length():
     )
 
 
-@ask.intent('changeTemperature', slot_func=get_num)
-def change_temperature():
+@ask.intent('changeTemperature')
+def change_temperature(scope:SlotType.SCOPE=None, temp:SlotType.NUMBER=None):
     """Allow user to change model temperature. Lower values (near 0) are often
     better for formal or educational contexts, e.g. a science tutor.
     """
@@ -373,8 +377,8 @@ def change_temperature():
     parse_error_msg = 'I didn\'t recognize that temperature value. ' \
                       + error_msg
 
-    scope = slot(request, 'Scope', default='global')
-    temp = slot(request, 'Number')
+    scope = scope or slot(request, 'Scope', default='global')
+    temp = temp or slot(request, 'Number')
 
     try:
         # First check if Alexa parsing failed (slots converts "?" to "").
@@ -393,14 +397,12 @@ def change_temperature():
     )
 
 
-# TODO: need slot func?
 @ask.intent('enableAutoPunctuation')
 def enable_punctuation():
     state.auto_punct = True
     return _maybe_choose_person('I\'ve enabled automatic punctuation.')
 
 
-# TODO: need slot func?
 @ask.intent('disableAutoPunctuation')
 def disable_punctuation():
     state.auto_punct = False
@@ -476,7 +478,9 @@ def delegate():
         # No chained intents are in the queue so we assume this is just another
         # turn in the conversation.
         return _reply(response)
-    return func(response=response, **state.kwargs or {})
+    # TODO
+    raise ValueError('How does this work again? I forget.')
+    # return func(response=response, **state.kwargs or {})
 
 
 @ask.intent('AMAZON.YesIntent')
@@ -605,7 +609,7 @@ if __name__ == '__main__':
     gpt = PromptManager(['punctuate_alexa'], verbose=False)
     backend = BackendSelector()
     utt2intent = load('data/alexa/utterance2intent.pkl')
-    nlp = spacy.load('en_core_web_sm', disable=['parser', 'tagger'])
+    # nlp = spacy.load('en_core_web_sm', disable=['parser', 'tagger'])
 
     decorate_functions(debug_decorator)
     # Set false because otherwise weird things happen to app state in the

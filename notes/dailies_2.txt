@@ -659,18 +659,44 @@ _ -write slot extraction func for chooseModel (see bottom of alexa/utils.py for 
         UPDATE: renamed J to Vic since it specifically refers to the vicgalle api (I assumed this was a name Vic Galle but I don't actually know. Not important though.).
     X -update saved fuzzy dict from new skill json (see func in alexa/utils)
     ~ -update app.py to account for changes
+X -add slot func option to intent decorator and update intent funcs accordingly
 -consider how to support j and neo as backends in BackendSelector
     -implement
 
 3/18/22 fri
 -----------
--consider if any intents should be removed from fuzzy dict of inferrable intents (e.g. Yes, No, ones without slots?)
-    -implement
--consider how to handle intents w/ multiple slots (maybe need to compose funcs like get_num, get_scope)
+X -consider if any intents should be removed from fuzzy dict of inferrable intents (e.g. Yes, No, ones without slots?)
+    _ -implement
+    UPDATE: Yes and No are already not included. Other intents without slots could still be worth inferring so leave those in.
+X -update slot processing code for each intent in fuzzy dict (don't worry about composing slot funcs yet, just update signatures)
+    X -changeModel
+    X -readContacts
+    _ -emailMe
+        UPDATE: intend to rm this eventually anyway.
+    X -changeTemperature
+    X -changeMaxLength
+    X -readSettings
+    X -enableAutoPunctuation
+    X -disableAutoPunctuation
+    X -endChat
+    X -changeBackend
+X -consider how to handle intents w/ multiple slots (maybe need to compose funcs like get_num, get_scope)
+    UPDATE: change slot_func to slot_funcs which maps each slot name to a function.
+    X -implement
+    UPDATE: overhauled whole slot_func interface. Specify using type annotations, then make ask.intent auto-construct the slot parsing func based on that. Haven't tested yet outside of toy examples in ipython.
 -work on new get_backend func (jump off of alexa/utils version) to handle new vals (see fuzzy dict "fd" in ipython sess below this pane)
      -consider approaches: __contains__, fuzzywuzzy, fuzzyregex or spacy matcher, gpt infer
      -implement
 -test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
+
+3/19/22 sat
+-----------
+-work on new get_backend func (jump off of alexa/utils version) to handle new vals (see fuzzy dict "fd" in ipython sess below this pane)
+     -consider approaches: __contains__, fuzzywuzzy, fuzzyregex or spacy matcher, gpt infer
+     -implement
+-work on get_scope function
+-test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
+    -test ability to extract slots in each case (above task refers to our ability to infer intents, which is a distinct step)
 
 
 Backlog

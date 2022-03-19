@@ -1,10 +1,12 @@
 from collections import Mapping, deque
+from enum import Enum
 from flask_ask import session, Ask
-from functools import wraps
+from functools import wraps, partial
 import inspect
 from itertools import product
 import pandas as pd
 from pathlib import Path
+import spacy
 import sys
 from werkzeug.local import LocalProxy
 
@@ -119,38 +121,80 @@ word2int = FuzzyKeyDict(
 )
 
 
+nlp = spacy.load('en_core_web_sm', disable=('parser', 'tagger'))
+
+
 # TODO: maybe refactor these into 1 class or diff named func later? Want to
 # ensure we only tokenize once.
 # This extracts slots for choose_person.
-def get_name(text, nlp, skip={'Lou', 'lou'}):
+def get_name(text, skip={'Lou', 'lou'}):
     names = [ent.text for ent in nlp(text).ents
              if ent.label_ == 'PERSON' and ent.text not in skip]
     if len(names) == 1:
-        return {'name': names[0]}
-    return {'name': None,
+        return {'value': names[0]}
+    return {'value': None,
             'disambiguation': names}
+    # TODO: considering desired interface. ^
+    # if len(names) == 1:
+    #     return {'name': names[0]}
+    # return {'name': None,
+    #         'disambiguation': names}
 
 
 # TODO: make so text is only thing we need to pass in.
-def get_num(text, nlp):
+def get_number(text):
     nums = [t.text for t in nlp(text) if t.like_num]
     if len(nums) == 1:
-        return {'num': nums[0]}
-    return {'num': None,
-            'disambiguation': nums}
+        return nums[0]
+    # if len(nums) == 1:
+    #     return {'value': nums[0]}
+    # return {'value': None,
+    #         'disambiguation': nums}
 
 
 # TODO: basically need to start over. This is old.
 def get_backend(text, backends=('gooseai', 'openai', 'vic', 'hugging face')):
     for back in backends:
         if back[:-2] in text.lower():
-            return {'backend': back}
-    return {}
+            # return {'value': back}
+            return back
+    # return {}
+
+
+# TODO
+def get_scope(text, scopes=('global', 'conversation', 'person')):
+    return
 
 
 def get_dummy(text):
     # Must be defined before CustomAsk since it's a default argument there.
-    return {}
+    # return {}
+    return
+
+
+class SlotType(Enum):
+    """Bit of a weird way to use enum and not really necessary, just trying out
+    different ways to handle this kind of task. Gives us a nice user
+    interface for specifying slot types, e.g. model=SlotType.NUMBER,
+    while easily mapping these to functions without any extra indexing.
+    """
+    # Kind of hacky but regular functions get recognized as methods and lose
+    # enum functionality. Partial basically just hides them.
+    NAME = partial(get_name)
+    NUMBER = partial(get_number)
+    BACKEND = partial(get_backend)
+    SCOPE = partial(get_scope)
+
+
+def make_slot_func(func):
+    """Given a function (an alexa intent/flask endpoint), uses the type
+    annotations to cconstruct a function that extracts slot values from an
+    utterance string. Used in ask.intent().
+    """
+    def slot_func(text):
+        return {k: v.value(text) for k, v in func.__annotations__.items()
+                if isinstance(v, SlotType)}
+    return slot_func
 
 
 class IntentCallback(Callback):
@@ -307,7 +351,7 @@ class CustomAsk(Ask):
         """
         return self._callbacks(func)
 
-    def intent(self, name, slot_func=get_dummy, **ask_kwargs):
+    def intent(self, name, **ask_kwargs):
         """My version of ask.intent decorator, overriding the default
         implementation. Changes:
         - Automatically map slot names from title case to lowercase. AWS
@@ -330,7 +374,7 @@ class CustomAsk(Ask):
         """
         def decorator(func):
             func = self.attach_callbacks(func)
-            func.slot_func = slot_func
+            func.slot_func = make_slot_func(func)
             self._func2intent[func.__name__] = name
             self._intent2funcname[name] = func.__name__
             mapping = {k: k.title() for k in params(func)}
