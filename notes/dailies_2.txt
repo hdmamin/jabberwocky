@@ -691,16 +691,28 @@ X -consider how to handle intents w/ multiple slots (maybe need to compose funcs
 
 3/19/22 sat
 -----------
--work on new get_backend func (jump off of alexa/utils version) to handle new vals (see fuzzy dict "fd" in ipython sess below this pane)
-     -consider approaches: __contains__, fuzzywuzzy, fuzzyregex or spacy matcher, gpt infer
-     -implement
+~ -work on new get_backend func (jump off of alexa/utils version) to handle new vals (see fuzzy dict "fd" in ipython sess below this pane)
+     ~ -consider approaches: __contains__, fuzzywuzzy, fuzzyregex or spacy matcher, gpt infer
+     ~ -implement
+    UPDATE: tried a ton of stuff combining str similarity, phonetic similarity, gpt prompting, etc. Still haven't quite gotten something satisfactory.
+X -update valid backend slot utts
+    X -rename vic -> hobby (real word, not a name)
+    X -regenerate fuzzy dict
 -work on get_scope function
 -test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
     -test ability to extract slots in each case (above task refers to our ability to infer intents, which is a distinct step)
 
+3/20/22 sun
+-----------
+-adjust changeBackend intent func - slot utts allow both with and without spaces. Need to account for that.
+-investigate phonetic similarity->str sim approach in ipython below. Why all score=86? Maybe need diff str sim method.
+    -go through ideas in misc.txt until I find a get_backend I'm happy with
 
 Backlog
 -------
+-work on get_scope function
+-test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
+    -test ability to extract slots in each case (above task refers to our ability to infer intents, which is a distinct step)
 -consider how to support j and neo as backends in BackendSelector
     -implement
 -consider slot extraction interface. Should this extraction occur w/in each func separately, or create 1 SlotExtractor that does this in delegates() after inferring a function?

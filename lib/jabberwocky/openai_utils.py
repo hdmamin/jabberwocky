@@ -1211,6 +1211,8 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
     we instead place the prompt in its own .txt file and leave the .yaml file
     for hypers.
 
+    Note: 'reminder' field in prompt config file is optional.
+
     Parameters
     ----------
     name: str
@@ -1385,7 +1387,8 @@ def query_gpt_neo(prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
 
 def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
     """Queries free GPT-J API. GPT-J has 6 billion parameters and is, roughly
-    speaking, the open-source equivalent of Curie. It was trained on more
+    speaking, the open-source equivalent of Curie (3/19/22 update: size sounds
+    more like Babbage actually). It was trained on more
     code than GPT3 though so it may do surprisingly well at those kinds of
     tasks. This function should be usable as a mock_func argument in
     query_gpt_3.

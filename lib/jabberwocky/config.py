@@ -12,6 +12,7 @@ class C:
     bold_end = '\033[0m'
 
     # OpenAI constants
+    # Parameter Counts: 2.7B, 6.7B, 13B, 175B
     engines = ['ada', 'babbage', 'curie', 'davinci']
     engines_goose = ['gpt-neo-2-7b', 'gpt-j-6b', 'fairseq-13b', 'gpt-neo-20b']
     engines_neo = ['gpt-neo-125M', 'gpt-neo-1.3B', 'gpt-neo-2.7B', 'gpt-j-6B']

@@ -10,7 +10,7 @@ import spacy
 import sys
 from werkzeug.local import LocalProxy
 
-from config import LOG_FILE
+# from config import LOG_FILE # TODO uncomment
 from htools.meta import Callback, callbacks, params, MultiLogger, func_name
 from htools.structures import FuzzyKeyDict
 
@@ -124,6 +124,17 @@ word2int = FuzzyKeyDict(
 nlp = spacy.load('en_core_web_sm', disable=('parser', 'tagger'))
 
 
+def detokenize(tokens, punct=set('.,;:')):
+    # NLTK has built in detokenizer but it was adding spaces before commas and
+    # things like that.
+    res = ''
+    for tok in tokens:
+        if tok not in punct:
+            res += ' '
+        res += tok
+    return res.strip(' ')
+
+
 # TODO: maybe refactor these into 1 class or diff named func later? Want to
 # ensure we only tokenize once.
 # This extracts slots for choose_person.
@@ -152,13 +163,39 @@ def get_number(text):
     #         'disambiguation': nums}
 
 
-# TODO: basically need to start over. This is old.
-def get_backend(text, backends=('gooseai', 'openai', 'vic', 'hugging face')):
-    for back in backends:
-        if back[:-2] in text.lower():
-            # return {'value': back}
-            return back
-    # return {}
+# TODO: lots of work to do here, might discard this approach entirely.
+# Keep imports here for now since I'll probably delete this eventually.
+from fuzzywuzzy import fuzz, process
+import re
+from nltk.tokenize import word_tokenize
+from htools import ngrams
+def get_backend(
+        text, scorer=fuzz.ratio,
+        n=3,
+        thresh=80,
+        backends=('goose ai', 'open ai', 'vic', 'hugging face'),
+        skip=('lou', 'backend', 'change', 'switch', 'set', 'use')
+):
+    text = text.lower()
+    for skip_word in skip:
+        text = text.replace(skip_word, '')
+    text = re.sub('  *', ' ', text)
+    print(text)
+
+    one_grams = word_tokenize(text)
+    two_grams = [detokenize(pair) for pair in
+                 ngrams(one_grams, n=2, drop_last=True)]
+    res = {}
+    for backend in backends:
+        candidates = one_grams
+        if ' ' in backend:
+            res[backend] = process.extract(backend, two_grams, scorer=scorer,
+                                           limit=n)
+            backend = backend.replace(' ', '')
+        res[backend] = process.extract(backend, one_grams, scorer=scorer,
+                                       limit=n)
+    return {k: [pair for pair in v if pair[1] >= thresh] or v[0]
+            for k, v in res.items()}
 
 
 # TODO
