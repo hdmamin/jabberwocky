@@ -705,11 +705,22 @@ X -update valid backend slot utts
 3/20/22 sun
 -----------
 -adjust changeBackend intent func - slot utts allow both with and without spaces. Need to account for that.
--investigate phonetic similarity->str sim approach in ipython below. Why all score=86? Maybe need diff str sim method.
-    -go through ideas in misc.txt until I find a get_backend I'm happy with
+~ -investigate phonetic similarity->str sim approach in ipython below. Why all score=86? Maybe need diff str sim method.
+    ~ -go through ideas in misc.txt until I find a get_backend I'm happy with
+    ~ -look into Adrienne idea re formnat values
+        UPDATE: lots of missing values in table I found compared to eng_to_ipa encoding. Also couldn't quickly find good way to encode consonant similarity.
+    ~ -try patternomatic spacy package
+        UPDATE: lots of code issues, seems like not compatible w/ current version of spacy.
+    UPDATE: fairly promising method is to store slot vals used for each utt and then just use those from closest utt. Avoids lots of extraction hassle, but might not have really solved the poor transcription issue. That might be better solved with gpt3 - perhaps asking it to correct spellings will work better.
+
+3/21/22 mon
+-----------
+-update infer_intent to provide slots in weighted case (see TODO)
+-prototype new gpt prompt asking to correct spelling rather than correct+extract all in 1
 
 Backlog
 -------
+-adjust changeBackend intent func - slot utts allow both with and without spaces. Need to account for that.
 -work on get_scope function
 -test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
     -test ability to extract slots in each case (above task refers to our ability to infer intents, which is a distinct step)

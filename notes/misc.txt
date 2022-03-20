@@ -239,3 +239,17 @@ slot extraction ideas (focusing on get_backend atm):
 -compare all phonetic representation (using jellyfish, g2p, SoundsLike, etc.) of n=1-3 grams using fuzzywuzzy or similar
     -encode whole utterance phonetically. Then str.join and compare to pre-computed phonetic representations of each utterance in fuzzdict. (NOTE: cur fuzzy dict seems to not have new slot vals for backend.)
 -some sort of spacy matcher or partially rule-based approach that uses some knowledge of structure (e.g. extract word directly before or after "backend")
+
+3/20/22 sun
+-----------
+Adrienne advice re phonetic similarity:
+
+"""
+Vowels are relatively easy to quantify phonetically because they have formants (some physical property of the sound wave). For an audio file, there are tools (like Praat) that can calculate the formant values. For text, you can look up average formant values for each vowel (though of course these are the values of the phonetic vowels, not the orthographic vowels, so you’d need some way of translating the written words into something phonetically meaningful, like IPA). The first and second formants (“F1” and “F2”) are most important, and F3 is sometimes important too. You can probably ignore F0 and F4, unless you’re interested in measuring differences between individual speakers saying the same word. 
+
+To measure similarity between consonants, I would probably use phonological features, although you’d need some way of quantifying them. The big three phonological features are voicing, place of articulation, and manner of articulation. For example, “n” and “m” are similar because they have the same voicing (they’re both voiced or [+voice]), and the same manner of articulation, [+nasal]. The only difference is the place of articulation (“n” is alveolar, “m” is bilabial). 
+
+“k” and “g” are similar because they have the same place of articulation (velar) and the same manner of articulation (stop/plosive), and the only difference is the voicing (“k” is voiceless and “g” is voiced). 
+
+My sense is that manner of articulation is somehow the most important — I imagine that misperception/mishearing tends to have more to do with manner of articulation than with place or voicing. For example, “s” and “t” have the same voicing and place of articulation, but different manners of articulation, and they probably don’t seem very intuitively similar to most English speakers. But “s” and “th” have the same voicing and manner of articulation, but different places of articulation, and probably seem more intuitively similar and are probably more likely to be confused with each other auditorily.
+"""

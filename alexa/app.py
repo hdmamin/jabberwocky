@@ -17,7 +17,7 @@ import openai
 import requests
 import spacy
 
-from config import EMAIL, HF_API_KEY
+from config import EMAIL, LOG_FILE
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load, FuzzyKeyDict, vcounts
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
@@ -33,7 +33,7 @@ app = Flask(__name__)
 # Necessary to make session accessible outside endpoint functions.
 app.app_context().push()
 state = Settings()
-ask = CustomAsk(state, app, '/')
+ask = CustomAsk(state, LOG_FILE, app, '/')
 
 
 def get_user_info(attrs=('name', 'email')):
@@ -461,7 +461,7 @@ def delegate():
     """
     func = ask.func_pop()
     response = slot(request, 'response', lower=False)
-    matches = infer_intent(response, utt2intent)
+    matches = infer_intent(response, utt2meta)
     ask.logger.info('\nInferred intent match scores:')
     ask.logger.info(matches)
     # TODO: should a matching intent override even when there IS a func in the
@@ -608,7 +608,7 @@ if __name__ == '__main__':
     conv = ConversationManager(['Albert Einstein'])  # TODO: load all personas?
     gpt = PromptManager(['punctuate_alexa'], verbose=False)
     backend = BackendSelector()
-    utt2intent = load('data/alexa/utterance2intent.pkl')
+    utt2meta = load('data/alexa/utterance2intent.pkl')
     # nlp = spacy.load('en_core_web_sm', disable=['parser', 'tagger'])
 
     decorate_functions(debug_decorator)

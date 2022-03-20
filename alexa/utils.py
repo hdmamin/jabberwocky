@@ -2,7 +2,6 @@ from collections import Mapping, deque
 from enum import Enum
 from flask_ask import session, Ask
 from functools import wraps, partial
-import inspect
 from itertools import product
 import pandas as pd
 from pathlib import Path
@@ -10,7 +9,6 @@ import spacy
 import sys
 from werkzeug.local import LocalProxy
 
-# from config import LOG_FILE # TODO uncomment
 from htools.meta import Callback, callbacks, params, MultiLogger, func_name
 from htools.structures import FuzzyKeyDict
 
@@ -173,8 +171,8 @@ def get_backend(
         text, scorer=fuzz.ratio,
         n=3,
         thresh=80,
-        backends=('goose ai', 'open ai', 'vic', 'hugging face'),
-        skip=('lou', 'backend', 'change', 'switch', 'set', 'use')
+        backends=('goose ai', 'open ai', 'hobby', 'hugging face'),
+        skip=('lou', 'backend', 'back end', 'change', 'switch', 'set', 'use')
 ):
     text = text.lower()
     for skip_word in skip:
@@ -187,15 +185,15 @@ def get_backend(
                  ngrams(one_grams, n=2, drop_last=True)]
     res = {}
     for backend in backends:
-        candidates = one_grams
         if ' ' in backend:
             res[backend] = process.extract(backend, two_grams, scorer=scorer,
                                            limit=n)
             backend = backend.replace(' ', '')
         res[backend] = process.extract(backend, one_grams, scorer=scorer,
                                        limit=n)
-    return {k: [pair for pair in v if pair[1] >= thresh] or v[0]
-            for k, v in res.items()}
+    b2matches = {k: [pair for pair in v if pair[1] >= thresh] or [v[0]]
+                 for k, v in res.items()}
+    return sorted(b2matches.items(), key=lambda x: x[1][0][-1], reverse=True)
 
 
 # TODO
@@ -278,12 +276,12 @@ class CustomAsk(Ask):
     method for a summary of main changes.
     """
 
-    def __init__(self, state, *args, **kwargs):
+    def __init__(self, state, log_file, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Unlike flask app.logger, this writes to both stdout and a log file.
         # We ensure it's empty at the start of each session.
-        Path(LOG_FILE).unlink()
-        self.logger = MultiLogger(LOG_FILE, fmode='a')
+        Path(log_file).unlink()
+        self.logger = MultiLogger(log_file, fmode='a')
         # Decorator that we use on each intent endpoint.
         self.state = state
         self._callbacks = callbacks([IntentCallback(self, state=state)])
@@ -666,7 +664,8 @@ def build_utterance_map(model_json, fuzzy=True,
 
     Returns
     -------
-
+    Dict: Maps sample utterance to dict containing 'intent' str and 'slots'
+    dict.
     """
     exclude_types = set(exclude_types)
     model = model_json['interactionModel']['languageModel']
@@ -674,7 +673,7 @@ def build_utterance_map(model_json, fuzzy=True,
                                  for row in type_['values']]
                  for type_ in model['types']}
     type2vals['AMAZON.NUMBER'] = list(map(str, range(10)))
-    utt2intent = {}
+    utt2meta = {}
     for intent in model['intents']:
         slot2vals = {}
         try:
@@ -686,10 +685,11 @@ def build_utterance_map(model_json, fuzzy=True,
 
         # Replace all slot names with common slot values.
         for row in intent['samples']:
-            utt2intent.update(
-                {row.format(**dict(zip(slot2vals, args))): intent['name']
-                 for args in product(*slot2vals.values())})
-    return FuzzyKeyDict(utt2intent) if fuzzy else utt2intent
+            for args in product(*slot2vals.values()):
+                kwargs = dict(zip(slot2vals, args))
+                utt2meta[row.format(**kwargs)] = {'intent': intent['name'],
+                                                  'slots': kwargs}
+    return FuzzyKeyDict(utt2meta) if fuzzy else utt2meta
 
 
 def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
@@ -726,7 +726,8 @@ def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
                              mode='keys_values_similarities')
     top_1_pct = res[0][-1] / 100
     if top_1_pct >= top_1_thresh:
-        return {'intent': res[0][1],
+        return {'intent': res[0][1]['intent'],
+                'slots': res[0][1]['slots'],
                 'confidence': top_1_pct,
                 'reason': 'top_1',
                 'res': res}
@@ -736,10 +737,13 @@ def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
         .assign(pct=lambda x: x / x.sum())
     if weighted.pct.iloc[0] > weighted_thresh:
         return {'intent': weighted.iloc[0].name,
+                # TODO: figure out how to determine slots here.
+                'slots': {},
                 'confidence': weighted.iloc[0].pct,
                 'reason': 'weighted',
                 'res': res}
     return {'intent': '',
+            'slots': {},
             'confidence': -1,
             'reason': '',
             'res': res}
