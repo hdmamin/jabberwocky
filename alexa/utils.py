@@ -2,6 +2,7 @@ from collections import Mapping, deque
 from enum import Enum
 from flask_ask import session, Ask
 from functools import wraps, partial
+from fuzzywuzzy import fuzz, process
 from itertools import product
 import pandas as pd
 from pathlib import Path
@@ -9,7 +10,8 @@ import spacy
 import sys
 from werkzeug.local import LocalProxy
 
-from htools.meta import Callback, callbacks, params, MultiLogger, func_name
+from htools.meta import Callback, callbacks, params, MultiLogger, func_name,\
+    deprecated
 from htools.structures import FuzzyKeyDict
 
 
@@ -133,9 +135,21 @@ def detokenize(tokens, punct=set('.,;:')):
     return res.strip(' ')
 
 
-# TODO: maybe refactor these into 1 class or diff named func later? Want to
-# ensure we only tokenize once.
-# This extracts slots for choose_person.
+"""
+Note: these three get_ functions were part of an initial attempt at extracting
+slots when alexa failed. This is the same method that caused the need for my
+SlotType class. See commit on 3/21/22 with message "checkpoint: pre-delete
+type hint-based slot extraction" for how this worked. Never fully finished 
+this so don't expect everything to work even at that commit - notice the
+inconsistent interfaces where some return a dict with 'value' and 
+'disambiguation' keys and others don't.
+
+Ultimately switched to a different approach where our fuzzy dict maps sample 
+utterances to their slot values and we just take the closest utterance's slots
+rather than trying to extract them each time.
+"""
+
+@deprecated
 def get_name(text, skip={'Lou', 'lou'}):
     names = [ent.text for ent in nlp(text).ents
              if ent.label_ == 'PERSON' and ent.text not in skip]
@@ -143,30 +157,18 @@ def get_name(text, skip={'Lou', 'lou'}):
         return {'value': names[0]}
     return {'value': None,
             'disambiguation': names}
-    # TODO: considering desired interface. ^
-    # if len(names) == 1:
-    #     return {'name': names[0]}
-    # return {'name': None,
-    #         'disambiguation': names}
 
 
-# TODO: make so text is only thing we need to pass in.
+@deprecated
 def get_number(text):
     nums = [t.text for t in nlp(text) if t.like_num]
     if len(nums) == 1:
-        return nums[0]
-    # if len(nums) == 1:
-    #     return {'value': nums[0]}
-    # return {'value': None,
-    #         'disambiguation': nums}
+        return {'value': nums[0]}
+    return {'value': None,
+            'disambiguation': nums}
 
 
-# TODO: lots of work to do here, might discard this approach entirely.
-# Keep imports here for now since I'll probably delete this eventually.
-from fuzzywuzzy import fuzz, process
-import re
-from nltk.tokenize import word_tokenize
-from htools import ngrams
+@deprecated
 def get_backend(
         text, scorer=fuzz.ratio,
         n=3,
@@ -174,11 +176,16 @@ def get_backend(
         backends=('goose ai', 'open ai', 'hobby', 'hugging face'),
         skip=('lou', 'backend', 'back end', 'change', 'switch', 'set', 'use')
 ):
+    # Putting imports inside since this is deprecated anyway. Don't want to
+    # slow down app.py when it imports this module.
+    import re
+    from nltk.tokenize import word_tokenize
+    from htools import ngrams
+
     text = text.lower()
     for skip_word in skip:
         text = text.replace(skip_word, '')
     text = re.sub('  *', ' ', text)
-    print(text)
 
     one_grams = word_tokenize(text)
     two_grams = [detokenize(pair) for pair in
@@ -196,15 +203,13 @@ def get_backend(
     return sorted(b2matches.items(), key=lambda x: x[1][0][-1], reverse=True)
 
 
-# TODO
-def get_scope(text, scopes=('global', 'conversation', 'person')):
-    return
-
-
-def get_dummy(text):
-    # Must be defined before CustomAsk since it's a default argument there.
-    # return {}
-    return
+@deprecated('get_scope was never finished and is now deprecated. It\'s '
+            'used in SlotType\'s definition so I don\'t delete it, though '
+            'that class is no longer used. Just want to keep it as a '
+            'reference since it does some pretty interesting things, '
+            'code-wise.')
+def get_scope(text):
+    return {}
 
 
 class SlotType(Enum):
@@ -696,8 +701,8 @@ def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
                  weighted_thresh=.8):
     """Try to infer the user's intent from an utterance. Alexa should detect
     this automatically but it sometimes messes up. This also helps if the user
-    gets the utterance slightly wrong, e.g. "Lou, set model to j" rather
-    than "Lou, switch model to j".
+    gets the utterance slightly wrong, e.g. "Lou, set backend to goose ai"
+    rather than "Lou, switch backend to goose ai".
 
     Parameters
     ----------
@@ -731,14 +736,17 @@ def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
                 'confidence': top_1_pct,
                 'reason': 'top_1',
                 'res': res}
-    df = pd.DataFrame(res, columns=['txt', 'intent', 'score'])
+    df = pd.DataFrame(res, columns=['txt', 'intent', 'score'])\
+        .assign(slots=lambda df_: df_.intent.apply(lambda x: x['slots']),
+                intent=lambda df_: df_.intent.apply(lambda x: x['intent']))
     weighted = df.groupby('intent').score.sum()\
         .to_frame()\
         .assign(pct=lambda x: x / x.sum())
     if weighted.pct.iloc[0] > weighted_thresh:
-        return {'intent': weighted.iloc[0].name,
-                # TODO: figure out how to determine slots here.
-                'slots': {},
+        intent = weighted.iloc[0].name
+        slots = df.loc[df.intent == intent, 'slots'].iloc[0]
+        return {'intent': intent,
+                'slots': slots,
                 'confidence': weighted.iloc[0].pct,
                 'reason': 'weighted',
                 'res': res}

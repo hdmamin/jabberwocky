@@ -715,8 +715,9 @@ X -update valid backend slot utts
 
 3/21/22 mon
 -----------
--update infer_intent to provide slots in weighted case (see TODO)
--prototype new gpt prompt asking to correct spelling rather than correct+extract all in 1
+X -update infer_intent to provide slots in weighted case (see TODO)
+_ -prototype new gpt prompt asking to correct spelling rather than correct+extract all in 1
+    UPDATE: let's hold off on this until I see more evidence that it's actually needed. Maybe new method will work already.
 
 Backlog
 -------
