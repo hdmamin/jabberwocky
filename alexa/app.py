@@ -23,7 +23,7 @@ from htools import quickmail, save, tolist, listlike, decorate_functions,\
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
     query_gpt_neo, PromptManager, BackendSelector
 from utils import slot, Settings, model_type, CustomAsk, infer_intent,\
-    get_backend, get_name, get_number, SlotType, nlp
+    get_backend, get_name, get_number, nlp
 
 
 # Define these before functions since endpoints use ask method as decorators.
@@ -185,7 +185,7 @@ def _choose_person_text(msg='Who would you like to speak to?'):
 
 
 @ask.intent('changeBackend')
-def change_backend(backend:SlotType.BACKEND=None):
+def change_backend(backend=None):
     """Change the model backend (openai, gooseai, maybe others in the future)
     being used to generate responses.
 
@@ -198,18 +198,19 @@ def change_backend(backend:SlotType.BACKEND=None):
         .replace(' ', '')
     msg = f'I\'ve switched your backend to {backend_name}.'
     try:
+        # TODO: should be able to rm once I confirm new slot extraction works.
         # Try to guess backend because alexa has trouble transcribing
         # 'gooseAI'.
-        if backend_name not in backend.name2base:
-            best_match, best_score = process.extractOne(
-                backend_name,
-                [name.replace('ai', ' ai') for name in backend.name2base],
-                scorer=fuzz.partial_token_set_ratio
-            )
-            if best_score >= 80:
-                backend_name = best_match
-            else:
-                raise RuntimeError('Invalid backend name.')
+        # if backend_name not in backend.name2base:
+        #     best_match, best_score = process.extractOne(
+        #         backend_name,
+        #         [name.replace('ai', ' ai') for name in backend.name2base],
+        #         scorer=fuzz.partial_token_set_ratio
+        #     )
+        #     if best_score >= 80:
+        #         backend_name = best_match
+        #     else:
+        #         raise RuntimeError('Invalid backend name.')
         backend.switch(backend_name)
     except RuntimeError:
         msg = f'It sounded like you asked for backend ' \
@@ -220,7 +221,7 @@ def change_backend(backend:SlotType.BACKEND=None):
 
 
 @ask.intent('choosePerson')
-def choose_person(person:SlotType.NAME=None):
+def choose_person(person=None):
     """Allow the user to choose which person to talk to. If the user isn't
     recognized in their "contacts", we can autogenerate the persona for them
     if the person is relatively well known.
@@ -285,7 +286,7 @@ def _generate_person(choice, **kwargs):
 
 
 @ask.intent('changeModel')
-def change_model(scope:SlotType.SCOPE=None, model:SlotType.NUMBER=None):
+def change_model(scope=None, model=None):
     """Change the model (gpt3 davinci, gpt3 curie, gpt-j, etc.) being used to
     generate responses.
 
@@ -333,7 +334,7 @@ def change_model(scope:SlotType.SCOPE=None, model:SlotType.NUMBER=None):
 
 
 @ask.intent('changeMaxLength')
-def change_max_length(scope:SlotType.SCOPE=None, length:SlotType.NUMBER=None):
+def change_max_length(scope=None, length=None):
     """Change the max number of tokens in a generated response. The max is
     2048. There are roughly 1.33 tokens per word. I've set the default to
     50 tokens, which equates to roughly 2-3 sentences.
@@ -364,7 +365,7 @@ def change_max_length(scope:SlotType.SCOPE=None, length:SlotType.NUMBER=None):
 
 
 @ask.intent('changeTemperature')
-def change_temperature(scope:SlotType.SCOPE=None, temp:SlotType.NUMBER=None):
+def change_temperature(scope=None, temp=None):
     """Allow user to change model temperature. Lower values (near 0) are often
     better for formal or educational contexts, e.g. a science tutor.
     """
@@ -465,15 +466,13 @@ def delegate():
     ask.logger.info('\nInferred intent match scores:')
     ask.logger.info(matches)
     # TODO: should a matching intent override even when there IS a func in the
-    # queue waiting to be called? Have to consider tradeoffs.
+    # queue waiting to be called? Have to consider tradeoffs. Currently
+    # inferred intents take precedence because I'm still wary of relying too
+    # much on queue correctness.
     if matches['intent']:
         ask.logger.info(f'CALLING INFERRED INTENT: {matches["intent"]}')
-        # TODO: try to extract slot values from raw text? Or just have
-        # delegated function return error msg? For now calling without
-        # args.
         inferred_func = ask.intent2func(matches['intent'])
-        slot_vals = inferred_func.slot_func(response)
-        return inferred_func(**slot_vals)
+        return inferred_func(**matches['slots'])
     if not func:
         # No chained intents are in the queue so we assume this is just another
         # turn in the conversation.

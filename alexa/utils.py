@@ -226,6 +226,7 @@ class SlotType(Enum):
     SCOPE = partial(get_scope)
 
 
+@deprecated
 def make_slot_func(func):
     """Given a function (an alexa intent/flask endpoint), uses the type
     annotations to cconstruct a function that extracts slot values from an
@@ -414,7 +415,6 @@ class CustomAsk(Ask):
         """
         def decorator(func):
             func = self.attach_callbacks(func)
-            func.slot_func = make_slot_func(func)
             self._func2intent[func.__name__] = name
             self._intent2funcname[name] = func.__name__
             mapping = {k: k.title() for k in params(func)}

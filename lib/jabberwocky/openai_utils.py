@@ -60,8 +60,10 @@ class BackendSelector:
         self.old_key = ''
 
     def __call__(self, name):
-        """__enter__ can't take arguments so we need to specify this here."""
-        self.new_name = name
+        """__enter__ can't take arguments so we need to specify this here.
+        Notice that name is auto-lowercased and spaces are removed.
+        """
+        self.new_name = name.lower().replace(' ', '')
         return self
 
     def __enter__(self):

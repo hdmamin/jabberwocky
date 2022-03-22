@@ -718,25 +718,29 @@ X -update valid backend slot utts
 X -update infer_intent to provide slots in weighted case (see TODO)
 _ -prototype new gpt prompt asking to correct spelling rather than correct+extract all in 1
     UPDATE: let's hold off on this until I see more evidence that it's actually needed. Maybe new method will work already.
+X -write deprecated deco and mark slot extraction funcs as such
+    UPDATE: put this in htools rather than jabberwocky.
+X -adjust changeBackend intent func - slot utts allow both with and without spaces. Need to account for that.
+    UPDATE: changed BackendSelector to lowercase input and remove spaces. Think that should be sufficient.
+
+3/22/22 tues
+------------
+-consider how to support hobby and huggingface as backends in BackendSelector
+    -implement
+-continue testing changeBackend in console
+    -is the intent getting recognized?
+    -if not, what intents (if any) are getting inferred?
+
 
 Backlog
 -------
--adjust changeBackend intent func - slot utts allow both with and without spaces. Need to account for that.
--work on get_scope function
+-resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
     -test ability to extract slots in each case (above task refers to our ability to infer intents, which is a distinct step)
--consider how to support j and neo as backends in BackendSelector
-    -implement
--consider slot extraction interface. Should this extraction occur w/in each func separately, or create 1 SlotExtractor that does this in delegates() after inferring a function?
-    -implement chosen method
--continue testing changeBackend in console
     -for diff utterances, see what matching intents are printed out by fuzzykeydict
     -see what common similarity scores are
-    -determine a good way to map from similar intents to an actual choice (i.e. do all need to match? Do we just care that the top one is over some similarity threshold, and if so what? Do we take some weighted score, e.g. if top match is 80% changeBackend but #2 and #3 are both 79% changeModel?)
-        -what other logic (if any) do we need to implement to make this work? In some cases we may want to trust the queued function, in some maybe not? Might also be able to hardcode some logic, i.e. "startswith(Lou)".
     -briefly examine fuzzykeydict examples and try to think of what common bugs could appear (e.g. very short sample utterances might be problematic? check what shortest ones are)
-    -try some other intents and assess routing logic quality.
-    -maybe assess whether n=3 is a good choice for similar keys
+    -maybe assess whether n_keys should change in fuzzy_dict.similar() call
 -adjust Ask to track how many calls deep we are for a single user turn and adjust logging indentation accordingly. Make it visually easier to see when an intent call is really done vs. when it was just a nested call inside another intent.
 -add support for banana.dev version of gptj (see ipy in tab 1)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
