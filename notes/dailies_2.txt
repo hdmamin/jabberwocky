@@ -725,12 +725,22 @@ X -adjust changeBackend intent func - slot utts allow both with and without spac
 
 3/22/22 tues
 ------------
--consider how to support hobby and huggingface as backends in BackendSelector
-    -implement
+~ -consider how to support hobby and huggingface as backends in BackendSelector
+    X -implement
+    UPDATE: wrote something that I think should work but needs much more testing.
 -continue testing changeBackend in console
     -is the intent getting recognized?
     -if not, what intents (if any) are getting inferred?
 
+3/23/22 wed
+-----------
+-test backendselector more in jupyter (not ipython, want to see docstring)
+    -do base and key change when we expect them to?
+    -does query() show docstring as expected?
+    -try actual queries w/ all functions wrapped in debug. Make sure mock funcs are getting called when appropriate.
+-continue testing changeBackend in console
+    -is the intent getting recognized?
+    -if not, what intents (if any) are getting inferred?
 
 Backlog
 -------

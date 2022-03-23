@@ -16,7 +16,7 @@ import sys
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
-    listlike, Results, flatten
+    listlike, Results, flatten, add_docstring, func_name
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
@@ -26,142 +26,143 @@ from jabberwocky.utils import strip, bold, load_yaml, colored, \
 HF_API_KEY = load_huggingface_api_key()
 
 
-class BackendSelector:
-    """
-    Examples
-    --------
-    backend = BackendSelector()
+def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
+    """Queries free GPT-J API. GPT-J has 6 billion parameters and is, roughly
+    speaking, the open-source equivalent of Curie (3/19/22 update: size sounds
+    more like Babbage actually). It was trained on more
+    code than GPT3 though so it may do surprisingly well at those kinds of
+    tasks. This function should be usable as a mock_func argument in
+    query_gpt_3.
 
-    # Default backend is openai.
-    openai_res = query_gpt3()
+    API uptime may be questionable though. There's an accompanying front end
+    here:
+    http://api.vicgalle.net:8000/
 
-    with backend('gooseai'):
-        # Now we're using the gooseai backend.
-        gooseai_res = query_gpt3()
-
-    # Now we're back to using openai.
-    openai_res_2 = query_gpt3()
-
-    # Now we'll switch to gooseai and changes will persist since we're not
-    # using a context manager.
-    backend.switch('gooseai')
-    gooseai_res_2 = query_gpt3()
-    """
-
-    name2base = {
-        'openai': 'https://api.openai.com',
-        'gooseai': 'https://api.goose.ai/v1'
-    }
-    base2name = {v: k for k, v in name2base.items()}
-
-    def __init__(self):
-        self.new_name = ''
-        self.old_name = ''
-        self.old_key = ''
-
-    def __call__(self, name):
-        """__enter__ can't take arguments so we need to specify this here.
-        Notice that name is auto-lowercased and spaces are removed.
-        """
-        self.new_name = name.lower().replace(' ', '')
-        return self
-
-    def __enter__(self):
-        """Change backend to the one specified in __call__, which is
-        automatically called first when using `with` syntax.
-        """
-        print(f'Switching openai backend to "{self.new_name}"')
-        self.old_key, openai.api_key = openai.api_key, \
-                                       load_api_key(self.new_name)
-        self.old_name = self.base2name[openai.api_base]
-        openai.api_base = self.name2base[self.new_name]
-
-    def __exit__(self, exc_type, exc_val, traceback):
-        """Revert to previously used backend on contextmanager exit."""
-        print(f'Switching openai backend back to "{self.old_name}".')
-        openai.api_key = self.old_key
-        openai.api_base = self.name2base[self.old_name]
-        self.clear()
-
-    def clear(self):
-        """Reset instance variables tracking that were used to restore
-        previous backend.
-        """
-        self.old_key = self.old_name = self.new_name = ''
-
-    def switch(self, name):
-        """Switch backend and make changes persist, unlike in context manager
-        where we reset them on exit.
-
-        Parameters
-        ----------
-        name: str
-            One of (openai, gooseai).
-        """
-        self(name=name).__enter__()
-        self.clear()
-
-    @classmethod
-    def current(cls):
-        """Get current backend name, e.g. "gooseai".
-
-        Returns
-        -------
-        str
-        """
-        return cls.base2name[openai.api_base]
-
-    @classmethod
-    def engine(cls, engine_i):
-        """Get appropriate engine name depending on current api backend and
-        selected engine_i.
-
-        Parameters
-        ----------
-        engine_i: int
-            Number from 0-3 (inclusive) specifying which model to use. The two
-            backends *should* perform similar for values of 0-2, but openai's
-            3 (davinci, 175 billion parameters) is a much bigger model than
-            gooseai's 3 (NEO-X, 20 billion parameters). Mostly used in
-            query_gpt3().
-
-        Returns
-        -------
-        str: Name of an engine, e.g. "davinci" if we're in openai mode or
-        "gpt-neo-20b" if we're in gooseai mode.
-        """
-        return C.backend_engines[cls.current()][engine_i]
-
-
-class MockFunctionException(Exception):
-    """Allow all mock query functions to return a common exception."""
-
-
-def load_openai_api_key():
-    """Load openai API key. This must either be an environment variable called
-    OPENAI_API_KEY or placed in a text file at ~/.openai.
+    Parameters
+    ----------
+    prompt: str
+    temperature: float
+    max_tokens: int
+    kwargs: any
+        Only supported options are top_p (float) and stop (Iterable[str]).
+        Notice that stream mode is not supported.
 
     Returns
     -------
-    str
+    tuple[str]: Prompt, response.
     """
-    key = os.getenv('OPENAI_API_KEY')
-    if not key:
-        with open(Path('~/.openai').expanduser(), 'r') as f:
-            key = f.read().strip()
-    return key
+    params = {'context': prompt,
+              'token_max_length': max_tokens,
+              'temperature': temperature,
+              'top_p': kwargs.pop('top_p', 1.0)}
 
+    # Ensure that we end up with a list AND that stop is still Falsy if user
+    # explicitly passes in stop=None.
+    stop = tolist(kwargs.pop('stop', None) or [])
+    if stop: params['stop_sequence'] = stop[0]
 
-def openai_auth():
-    """Load openai api key and try to set it in the openai library. This must
-    be done after importing openai.
-    """
-    os.environ['OPENAI_API_KEY'] = key = load_openai_api_key()
+    # Must keep this after the block of stop-related logic above.
+    if kwargs:
+        warnings.warn(f'GPT-J api does not support other kwargs: {kwargs}')
+
     try:
-        module = sys.modules['openai']
-        module.api_key = key
+        res = requests.post('http://api.vicgalle.net:5000/generate',
+                            params=params)
+        res.raise_for_status()
     except Exception as e:
-        warnings.warn('openai library has not been imported. API key not set.')
+        raise MockFunctionException(str(e)) from None
+    res = res.json()
+
+    # Endpoint doesn't support multiple stop sequences so we have to
+    # postprocess. Even with a single stop sequence, it includes it while gpt3
+    # and my gpt-neo function exclude it, so we need to handle that here.
+    idx = min([i for i in map(res['text'].find, stop) if i >= 0] or [None])
+    completion = res['text'][:idx]
+    return res['prompt'], completion
+
+
+@valuecheck
+def query_gpt_neo(prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
+                  max_tokens=250, top_k=None, top_p=None, **kwargs):
+    """Query gpt-Neo using Huggingface API.
+
+    Parameters
+    ----------
+    prompt: str
+    engine_i: int
+        Determines which Huggingface model API to query. See
+        config.C.engines_neo. Those names refer to the number of
+        parameters in the model, where bigger models generally produce higher
+        quality results but may be slower (in addition to the actual inference
+        being slower to produce, the better models are also more popular so the
+        API is hit with more requests).
+    temperature: float
+        Between 0 and 1. 0-0.4 is good for straightforward informational
+        queries (e.g. reformatting, writing business emails) while 0.7-1 is
+        good for more creative works.
+    top_k: None or int
+        Kind of like top_p in that smaller values may produce more
+        sensible but less creative responses. While top_p limits options to
+        a cumulative percentage, top_k limits it to a discrete number of
+        top choices.
+    top_p: None or float
+        Value in [0.0, 1.0] if provided. Kind of like temperature in that
+        smaller values may produce more sensible but less creative responses.
+    repetition_penalty
+    max_tokens: int
+        Sets max response length. One token is ~.75 words.
+    kwargs: any
+        Just lets us absorb extra kwargs when used in place of query_gpt3().
+
+    Returns
+    -------
+    tuple or iterator: When stream=False, we return a tuple where the first
+    item is the prompt (str) and the second is the response text(str). If
+    return_full is True, a third item consisting of the whole response object
+    is returned as well. When stream=True, we return an iterator where each
+    step contains a single token. This will either be the text response alone
+    (str) or a tuple of (text, response) if return_full is True. Unlike in
+    non-streaming mode, we don't return the prompt - that seems less
+    appropriate for many time steps.
+    Returns
+    -------
+    tuple[str]: Prompt, response tuple, just like query_gpt_3().
+    """
+    engine = BackendSelector.engine(engine_i)
+
+    # Docs say we can return up to 256 tokens but API sometimes throws errors
+    # if we go above 250.
+    headers = {'Authorization':
+               f'Bearer api_{HF_API_KEY}'}
+    # Notice the names don't always align with parameter names - I wanted
+    # those to be more consistent with query_gpt3() function. Also notice
+    # that types matter: if Huggingface expects a float but gets an int, we'll
+    # get an error.
+    if repetition_penalty is not None:
+        repetition_penalty = float(repetition_penalty)
+    data = {'inputs': prompt,
+            'parameters': {'top_k': top_k, 'top_p': top_p,
+                           'temperature': float(temperature),
+                           'max_new_tokens': min(max_tokens, 250),
+                           'repetition_penalty': repetition_penalty,
+                           'return_full_text': False}}
+    url = f'https://api-inference.huggingface.co/models/EleutherAI/{engine}'
+    try:
+        # Put the request itself inside try too in case of timeout.
+        r = requests.post(url, headers=headers, data=json.dumps(data))
+        r.raise_for_status()
+    except requests.HTTPError as e:
+        raise MockFunctionException(str(e)) from None
+
+    # Huggingface doesn't natively provide the `stop` parameter that OpenAI
+    # does so we have to do this manually.
+    res = r.json()[0]['generated_text']
+    if 'stop' in kwargs:
+        idx = [idx for idx in map(res.find, tolist(kwargs['stop']))
+               if idx >= 0]
+        stop_idx = min(idx) if idx else None
+        res = res[:stop_idx]
+    return prompt, res
 
 
 def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
@@ -263,13 +264,6 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
                 elif mock_mode == 'warn':
                     warnings.warn(str(e))
     else:
-        # TODO: might end up changing this. Still have to decide best way to
-        # use gooseai.
-        # Updated to allow passing in ints or strs here because gooseai has
-        # a different set of models and there's not as straightforward a way
-        # to map them to ints.
-        # if isinstance(engine_i, int):
-        #     engine_i = C.engines[engine_i]
         res = openai.Completion.create(
             engine=BackendSelector.engine(engine_i),
             prompt=prompt,
@@ -288,6 +282,196 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
     else:
         output = (prompt, strip(res.choices[0].text, strip_output), res)
         return output if return_full else output[:-1]
+
+
+class BackendSelector:
+    """
+    Examples
+    --------
+    backend = BackendSelector()
+
+    # Default backend is openai.
+    openai_res = query_gpt3()
+
+    with backend('gooseai'):
+        # Now we're using the gooseai backend.
+        gooseai_res = query_gpt3()
+
+    # Now we're back to using openai.
+    openai_res_2 = query_gpt3()
+
+    # Now we'll switch to gooseai and changes will persist since we're not
+    # using a context manager.
+    backend.switch('gooseai')
+    gooseai_res_2 = query_gpt3()
+    """
+
+    name2base = {
+        'openai': 'https://api.openai.com',
+        'gooseai': 'https://api.goose.ai/v1',
+    }
+
+    # Order matters: keep openai first so name2key initialization works.
+    name2mock = {
+        'openai': None,
+        'gooseai': None,
+        'huggingface': query_gpt_neo,
+        'hobby': query_gpt_j
+    }
+
+    name2key = {}
+    for name in name2mock:
+        if name == 'hobby':
+            name2key[name] = '<HOBBY BACKEND: FAKE API KEY>'
+        else:
+            name2key[name] = load_api_key(name)
+
+    def __init__(self):
+        self.new_name = ''
+        self.old_name = ''
+        self.old_key = ''
+
+    def __call__(self, name):
+        """__enter__ can't take arguments so we need to specify this here.
+        Notice that name is auto-lowercased and spaces are removed.
+        """
+        self.new_name = name.lower().replace(' ', '')
+        self.old_name = self.current()
+        return self
+
+    def __enter__(self):
+        """Change backend to the one specified in __call__, which is
+        automatically called first when using `with` syntax.
+        """
+        print(f'Switching openai backend to "{self.new_name}".')
+        # Store an attribute on openai itself to reduce risk of bugs caused by
+        # BackendSelector being deleted or recreated. Previously used a
+        # self.base2name mapping to retrieve the current name but that doesn't
+        # work when multiple names use the same base (e.g. huggingface and
+        # hobby API backends can't be identified just by their base with
+        # this implementation).
+        openai.curr_name = self.new_name
+        self.old_key, openai.api_key = openai.api_key, \
+            self.name2key[self.new_name]
+        if self.new_name in self.name2base:
+            openai.api_base = self.name2base[self.new_name]
+
+    def __exit__(self, exc_type, exc_val, traceback):
+        """Revert to previously used backend on contextmanager exit."""
+        print(f'Switching openai backend back to "{self.old_name}".')
+        openai.api_key = self.old_key
+        if self.old_name in self.name2base:
+            openai.api_base = self.name2base[self.old_name]
+        openai.curr_name = self.old_name
+        self.clear()
+
+    def clear(self):
+        """Reset instance variables tracking that were used to restore
+        previous backend.
+        """
+        self.old_key = self.old_name = self.new_name = ''
+
+    def switch(self, name):
+        """Switch backend and make changes persist, unlike in context manager
+        where we reset them on exit.
+
+        Parameters
+        ----------
+        name: str
+            One of (openai, gooseai).
+        """
+        self(name=name).__enter__()
+        self.clear()
+
+    @classmethod
+    def current(cls):
+        """Get current backend name, e.g. "gooseai". If we've ever switched
+        backend with BackendSelector, openai.curr_name
+        should exist. If not, the backend should be the default.
+
+        Returns
+        -------
+        str
+        """
+        return getattr(openai, 'curr_name', 'openai')
+
+    @classmethod
+    def engine(cls, engine_i):
+        """Get appropriate engine name depending on current api backend and
+        selected engine_i.
+
+        Parameters
+        ----------
+        engine_i: int
+            Number from 0-3 (inclusive) specifying which model to use. The two
+            backends *should* perform similar for values of 0-2, but openai's
+            3 (davinci, 175 billion parameters) is a much bigger model than
+            gooseai's 3 (NEO-X, 20 billion parameters). Mostly used in
+            query_gpt3().
+
+        Returns
+        -------
+        str: Name of an engine, e.g. "davinci" if we're in openai mode or
+        "gpt-neo-20b" if we're in gooseai mode.
+        """
+        current = cls.current()
+        # Adds better error message if current name is somehow invalid.
+        try:
+            engines = C.backend_engines[current]
+        except KeyError:
+            raise KeyError(f'Encountered invalid backend name {current}.'
+                           f' Should be one of {cls.name2mock.keys()}.')
+
+        # Adds better error message if user passes in a number too big for the
+        # current backend.
+        try:
+            return engines[engine_i]
+        except IndexError:
+            raise ValueError(f'Encountered invalid engine_i value: {engine_i}.'
+                             f'Should be one of {list(range(len(engines)))} '
+                             f'when using backend {current}.')
+
+    @add_docstring(query_gpt3)
+    def query(self, *args, **kwargs):
+        if kwargs.pop('mock_func', None):
+            raise ValueError('Do not pass in a mock_func with this interface. '
+                             'That is handled for you under the hood.')
+        mock_func = self.name2mock[self.current()]
+        return query_gpt3(*args, **kwargs, mock_func=mock_func)
+
+    def __repr__(self):
+        return f'{func_name(self)} <current_name: {self.current()}>'
+
+
+class MockFunctionException(Exception):
+    """Allow all mock query functions to return a common exception."""
+
+
+def load_openai_api_key():
+    """Load openai API key. This must either be an environment variable called
+    OPENAI_API_KEY or placed in a text file at ~/.openai.
+
+    Returns
+    -------
+    str
+    """
+    key = os.getenv('OPENAI_API_KEY')
+    if not key:
+        with open(Path('~/.openai').expanduser(), 'r') as f:
+            key = f.read().strip()
+    return key
+
+
+def openai_auth():
+    """Load openai api key and try to set it in the openai library. This must
+    be done after importing openai.
+    """
+    os.environ['OPENAI_API_KEY'] = key = load_openai_api_key()
+    try:
+        module = sys.modules['openai']
+        module.api_key = key
+    except Exception as e:
+        warnings.warn('openai library has not been imported. API key not set.')
 
 
 def query_content_filter(text):
@@ -1297,149 +1481,6 @@ def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
             )
         text = ' '.join(new_words)
     return prompt, text
-
-
-@valuecheck
-def query_gpt_neo(prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
-                  max_tokens=250, top_k=None, top_p=None, **kwargs):
-    """Query gpt-Neo using Huggingface API.
-
-    Parameters
-    ----------
-    prompt: str
-    engine_i: int
-        Determines which Huggingface model API to query. See
-        config.C.engines_neo. Those names refer to the number of
-        parameters in the model, where bigger models generally produce higher
-        quality results but may be slower (in addition to the actual inference
-        being slower to produce, the better models are also more popular so the
-        API is hit with more requests).
-    temperature: float
-        Between 0 and 1. 0-0.4 is good for straightforward informational
-        queries (e.g. reformatting, writing business emails) while 0.7-1 is
-        good for more creative works.
-    top_k: None or int
-        Kind of like top_p in that smaller values may produce more
-        sensible but less creative responses. While top_p limits options to
-        a cumulative percentage, top_k limits it to a discrete number of
-        top choices.
-    top_p: None or float
-        Value in [0.0, 1.0] if provided. Kind of like temperature in that
-        smaller values may produce more sensible but less creative responses.
-    repetition_penalty
-    max_tokens: int
-        Sets max response length. One token is ~.75 words.
-    kwargs: any
-        Just lets us absorb extra kwargs when used in place of query_gpt3().
-
-    Returns
-    -------
-    tuple or iterator: When stream=False, we return a tuple where the first
-    item is the prompt (str) and the second is the response text(str). If
-    return_full is True, a third item consisting of the whole response object
-    is returned as well. When stream=True, we return an iterator where each
-    step contains a single token. This will either be the text response alone
-    (str) or a tuple of (text, response) if return_full is True. Unlike in
-    non-streaming mode, we don't return the prompt - that seems less
-    appropriate for many time steps.
-    Returns
-    -------
-    tuple[str]: Prompt, response tuple, just like query_gpt_3().
-    """
-    valid_i = range(len(C.engines_neo))
-    if engine_i not in valid_i:
-        raise ValueError(f'Invalid engine_i {engine_i}. GPT-neo allows '
-                         f'values {set(valid_i)}.')
-    engine = C.engines_neo[engine_i]
-
-    # Docs say we can return up to 256 tokens but API sometimes throws errors
-    # if we go above 250.
-    headers = {'Authorization':
-               f'Bearer api_{HF_API_KEY}'}
-    # Notice the names don't always align with parameter names - I wanted
-    # those to be more consistent with query_gpt3() function. Also notice
-    # that types matter: if Huggingface expects a float but gets an int, we'll
-    # get an error.
-    if repetition_penalty is not None:
-        repetition_penalty = float(repetition_penalty)
-    data = {'inputs': prompt,
-            'parameters': {'top_k': top_k, 'top_p': top_p,
-                           'temperature': float(temperature),
-                           'max_new_tokens': min(max_tokens, 250),
-                           'repetition_penalty': repetition_penalty,
-                           'return_full_text': False}}
-    url = f'https://api-inference.huggingface.co/models/EleutherAI/{engine}'
-    try:
-        # Put the request itself inside try too in case of timeout.
-        r = requests.post(url, headers=headers, data=json.dumps(data))
-        r.raise_for_status()
-    except requests.HTTPError as e:
-        raise MockFunctionException(str(e)) from None
-
-    # Huggingface doesn't natively provide the `stop` parameter that OpenAI
-    # does so we have to do this manually.
-    res = r.json()[0]['generated_text']
-    if 'stop' in kwargs:
-        idx = [idx for idx in map(res.find, tolist(kwargs['stop']))
-               if idx >= 0]
-        stop_idx = min(idx) if idx else None
-        res = res[:stop_idx]
-    return prompt, res
-
-
-def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
-    """Queries free GPT-J API. GPT-J has 6 billion parameters and is, roughly
-    speaking, the open-source equivalent of Curie (3/19/22 update: size sounds
-    more like Babbage actually). It was trained on more
-    code than GPT3 though so it may do surprisingly well at those kinds of
-    tasks. This function should be usable as a mock_func argument in
-    query_gpt_3.
-
-    API uptime may be questionable though. There's an accompanying front end
-    here:
-    http://api.vicgalle.net:8000/
-
-    Parameters
-    ----------
-    prompt: str
-    temperature: float
-    max_tokens: int
-    kwargs: any
-        Only supported options are top_p (float) and stop (Iterable[str]).
-        Notice that stream mode is not supported.
-
-    Returns
-    -------
-    tuple[str]: Prompt, response.
-    """
-    params = {'context': prompt,
-              'token_max_length': max_tokens,
-              'temperature': temperature,
-              'top_p': kwargs.pop('top_p', 1.0)}
-
-    # Ensure that we end up with a list AND that stop is still Falsy if user
-    # explicitly passes in stop=None.
-    stop = tolist(kwargs.pop('stop', None) or [])
-    if stop: params['stop_sequence'] = stop[0]
-
-    # Must keep this after the block of stop-related logic above.
-    if kwargs:
-        warnings.warn(f'GPT-J api does not support other kwargs: {kwargs}')
-
-    try:
-        res = requests.post('http://api.vicgalle.net:5000/generate',
-                            params=params)
-        res.raise_for_status()
-    except Exception as e:
-        raise MockFunctionException(str(e)) from None
-    res = res.json()
-
-    # Endpoint doesn't support multiple stop sequences so we have to
-    # postprocess. Even with a single stop sequence, it includes it while gpt3
-    # and my gpt-neo function exclude it, so we need to handle that here.
-    idx = min([i for i in map(res['text'].find, stop) if i >= 0] or [None])
-    completion = res['text'][:idx]
-    return res['prompt'], completion
 
 
 def conversation_formatter(text_fmt, prompt, **kwargs):

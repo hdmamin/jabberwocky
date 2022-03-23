@@ -55,7 +55,7 @@ def load_api_key(name):
     Parameters
     ----------
     name: str
-        Examples: 'booste', 'hggingface', 'gooseai'.
+        Examples: 'booste', 'huggingface', 'gooseai'.
 
     Returns
     -------
