@@ -607,6 +607,7 @@ if __name__ == '__main__':
     conv = ConversationManager(['Albert Einstein'])  # TODO: load all personas?
     gpt = PromptManager(['punctuate_alexa'], verbose=False)
     backend = BackendSelector()
+    backend.query()
     utt2meta = load('data/alexa/utterance2intent.pkl')
     # nlp = spacy.load('en_core_web_sm', disable=['parser', 'tagger'])
 

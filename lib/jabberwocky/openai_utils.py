@@ -3,6 +3,7 @@
 from collections.abc import Iterable, Mapping
 from collections import Counter
 from contextlib import contextmanager
+import inspect
 from itertools import zip_longest
 import json
 from nltk.tokenize import sent_tokenize
@@ -284,6 +285,27 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
         return output if return_full else output[:-1]
 
 
+def with_signature(to_f, keep=False):
+    """Decorator borrowed from fastai and renamed to avoid name collision
+    with htools (originally called "delegates"). Replaces `**kwargs`
+    in signature with params from `to`. Unlike htools.delegates, it only
+    changes documentation - variables are still made available in the decorated
+    function as 'kwargs'.
+    """
+    def _f(f):
+        from_f = f
+        sig = inspect.signature(from_f)
+        sigd = dict(sig.parameters)
+        k = sigd.pop('kwargs')
+        s2 = {k: v for k, v in inspect.signature(to_f).parameters.items()
+              if v.default != inspect.Parameter.empty and k not in sigd}
+        sigd.update(s2)
+        if keep: sigd['kwargs'] = k
+        from_f.__signature__ = sig.replace(parameters=sigd.values())
+        return f
+    return _f
+
+
 class BackendSelector:
     """
     Examples
@@ -358,7 +380,7 @@ class BackendSelector:
 
     def __exit__(self, exc_type, exc_val, traceback):
         """Revert to previously used backend on contextmanager exit."""
-        print(f'Switching openai backend back to "{self.old_name}".')
+        print(f'Switching  backend back to "{self.old_name}".')
         openai.api_key = self.old_key
         if self.old_name in self.name2base:
             openai.api_base = self.name2base[self.old_name]
@@ -383,8 +405,8 @@ class BackendSelector:
         self(name=name).__enter__()
         self.clear()
 
-    @classmethod
-    def current(cls):
+    @staticmethod
+    def current():
         """Get current backend name, e.g. "gooseai". If we've ever switched
         backend with BackendSelector, openai.curr_name
         should exist. If not, the backend should be the default.
@@ -431,13 +453,15 @@ class BackendSelector:
                              f'Should be one of {list(range(len(engines)))} '
                              f'when using backend {current}.')
 
+    # Decorator order matters - doesn't work if we flip these.
+    @with_signature(query_gpt3)
     @add_docstring(query_gpt3)
-    def query(self, *args, **kwargs):
+    def query(self, prompt, **kwargs):
         if kwargs.pop('mock_func', None):
             raise ValueError('Do not pass in a mock_func with this interface. '
                              'That is handled for you under the hood.')
         mock_func = self.name2mock[self.current()]
-        return query_gpt3(*args, **kwargs, mock_func=mock_func)
+        return query_gpt3(prompt, **kwargs, mock_func=mock_func)
 
     def __repr__(self):
         return f'{func_name(self)} <current_name: {self.current()}>'

@@ -735,15 +735,30 @@ X -adjust changeBackend intent func - slot utts allow both with and without spac
 3/23/22 wed
 -----------
 -test backendselector more in jupyter (not ipython, want to see docstring)
-    -do base and key change when we expect them to?
-    -does query() show docstring as expected?
-    -try actual queries w/ all functions wrapped in debug. Make sure mock funcs are getting called when appropriate.
+    X -do base and key change when we expect them to?
+    X -does query() show docstring as expected?
+        UPDATE: had to add modified fastai decorator but now it works.
+    ~ -try actual queries w/ all functions wrapped in debug. Make sure mock funcs are getting called when appropriate.
+        UPDATE: Seems to work but both gptj and huggingface eleuther apis are down or deprecated - unclear.
 -continue testing changeBackend in console
     -is the intent getting recognized?
     -if not, what intents (if any) are getting inferred?
 
+3/24/22 thurs
+-------------
+-rename query neo to match backend name
+-maybe rename backendselector class? No longer just a backend selector exactly.
+-make ls() (from nb) a method of backendselector?
+-make other extra simple mock funcs supported by backendselector? With 2 apis down, there's no free option for testing atm. (Note: make sure you don't break query_gpt3 if so, since mock_funcs currently edit the object loaded by our regular mock response).
+-update convManager to use new backend.query api
+-update promptManager to use new backend.query api
+
+
 Backlog
 -------
+-continue testing changeBackend in console
+    -is the intent getting recognized?
+    -if not, what intents (if any) are getting inferred?
 -resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
     -test ability to extract slots in each case (above task refers to our ability to infer intents, which is a distinct step)
