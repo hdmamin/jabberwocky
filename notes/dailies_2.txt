@@ -734,12 +734,13 @@ X -adjust changeBackend intent func - slot utts allow both with and without spac
 
 3/23/22 wed
 -----------
--test backendselector more in jupyter (not ipython, want to see docstring)
+~ -test backendselector more in jupyter (not ipython, want to see docstring)
     X -do base and key change when we expect them to?
     X -does query() show docstring as expected?
         UPDATE: had to add modified fastai decorator but now it works.
     ~ -try actual queries w/ all functions wrapped in debug. Make sure mock funcs are getting called when appropriate.
         UPDATE: Seems to work but both gptj and huggingface eleuther apis are down or deprecated - unclear.
+X -renew goose.ai api key
 -continue testing changeBackend in console
     -is the intent getting recognized?
     -if not, what intents (if any) are getting inferred?
