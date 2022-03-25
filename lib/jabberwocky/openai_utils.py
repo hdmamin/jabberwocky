@@ -173,6 +173,11 @@ def query_gpt_huggingface(
     return prompt, res
 
 
+def query_gpt_repeat(prompt, **kwargs):
+    """Mock func that just returns the prompt as the response."""
+    return prompt, prompt
+
+
 def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
                max_tokens=50, logprobs=None, stream=False, mock=False,
                return_full=False, strip_output=True, mock_func=None,
@@ -346,13 +351,14 @@ class GPTBackend:
         'openai': None,
         'gooseai': None,
         'huggingface': query_gpt_huggingface,
-        'hobby': query_gpt_j
+        'hobby': query_gpt_j,
+        'repeat': query_gpt_repeat
     }
 
     name2key = {}
     for name in name2mock:
-        if name == 'hobby':
-            name2key[name] = '<HOBBY BACKEND: FAKE API KEY>'
+        if name in {'hobby', 'repeat'}:
+            name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
         else:
             name2key[name] = load_api_key(name)
 
@@ -402,7 +408,7 @@ class GPTBackend:
         """
         print('\nBase:', openai.api_base)
         print('Key:', openai.api_key)
-        print('Mock func:', cls.name2mock[cls.current()])
+        print('Mock func:', cls.mock_func())
 
     def clear(self):
         """Reset instance variables tracking that were used to restore
@@ -433,6 +439,10 @@ class GPTBackend:
         str
         """
         return getattr(openai, 'curr_name', 'openai')
+
+    def mock_func(cls):
+        """Return current mock function (callable or None)."""
+        return cls.name2mock[cls.current()]
 
     @classmethod
     def engine(cls, engine_i):
@@ -477,8 +487,7 @@ class GPTBackend:
         if kwargs.pop('mock_func', None):
             raise ValueError('Do not pass in a mock_func with this interface. '
                              'That is handled for you under the hood.')
-        mock_func = self.name2mock[self.current()]
-        return query_gpt3(prompt, **kwargs, mock_func=mock_func)
+        return query_gpt3(prompt, **kwargs, mock_func=self.mock_func())
 
     def __repr__(self):
         return f'{func_name(self)} <current_name: {self.current()}>'
@@ -667,7 +676,7 @@ class PromptManager:
             if save_kwargs.get('mock_func', None):
                 save_kwargs['mock_func'] = str(save_kwargs['mock_func'])
             save(save_kwargs, self.log_path)
-        return query_gpt3(prompt, **kwargs)
+        return gpt.query(prompt, **kwargs)
 
     def kwargs(self, task, fully_resolved=True, return_prompt=False,
                extra_kwargs=None, **kwargs):
@@ -708,6 +717,13 @@ class PromptManager:
             raise RuntimeError('Arg "prompt" should not be in query kwargs. '
                                'It will be constructed within this method and '
                                'passing it in will override the new version.')
+        if 'mock_func' in kwargs:
+            raise RuntimeError(
+                '"mock_func" should no longer be specified as an argument. '
+                'You can use the `gpt.switch()` method or `with gpt(name)` '
+                'context manager to achieve this behavior.'
+            )
+
         kwargs = {**self.prompts[task], **kwargs}
         for k, v in (extra_kwargs or {}).items():
             v_cls = type(v)
@@ -724,6 +740,7 @@ class PromptManager:
             kwargs[k] = curr_val
 
         if fully_resolved: kwargs = dict(bound_args(query_gpt3, [], kwargs))
+        kwargs['mock_func'] = gpt.mock_func()
         return kwargs if return_prompt else select(kwargs, drop=['prompt'])
 
     def prompt(self, task, text='', print_=False):
@@ -1114,6 +1131,13 @@ class ConversationManager:
                 'constructed within this method and passing it in will '
                 'override the new version.'
             )
+        if 'mock_func' in kwargs:
+            raise RuntimeError(
+                '"mock_func" should no longer be specified as an argument. '
+                'You can use the `gpt.switch()` method or `with gpt(name)` '
+                'context manager to achieve this behavior.'
+            )
+
         kwargs = {**self._kwargs, **kwargs}
         for k, v in (extra_kwargs or {}).items():
             v_cls = type(v)
@@ -1130,6 +1154,7 @@ class ConversationManager:
             kwargs[k] = curr_val
 
         if fully_resolved: kwargs = dict(bound_args(query_gpt3, [], kwargs))
+        kwargs['mock_func'] = gpt.mock_func()
 
         # Note: should this return an updated prompt? Right now it looks like
         # it always returns the base one.
@@ -1195,7 +1220,7 @@ class ConversationManager:
 
         # Query and return generator. This allows us to use streaming mode in
         # GUI while still updating this instance with gpt3's response.
-        res = query_gpt3(prompt, **kwargs)
+        res = gpt.query(prompt, **kwargs)
         if not kwargs.get('stream', False):
             self.gpt3_turns.append(res[1])
             return res
@@ -1562,3 +1587,4 @@ TASK2FORMATTER = {'conversation': conversation_formatter}
 
 # I figure if we're importing these functions, we'll need to authenticate.
 openai_auth()
+gpt = GPTBackend()

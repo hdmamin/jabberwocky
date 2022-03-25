@@ -1,6 +1,7 @@
 """Define constants used throughout the project.
 """
 
+from pathlib import Path
 
 from htools.structures import IndexedDict
 
@@ -26,6 +27,7 @@ class C:
     prices = IndexedDict(zip(engines, [.0008, .0012, .006, .06]))
 
     # Data
-    mock_stream_paths = {True: 'data/misc/sample_stream_response.pkl',
-                         False: 'data/misc/sample_response.pkl'}
+    root = Path(__file__).parent.parent.parent
+    mock_stream_paths = {True: root/'data/misc/sample_stream_response.pkl',
+                         False: root/'data/misc/sample_response.pkl'}
 

@@ -750,25 +750,30 @@ X -renew goose.ai api key
 X -rename query neo to match backend name
 X -maybe rename backendselector class? No longer just a backend selector exactly.
 X -make ls() (from nb) a method of backendselector?
--make other extra simple mock funcs supported by backendselector? With 2 apis down, there's no free option for testing atm. (Note: make sure you don't break query_gpt3 if so, since mock_funcs currently edit the object loaded by our regular mock response).
--update convManager to use new backend.query api
--update promptManager to use new backend.query api
+X -add gptbackend method to get current mock_func
+X -make other extra simple mock funcs supported by backendselector? With 2 apis down, there's no free option for testing atm. (Note: make sure you don't break query_gpt3 if so, since mock_funcs currently edit the object loaded by our regular mock response).
+X -update convManager to use new backend.query api
+X -update promptManager to use new backend.query api
+    UPDATE: updated query and kwargs methods, then briefly tested in jupyter. Seems all good.
 
-
-Backlog
--------
+3/25/22 fri
+-----------
 -continue testing changeBackend in console
     -is the intent getting recognized?
     -if not, what intents (if any) are getting inferred?
--resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
     -test ability to extract slots in each case (above task refers to our ability to infer intents, which is a distinct step)
     -for diff utterances, see what matching intents are printed out by fuzzykeydict
     -see what common similarity scores are
     -briefly examine fuzzykeydict examples and try to think of what common bugs could appear (e.g. very short sample utterances might be problematic? check what shortest ones are)
     -maybe assess whether n_keys should change in fuzzy_dict.similar() call
--adjust Ask to track how many calls deep we are for a single user turn and adjust logging indentation accordingly. Make it visually easier to see when an intent call is really done vs. when it was just a nested call inside another intent.
--add support for banana.dev version of gptj (see ipy in tab 1)
+-easier(?) task: add support for banana.dev version of gptj (see ipy in tab 1)
+-fun task: adjust Ask to track how many calls deep we are for a single user turn and adjust logging indentation accordingly. Make it visually easier to see when an intent call is really done vs. when it was just a nested call inside another intent.
+
+
+Backlog
+-------
+-resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
 -update end of conv to erase conv-level settings
