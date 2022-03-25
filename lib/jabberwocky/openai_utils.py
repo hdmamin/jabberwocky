@@ -440,6 +440,7 @@ class GPTBackend:
         """
         return getattr(openai, 'curr_name', 'openai')
 
+    @classmethod
     def mock_func(cls):
         """Return current mock function (callable or None)."""
         return cls.name2mock[cls.current()]
@@ -481,13 +482,14 @@ class GPTBackend:
                              f'when using backend {current}.')
 
     # Decorator order matters - doesn't work if we flip these.
+    @classmethod
     @with_signature(query_gpt3)
     @add_docstring(query_gpt3)
-    def query(self, prompt, **kwargs):
+    def query(cls, prompt, **kwargs):
         if kwargs.pop('mock_func', None):
             raise ValueError('Do not pass in a mock_func with this interface. '
                              'That is handled for you under the hood.')
-        return query_gpt3(prompt, **kwargs, mock_func=self.mock_func())
+        return query_gpt3(prompt, **kwargs, mock_func=cls.mock_func())
 
     def __repr__(self):
         return f'{func_name(self)} <current_name: {self.current()}>'
@@ -676,7 +678,7 @@ class PromptManager:
             if save_kwargs.get('mock_func', None):
                 save_kwargs['mock_func'] = str(save_kwargs['mock_func'])
             save(save_kwargs, self.log_path)
-        return gpt.query(prompt, **kwargs)
+        return GPTBackend.query(prompt, **kwargs)
 
     def kwargs(self, task, fully_resolved=True, return_prompt=False,
                extra_kwargs=None, **kwargs):
@@ -1220,7 +1222,7 @@ class ConversationManager:
 
         # Query and return generator. This allows us to use streaming mode in
         # GUI while still updating this instance with gpt3's response.
-        res = gpt.query(prompt, **kwargs)
+        res = GPTBackend.query(prompt, **kwargs)
         if not kwargs.get('stream', False):
             self.gpt3_turns.append(res[1])
             return res
@@ -1587,4 +1589,3 @@ TASK2FORMATTER = {'conversation': conversation_formatter}
 
 # I figure if we're importing these functions, we'll need to authenticate.
 openai_auth()
-gpt = GPTBackend()

@@ -754,10 +754,15 @@ X -add gptbackend method to get current mock_func
 X -make other extra simple mock funcs supported by backendselector? With 2 apis down, there's no free option for testing atm. (Note: make sure you don't break query_gpt3 if so, since mock_funcs currently edit the object loaded by our regular mock response).
 X -update convManager to use new backend.query api
 X -update promptManager to use new backend.query api
-    UPDATE: updated query and kwargs methods, then briefly tested in jupyter. Seems all good.
+    UPDATE: updated query and kwargs methods, then briefly kwargs tested in jupyter. Seems all good. But I then went back and made gpt.query a classmethod so need to test this again.
 
 3/25/22 fri
 -----------
+-test convManager and promptManager in jupyter after latest change to gpt.query (see last bullet point yesterday)
+    -convManager.kwargs
+    -promptManager.kwargs
+    -convManager.query
+    -promptManager.query
 -continue testing changeBackend in console
     -is the intent getting recognized?
     -if not, what intents (if any) are getting inferred?
