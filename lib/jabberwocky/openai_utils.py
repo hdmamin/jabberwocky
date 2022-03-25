@@ -371,7 +371,12 @@ class GPTBackend:
         """__enter__ can't take arguments so we need to specify this here.
         Notice that name is auto-lowercased and spaces are removed.
         """
-        self.new_name = name.lower().replace(' ', '')
+        new_name = name.lower().replace(' ', '')
+        if new_name not in self.name2mock:
+            raise ValueError(f'Invalid name {name}. Valid options are: '
+                             f'{list(self.name2mock)}')
+
+        self.new_name = new_name
         self.old_name = self.current()
         return self
 
@@ -446,6 +451,16 @@ class GPTBackend:
         return cls.name2mock[cls.current()]
 
     @classmethod
+    def key(cls):
+        """Return current API key. In some cases this is a mock value since
+        some modes don't have a key.
+        """
+        # More reliable than checking name2key because the openai attribute
+        # is what's actually used (at least for openai vs. gooseai -
+        # huggingface mock_func technically uses a global).
+        return openai.api_key
+
+    @classmethod
     def engine(cls, engine_i):
         """Get appropriate engine name depending on current api backend and
         selected engine_i.
@@ -464,13 +479,7 @@ class GPTBackend:
         str: Name of an engine, e.g. "davinci" if we're in openai mode or
         "gpt-neo-20b" if we're in gooseai mode.
         """
-        current = cls.current()
-        # Adds better error message if current name is somehow invalid.
-        try:
-            engines = C.backend_engines[current]
-        except KeyError:
-            raise KeyError(f'Encountered invalid backend name {current}.'
-                           f' Should be one of {cls.name2mock.keys()}.')
+        engines = C.backend_engines[cls.current()]
 
         # Adds better error message if user passes in a number too big for the
         # current backend.
@@ -479,17 +488,27 @@ class GPTBackend:
         except IndexError:
             raise ValueError(f'Encountered invalid engine_i value: {engine_i}.'
                              f'Should be one of {list(range(len(engines)))} '
-                             f'when using backend {current}.')
+                             f'when using backend {cls.current()}.')
 
     # Decorator order matters - doesn't work if we flip these.
     @classmethod
     @with_signature(query_gpt3)
     @add_docstring(query_gpt3)
     def query(cls, prompt, **kwargs):
-        if kwargs.pop('mock_func', None):
-            raise ValueError('Do not pass in a mock_func with this interface. '
-                             'That is handled for you under the hood.')
-        return query_gpt3(prompt, **kwargs, mock_func=cls.mock_func())
+        mock_func = cls.mock_func()
+        kwargs_mock = kwargs.pop('mock_func', None)
+        # If user doesn't pass in mock_func explicitly
+        # shouldn't raise an error.
+        if kwargs_mock and kwargs_mock != mock_func:
+            raise ValueError(
+                f'Encountered unexpected mock_func {kwargs_mock} with this '
+                f'interface. The current backend expects a mock_func of '
+                f'{mock_func}. Note: you typically shouldn\'t pass in '
+                f'mock_func explicitly since GPTBackend handles this for you. '
+                f'(Technically, we do allow this due to the way PromptManager '
+                f'and ConversationManager implement kwargs() methods).'
+            )
+        return query_gpt3(prompt, **kwargs, mock_func=mock_func)
 
     def __repr__(self):
         return f'{func_name(self)} <current_name: {self.current()}>'
@@ -719,11 +738,18 @@ class PromptManager:
             raise RuntimeError('Arg "prompt" should not be in query kwargs. '
                                'It will be constructed within this method and '
                                'passing it in will override the new version.')
-        if 'mock_func' in kwargs:
-            raise RuntimeError(
-                '"mock_func" should no longer be specified as an argument. '
-                'You can use the `gpt.switch()` method or `with gpt(name)` '
-                'context manager to achieve this behavior.'
+        mock_func = GPTBackend.mock_func()
+        kwargs_mock = kwargs.get('mock_func', None)
+        # If user doesn't pass in a mock_func explicitly, this shouldn't raise
+        # an error even if our backend will automatically use one.
+        if kwargs_mock and kwargs_mock != mock_func:
+            raise ValueError(
+                f'Encountered unexpected mock_func {kwargs_mock}. The current '
+                f'backend expects a mock_func of {mock_func}. Note: you '
+                'typically shouldn\'t pass in mock_func explicitly since '
+                'GPTBackend handles this for you. '
+                '(Technically, we do allow this due to the way PromptManager '
+                'and ConversationManager implement kwargs() methods).'
             )
 
         kwargs = {**self.prompts[task], **kwargs}
@@ -742,7 +768,7 @@ class PromptManager:
             kwargs[k] = curr_val
 
         if fully_resolved: kwargs = dict(bound_args(query_gpt3, [], kwargs))
-        kwargs['mock_func'] = gpt.mock_func()
+        kwargs['mock_func'] = mock_func
         return kwargs if return_prompt else select(kwargs, drop=['prompt'])
 
     def prompt(self, task, text='', print_=False):
@@ -1133,11 +1159,18 @@ class ConversationManager:
                 'constructed within this method and passing it in will '
                 'override the new version.'
             )
-        if 'mock_func' in kwargs:
-            raise RuntimeError(
-                '"mock_func" should no longer be specified as an argument. '
-                'You can use the `gpt.switch()` method or `with gpt(name)` '
-                'context manager to achieve this behavior.'
+        mock_func = GPTBackend.mock_func()
+        kwargs_mock = kwargs.get('mock_func', None)
+        # If user doesn't pass in a mock_func explicitly, this shouldn't raise
+        # an error even if our backend will automatically use one.
+        if kwargs_mock and kwargs_mock != mock_func:
+            raise ValueError(
+                f'Encountered unexpected mock_func {kwargs_mock}. The current '
+                f'backend expects a mock_func of {mock_func}. Note: you '
+                'typically shouldn\'t pass in mock_func explicitly since '
+                'GPTBackend handles this for you. '
+                '(Technically, we do allow this due to the way PromptManager '
+                'and ConversationManager implement kwargs() methods).'
             )
 
         kwargs = {**self._kwargs, **kwargs}
@@ -1156,7 +1189,7 @@ class ConversationManager:
             kwargs[k] = curr_val
 
         if fully_resolved: kwargs = dict(bound_args(query_gpt3, [], kwargs))
-        kwargs['mock_func'] = gpt.mock_func()
+        kwargs['mock_func'] = mock_func
 
         # Note: should this return an updated prompt? Right now it looks like
         # it always returns the base one.

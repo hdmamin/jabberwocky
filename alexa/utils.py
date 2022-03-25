@@ -203,7 +203,7 @@ def get_backend(
     return sorted(b2matches.items(), key=lambda x: x[1][0][-1], reverse=True)
 
 
-@deprecated('get_scope was never finished and is now deprecated. It\'s '
+@deprecated(msg='get_scope was never finished and is now deprecated. It\'s '
             'used in SlotType\'s definition so I don\'t delete it, though '
             'that class is no longer used. Just want to keep it as a '
             'reference since it does some pretty interesting things, '

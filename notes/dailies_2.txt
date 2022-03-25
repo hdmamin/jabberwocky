@@ -758,26 +758,39 @@ X -update promptManager to use new backend.query api
 
 3/25/22 fri
 -----------
--test convManager and promptManager in jupyter after latest change to gpt.query (see last bullet point yesterday)
-    -convManager.kwargs
-    -promptManager.kwargs
-    -convManager.query
-    -promptManager.query
--continue testing changeBackend in console
-    -is the intent getting recognized?
-    -if not, what intents (if any) are getting inferred?
--test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
-    -test ability to extract slots in each case (above task refers to our ability to infer intents, which is a distinct step)
-    -for diff utterances, see what matching intents are printed out by fuzzykeydict
-    -see what common similarity scores are
-    -briefly examine fuzzykeydict examples and try to think of what common bugs could appear (e.g. very short sample utterances might be problematic? check what shortest ones are)
+X -test convManager and promptManager in jupyter after latest change to gpt.query (see last bullet point yesterday)
+    X -convManager.kwargs
+    X -promptManager.kwargs
+    X -convManager.query
+    X -promptManager.query
+X -continue testing changeBackend in console
+    X -is the intent getting recognized?
+    X -if not, what intents (if any) are getting inferred?
+    UPDATE: intent inference seemed to work very well initially (magically, no bugs!) but at end of session realized problem w/ weighted inference strategy.
+~ -test each inferrable intent in console (e.g. type something like "Lou, change backend to Open I" or speak "Lou change backend to goose AI" (hard for it to recognize))
+    _-test ability to extract slots in each case (above task refers to our ability to infer intents, which is a distinct step)
+    _ -for diff utterances, see what matching intents are printed out by fuzzykeydict
+    ~ -see what common similarity scores are
+    ~ -briefly examine fuzzykeydict examples and try to think of what common bugs could appear (e.g. very short sample utterances might be problematic? check what shortest ones are)
     -maybe assess whether n_keys should change in fuzzy_dict.similar() call
 -easier(?) task: add support for banana.dev version of gptj (see ipy in tab 1)
 -fun task: adjust Ask to track how many calls deep we are for a single user turn and adjust logging indentation accordingly. Make it visually easier to see when an intent call is really done vs. when it was just a nested call inside another intent.
 
+2/26/22 sat
+-----------
+[NOTE: currently have gooseai enabled for both punctuation and replies. Hobby backend still down and huggingface backend seems too slow to do 2 tasks (punct + reply) in time for alexa.]
+-add "repeat" option to dialog model in UI
+    -generate new utt2meta.pkl
+-update readSettings to include defaults (i.e. if user hasn't explicitly set Model, this intent won't read it)
+-fix weighted strategy in infer_intent (e.g. if all 5 closest matches are changeModel but the closest match is .4, we wouldn't want to delegate to that, but we do atm)
+-troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
+    -see if we can increase timeout
+
 
 Backlog
 -------
+-add support for banana.dev version of gptj (see ipy in tab 1)
+-adjust Ask to track how many calls deep we are for a single user turn and adjust logging indentation accordingly. Make it visually easier to see when an intent call is really done vs. when it was just a nested call inside another intent.
 -resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)

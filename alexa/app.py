@@ -124,8 +124,10 @@ def send_transcript(conv, user_email='', cleanup=False):
     return True
 
 
-def reset_app_state(end_conv=True, clear_queue=True, use_gpt_j=True,
-                    backend_='gooseai', auto_punct=True,
+# TODO: might want to change default backend, but for now use free model for
+# testing.
+def reset_app_state(end_conv=True, clear_queue=True,
+                    backend_='huggingface', auto_punct=True,
                     attrs=('name', 'email')):
     """Reset some app-level attributes in `state`, `ask`, and `conv` objects.
     This does NOT reset gpt3 query kwargs aside from replacing all gpt3 calls
@@ -139,8 +141,6 @@ def reset_app_state(end_conv=True, clear_queue=True, use_gpt_j=True,
         a conversation is underway.
     clear_queue: bool
         If True, clear Ask's queue of functions to call later.
-    use_gpt_j: bool
-        If true, replace gpt3 calls with free gpt-j calls.
     auto_punct: bool
         If True, use gpt-j to auto-punctuate/capitalize alexa's transcriptions
         before using them as prompts for a reply.
@@ -152,11 +152,7 @@ def reset_app_state(end_conv=True, clear_queue=True, use_gpt_j=True,
     if clear_queue:
         ask.func_clear()
     state.kwargs = {}
-    # TODO: might want to change this eventually, but for now use free model
-    # by default.
-    if use_gpt_j:
-        state.set('global', mock_func=query_gpt_j)
-    if backend_ in ('gooseai', 'openai'):
+    if backend_:
        gpt.switch(backend_)
     state.auto_punct = auto_punct
     for k, v in get_user_info(attrs).items():
@@ -318,12 +314,6 @@ def change_model(scope=None, model=None):
     msg = f'I\'ve switched your {scope} backend to model {model}.'
     if isinstance(model, int):
         state.set(scope, model_i=model)
-        state.set(scope, mock_func=None)
-    # TODO: rm
-    # elif model == 'j':
-    #     state.set(scope, mock_func=query_gpt_j)
-    # elif model == 'neo':
-    #     state.set(scope, mock_func=partial(query_gpt_neo, api_key=HF_API_KEY))
     else:
         msg = f'It sounded like you asked for model ' \
               f'{model or "no choice specified"}, but the only ' \
@@ -447,11 +437,24 @@ def _reply(prompt=None):
     # TODO: maybe add setting to make punctuation optional? Prob slows things
     # down significantly, but potentially could improve completions a lot.
     ask.logger.info('BEFORE PUNCTUATION: ' + prompt)
-    _, prompt = gpt.query(task='punctuate_alexa', text=prompt,
-                          mock_func=query_gpt_j, strip_output=True,
-                          max_tokens=2 * len(prompt.split()))
+    # TODO: maybe change eventually but for now just use free version. I think
+    # I prefer to keep this separate from the actual response backend.
+    # Using a fairly powerful model among the free options though.
+    # with gpt('huggingface'):
+    #     _, prompt = prompter.query(task='punctuate_alexa', engine_i=2,
+    #                                text=prompt, strip_output=True,
+    #                                max_tokens=2 * len(prompt.split()))
+    # TODO: change back to free.
+    with gpt('gooseai'):
+        _, prompt = prompter.query(task='punctuate_alexa', engine_i=1,
+                                   text=prompt, strip_output=True,
+                                   max_tokens=2 * len(prompt.split()))
     ask.logger.info('AFTER PUNCTUATION: ' + prompt)
-    _, text = conv.query(prompt, **state)
+    # TODO: rm. Hardcoding to gooseai and engine=0 to test if no response is
+    # due to hf being slow.
+    with gpt('gooseai'):
+        _, text = conv.query(prompt, **state, engine_i=0)
+    # _, text = conv.query(prompt, **state)
     return question(text)
 
 
@@ -604,9 +607,9 @@ def end_session():
 
 if __name__ == '__main__':
     conv = ConversationManager(['Albert Einstein'])  # TODO: load all personas?
-    gpt = PromptManager(['punctuate_alexa'], verbose=False)
+    prompter = PromptManager(['punctuate_alexa'], verbose=False)
     gpt = GPTBackend()
-    utt2meta = load('data/alexa/utterance2intent.pkl')
+    utt2meta = load('data/alexa/utterance2meta.pkl')
 
     decorate_functions(debug_decorator)
     # Set false because otherwise weird things happen to app state in the
