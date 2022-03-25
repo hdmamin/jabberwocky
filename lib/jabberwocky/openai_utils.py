@@ -25,6 +25,8 @@ from jabberwocky.utils import strip, bold, load_yaml, colored, \
 
 
 HF_API_KEY = load_huggingface_api_key()
+MOCK_RESPONSE = [load(C.mock_stream_paths[False]),
+                 load(C.mock_stream_paths[True])]
 
 
 def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
@@ -83,16 +85,21 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
 
 
 @valuecheck
-def query_gpt_neo(prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
-                  max_tokens=250, top_k=None, top_p=None, **kwargs):
-    """Query gpt-Neo using Huggingface API.
+def query_gpt_huggingface(
+        prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
+        max_tokens=250, top_k=None, top_p=None, **kwargs
+):
+    """Query EleuetherAI gpt models using the Huggingface API. This was called
+    query_gpt_neo in a former version of the library (which is used by the
+    GUI) but the API now hosts a GPT-J model as well so I renamed it.
 
     Parameters
     ----------
     prompt: str
     engine_i: int
         Determines which Huggingface model API to query. See
-        config.C.engines_neo. Those names refer to the number of
+        config.C.backend_engines['huggingface'].
+        Those names refer to the number of
         parameters in the model, where bigger models generally produce higher
         quality results but may be slower (in addition to the actual inference
         being slower to produce, the better models are also more popular so the
@@ -129,7 +136,7 @@ def query_gpt_neo(prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
     -------
     tuple[str]: Prompt, response tuple, just like query_gpt_3().
     """
-    engine = BackendSelector.engine(engine_i)
+    engine = GPTBackend.engine(engine_i)
 
     # Docs say we can return up to 256 tokens but API sometimes throws errors
     # if we go above 250.
@@ -215,7 +222,8 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
         raise an error when loading a saved mock response. Therefore, we may
         want to write a mock_func that extracts the new input portion of the
         prompt (discarding instructions and examples). This option is
-        unavailable in stream mode.
+        unavailable in stream mode. [3/24/22: that last line might not be true
+        with gooseAI. Need to investigate further.]
     mock_mode: str
         Determines what to do if using mock mode and mock_func is not None and
         it fails. Either 'raise' an error, 'warn' the user and proceed with the
@@ -243,7 +251,7 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
     # to unexpected charges 😬. Trying to prevent this in the future.
     mock = mock or bool(mock_func)
     if mock:
-        res = load(C.mock_stream_paths[stream])
+        res = MOCK_RESPONSE[stream]
         if mock_func:
             if stream:
                 raise NotImplementedError('mock_func unavailable when '
@@ -266,7 +274,7 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
                     warnings.warn(str(e))
     else:
         res = openai.Completion.create(
-            engine=BackendSelector.engine(engine_i),
+            engine=GPTBackend.engine(engine_i),
             prompt=prompt,
             temperature=temperature,
             frequency_penalty=frequency_penalty,
@@ -306,26 +314,26 @@ def with_signature(to_f, keep=False):
     return _f
 
 
-class BackendSelector:
+class GPTBackend:
     """
     Examples
     --------
-    backend = BackendSelector()
+    gpt = GPTBackend()
 
     # Default backend is openai.
-    openai_res = query_gpt3()
+    openai_res = gpt.query(**kwargs)
 
-    with backend('gooseai'):
+    with gpt('gooseai'):
         # Now we're using the gooseai backend.
-        gooseai_res = query_gpt3()
+        gooseai_res = gpt.query(**kwargs)
 
     # Now we're back to using openai.
-    openai_res_2 = query_gpt3()
+    openai_res_2 = gpt.query(**kwargs)
 
     # Now we'll switch to gooseai and changes will persist since we're not
     # using a context manager.
-    backend.switch('gooseai')
-    gooseai_res_2 = query_gpt3()
+    gpt.switch('gooseai')
+    gooseai_res_2 = gpt.query(**kwargs)
     """
 
     name2base = {
@@ -337,7 +345,7 @@ class BackendSelector:
     name2mock = {
         'openai': None,
         'gooseai': None,
-        'huggingface': query_gpt_neo,
+        'huggingface': query_gpt_huggingface,
         'hobby': query_gpt_j
     }
 
@@ -367,7 +375,7 @@ class BackendSelector:
         """
         print(f'Switching openai backend to "{self.new_name}".')
         # Store an attribute on openai itself to reduce risk of bugs caused by
-        # BackendSelector being deleted or recreated. Previously used a
+        # GPTBackend being deleted or recreated. Previously used a
         # self.base2name mapping to retrieve the current name but that doesn't
         # work when multiple names use the same base (e.g. huggingface and
         # hobby API backends can't be identified just by their base with
@@ -386,6 +394,15 @@ class BackendSelector:
             openai.api_base = self.name2base[self.old_name]
         openai.curr_name = self.old_name
         self.clear()
+
+    @classmethod
+    def ls(cls):
+        """Print current state of the backend: api_base, api_key, and 
+        mock_func. Mostly useful for debugging and sanity checks.
+        """
+        print('\nBase:', openai.api_base)
+        print('Key:', openai.api_key)
+        print('Mock func:', cls.name2mock[cls.current()])
 
     def clear(self):
         """Reset instance variables tracking that were used to restore
@@ -408,7 +425,7 @@ class BackendSelector:
     @staticmethod
     def current():
         """Get current backend name, e.g. "gooseai". If we've ever switched
-        backend with BackendSelector, openai.curr_name
+        backend with GPTBackend, openai.curr_name
         should exist. If not, the backend should be the default.
 
         Returns

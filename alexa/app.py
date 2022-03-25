@@ -12,18 +12,17 @@ from pathlib import Path
 from flask import Flask, request
 from flask_ask import question, context, statement
 from fuzzywuzzy import fuzz, process
-# openai appears unused but is actually used by BackendSelector instance.
+# openai appears unused but is actually used by GPTBackend instance.
 import openai
 import requests
-import spacy
 
 from config import EMAIL, LOG_FILE
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
-    debug as debug_decorator, load, FuzzyKeyDict, vcounts
+    debug as debug_decorator, load
 from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
-    query_gpt_neo, PromptManager, BackendSelector
-from utils import slot, Settings, model_type, CustomAsk, infer_intent,\
-    get_backend, get_name, get_number, nlp
+    PromptManager, GPTBackend
+from utils import slot, Settings, model_type, CustomAsk, infer_intent
+
 
 
 # Define these before functions since endpoints use ask method as decorators.
@@ -158,7 +157,7 @@ def reset_app_state(end_conv=True, clear_queue=True, use_gpt_j=True,
     if use_gpt_j:
         state.set('global', mock_func=query_gpt_j)
     if backend_ in ('gooseai', 'openai'):
-        backend.switch(backend_)
+       gpt.switch(backend_)
     state.auto_punct = auto_punct
     for k, v in get_user_info(attrs).items():
         setattr(state, k, v)
@@ -211,12 +210,12 @@ def change_backend(backend=None):
         #         backend_name = best_match
         #     else:
         #         raise RuntimeError('Invalid backend name.')
-        backend.switch(backend_name)
+        gpt.switch(backend_name)
     except RuntimeError:
         msg = f'It sounded like you asked for backend ' \
               f'{backend_name or "no choice specified"}, but the only ' \
               'valid options are: "Open AI" and "Goose AI". You are ' \
-              f'currently still using backend {backend.current()}.'
+              f'currently still using backend {gpt.current()}.'
     return _maybe_choose_person(msg)
 
 
@@ -532,7 +531,7 @@ def read_settings():
             v = f'a list containing the following items: {v}'
         strings.append(f'{k.replace("_", " ")} is {v}')
     msg = f'Here are your settings: {"; ".join(strings)}. ' \
-          f'Your api backend is {backend.current()}. ' \
+          f'Your api backend is {gpt.current()}. ' \
           f'You are {"" if state.auto_punct else "not"} using automatic '\
           'punctuation to improve transcription quality.'
     return _maybe_choose_person(msg)
@@ -606,10 +605,8 @@ def end_session():
 if __name__ == '__main__':
     conv = ConversationManager(['Albert Einstein'])  # TODO: load all personas?
     gpt = PromptManager(['punctuate_alexa'], verbose=False)
-    backend = BackendSelector()
-    backend.query()
+    gpt = GPTBackend()
     utt2meta = load('data/alexa/utterance2intent.pkl')
-    # nlp = spacy.load('en_core_web_sm', disable=['parser', 'tagger'])
 
     decorate_functions(debug_decorator)
     # Set false because otherwise weird things happen to app state in the

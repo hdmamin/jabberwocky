@@ -747,9 +747,9 @@ X -renew goose.ai api key
 
 3/24/22 thurs
 -------------
--rename query neo to match backend name
--maybe rename backendselector class? No longer just a backend selector exactly.
--make ls() (from nb) a method of backendselector?
+X -rename query neo to match backend name
+X -maybe rename backendselector class? No longer just a backend selector exactly.
+X -make ls() (from nb) a method of backendselector?
 -make other extra simple mock funcs supported by backendselector? With 2 apis down, there's no free option for testing atm. (Note: make sure you don't break query_gpt3 if so, since mock_funcs currently edit the object loaded by our regular mock response).
 -update convManager to use new backend.query api
 -update promptManager to use new backend.query api
