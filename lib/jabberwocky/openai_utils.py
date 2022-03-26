@@ -148,6 +148,10 @@ def query_gpt_huggingface(
     # get an error.
     if repetition_penalty is not None:
         repetition_penalty = float(repetition_penalty)
+    if kwargs:
+        warnings.warn('query_gpt_huggingface received unused kwargs '
+                      f'{kwargs}.')
+
     data = {'inputs': prompt,
             'parameters': {'top_k': top_k, 'top_p': top_p,
                            'temperature': float(temperature),

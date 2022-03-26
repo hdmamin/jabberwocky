@@ -11,8 +11,9 @@ import sys
 from werkzeug.local import LocalProxy
 
 from htools.meta import Callback, callbacks, params, MultiLogger, func_name,\
-    deprecated
+    deprecated, select
 from htools.structures import FuzzyKeyDict
+from jabberwocky.openai_utils import query_gpt3
 
 
 word2int = FuzzyKeyDict(
@@ -514,6 +515,19 @@ class Settings(Mapping):
             return session.attributes.get(key, None)
         raise AttributeError
 
+    def init_settings(self, conv=None,
+                      args=('engine_i', 'temperature', 'max_tokens',
+                            'frequency_penalty')):
+        """Don't call this in __init__ automatically because flask session
+        object is not yet not available. Instead, we call it in the
+        reset_app_state function in app.py.
+        """
+        if conv:
+            kwargs = select(conv._kwargs, keep=args)
+        else:
+            kwargs = getdefaults(query_gpt3, *args)
+        self.set('global', **kwargs)
+
     @classmethod
     def clone(cls, settings):
         return cls(settings._global.copy(),
@@ -698,7 +712,7 @@ def build_utterance_map(model_json, fuzzy=True,
 
 
 def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
-                 weighted_thresh=.8):
+                 weighted_thresh=.7):
     """Try to infer the user's intent from an utterance. Alexa should detect
     this automatically but it sometimes messes up. This also helps if the user
     gets the utterance slightly wrong, e.g. "Lou, set backend to goose ai"
@@ -741,7 +755,7 @@ def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
                 intent=lambda df_: df_.intent.apply(lambda x: x['intent']))
     weighted = df.groupby('intent').score.sum()\
         .to_frame()\
-        .assign(pct=lambda x: x / x.sum())
+        .assign(pct=lambda x: x / (n_keys * 100))
     if weighted.pct.iloc[0] > weighted_thresh:
         intent = weighted.iloc[0].name
         slots = df.loc[df.intent == intent, 'slots'].iloc[0]
@@ -750,8 +764,36 @@ def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
                 'confidence': weighted.iloc[0].pct,
                 'reason': 'weighted',
                 'res': res}
+    # In this case, confidence is a bit different but it's loosely intended to
+    # mean "confidence that the utterance matched no pre-defined intent".
+    # Value simply needs to be higher than 1 - weighted_thresh.
     return {'intent': '',
             'slots': {},
-            'confidence': -1,
+            'confidence': 1 - weighted.iloc[0].pct,
             'reason': '',
             'res': res}
+
+
+def getdefaults(func, *args):
+    """Get default value for a function argument.
+
+    Parameters
+    ----------
+    func: FunctionType
+    arg: str
+
+    Returns
+    -------
+    dict[str, any]: Maps parameter name(s) to default value(s).
+
+    Examples
+    --------
+    >>> getdefaults(query_gpt3, 'temperature')
+    {'temperature': 0.7}
+
+    >>> getdefaults(query_gpt3, 'temperature', 'engine_i')
+    {'temperature': 0.7,
+     'engine_i': 0}
+    """
+    params_ = params(func)
+    return {k: v.default for k, v in params_.items() if k in args}

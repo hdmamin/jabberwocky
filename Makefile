@@ -31,3 +31,9 @@ install_dev:
  
 run:
 	python gui/main.py
+
+ngrok:
+	ngrok http 5000
+
+run_alexa:
+	python alexa/app.py

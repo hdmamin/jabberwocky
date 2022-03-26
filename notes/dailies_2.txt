@@ -779,17 +779,37 @@ X -continue testing changeBackend in console
 2/26/22 sat
 -----------
 [NOTE: currently have gooseai enabled for both punctuation and replies. Hobby backend still down and huggingface backend seems too slow to do 2 tasks (punct + reply) in time for alexa.]
--add "repeat" option to dialog model in UI
-    -generate new utt2meta.pkl
--update readSettings to include defaults (i.e. if user hasn't explicitly set Model, this intent won't read it)
--fix weighted strategy in infer_intent (e.g. if all 5 closest matches are changeModel but the closest match is .4, we wouldn't want to delegate to that, but we do atm)
--troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
-    -see if we can increase timeout
+
+X -add "repeat" option to dialog model in UI
+    X -generate new utt2meta.pkl
+X -update readSettings to include defaults (i.e. if user hasn't explicitly set Model, this intent won't read it)
+    X -update
+    UPDATE: adjusted settings object to store these by default.
+    X -test in console
+X -add makefile commands for run_alexa and ngrok (realized I forgot ngrok cmd after restarting computer)
+-add a "back to your conversation" msg for when changing settings mid conv
+    X -implement
+    -test in console
+X -fix weighted strategy in infer_intent (e.g. if all 5 closest matches are changeModel but the closest match is .4, we wouldn't want to delegate to that, but we do atm)
+    X -implement
+    X -test
+~ -troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
+    ~ -see if we can increase timeout
+        UPDATE: sounds like default timeout is 10sec for skill to provide a response (incidentally, user has 8sec to provide a response) and these values are not configurable. However, it may be possible to hack a workaround using progressive responses, but this would not be ideal for every response. I.e. if we know a longer completion is coming, we could probably have alexa say "hmm, let me think about that" and then follow up with the real response. But we don't want alexa to say that every turn.
+
+3/27/22 sun
+-----------
+-more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
+    -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
+    -if that works, re-enable HF reply as well and time
+    -fix if necessary
 
 
 Backlog
 -------
 -add support for banana.dev version of gptj (see ipy in tab 1)
+-move logging to query_gpt3 or GPTBackend.query (rather than in conv/prompt managers only)?
+    -first investigate if this is already done natively - vaguely recall seeing something in package code suggesting it was
 -adjust Ask to track how many calls deep we are for a single user turn and adjust logging indentation accordingly. Make it visually easier to see when an intent call is really done vs. when it was just a nested call inside another intent.
 -resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)

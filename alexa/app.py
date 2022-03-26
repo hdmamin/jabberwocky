@@ -19,9 +19,10 @@ import requests
 from config import EMAIL, LOG_FILE
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load
-from jabberwocky.openai_utils import ConversationManager, query_gpt_j,\
-    PromptManager, GPTBackend
-from utils import slot, Settings, model_type, CustomAsk, infer_intent
+from jabberwocky.openai_utils import ConversationManager, PromptManager,\
+    GPTBackend, query_gpt3
+from utils import slot, Settings, model_type, CustomAsk, infer_intent, \
+    getdefaults
 
 
 
@@ -65,6 +66,11 @@ def get_user_info(attrs=('name', 'email')):
         else:
             res[attr] = r.json()
     return res
+
+
+@app.route('/health')
+def health():
+    return {'status': 200}
 
 
 # TODO: do I need to ask this somewhere? I enabled permission for MY account
@@ -124,14 +130,12 @@ def send_transcript(conv, user_email='', cleanup=False):
     return True
 
 
-# TODO: might want to change default backend, but for now use free model for
-# testing.
+# TODO: might want to change default backend arg, but for now use free model
+# for testing.
 def reset_app_state(end_conv=True, clear_queue=True,
                     backend_='huggingface', auto_punct=True,
                     attrs=('name', 'email')):
     """Reset some app-level attributes in `state`, `ask`, and `conv` objects.
-    This does NOT reset gpt3 query kwargs aside from replacing all gpt3 calls
-    with gptj calls by default.
 
     Parameters
     ----------
@@ -151,14 +155,20 @@ def reset_app_state(end_conv=True, clear_queue=True,
         conv.end_conversation()
     if clear_queue:
         ask.func_clear()
-    state.kwargs = {}
     if backend_:
-       gpt.switch(backend_)
+        gpt.switch(backend_)
+    state.kwargs = {}
     state.auto_punct = auto_punct
     for k, v in get_user_info(attrs).items():
         setattr(state, k, v)
         if k == 'name' and v:
             conv.me = v
+    # If we ever want explicitly tracked settings to include stop phrases,
+    # this must remain after changing conv.me (see line above) since that
+    # changes the stop phrases.
+    state.init_settings(conv)
+    # TODO: keeping things cheaper for testing.
+    state.set('global', engine_i=0)
 
 
 @ask.launch
@@ -226,12 +236,6 @@ def choose_person(person=None):
     Person: str
         Name of a person to chat with.
     """
-    # Don't put slot call as the default value in get because that would cause
-    # it to be executed before checking if kwargs contains the value we want.
-    # When the name is passed in, there will likely be no slots and that call
-    # would raise an error.
-    # TODO: rm after testing.
-    # person = kwargs.get('response') or slot(request, 'Person')
     person = person or slot(request, 'Person')
     # Handle case where conversation is already ongoing. This should have been
     # a reply - it just happened to consist of only a name.
@@ -264,8 +268,6 @@ def _generate_person(choice, **kwargs):
     if choice:
         try:
             conv.add_persona(kwargs['person'].title())
-            # TODO: rm after testing
-            # return choose_person(response=kwargs['person'])
             return choose_person(person=kwargs['person'])
         except Exception as e:
             ask.logger.error(f'Failed to generate {kwargs["person"]}. '
@@ -399,8 +401,10 @@ def disable_punctuation():
     return _maybe_choose_person('I\'ve disabled automatic punctuation.')
 
 
-def _maybe_choose_person(msg='',
-                         choose_msg='Now, who would you like to speak to?'):
+def _maybe_choose_person(
+        msg='', choose_msg='Now, who would you like to speak to?',
+        return_msg_fmt='Now, back to your conversation with {}.'
+):
     """Check if a conversation is already in progress and if not, prompt the
     user to choose someone to talk to. Just a little convenience function to
     use after changing settings or the like.
@@ -420,8 +424,12 @@ def _maybe_choose_person(msg='',
     assert msg or choose_msg, \
         'You must provide at least one of msg or choose_msg.'
 
-    if not conv.current_persona:
-        msg = msg.rstrip(' ') + ' ' + _choose_person_text(choose_msg)
+    msg = msg.rstrip(' ') + ' '
+    if conv.current_persona:
+        name = conv.process_name(conv.current_persona, inverse=True)
+        msg += return_msg_fmt.format(name)
+    else:
+        msg += _choose_person_text(choose_msg)
     return question(msg)
 
 
@@ -439,21 +447,16 @@ def _reply(prompt=None):
     ask.logger.info('BEFORE PUNCTUATION: ' + prompt)
     # TODO: maybe change eventually but for now just use free version. I think
     # I prefer to keep this separate from the actual response backend.
-    # Using a fairly powerful model among the free options though.
+    # UPDATE: just comment out punctuation for now.
     # with gpt('huggingface'):
     #     _, prompt = prompter.query(task='punctuate_alexa', engine_i=2,
     #                                text=prompt, strip_output=True,
     #                                max_tokens=2 * len(prompt.split()))
-    # TODO: change back to free.
-    with gpt('gooseai'):
-        _, prompt = prompter.query(task='punctuate_alexa', engine_i=1,
-                                   text=prompt, strip_output=True,
-                                   max_tokens=2 * len(prompt.split()))
     ask.logger.info('AFTER PUNCTUATION: ' + prompt)
-    # TODO: rm. Hardcoding to gooseai and engine=0 to test if no response is
-    # due to hf being slow.
+    # TODO: rm Hardcoding to gooseai. Just testing if no response is due to hf
+    # being slow.
     with gpt('gooseai'):
-        _, text = conv.query(prompt, **state, engine_i=0)
+        _, text = conv.query(prompt, **state)
     # _, text = conv.query(prompt, **state)
     return question(text)
 
@@ -502,7 +505,6 @@ def no():
         # TODO: better validation to ensure the user meant to send this as a
         # reply, not just bc the queue is empty.
         # TODO: what to do when nothing in queue? Maybe send to reply()?
-        # TODO: what to do when nothing in queue? Maybe send to reply()?
         return _reply(prompt='No.')
     return func(choice=False, **state.kwargs)
 
@@ -533,6 +535,10 @@ def read_settings():
         if listlike(v):
             v = f'a list containing the following items: {v}'
         strings.append(f'{k.replace("_", " ")} is {v}')
+        # Do this in for loop rather than after to model name is read right
+        # after engine_i.
+        if k == 'engine_i':
+            strings.append(f'model name is {GPTBackend.engine(v)}')
     msg = f'Here are your settings: {"; ".join(strings)}. ' \
           f'Your api backend is {gpt.current()}. ' \
           f'You are {"" if state.auto_punct else "not"} using automatic '\
