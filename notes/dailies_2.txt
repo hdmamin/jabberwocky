@@ -796,9 +796,16 @@ X -fix weighted strategy in infer_intent (e.g. if all 5 closest matches are chan
 ~ -troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     ~ -see if we can increase timeout
         UPDATE: sounds like default timeout is 10sec for skill to provide a response (incidentally, user has 8sec to provide a response) and these values are not configurable. However, it may be possible to hack a workaround using progressive responses, but this would not be ideal for every response. I.e. if we know a longer completion is coming, we could probably have alexa say "hmm, let me think about that" and then follow up with the real response. But we don't want alexa to say that every turn.
+~ -adjust Ask to track how many calls deep we are for a single user turn and adjust logging indentation accordingly. Make it visually easier to see when an intent call is really done vs. when it was just a nested call inside another intent.
+    X -implement
+    ~ -test
+        UPDATE: didn't see any indentation yet but I didn't check thoroughly if the sequence of actions/intents called for it. Do this tomorrow.
+        
 
 3/27/22 sun
 -----------
+-test call stack logging more thoroughly in console (does it indent messages when it should?)
+-investigate potential issue where ' Me:' is getting attached to end of gpt responses. Unsure if weaker model is skipping the double newline and therefore not being caught by the stop phrase, or if conv.me set op isn't working right, or if gooseai includes the stop phrase(s) in the response.
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time
@@ -810,7 +817,6 @@ Backlog
 -add support for banana.dev version of gptj (see ipy in tab 1)
 -move logging to query_gpt3 or GPTBackend.query (rather than in conv/prompt managers only)?
     -first investigate if this is already done natively - vaguely recall seeing something in package code suggesting it was
--adjust Ask to track how many calls deep we are for a single user turn and adjust logging indentation accordingly. Make it visually easier to see when an intent call is really done vs. when it was just a nested call inside another intent.
 -resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)

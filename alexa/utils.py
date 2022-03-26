@@ -265,17 +265,24 @@ class IntentCallback(Callback):
         # function calls other intent functions within it and it was getting
         # confusing when prev_intent wasn't updated til afterwards.
         self.state.prev_intent = self.ask.intent_name(func)
+        self.ask.stack_size += 1
 
     def on_end(self, func, inputs, output=None):
+        self.ask.stack_size -= 1
+        if self.ask.stack_size < 0:
+            self.ask.logger.error('Ask.stack_size should always be >= 0.')
         self.ask.logger.info('\nON END')
         self._print_state()
 
     def _print_state(self, func=None):
+        pre = '\t' * self.ask.stack_size
         if func:
-            self.ask.logger.info(f'Cur intent: {self.ask.intent_name(func)}')
-        self.ask.logger.info(f'Prev intent: {self.state.prev_intent}')
-        self.ask.logger.info(f'State: {self.state}')
-        self.ask.logger.info(f'Queue: {self.ask._queue}\n')
+            self.ask.logger.info(
+                f'{pre}Cur intent: {self.ask.intent_name(func)}'
+            )
+        self.ask.logger.info(f'{pre}Prev intent: {self.state.prev_intent}')
+        self.ask.logger.info(f'{pre}State: {self.state}')
+        self.ask.logger.info(f'{pre}Queue: {self.ask._queue}\n')
 
 
 class CustomAsk(Ask):
@@ -301,6 +308,7 @@ class CustomAsk(Ask):
         # method when launching the skill because previously pushed functions
         # can persist otherwise.
         self._queue = deque()
+        self.stack_size = 0
 
     def intent2func(self, intent_name:str):
         return getattr(sys.modules['__main__'],
