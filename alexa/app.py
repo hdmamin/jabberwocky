@@ -33,7 +33,7 @@ app = Flask(__name__)
 # Necessary to make session accessible outside endpoint functions.
 app.app_context().push()
 state = Settings()
-ask = CustomAsk(state, LOG_FILE, app, '/')
+ask = CustomAsk(app=app, route='/', state=state, log_file=LOG_FILE, filler=' ')
 
 
 def get_user_info(attrs=('name', 'email')):

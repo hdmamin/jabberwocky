@@ -4,6 +4,7 @@ from flask_ask import session, Ask
 from functools import wraps, partial
 from fuzzywuzzy import fuzz, process
 from itertools import product
+import logging
 import pandas as pd
 from pathlib import Path
 import spacy
@@ -257,10 +258,8 @@ class IntentCallback(Callback):
         pass
 
     def on_begin(self, func, inputs, output=None):
-        self.ask.logger.info('\n' + '-' * 79)
-        self.ask.logger.info('ON BEGIN')
         self.ask.func_dedupe(func)
-        self._print_state(func)
+        self._print_state(on_begin=True, func=func)
         # Update this after logging but before on_end. Sometimes an intent
         # function calls other intent functions within it and it was getting
         # confusing when prev_intent wasn't updated til afterwards.
@@ -271,18 +270,35 @@ class IntentCallback(Callback):
         self.ask.stack_size -= 1
         if self.ask.stack_size < 0:
             self.ask.logger.error('Ask.stack_size should always be >= 0.')
-        self.ask.logger.info('\nON END')
-        self._print_state()
+        self._print_state(on_begin=False, func=func)
 
-    def _print_state(self, func=None):
-        pre = '\t' * self.ask.stack_size
-        if func:
-            self.ask.logger.info(
-                f'{pre}Cur intent: {self.ask.intent_name(func)}'
-            )
-        self.ask.logger.info(f'{pre}Prev intent: {self.state.prev_intent}')
-        self.ask.logger.info(f'{pre}State: {self.state}')
-        self.ask.logger.info(f'{pre}Queue: {self.ask._queue}\n')
+    def _print_state(self, on_begin, func=None):
+        func_name_ = self.ask.intent_name(func)
+        if on_begin:
+            self.ask.logger.info('-' * 79)
+            start_msg = 'ON BEGIN'
+        else:
+            start_msg = f'\nON END'
+        self.ask.logger.info(f'{start_msg} ({func_name_})')
+        self.ask.logger.info(f'Prev intent: {self.state.prev_intent}')
+        self.ask.logger.info(f'State: {self.state}')
+        self.ask.logger.info(f'Queue: {self.ask._queue}\n\n')
+
+
+class IndentedFormatter(logging.Formatter):
+    """Custom formatter for ask.logger so that all logging is indented by the
+    appropriate amount, depending on the size of the intent stack.
+    """
+
+    def __init__(self, ask, filler=' ', *args, **kwargs):
+        self.ask = ask
+        self.filler = filler
+        super().__init__(*args, **kwargs)
+
+    def format(self, record):
+        msg = super().format(record)
+        indent = max(0, self.ask.stack_size * 4) * self.filler
+        return '\n'.join(indent + line for line in msg.splitlines())
 
 
 class CustomAsk(Ask):
@@ -290,12 +306,12 @@ class CustomAsk(Ask):
     method for a summary of main changes.
     """
 
-    def __init__(self, state, log_file, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, app, route, state, log_file, filler=' ',
+                 *args, **kwargs):
+        super().__init__(app=app, route=route, *args, **kwargs)
         # Unlike flask app.logger, this writes to both stdout and a log file.
         # We ensure it's empty at the start of each session.
-        Path(log_file).unlink()
-        self.logger = MultiLogger(log_file, fmode='a')
+        self.logger = self.get_logger(log_file, filler=filler)
         # Decorator that we use on each intent endpoint.
         self.state = state
         self._callbacks = callbacks([IntentCallback(self, state=state)])
@@ -309,6 +325,15 @@ class CustomAsk(Ask):
         # can persist otherwise.
         self._queue = deque()
         self.stack_size = 0
+
+    def get_logger(self, log_file, filler):
+        # Indent log statements depending on our depth in the intent stack.
+        Path(log_file).unlink()
+        logger = MultiLogger(log_file, fmode='a')
+        formatter = IndentedFormatter(self, filler=filler)
+        for handler in logger.handlers:
+            handler.setFormatter(formatter)
+        return logger
 
     def intent2func(self, intent_name:str):
         return getattr(sys.modules['__main__'],
