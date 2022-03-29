@@ -820,7 +820,11 @@ X -test call stack logging more thoroughly in console (does it indent messages w
 
 3/28/22 mon
 -----------
--investigate potential issue where ' Me:' is getting attached to end of gpt responses. Unsure if weaker model is skipping the double newline and therefore not being caught by the stop phrase, or if conv.me set op isn't working right, or if gooseai includes the stop phrase(s) in the response.
+X -move logging to query_gpt3 or GPTBackend.query (rather than in conv/prompt managers only)?
+    _ -first investigate if this is already done natively - vaguely recall seeing something in package code suggesting it was
+    UPDATE: whoops, forgot to check for native solution. But already finished this so I guess it's fine.
+~ -investigate potential issue where ' Me:' is getting attached to end of gpt responses. Unsure if weaker model is skipping the double newline and therefore not being caught by the stop phrase, or if conv.me set op isn't working right, or if gooseai includes the stop phrase(s) in the response.
+    UPDATE: tentatively confirmed that gooseai does not truncate before stop word. Started refactoring this functionality out of huggingface mock func but found new issue re partial stop phrases. Documented in nb 12 for tomorrow.
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time
@@ -832,14 +836,28 @@ X -test call stack logging more thoroughly in console (does it indent messages w
     -check which backends support this
     -implement
 
+3/29/22 tues
+------------
+-finish stop phrase truncation function in jupyter
+    -check which backends provide stopping 'reason' (affects which we can rm partial stop words for)
+    -refactor functionality out of huggingface mock func
+    -figure out how to do this for gooseai (does it need a mockfunc that just ONLY does this? Or should we put this GPTBackend.query and skip it depending on the current backend?)
+-update query_gpt3 (and accompanying methods) to work w/ n_prompts > 1 (will help w/ my mostly unrelated perplexity project)
+    -check if openai supports this too or just gooseai
+    -implement
+-update query_gpt3 (and accompanying methods) to support n_completions > 1 (for backends that support this). (This might be useful for this project, but would certainly be useful for many other gpt use cases and I don't want to break my api yet again. Good reason to wait on pushing this version to pypi.)
+    -check which backends support this
+    -implement
 
 Backlog
 -------
 -handle error when wiki person generation fails
+-more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
+    -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
+    -if that works, re-enable HF reply as well and time
+    -fix if necessary
 -support custom persona (speak bio yourself)
 -add support for banana.dev version of gptj (see ipy in tab 1)
--move logging to query_gpt3 or GPTBackend.query (rather than in conv/prompt managers only)?
-    -first investigate if this is already done natively - vaguely recall seeing something in package code suggesting it was
 -resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)

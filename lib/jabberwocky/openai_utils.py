@@ -148,6 +148,7 @@ def query_gpt_huggingface(
     # get an error.
     if repetition_penalty is not None:
         repetition_penalty = float(repetition_penalty)
+    stop = tolist(kwargs.pop('stop', []))
     if kwargs:
         warnings.warn('query_gpt_huggingface received unused kwargs '
                       f'{kwargs}.')
@@ -169,9 +170,8 @@ def query_gpt_huggingface(
     # Huggingface doesn't natively provide the `stop` parameter that OpenAI
     # does so we have to do this manually.
     res = r.json()[0]['generated_text']
-    if 'stop' in kwargs:
-        idx = [idx for idx in map(res.find, tolist(kwargs['stop']))
-               if idx >= 0]
+    if stop:
+        idx = [idx for idx in map(res.find, stop) if idx >= 0]
         stop_idx = min(idx) if idx else None
         res = res[:stop_idx]
     return prompt, res
@@ -498,7 +498,7 @@ class GPTBackend:
     @classmethod
     @with_signature(query_gpt3)
     @add_docstring(query_gpt3)
-    def query(cls, prompt, **kwargs):
+    def query(cls, prompt, log_path=None, **kwargs):
         mock_func = cls.mock_func()
         kwargs_mock = kwargs.pop('mock_func', None)
         # If user doesn't pass in mock_func explicitly
@@ -512,7 +512,21 @@ class GPTBackend:
                 f'(Technically, we do allow this due to the way PromptManager '
                 f'and ConversationManager implement kwargs() methods).'
             )
-        return query_gpt3(prompt, **kwargs, mock_func=mock_func)
+        kwargs['prompt'] = prompt
+        cls._log_query_kwargs(log_path, mock_func=mock_func, **kwargs)
+        return query_gpt3(**kwargs, mock_func=mock_func)
+
+    @classmethod
+    def _log_query_kwargs(cls, path, mock_func=None, **kwargs):
+        """Log kwargs for troubleshooting purposes."""
+        if path:
+            # Meta key is used to store any info we want to log but that should
+            # not be passed to the actual query_gpt3 call.
+            kwargs['meta'] = {
+                'backend_name': cls.current(),
+                'mock_func': func_name(mock_func) if mock_func else None
+            }
+            save(kwargs, path, verbose=False)
 
     def __repr__(self):
         return f'{func_name(self)} <current_name: {self.current()}>'
@@ -696,12 +710,7 @@ class PromptManager:
             print('fully resolved kwargs:\n',
                   dict(bound_args(query_gpt3, [], kwargs)))
             return
-        if self.log_path:
-            save_kwargs = {'prompt': prompt, **kwargs}
-            if save_kwargs.get('mock_func', None):
-                save_kwargs['mock_func'] = str(save_kwargs['mock_func'])
-            save(save_kwargs, self.log_path)
-        return GPTBackend.query(prompt, **kwargs)
+        return GPTBackend.query(prompt, log_path=self.log_path, **kwargs)
 
     def kwargs(self, task, fully_resolved=True, return_prompt=False,
                extra_kwargs=None, **kwargs):
@@ -1251,15 +1260,9 @@ class ConversationManager:
         self.user_turns.append(text.strip())
         self.cached_query = ''
 
-        # Log kwargs for troubleshooting purposes.
-        save_kwargs = {'prompt': prompt, **kwargs}
-        if save_kwargs.get('mock_func', None):
-            save_kwargs['mock_func'] = str(save_kwargs['mock_func'])
-        save(save_kwargs, self.log_path, verbose=False)
-
         # Query and return generator. This allows us to use streaming mode in
         # GUI while still updating this instance with gpt3's response.
-        res = GPTBackend.query(prompt, **kwargs)
+        res = GPTBackend.query(prompt, log_path=self.log_path, **kwargs)
         if not kwargs.get('stream', False):
             self.gpt3_turns.append(res[1])
             return res
