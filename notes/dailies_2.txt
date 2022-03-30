@@ -838,19 +838,37 @@ X -move logging to query_gpt3 or GPTBackend.query (rather than in conv/prompt ma
 
 3/29/22 tues
 ------------
--finish stop phrase truncation function in jupyter
-    -check which backends provide stopping 'reason' (affects which we can rm partial stop words for)
+X -add more params to query_gpt3 and update documentation
+~ -finish stop phrase truncation function in jupyter
+    X -support truncating on partial stop phrases when completion ended with reason "length"
+    ~ -check which backends provide stopping 'reason' (affects which we can rm partial stop words for)
+        UPDATE: openai and gooseai do. Haven't confirmed others yet but I doubt they do.
     -refactor functionality out of huggingface mock func
     -figure out how to do this for gooseai (does it need a mockfunc that just ONLY does this? Or should we put this GPTBackend.query and skip it depending on the current backend?)
 -update query_gpt3 (and accompanying methods) to work w/ n_prompts > 1 (will help w/ my mostly unrelated perplexity project)
     -check if openai supports this too or just gooseai
     -implement
 -update query_gpt3 (and accompanying methods) to support n_completions > 1 (for backends that support this). (This might be useful for this project, but would certainly be useful for many other gpt use cases and I don't want to break my api yet again. Good reason to wait on pushing this version to pypi.)
-    -check which backends support this
+    ~ -check which backends support this
+        UPDATE: openai does w/ param n, same as gooseai. Still need to check HF and Hobby.
     -implement
+
+3/30/22 wed
+-----------
+-stop phrase truncation function
+    -refactor functionality out of huggingface mock func
+    -figure out how to do this for gooseai (does it need a mockfunc that just ONLY does this? Or should we put this GPTBackend.query and skip it depending on the current backend?)
+-allow (or force?) query_gpt3 to make mock functions overwriting other parts of mocked response besides text, e.g. finish_reason and logprobs. (Currently only text is changed.)
+
 
 Backlog
 -------
+-update query_gpt3 (and accompanying methods) to work w/ n_prompts > 1 (will help w/ my mostly unrelated perplexity project)
+    -check which backends support this
+    -implement
+-update query_gpt3 (and accompanying methods) to support n_completions > 1 (for backends that support this). (This might be useful for this project, but would certainly be useful for many other gpt use cases and I don't want to break my api yet again. Good reason to wait on pushing this version to pypi.)
+    -check if HF and Hobby (J) backends implement this (openai and gooseai do w/ param n)
+    -implement
 -handle error when wiki person generation fails
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)

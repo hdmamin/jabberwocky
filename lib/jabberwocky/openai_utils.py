@@ -182,12 +182,17 @@ def query_gpt_repeat(prompt, **kwargs):
     return prompt, prompt
 
 
-def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
-               max_tokens=50, logprobs=None, stream=False, mock=False,
-               return_full=False, strip_output=True, mock_func=None,
-               mock_mode:('raise', 'warn', 'ignore')='raise',
+def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
+               frequency_penalty=0.0, presence_penalty=0.0,
+               max_tokens=50, logprobs=None, n=1, stream=False,
+               logit_bias=None, mock=False, return_full=False,
+               strip_output=True,
+               mock_func=None, mock_mode:('raise', 'warn', 'ignore')='raise',
                **kwargs):
-    """Convenience function to query gpt3.
+    """Convenience function to query gpt3. Mostly serves 2 purposes:
+    1. Build in some mocking functionality for cheaper/free testing.
+    2. Explicitly add some parameters and descriptions to the function
+    docstring, since openai.Completion.create does not include most kwargs.
 
     Parameters
     ----------
@@ -199,14 +204,37 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
         Between 0 and 1. 0-0.4 is good for straightforward informational
         queries (e.g. reformatting, writing business emails) while 0.7-1 is
         good for more creative works.
+    top_p: float
+        Value in (0.0, 1.0] that limits the model to sample from tokens making
+        up the top_p percent combined. I.e. higher values allow for more
+        creativity (like high temperature) and low values are closer to argmax
+        sampling (like low temperature). API recommends setting a sub-maximal
+        value for at most one of this and temperature, not both.
+    frequency_penalty: float
+        Value in [-2.0, 2.0] where larger (more positive) values more heavily
+        penalize words that have already occurred frequently in the text.
+        Usually reasonable to keep this in [0, 1].
+    presence_penalty: float
+        Value in [-2.0, 2.0] where larger (more positive) values more heavily
+        penalize words that have already occurred in the text. Usually
+        reasonable to keep this in [0, 1].
     max_tokens: int
         Sets max response length. One token is ~.75 words.
     logprobs: int or None
-        Get log probabilities for top n candidates at each time step.
+        Get log probabilities for top n candidates at each time step. This
+        will only be useful if you set return_full=True.
+    n: int
+        Number of possible completions to return. Careful: values > 1 can add
+        up quickly w.r.t. cost.
     stream: bool
         If True, return an iterator instead of a str/tuple. See the returns
         section as the output is slightly different. I believe each chunk
         returns one token when stream is True.
+    logit_bias: dict or None
+        If provided, should map string(s) (NUMERIC INDEX of word tokens,
+        not the tokens themselves) to ints between -100 and 100 (inclusive?).
+        Values in (-1, 1) should be used to nudge the model, while larger
+        values can effectively ban/compel the model to use certain words.
     mock: bool
         If True and no mock_func is provided, return a saved sample response
         instead of hitting the API
@@ -238,8 +266,9 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
         it fails. Either 'raise' an error, 'warn' the user and proceed with the
         saved response, or silently proceed with the saved response.
     kwargs: any
-        Additional kwargs to pass to gpt3.
-        Ex: presence_penalty, frequency_penalty (both floats in [0, 1]).
+        Additional kwargs to pass to gpt3 or mock_func. Most useful openai
+        API kwargs are already in the docstring so mostly intended for the
+        latter.
 
     Returns
     -------
@@ -256,9 +285,31 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
         warnings.warn('strip_output is automatically set to False when stream '
                       'is True. It would be impossible to correctly '
                       'reconstruct outputs otherwise.')
+    if temperature < 1 and top_p < 1:
+        warnings.warn('You set both temperature and top_p to values < 1. '
+                      'API recommends setting only one of these to '
+                      'sub-maximal value.')
+    if logprobs and not return_full:
+        warnings.warn('You set logprobs to a nonzero value but '
+                      'return_full=False. If you want to access the logprobs, '
+                      'you should set return_full=True.')
+
     # Realized GPT-J was often being called without setting mock=True, leading
     # to unexpected charges 😬. Trying to prevent this in the future.
     mock = mock or bool(mock_func)
+    kwargs = {
+        **kwargs,
+        'prompt': prompt,
+        'temperature': temperature,
+        'top_p': top_p,
+        'frequency_penalty': frequency_penalty,
+        'presence_penalty': presence_penalty,
+        'max_tokens': max_tokens,
+        'logprobs': logprobs,
+        'n': n,
+        'stream': stream,
+        'logit_bias': logit_bias
+    }
     if mock:
         res = MOCK_RESPONSE[stream]
         if mock_func:
@@ -271,27 +322,15 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, frequency_penalty=0.0,
             # we can also use them in place of it instead of specifying a
             # mock_func parameter.
             try:
-                res.choices[0].text = mock_func(
-                    prompt, engine_i=engine_i, temperature=temperature,
-                    frequency_penalty=frequency_penalty, max_tokens=max_tokens,
-                    **kwargs
-                )[1]
+                res.choices[0].text = mock_func(engine_i=engine_i, **kwargs)[1]
             except MockFunctionException as e:
                 if mock_mode == 'raise':
                     raise e
                 elif mock_mode == 'warn':
                     warnings.warn(str(e))
     else:
-        res = openai.Completion.create(
-            engine=GPTBackend.engine(engine_i),
-            prompt=prompt,
-            temperature=temperature,
-            frequency_penalty=frequency_penalty,
-            max_tokens=max_tokens,
-            logprobs=logprobs,
-            stream=stream,
-            **kwargs
-        )
+        res = openai.Completion.create(engine=GPTBackend.engine(engine_i),
+                                       **kwargs)
 
     # Extract text and return. Zip maintains lazy evaluation.
     if stream:
