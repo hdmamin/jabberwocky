@@ -458,6 +458,17 @@ class GPTBackend:
         print('Key:', openai.api_key)
         print('Mock func:', cls.mock_func())
 
+    @classmethod
+    def backends(cls):
+        """List all valid backend names. We could always access these via a
+        class attribute but this name is easier to remember.
+
+        Returns
+        -------
+        list[str]
+        """
+        return list(cls.name2mock)
+
     def clear(self):
         """Reset instance variables tracking that were used to restore
         previous backend.
@@ -489,9 +500,9 @@ class GPTBackend:
         return getattr(openai, 'curr_name', 'openai')
 
     @classmethod
-    def mock_func(cls):
+    def mock_func(cls, backend=None):
         """Return current mock function (callable or None)."""
-        return cls.name2mock[cls.current()]
+        return cls.name2mock[backend or cls.current()]
 
     @classmethod
     def key(cls):
@@ -504,7 +515,7 @@ class GPTBackend:
         return openai.api_key
 
     @classmethod
-    def engine(cls, engine_i):
+    def engine(cls, engine_i, backend=None):
         """Get appropriate engine name depending on current api backend and
         selected engine_i.
 
@@ -516,13 +527,16 @@ class GPTBackend:
             3 (davinci, 175 billion parameters) is a much bigger model than
             gooseai's 3 (NEO-X, 20 billion parameters). Mostly used in
             query_gpt3().
+        backend: str or None
+            If provided, should be the name of a backend (e.g. 'huggingface'
+            or any of the keys in GPTBackend.backends()).
 
         Returns
         -------
         str: Name of an engine, e.g. "davinci" if we're in openai mode or
         "gpt-neo-20b" if we're in gooseai mode.
         """
-        engines = C.backend_engines[cls.current()]
+        engines = C.backend_engines[backend or cls.current()]
 
         # Adds better error message if user passes in a number too big for the
         # current backend.
