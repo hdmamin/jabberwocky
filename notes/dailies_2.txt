@@ -874,13 +874,27 @@ X -add gptbackend.backends() method for convenience
 
 3/31/22 thurs
 -------------
+X -add support for banana.dev version of gptj
+    UPDATE: will need additional work to support stop phrases, etc. but all the funcs will undergo changes when that happens.
 -update query_gpt3 (and accompanying methods) to work w/ n_prompts > 1 AND n_completions > 1
-    -consider desired interface. What should be returned when np=1 and nc=1, np>1 and nc>1, np>1 and nc=1, etc.
+    ~ -consider desired interface. What should be returned when np=1 and nc=1, np>1 and nc>1, np>1 and nc=1, etc.
+        UPDATE: wrote some sample usage code in nb12 markdown cell. Still undecided. Considering larger rewrite - the whole mock_func scheme seems kind of annoying. Might be easier to have GPTBackend just choose the right query_func and forget about the "passing a mock func to query_gpt3" paradigm. Also used mark decorator to label which funcs require manual stop phrase truncation - I think that will help refactor that step out.
     -examine responses from various and consider how best to map from these to desired interface
     -implement
--stop phrase truncation function
+~ -stop phrase truncation function
+    UPDATE: started noodling on what this could look like. See end of GPTBackend.query method, which uses attr from mark() decorator to do exra truncation if necessary.
     -refactor functionality out of huggingface mock func
     -figure out how to do this for gooseai (does it need a mockfunc that just ONLY does this? Or should we put this GPTBackend.query and skip it depending on the current backend?)
+
+4/1/22 fri
+----------
+-add banana backend in aws console
+    -re-generate json and save (remember to save both raw json and generated')
+-continue considering query redesign 
+    -settle on removing mock_func construct or not (try to think: is there really a good reason for this?). If yes:
+        -decide what each func should return
+        -make sure redesign doesn't break ConvManager or PromptManager too badly (I'm okay with updating these - the api will clearly change too much to be compatible w/ the gui anyway - but make sure stuff like the hooked generator doesn't TOTALLY break in hard to solve ways.) Might want to change how we get kwargs(), i.e. the default query function could change and we should use the active one.
+        -add check in GPTBackend.query for if we need to manually trunc stop words
 
 
 Backlog
@@ -892,7 +906,6 @@ Backlog
     -if that works, re-enable HF reply as well and time
     -fix if necessary
 -support custom persona (speak bio yourself)
--add support for banana.dev version of gptj (see ipy in tab 1)
 -resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)

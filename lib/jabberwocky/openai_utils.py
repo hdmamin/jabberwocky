@@ -1,5 +1,6 @@
 """Utility functions for interacting with the gpt3 api."""
 
+import banana_dev as banana
 from collections.abc import Iterable, Mapping
 from collections import Counter
 from contextlib import contextmanager
@@ -17,18 +18,20 @@ import sys
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
-    listlike, Results, flatten, add_docstring, func_name
+    listlike, Results, flatten, add_docstring, func_name, mark
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
-    load_huggingface_api_key, hooked_generator, load_api_key
+    hooked_generator, load_api_key
 
 
-HF_API_KEY = load_huggingface_api_key()
+HF_API_KEY = load_api_key('huggingface')
+BANANA_API_KEY = load_api_key('banana')
 MOCK_RESPONSE = [load(C.mock_stream_paths[False]),
                  load(C.mock_stream_paths[True])]
 
 
+@mark(requires_stopword_truncation=True)
 def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
     """Queries free GPT-J API. GPT-J has 6 billion parameters and is, roughly
     speaking, the open-source equivalent of Curie (3/19/22 update: size sounds
@@ -85,6 +88,7 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
 
 
 @valuecheck
+@mark(requires_stopword_truncation=True)
 def query_gpt_huggingface(
         prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
         max_tokens=250, top_k=None, top_p=None, **kwargs
@@ -177,6 +181,7 @@ def query_gpt_huggingface(
     return prompt, res
 
 
+@mark(requires_stopword_truncation=True)
 def query_gpt_repeat(prompt, **kwargs):
     """Mock func that just returns the prompt as the response."""
     return prompt, prompt
@@ -332,13 +337,47 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
         res = openai.Completion.create(engine=GPTBackend.engine(engine_i),
                                        **kwargs)
 
-    # Extract text and return. Zip maintains lazy evaluation.
     if stream:
+        # In this case, we get 1 response for each new token. Zip does maintain
+        # lazy evaluation.
         texts = (chunk.choices[0].text for chunk in res)
         return zip(texts, res) if return_full else texts
     else:
         output = (prompt, strip(res.choices[0].text, strip_output), res)
         return output if return_full else output[:-1]
+
+
+# TODO: add stop phrase support.
+@add_docstring(query_gpt3)
+@mark(requires_stopword_truncation=True)
+def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
+                     top_k=False, **kwargs):
+    """Free gptj access. Unclear which version of the model they provide -
+    guessing 6B params? The query_gpt3 docstring is included below for
+    convenience, but that doesn't mean all of its parameters are supported;
+    only those visible in the signature are (all kwargs are ignored here). For
+    example, this does not natively support stop phrases or n_prompts > 1 or
+    n_completions > 1.
+    """
+    if kwargs:
+        warnings.warn(f'query_gpt_banana received unused kwargs {kwargs}.')
+
+    params = {
+        'text': prompt,
+        'length': max_tokens,
+        'temperature': temperature,
+        'topP': top_p,
+        'topK': top_k,
+    }
+    try:
+        res = banana.run(api_key=BANANA_API_KEY, model_key='gptj',
+                         model_inputs=params)
+        # Do this in separate line to make it easier for humans to parse error
+        # messages.
+        res = res['modelOutputs'][0]
+        return res['input'], res['output']
+    except Exception as e:
+        raise MockFunctionException(str(e)) from None
 
 
 def with_signature(to_f, keep=False):
@@ -384,6 +423,9 @@ class GPTBackend:
     gooseai_res_2 = gpt.query(**kwargs)
     """
 
+    # Only include backends here that actually should change the
+    # openai.api_base value (these will probably be backends that require no
+    # or minimal mock_funcs).
     name2base = {
         'openai': 'https://api.openai.com',
         'gooseai': 'https://api.goose.ai/v1',
@@ -395,7 +437,8 @@ class GPTBackend:
         'gooseai': None,
         'huggingface': query_gpt_huggingface,
         'hobby': query_gpt_j,
-        'repeat': query_gpt_repeat
+        'repeat': query_gpt_repeat,
+        'banana': query_gpt_banana
     }
 
     name2key = {}
@@ -568,6 +611,16 @@ class GPTBackend:
         kwargs['prompt'] = prompt
         cls._log_query_kwargs(log_path, mock_func=mock_func, **kwargs)
         return query_gpt3(**kwargs, mock_func=mock_func)
+
+        # TODO just thinking
+        query_func = query_gpt3 # TODO: use whatever func is active
+        truncate_at_first_stop = identity # TODO: use real func
+        res = query_func(**kwargs)
+        if getattr(query_func, 'requires_stopword_truncation', False):
+            res = truncate_at_first_stop(res)
+        if kwargs.get('stream', False):
+            return None # TODO
+        return None # TODO
 
     @classmethod
     def _log_query_kwargs(cls, path, mock_func=None, **kwargs):
