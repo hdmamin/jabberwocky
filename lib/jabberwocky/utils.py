@@ -12,6 +12,27 @@ from htools import select, bound_args, copy_func, xor_none
 from jabberwocky.config import C
 
 
+def with_signature(to_f, keep=False):
+    """Decorator borrowed from fastai and renamed to avoid name collision
+    with htools (originally called "delegates"). Replaces `**kwargs`
+    in signature with params from `to`. Unlike htools.delegates, it only
+    changes documentation - variables are still made available in the decorated
+    function as 'kwargs'.
+    """
+    def _f(f):
+        from_f = f
+        sig = signature(from_f)
+        sigd = dict(sig.parameters)
+        k = sigd.pop('kwargs')
+        s2 = {k: v for k, v in signature(to_f).parameters.items()
+              if v.default != Parameter.empty and k not in sigd}
+        sigd.update(s2)
+        if keep: sigd['kwargs'] = k
+        from_f.__signature__ = sig.replace(parameters=sigd.values())
+        return f
+    return _f
+
+
 def strip(text, do_strip=True):
     """Convenience function used in query_gpt3.
 
@@ -25,6 +46,16 @@ def strip(text, do_strip=True):
     str: If do_strip is False, this is the same as the input.
     """
     return text.strip() if do_strip else text
+
+
+def squeeze(*args, n=1):
+    """Return either the input `args` or the first item of each arg, depending
+    on our choice of n. We effectively treat n as a boolean. This is used by
+    the query_gpt_{} functions to return either a (str, dict) tuple or a
+    (list[str], list[dict]) tuple, depending on the number of completions
+    we ask for.
+    """
+    return tuple(arg[0] for arg in args) if n == 1 else args
 
 
 def load_booste_api_key():

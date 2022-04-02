@@ -4,7 +4,6 @@ import banana_dev as banana
 from collections.abc import Iterable, Mapping
 from collections import Counter
 from contextlib import contextmanager
-import inspect
 from itertools import zip_longest
 import json
 from nltk.tokenize import sent_tokenize
@@ -18,11 +17,11 @@ import sys
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
-    listlike, Results, flatten, add_docstring, func_name, mark
+    listlike, Results, flatten, add_docstring, func_name
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
-    hooked_generator, load_api_key
+    hooked_generator, load_api_key, with_signature, squeeze
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -31,7 +30,69 @@ MOCK_RESPONSE = [load(C.mock_stream_paths[False]),
                  load(C.mock_stream_paths[True])]
 
 
-@mark(requires_stopword_truncation=True)
+def truncate_at_first_stop(text, stop_phrases, finish_reason='',
+                           trunc_full=True, trunc_partial=True,
+                           partial_pct=.8, partial_n=4):
+    """Remove stop phrases from gpt completions, since some backends either
+    don't provide this functionality or do but leave the trailing stop word
+    attached. We also provide the option to try to detect if the completion
+    finished mid-stopword and remove it if so. E.g. with a stopword of
+    "\n\nMe:", a completion that ends with "\n\nMe" and finished due to
+    length constraints likely should be stripped.
+
+    Parameters
+    ----------
+    text: str
+        GPT completion.
+    stop_phrases: list[str]
+        One or more words/phrases that signify that a completion should end.
+    finish_reason: str
+        Reason a completion ended (if "length", this means it was cut short due
+        to a max_token limit and therefore is at risk for a possible partial
+        stop_phrase remaining at the end). Currently only provided by
+        gpt3/gooseai backends.
+    trunc_full: bool
+        If True, assume the backend does not automatically remove the
+        truncating stop word and instead stops AFTERWARDS (or not at all).
+        As of 4/2/22, this should only be False for the openai backend.
+    trunc_partial: bool
+        If True and finish_reason is "length", we'll try to truncate if the
+        completion ENDS WITH a partial stop word.
+    partial_pct: float
+        When truncating partial stop phrases, this is the percent
+        of a stop phrase that much be matched. Should lie in (0, 1).
+    partial_n: int
+        When truncating partial stop phrases, this the minimum number of
+        characters that must match. (We might want to ensure that super short
+        matches don't qualify.)
+
+    Returns
+    -------
+    str: Input text truncated right before the first stop phrase (if any), and
+    possibly before a partial stop phrase depending on user-specified options.
+    """
+    if trunc_full:
+        idx = [idx for idx in map(text.find, stop_phrases) if idx >= 0]
+        stop_idx = min(idx or [None])
+        text = text[:stop_idx]
+
+    # If the completion was cut short due to length AND the completion ends
+    # with the majority of a stop phrase, we infer that this should be stripped
+    # from the end. This rule won't be perfect but it seems like a decent bet.
+    if trunc_partial and finish_reason == 'length':
+        for phrase in stop_phrases:
+            thresh = max(int(round(partial_pct * len(phrase))), partial_n)
+            chunk = phrase[:thresh]
+            if text.endswith(chunk):
+                warnings.warn(
+                    'Guessing that truncation is reasonable because '
+                    'finish_reason="length" and completion ends with a '
+                    'partial stop phrase.'
+                )
+                return text.rpartition(chunk)[0]
+    return text
+
+
 def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
     """Queries free GPT-J API. GPT-J has 6 billion parameters and is, roughly
     speaking, the open-source equivalent of Curie (3/19/22 update: size sounds
@@ -55,7 +116,7 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
 
     Returns
     -------
-    tuple[str]: Prompt, response.
+    tuple[str, dict]: Response text, full response dict.
     """
     params = {'context': prompt,
               'token_max_length': max_tokens,
@@ -71,27 +132,72 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
     if kwargs:
         warnings.warn(f'GPT-J api does not support other kwargs: {kwargs}')
 
-    try:
-        res = requests.post('http://api.vicgalle.net:5000/generate',
-                            params=params)
-        res.raise_for_status()
-    except Exception as e:
-        raise MockFunctionException(str(e)) from None
+    res = requests.post('http://api.vicgalle.net:5000/generate',
+                        params=params)
+    res.raise_for_status()
     res = res.json()
+    return res['text'], res
 
-    # Endpoint doesn't support multiple stop sequences so we have to
-    # postprocess. Even with a single stop sequence, it includes it while gpt3
-    # and my gpt-neo function exclude it, so we need to handle that here.
-    idx = min([i for i in map(res['text'].find, stop) if i >= 0] or [None])
-    completion = res['text'][:idx]
-    return res['prompt'], completion
+
+# def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
+#     """Queries free GPT-J API. GPT-J has 6 billion parameters and is, roughly
+#     speaking, the open-source equivalent of Curie (3/19/22 update: size sounds
+#     more like Babbage actually). It was trained on more
+#     code than GPT3 though so it may do surprisingly well at those kinds of
+#     tasks. This function should be usable as a mock_func argument in
+#     query_gpt_3.
+#
+#     API uptime may be questionable though. There's an accompanying front end
+#     here:
+#     http://api.vicgalle.net:8000/
+#
+#     Parameters
+#     ----------
+#     prompt: str
+#     temperature: float
+#     max_tokens: int
+#     kwargs: any
+#         Only supported options are top_p (float) and stop (Iterable[str]).
+#         Notice that stream mode is not supported.
+#
+#     Returns
+#     -------
+#     tuple[str]: Prompt, response.
+#     """
+#     params = {'context': prompt,
+#               'token_max_length': max_tokens,
+#               'temperature': temperature,
+#               'top_p': kwargs.pop('top_p', 1.0)}
+#
+#     # Ensure that we end up with a list AND that stop is still Falsy if user
+#     # explicitly passes in stop=None.
+#     stop = tolist(kwargs.pop('stop', None) or [])
+#     if stop: params['stop_sequence'] = stop[0]
+#
+#     # Must keep this after the block of stop-related logic above.
+#     if kwargs:
+#         warnings.warn(f'GPT-J api does not support other kwargs: {kwargs}')
+#
+#     try:
+#         res = requests.post('http://api.vicgalle.net:5000/generate',
+#                             params=params)
+#         res.raise_for_status()
+#     except Exception as e:
+#         raise MockFunctionException(str(e)) from None
+#     res = res.json()
+#
+#     # Endpoint doesn't support multiple stop sequences so we have to
+#     # postprocess. Even with a single stop sequence, it includes it while gpt3
+#     # and my gpt-neo function exclude it, so we need to handle that here.
+#     idx = min([i for i in map(res['text'].find, stop) if i >= 0] or [None])
+#     completion = res['text'][:idx]
+#     return res['prompt'], completion
 
 
 @valuecheck
-@mark(requires_stopword_truncation=True)
 def query_gpt_huggingface(
         prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
-        max_tokens=250, top_k=None, top_p=None, **kwargs
+        max_tokens=50, top_k=None, top_p=None, n=1, **kwargs
 ):
     """Query EleuetherAI gpt models using the Huggingface API. This was called
     query_gpt_neo in a former version of the library (which is used by the
@@ -111,7 +217,9 @@ def query_gpt_huggingface(
     temperature: float
         Between 0 and 1. 0-0.4 is good for straightforward informational
         queries (e.g. reformatting, writing business emails) while 0.7-1 is
-        good for more creative works.
+        good for more creative works. Warning: huggingface docs say this
+        actually goes from 0-100 - should check if they're using this value
+        differently than the openai API.
     top_k: None or int
         Kind of like top_p in that smaller values may produce more
         sensible but less creative responses. While top_p limits options to
@@ -128,6 +236,10 @@ def query_gpt_huggingface(
 
     Returns
     -------
+    # TODO update
+    # Currently returns List[str], List[dict] where index i in each list gives
+    # us the ith completion. We always pass in a single prompt.
+
     tuple or iterator: When stream=False, we return a tuple where the first
     item is the prompt (str) and the second is the response text(str). If
     return_full is True, a third item consisting of the whole response object
@@ -136,23 +248,29 @@ def query_gpt_huggingface(
     (str) or a tuple of (text, response) if return_full is True. Unlike in
     non-streaming mode, we don't return the prompt - that seems less
     appropriate for many time steps.
+
     Returns
     -------
     tuple[str]: Prompt, response tuple, just like query_gpt_3().
     """
-    engine = GPTBackend.engine(engine_i)
+    if not isinstance(prompt, str):
+        raise TypeError(f'Prompt must be str, not {type(prompt)}.')
+
+    # Hardcode backend in case we use this function outside of the
+    # GPTBackend.query wrapper.
+    engine = GPTBackend.engine(engine_i, backend='huggingface')
 
     # Docs say we can return up to 256 tokens but API sometimes throws errors
     # if we go above 250.
     headers = {'Authorization':
-               f'Bearer api_{HF_API_KEY}'}
+                   f'Bearer api_{HF_API_KEY}'}
     # Notice the names don't always align with parameter names - I wanted
     # those to be more consistent with query_gpt3() function. Also notice
     # that types matter: if Huggingface expects a float but gets an int, we'll
     # get an error.
     if repetition_penalty is not None:
         repetition_penalty = float(repetition_penalty)
-    stop = tolist(kwargs.pop('stop', []))
+    kwargs.pop('stop', [])
     if kwargs:
         warnings.warn('query_gpt_huggingface received unused kwargs '
                       f'{kwargs}.')
@@ -162,42 +280,285 @@ def query_gpt_huggingface(
                            'temperature': float(temperature),
                            'max_new_tokens': min(max_tokens, 250),
                            'repetition_penalty': repetition_penalty,
-                           'return_full_text': False}}
+                           'return_full_text': False,
+                           'num_return_sequences': n}}
     url = f'https://api-inference.huggingface.co/models/EleutherAI/{engine}'
-    try:
-        # Put the request itself inside try too in case of timeout.
-        r = requests.post(url, headers=headers, data=json.dumps(data))
-        r.raise_for_status()
-    except requests.HTTPError as e:
-        raise MockFunctionException(str(e)) from None
-
-    # Huggingface doesn't natively provide the `stop` parameter that OpenAI
-    # does so we have to do this manually.
-    res = r.json()[0]['generated_text']
-    if stop:
-        idx = [idx for idx in map(res.find, stop) if idx >= 0]
-        stop_idx = min(idx) if idx else None
-        res = res[:stop_idx]
-    return prompt, res
+    r = requests.post(url, headers=headers, data=json.dumps(data))
+    r.raise_for_status()
+    res = r.json()
+    # Structure: text, full response
+    # List[str], List[dict]
+    return [row['generated_text'] for row in res], res
 
 
-@mark(requires_stopword_truncation=True)
+# @valuecheck
+# def query_gpt_huggingface(
+#         prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
+#         max_tokens=50, top_k=None, top_p=None, **kwargs
+# ):
+#     """Query EleuetherAI gpt models using the Huggingface API. This was called
+#     query_gpt_neo in a former version of the library (which is used by the
+#     GUI) but the API now hosts a GPT-J model as well so I renamed it.
+#
+#     Parameters
+#     ----------
+#     prompt: str
+#     engine_i: int
+#         Determines which Huggingface model API to query. See
+#         config.C.backend_engines['huggingface'].
+#         Those names refer to the number of
+#         parameters in the model, where bigger models generally produce higher
+#         quality results but may be slower (in addition to the actual inference
+#         being slower to produce, the better models are also more popular so the
+#         API is hit with more requests).
+#     temperature: float
+#         Between 0 and 1. 0-0.4 is good for straightforward informational
+#         queries (e.g. reformatting, writing business emails) while 0.7-1 is
+#         good for more creative works.
+#     top_k: None or int
+#         Kind of like top_p in that smaller values may produce more
+#         sensible but less creative responses. While top_p limits options to
+#         a cumulative percentage, top_k limits it to a discrete number of
+#         top choices.
+#     top_p: None or float
+#         Value in [0.0, 1.0] if provided. Kind of like temperature in that
+#         smaller values may produce more sensible but less creative responses.
+#     repetition_penalty
+#     max_tokens: int
+#         Sets max response length. One token is ~.75 words. IIRC 250 is the max
+#         they support.
+#     kwargs: any
+#         Just lets us absorb extra kwargs when used in place of query_gpt3().
+#
+#     Returns
+#     -------
+#     tuple or iterator: When stream=False, we return a tuple where the first
+#     item is the prompt (str) and the second is the response text(str). If
+#     return_full is True, a third item consisting of the whole response object
+#     is returned as well. When stream=True, we return an iterator where each
+#     step contains a single token. This will either be the text response alone
+#     (str) or a tuple of (text, response) if return_full is True. Unlike in
+#     non-streaming mode, we don't return the prompt - that seems less
+#     appropriate for many time steps.
+#     Returns
+#     -------
+#     tuple[str]: Prompt, response tuple, just like query_gpt_3().
+#     """
+#     engine = GPTBackend.engine(engine_i)
+#
+#     # Docs say we can return up to 256 tokens but API sometimes throws errors
+#     # if we go above 250.
+#     headers = {'Authorization':
+#                f'Bearer api_{HF_API_KEY}'}
+#     # Notice the names don't always align with parameter names - I wanted
+#     # those to be more consistent with query_gpt3() function. Also notice
+#     # that types matter: if Huggingface expects a float but gets an int, we'll
+#     # get an error.
+#     if repetition_penalty is not None:
+#         repetition_penalty = float(repetition_penalty)
+#     stop = tolist(kwargs.pop('stop', []))
+#     if kwargs:
+#         warnings.warn('query_gpt_huggingface received unused kwargs '
+#                       f'{kwargs}.')
+#
+#     data = {'inputs': prompt,
+#             'parameters': {'top_k': top_k, 'top_p': top_p,
+#                            'temperature': float(temperature),
+#                            'max_new_tokens': min(max_tokens, 250),
+#                            'repetition_penalty': repetition_penalty,
+#                            'return_full_text': False}}
+#     url = f'https://api-inference.huggingface.co/models/EleutherAI/{engine}'
+#     try:
+#         # Put the request itself inside try too in case of timeout.
+#         r = requests.post(url, headers=headers, data=json.dumps(data))
+#         r.raise_for_status()
+#     except requests.HTTPError as e:
+#         raise MockFunctionException(str(e)) from None
+#
+#     # Huggingface doesn't natively provide the `stop` parameter that OpenAI
+#     # does so we have to do this manually.
+#     res = r.json()[0]['generated_text']
+#     if stop:
+#         idx = [idx for idx in map(res.find, stop) if idx >= 0]
+#         stop_idx = min(idx) if idx else None
+#         res = res[:stop_idx]
+#     return prompt, res
+
+
 def query_gpt_repeat(prompt, **kwargs):
     """Mock func that just returns the prompt as the response."""
-    return prompt, prompt
+    return prompt, {}
+
+
+# def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
+#                frequency_penalty=0.0, presence_penalty=0.0,
+#                max_tokens=50, logprobs=None, n=1, stream=False,
+#                logit_bias=None, mock=False, return_full=False,
+#                strip_output=True,
+#                mock_func=None, mock_mode:('raise', 'warn', 'ignore')='raise',
+#                **kwargs):
+#     """Convenience function to query gpt3. Mostly serves 2 purposes:
+#     1. Build in some mocking functionality for cheaper/free testing.
+#     2. Explicitly add some parameters and descriptions to the function
+#     docstring, since openai.Completion.create does not include most kwargs.
+#
+#     Parameters
+#     ----------
+#     prompt: str
+#     engine_i: int
+#         Corresponds to engines defined in config, where 0 is the cheapest, 3
+#         is the most expensive, etc.
+#     temperature: float
+#         Between 0 and 1. 0-0.4 is good for straightforward informational
+#         queries (e.g. reformatting, writing business emails) while 0.7-1 is
+#         good for more creative works.
+#     top_p: float
+#         Value in (0.0, 1.0] that limits the model to sample from tokens making
+#         up the top_p percent combined. I.e. higher values allow for more
+#         creativity (like high temperature) and low values are closer to argmax
+#         sampling (like low temperature). API recommends setting a sub-maximal
+#         value for at most one of this and temperature, not both.
+#     frequency_penalty: float
+#         Value in [-2.0, 2.0] where larger (more positive) values more heavily
+#         penalize words that have already occurred frequently in the text.
+#         Usually reasonable to keep this in [0, 1].
+#     presence_penalty: float
+#         Value in [-2.0, 2.0] where larger (more positive) values more heavily
+#         penalize words that have already occurred in the text. Usually
+#         reasonable to keep this in [0, 1].
+#     max_tokens: int
+#         Sets max response length. One token is ~.75 words.
+#     logprobs: int or None
+#         Get log probabilities for top n candidates at each time step. This
+#         will only be useful if you set return_full=True.
+#     n: int
+#         Number of possible completions to return. Careful: values > 1 can add
+#         up quickly w.r.t. cost.
+#     stream: bool
+#         If True, return an iterator instead of a str/tuple. See the returns
+#         section as the output is slightly different. I believe each chunk
+#         returns one token when stream is True.
+#     logit_bias: dict or None
+#         If provided, should map string(s) (NUMERIC INDEX of word tokens,
+#         not the tokens themselves) to ints between -100 and 100 (inclusive?).
+#         Values in (-1, 1) should be used to nudge the model, while larger
+#         values can effectively ban/compel the model to use certain words.
+#     mock: bool
+#         If True and no mock_func is provided, return a saved sample response
+#         instead of hitting the API
+#         in order to save tokens. Note that your other gpt3 kwargs
+#         (max_tokens, logprobs, kwargs) will be ignored. return_full will be
+#         respected since it affects the number of items returned - it's not a
+#         kwarg passed to the actual query function. Text is surrounded by
+#         <MOCK></MOCK> tags to make it obvious when mock is True (it's easy to
+#         forget to change the value of mock when switching back and forth).
+#     return_full: bool
+#         If True, return a third item which is the full response object.
+#         Otherwise we just return the prompt and response text.
+#     strip_output: bool
+#         If True, strip text returned by gpt3. Without this, many prompts have a
+#         leading space and/or trailing newlines due to the way examples are
+#         formatted.
+#     mock_func: None or function
+#         You can provide a function here that accepts the prompt
+#         and returns something which will be used as the mock text.
+#         As of version 1.1.0, this automatically sets mock=True. Sample use
+#         case: when punctuating a transcript, the text realignment process may
+#         raise an error when loading a saved mock response. Therefore, we may
+#         want to write a mock_func that extracts the new input portion of the
+#         prompt (discarding instructions and examples). This option is
+#         unavailable in stream mode. [3/24/22: that last line might not be true
+#         with gooseAI. Need to investigate further.]
+#     mock_mode: str
+#         Determines what to do if using mock mode and mock_func is not None and
+#         it fails. Either 'raise' an error, 'warn' the user and proceed with the
+#         saved response, or silently proceed with the saved response.
+#     kwargs: any
+#         Additional kwargs to pass to gpt3 or mock_func. Most useful openai
+#         API kwargs are already in the docstring so mostly intended for the
+#         latter.
+#
+#     Returns
+#     -------
+#     tuple or iterator: When stream=False, we return a tuple where the first
+#     item is the prompt (str) and the second is the response text(str). If
+#     return_full is True, a third item consisting of the whole response object
+#     is returned as well. When stream=True, we return an iterator where each
+#     step contains a single token. This will either be the text response alone
+#     (str) or a tuple of (text, response) if return_full is True. Unlike in
+#     non-streaming mode, we don't return the prompt - that seems less
+#     appropriate for many time steps.
+#     """
+#     if stream and strip_output:
+#         warnings.warn('strip_output is automatically set to False when stream '
+#                       'is True. It would be impossible to correctly '
+#                       'reconstruct outputs otherwise.')
+#     if temperature < 1 and top_p < 1:
+#         warnings.warn('You set both temperature and top_p to values < 1. '
+#                       'API recommends setting only one of these to '
+#                       'sub-maximal value.')
+#     if logprobs and not return_full:
+#         warnings.warn('You set logprobs to a nonzero value but '
+#                       'return_full=False. If you want to access the logprobs, '
+#                       'you should set return_full=True.')
+#
+#     # Realized GPT-J was often being called without setting mock=True, leading
+#     # to unexpected charges 😬. Trying to prevent this in the future.
+#     mock = mock or bool(mock_func)
+#     kwargs = {
+#         **kwargs,
+#         'prompt': prompt,
+#         'temperature': temperature,
+#         'top_p': top_p,
+#         'frequency_penalty': frequency_penalty,
+#         'presence_penalty': presence_penalty,
+#         'max_tokens': max_tokens,
+#         'logprobs': logprobs,
+#         'n': n,
+#         'stream': stream,
+#         'logit_bias': logit_bias
+#     }
+#     if mock:
+#         res = MOCK_RESPONSE[stream]
+#         if mock_func:
+#             if stream:
+#                 raise NotImplementedError('mock_func unavailable when '
+#                                           'stream=True.')
+#
+#             # Replace text with results of mocked call if possible. Mock_funcs
+#             # return response as the second item, just like this function, so
+#             # we can also use them in place of it instead of specifying a
+#             # mock_func parameter.
+#             try:
+#                 res.choices[0].text = mock_func(engine_i=engine_i, **kwargs)[1]
+#             except MockFunctionException as e:
+#                 if mock_mode == 'raise':
+#                     raise e
+#                 elif mock_mode == 'warn':
+#                     warnings.warn(str(e))
+#     else:
+#         res = openai.Completion.create(engine=GPTBackend.engine(engine_i),
+#                                        **kwargs)
+#
+#     if stream:
+#         # In this case, we get 1 response for each new token. Zip does maintain
+#         # lazy evaluation.
+#         texts = (chunk.choices[0].text for chunk in res)
+#         return zip(texts, res) if return_full else texts
+#     else:
+#         output = (prompt, strip(res.choices[0].text, strip_output), res)
+#         return output if return_full else output[:-1]
 
 
 def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
-               frequency_penalty=0.0, presence_penalty=0.0,
-               max_tokens=50, logprobs=None, n=1, stream=False,
-               logit_bias=None, mock=False, return_full=False,
-               strip_output=True,
-               mock_func=None, mock_mode:('raise', 'warn', 'ignore')='raise',
-               **kwargs):
+               frequency_penalty=0.0, presence_penalty=0.0, max_tokens=50,
+               logprobs=None, n=1, stream=False, logit_bias=None, **kwargs):
     """Convenience function to query gpt3. Mostly serves 2 purposes:
     1. Build in some mocking functionality for cheaper/free testing.
     2. Explicitly add some parameters and descriptions to the function
     docstring, since openai.Completion.create does not include most kwargs.
+
+    # TODO: update docs
 
     Parameters
     ----------
@@ -240,43 +601,14 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
         not the tokens themselves) to ints between -100 and 100 (inclusive?).
         Values in (-1, 1) should be used to nudge the model, while larger
         values can effectively ban/compel the model to use certain words.
-    mock: bool
-        If True and no mock_func is provided, return a saved sample response
-        instead of hitting the API
-        in order to save tokens. Note that your other gpt3 kwargs
-        (max_tokens, logprobs, kwargs) will be ignored. return_full will be
-        respected since it affects the number of items returned - it's not a
-        kwarg passed to the actual query function. Text is surrounded by
-        <MOCK></MOCK> tags to make it obvious when mock is True (it's easy to
-        forget to change the value of mock when switching back and forth).
-    return_full: bool
-        If True, return a third item which is the full response object.
-        Otherwise we just return the prompt and response text.
-    strip_output: bool
-        If True, strip text returned by gpt3. Without this, many prompts have a
-        leading space and/or trailing newlines due to the way examples are
-        formatted.
-    mock_func: None or function
-        You can provide a function here that accepts the prompt
-        and returns something which will be used as the mock text.
-        As of version 1.1.0, this automatically sets mock=True. Sample use
-        case: when punctuating a transcript, the text realignment process may
-        raise an error when loading a saved mock response. Therefore, we may
-        want to write a mock_func that extracts the new input portion of the
-        prompt (discarding instructions and examples). This option is
-        unavailable in stream mode. [3/24/22: that last line might not be true
-        with gooseAI. Need to investigate further.]
-    mock_mode: str
-        Determines what to do if using mock mode and mock_func is not None and
-        it fails. Either 'raise' an error, 'warn' the user and proceed with the
-        saved response, or silently proceed with the saved response.
     kwargs: any
-        Additional kwargs to pass to gpt3 or mock_func. Most useful openai
-        API kwargs are already in the docstring so mostly intended for the
-        latter.
+        Additional kwargs to pass to gpt3. Should rarely be necessary.
 
     Returns
     -------
+    # TODO: update
+    tuple[list[str], List[dict]]
+
     tuple or iterator: When stream=False, we return a tuple where the first
     item is the prompt (str) and the second is the response text(str). If
     return_full is True, a third item consisting of the whole response object
@@ -286,70 +618,50 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
     non-streaming mode, we don't return the prompt - that seems less
     appropriate for many time steps.
     """
-    if stream and strip_output:
-        warnings.warn('strip_output is automatically set to False when stream '
-                      'is True. It would be impossible to correctly '
-                      'reconstruct outputs otherwise.')
+    if stream and n > 1:
+        raise RuntimeError('Stream=True and n>1 not supported.')
+
+    #     if stream and strip_output:
+    #         warnings.warn('strip_output is automatically set to False when stream '
+    #                       'is True. It would be impossible to correctly '
+    #                       'reconstruct outputs otherwise.')
     if temperature < 1 and top_p < 1:
         warnings.warn('You set both temperature and top_p to values < 1. '
                       'API recommends setting only one of these to '
                       'sub-maximal value.')
-    if logprobs and not return_full:
-        warnings.warn('You set logprobs to a nonzero value but '
-                      'return_full=False. If you want to access the logprobs, '
-                      'you should set return_full=True.')
+    #     if logprobs and not return_full:
+    #         warnings.warn('You set logprobs to a nonzero value but '
+    #                       'return_full=False. If you want to access the logprobs, '
+    #                       'you should set return_full=True.')
 
-    # Realized GPT-J was often being called without setting mock=True, leading
-    # to unexpected charges 😬. Trying to prevent this in the future.
-    mock = mock or bool(mock_func)
-    kwargs = {
-        **kwargs,
-        'prompt': prompt,
-        'temperature': temperature,
-        'top_p': top_p,
-        'frequency_penalty': frequency_penalty,
-        'presence_penalty': presence_penalty,
-        'max_tokens': max_tokens,
-        'logprobs': logprobs,
-        'n': n,
-        'stream': stream,
-        'logit_bias': logit_bias
-    }
-    if mock:
-        res = MOCK_RESPONSE[stream]
-        if mock_func:
-            if stream:
-                raise NotImplementedError('mock_func unavailable when '
-                                          'stream=True.')
+    res = openai.Completion.create(
+        engine=GPTBackend.engine(engine_i),
+        prompt=prompt,
+        temperature=temperature,
+        top_p=top_p,
+        frequency_penalty=frequency_penalty,
+        presence_penalty=presence_penalty,
+        max_tokens=max_tokens,
+        logprobs=logprobs,
+        n=n,
+        stream=stream,
+        logit_bias=logit_bias or {},
+        **kwargs
+    )
 
-            # Replace text with results of mocked call if possible. Mock_funcs
-            # return response as the second item, just like this function, so
-            # we can also use them in place of it instead of specifying a
-            # mock_func parameter.
-            try:
-                res.choices[0].text = mock_func(engine_i=engine_i, **kwargs)[1]
-            except MockFunctionException as e:
-                if mock_mode == 'raise':
-                    raise e
-                elif mock_mode == 'warn':
-                    warnings.warn(str(e))
-    else:
-        res = openai.Completion.create(engine=GPTBackend.engine(engine_i),
-                                       **kwargs)
-
+    # Extract text and return. Zip maintains lazy evaluation.
     if stream:
-        # In this case, we get 1 response for each new token. Zip does maintain
-        # lazy evaluation.
+        # Each item in zipped object is (str, dict-like).
         texts = (chunk.choices[0].text for chunk in res)
-        return zip(texts, res) if return_full else texts
-    else:
-        output = (prompt, strip(res.choices[0].text, strip_output), res)
-        return output if return_full else output[:-1]
+        chunks = (dict(chunk.choices[0]) for chunk in res)
+        return zip(texts, chunks)
+
+    # Structure: (List[str], List[dict-like])
+    return [row.text for row in res.choices], \
+           [dict(choice) for choice in res.choices]
 
 
-# TODO: add stop phrase support.
 @add_docstring(query_gpt3)
-@mark(requires_stopword_truncation=True)
 def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
                      top_k=False, **kwargs):
     """Free gptj access. Unclear which version of the model they provide -
@@ -378,27 +690,6 @@ def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
         return res['input'], res['output']
     except Exception as e:
         raise MockFunctionException(str(e)) from None
-
-
-def with_signature(to_f, keep=False):
-    """Decorator borrowed from fastai and renamed to avoid name collision
-    with htools (originally called "delegates"). Replaces `**kwargs`
-    in signature with params from `to`. Unlike htools.delegates, it only
-    changes documentation - variables are still made available in the decorated
-    function as 'kwargs'.
-    """
-    def _f(f):
-        from_f = f
-        sig = inspect.signature(from_f)
-        sigd = dict(sig.parameters)
-        k = sigd.pop('kwargs')
-        s2 = {k: v for k, v in inspect.signature(to_f).parameters.items()
-              if v.default != inspect.Parameter.empty and k not in sigd}
-        sigd.update(s2)
-        if keep: sigd['kwargs'] = k
-        from_f.__signature__ = sig.replace(parameters=sigd.values())
-        return f
-    return _f
 
 
 class GPTBackend:
@@ -432,17 +723,22 @@ class GPTBackend:
     }
 
     # Order matters: keep openai first so name2key initialization works.
-    name2mock = {
-        'openai': None,
-        'gooseai': None,
+    name2func = {
+        'openai': query_gpt3,
+        'gooseai': query_gpt3,
         'huggingface': query_gpt_huggingface,
         'hobby': query_gpt_j,
         'repeat': query_gpt_repeat,
         'banana': query_gpt_banana
     }
 
+    # Names of backends that perform stop word truncation how we want (i.e.
+    # allow us to specify stop phrases AND truncate before the phrase rather
+    # than after, if we encounter one).
+    skip_trunc = {'openai'}
+
     name2key = {}
-    for name in name2mock:
+    for name in name2func:
         if name in {'hobby', 'repeat'}:
             name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
         else:
@@ -458,9 +754,9 @@ class GPTBackend:
         Notice that name is auto-lowercased and spaces are removed.
         """
         new_name = name.lower().replace(' ', '')
-        if new_name not in self.name2mock:
+        if new_name not in self.name2func:
             raise ValueError(f'Invalid name {name}. Valid options are: '
-                             f'{list(self.name2mock)}')
+                             f'{list(self.name2func)}')
 
         self.new_name = new_name
         self.old_name = self.current()
@@ -499,7 +795,7 @@ class GPTBackend:
         """
         print('\nBase:', openai.api_base)
         print('Key:', openai.api_key)
-        print('Mock func:', cls.mock_func())
+        print('Query func:', cls._get_query_func())
 
     @classmethod
     def backends(cls):
@@ -510,7 +806,7 @@ class GPTBackend:
         -------
         list[str]
         """
-        return list(cls.name2mock)
+        return list(cls.name2func)
 
     def clear(self):
         """Reset instance variables tracking that were used to restore
@@ -543,9 +839,9 @@ class GPTBackend:
         return getattr(openai, 'curr_name', 'openai')
 
     @classmethod
-    def mock_func(cls, backend=None):
+    def _get_query_func(cls, backend=None):
         """Return current mock function (callable or None)."""
-        return cls.name2mock[backend or cls.current()]
+        return cls.name2func[backend or cls.current()]
 
     @classmethod
     def key(cls):
@@ -594,43 +890,93 @@ class GPTBackend:
     @classmethod
     @with_signature(query_gpt3)
     @add_docstring(query_gpt3)
-    def query(cls, prompt, log_path=None, **kwargs):
-        mock_func = cls.mock_func()
-        kwargs_mock = kwargs.pop('mock_func', None)
-        # If user doesn't pass in mock_func explicitly
-        # shouldn't raise an error.
-        if kwargs_mock and kwargs_mock != mock_func:
-            raise ValueError(
-                f'Encountered unexpected mock_func {kwargs_mock} with this '
-                f'interface. The current backend expects a mock_func of '
-                f'{mock_func}. Note: you typically shouldn\'t pass in '
-                f'mock_func explicitly since GPTBackend handles this for you. '
-                f'(Technically, we do allow this due to the way PromptManager '
-                f'and ConversationManager implement kwargs() methods).'
-            )
-        kwargs['prompt'] = prompt
-        cls._log_query_kwargs(log_path, mock_func=mock_func, **kwargs)
-        return query_gpt3(**kwargs, mock_func=mock_func)
+    def query(cls, prompt, strip_output=True, log_path=None, **kwargs):
+        """
 
-        # TODO just thinking
-        query_func = query_gpt3 # TODO: use whatever func is active
-        truncate_at_first_stop = identity # TODO: use real func
-        res = query_func(**kwargs)
-        if getattr(query_func, 'requires_stopword_truncation', False):
-            res = truncate_at_first_stop(res)
-        if kwargs.get('stream', False):
-            return None # TODO
-        return None # TODO
+        Parameters
+        ----------
+        prompt
+        strip_output
+        log_path
+        kwargs
+
+        Returns
+        -------
+        list[str, dict]
+        """
+        if not isinstance(prompt, str):
+            raise NotImplementedError(
+                f'Prompt must be str, not {type(prompt).__name__}.'
+            )
+
+        # Keep line order so we can provide warnings if user is in stream mode.
+        query_func = cls._get_query_func()
+        stream = kwargs.get('stream', False)
+        if stream:
+            if strip_output:
+                warnings.warn('strip_output=True is not supported in stream '
+                              'mode. Automatically setting it to False.')
+                strip_output = True
+            if trunc_full:
+                warnings.warn(
+                    'Streaming mode does not support manual truncation of '
+                    'stop phrases and your current backend\'s has limited '
+                    'support for truncation.'
+                )
+
+        # V2 library no longer supports user passing in mock_func. We want to
+        # remove this from the kwargs we pass to our actual function.
+        kwargs_func = kwargs.pop('mock_func', None)
+        if kwargs_func:
+            raise ValueError(
+                f'Encountered unexpected mock_func {kwargs_func} with this '
+                'interface. This was part of the v1 library but is no longer '
+                'supported.'
+            )
+
+        kwargs['prompt'] = prompt
+        cls._log_query_kwargs(log_path, query_func=query_func, **kwargs)
+
+        # Possibly easier for caller to check for errors this way? Mostly a
+        # holdover from v1 library design, but I'm not 100% sure if the
+        # benefits still hold given the new design.
+        try:
+            text, full_response = query_func(**kwargs)
+        except Exception as e:
+            raise MockFunctionException(str(e)) from None
+        if stream:
+            return text, full_response
+
+        # Manually check for stop phrases because most backends either don't
+        # or truncate AFTER the stop phrase which is rarely what we want.
+        stop = kwargs.get('stop', [])
+        trunc_full = cls.current() not in cls.skip_trunc
+        clean_text = []
+        # tolist doesn't know how to handle dicts so we check explicitly.
+        if not listlike(text):
+            text = tolist(text)
+            full_response = [full_response]
+        for text_, resp_ in zip(text, full_response):
+            text_ = truncate_at_first_stop(
+                text_,
+                stop_phrases=stop,
+                finish_reason=resp_.get('finish_reason', ''),
+                trunc_full=trunc_full,
+                trunc_partial=True
+            )
+            clean_text.append(strip(text_, strip_output))
+
+        return squeeze(clean_text, full_response, n=kwargs.get('n', 1))
 
     @classmethod
-    def _log_query_kwargs(cls, path, mock_func=None, **kwargs):
+    def _log_query_kwargs(cls, path, query_func=None, **kwargs):
         """Log kwargs for troubleshooting purposes."""
         if path:
             # Meta key is used to store any info we want to log but that should
             # not be passed to the actual query_gpt3 call.
             kwargs['meta'] = {
                 'backend_name': cls.current(),
-                'mock_func': func_name(mock_func) if mock_func else None
+                'query_func': func_name(query_func) if query_func else None
             }
             save(kwargs, path, verbose=False)
 
@@ -857,7 +1203,7 @@ class PromptManager:
             raise RuntimeError('Arg "prompt" should not be in query kwargs. '
                                'It will be constructed within this method and '
                                'passing it in will override the new version.')
-        mock_func = GPTBackend.mock_func()
+        mock_func = GPTBackend._get_query_func()
         kwargs_mock = kwargs.get('mock_func', None)
         # If user doesn't pass in a mock_func explicitly, this shouldn't raise
         # an error even if our backend will automatically use one.
@@ -1278,7 +1624,7 @@ class ConversationManager:
                 'constructed within this method and passing it in will '
                 'override the new version.'
             )
-        mock_func = GPTBackend.mock_func()
+        mock_func = GPTBackend._get_query_func()
         kwargs_mock = kwargs.get('mock_func', None)
         # If user doesn't pass in a mock_func explicitly, this shouldn't raise
         # an error even if our backend will automatically use one.
