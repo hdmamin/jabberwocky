@@ -888,13 +888,32 @@ X -add support for banana.dev version of gptj
 
 4/1/22 fri
 ----------
--add banana backend in aws console
-    -re-generate json and save (remember to save both raw json and generated')
+X -add banana backend in aws console
+    X -re-generate json and save (remember to save both raw json and generated')
 -continue considering query redesign 
-    -settle on removing mock_func construct or not (try to think: is there really a good reason for this?). If yes:
-        -decide what each func should return
+    X -settle on removing mock_func construct or not (try to think: is there really a good reason for this?). If yes:
+        X -decide what each func should return
+            UPDATE: decided to let each function return either (str, dict-like) OR (list[str], list[dict-like]). This allows for my most common use case so far (n_prompts=1, n_completions=1) to continue having a convenient interface w/out extra indexing, while also supporting a straightforward interface for n_completions > 1. Tentatively decided to handle n_prompts > 1 and do that for all funcs using threading/multiprocessing (these completions should be indepedent so no NEED to use the api built-in implementation). Plan is to have a separate GPTBackend.query_multi method where we return a list of tuples. This way we can unpack each completion as (text, resp) rather than the weird zip stuff that forcing this to fit my current interface would entail.
+        ~ -start implementing
+            UPDATE: tentatively updated each mock_func in nb, but still some cleaning up to do.
         -make sure redesign doesn't break ConvManager or PromptManager too badly (I'm okay with updating these - the api will clearly change too much to be compatible w/ the gui anyway - but make sure stuff like the hooked generator doesn't TOTALLY break in hard to solve ways.) Might want to change how we get kwargs(), i.e. the default query function could change and we should use the active one.
         -add check in GPTBackend.query for if we need to manually trunc stop words
+
+4/2/22 sat
+----------
+-gpt query redesign
+    -finish implementing each mock_func in nb
+    -port to lib
+        -update docs for various funcs
+    -polish draft of backend query method so it:
+        -does the warnings that used to be in query_gpt3
+        -handles the warning/error if user tries to pass in a list of prompts
+        -does post-query stripping (see gpt3 query func in pycharm, which I removed from current nb version)
+        -does post-query stopword truncation when appropriate
+        -update convmanager (careful w/ hookedgenerator)
+            -maybe change kwargs() depending on active backend?
+        -update promptmanager 
+            -maybe change kwargs() depending on active backend?
 
 
 Backlog

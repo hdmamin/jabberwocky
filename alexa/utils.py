@@ -12,7 +12,7 @@ import sys
 from werkzeug.local import LocalProxy
 
 from htools.meta import Callback, callbacks, params, MultiLogger, func_name,\
-    deprecated, select
+    deprecated, select, save
 from htools.structures import FuzzyKeyDict
 from jabberwocky.openai_utils import query_gpt3
 
@@ -690,7 +690,9 @@ def model_type(state):
 
 
 def build_utterance_map(model_json, fuzzy=True,
-                        exclude_types=('AMAZON.Person', 'AMAZON.SearchQuery')):
+                        exclude_types=('AMAZON.Person', 'AMAZON.SearchQuery'),
+                        save_=False, model_path='data/alexa/dialog_model.json',
+                        meta_path='data/alexa/utterance2meta.pkl'):
     """Given a dictionary copied from Alexa's JSON Editor, return a
     dict or FuzzyKeyDict mapping each possible sample utterance to its
     corresponding intent. This allows our delegate() function to do some
@@ -741,7 +743,11 @@ def build_utterance_map(model_json, fuzzy=True,
                 kwargs = dict(zip(slot2vals, args))
                 utt2meta[row.format(**kwargs)] = {'intent': intent['name'],
                                                   'slots': kwargs}
-    return FuzzyKeyDict(utt2meta) if fuzzy else utt2meta
+    meta = FuzzyKeyDict(utt2meta) if fuzzy else utt2meta
+    if save_:
+        save(model_json, model_path)
+        save(meta, meta_path)
+    return meta
 
 
 def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
