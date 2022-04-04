@@ -17,11 +17,11 @@ import sys
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
-    listlike, Results, flatten, add_docstring, func_name
+    listlike, Results, flatten, add_docstring, func_name, params
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
-    hooked_generator, load_api_key, with_signature, squeeze
+    hooked_generator, load_api_key, with_signature, squeeze, stream_response
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -231,6 +231,8 @@ def query_gpt_huggingface(
     repetition_penalty
     max_tokens: int
         Sets max response length. One token is ~.75 words.
+    n: int
+        Number of completions to generate.
     kwargs: any
         Just lets us absorb extra kwargs when used in place of query_gpt3().
 
@@ -385,9 +387,11 @@ def query_gpt_huggingface(
 #     return prompt, res
 
 
-def query_gpt_repeat(prompt, **kwargs):
+def query_gpt_repeat(prompt, n=1, **kwargs):
     """Mock func that just returns the prompt as the response."""
-    return prompt, {}
+    if kwargs:
+        warnings.warn(f'Unused kwargs {kwargs} received by query_gpt_repeat.')
+    return [prompt for _ in range(n)], [{} for _ in range(n)]
 
 
 # def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
@@ -909,10 +913,14 @@ class GPTBackend:
                 f'Prompt must be str, not {type(prompt).__name__}.'
             )
 
-        # Keep line order so we can provide warnings if user is in stream mode.
+        # Keep trunc_full definition here so we can provide warnings if user
+        # is in stream mode.
         query_func = cls._get_query_func()
+        trunc_full = cls.current() not in cls.skip_trunc
         stream = kwargs.get('stream', False)
         if stream:
+            if kwargs.get('n', 1) > 1:
+                raise ValueError('Stream mode not supported when n > 1.')
             if strip_output:
                 warnings.warn('strip_output=True is not supported in stream '
                               'mode. Automatically setting it to False.')
@@ -920,7 +928,7 @@ class GPTBackend:
             if trunc_full:
                 warnings.warn(
                     'Streaming mode does not support manual truncation of '
-                    'stop phrases and your current backend\'s has limited '
+                    'stop phrases and your current backend has limited '
                     'support for truncation.'
                 )
 
@@ -945,12 +953,15 @@ class GPTBackend:
         except Exception as e:
             raise MockFunctionException(str(e)) from None
         if stream:
-            return text, full_response
+            if 'stream' in params(query_func):
+                return text, full_response
+            # Squeeze is necessary to support both valid query response types:
+            # (str, dict) and (list[str], list[dict]).
+            return stream_response(*squeeze(text, full_response, n=1))
 
         # Manually check for stop phrases because most backends either don't
         # or truncate AFTER the stop phrase which is rarely what we want.
         stop = kwargs.get('stop', [])
-        trunc_full = cls.current() not in cls.skip_trunc
         clean_text = []
         # tolist doesn't know how to handle dicts so we check explicitly.
         if not listlike(text):

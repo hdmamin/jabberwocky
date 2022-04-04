@@ -3,13 +3,37 @@
 from colorama import Fore
 from functools import update_wrapper, partial
 from inspect import _empty, Parameter, signature
+from itertools import cycle
 from pathlib import Path
 from PIL import Image
 import sys
+from threading import Thread
 import yaml
 
-from htools import select, bound_args, copy_func, xor_none
+from htools import select, bound_args, copy_func, xor_none, add_docstring, \
+    listlike
 from jabberwocky.config import C
+
+
+class ReturningThread(Thread):
+
+    @add_docstring(Thread)
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs=None, *, daemon=None):
+        """This is identical to a regular thread except that the join method
+        returns the value returned by your target function. The
+        Thread.__init__ docstring is shown below for the sake of convenience.
+        """
+        super().__init__(group=group, target=target, name=name,
+                         args=args, kwargs=kwargs, daemon=daemon)
+        self.result = None
+
+    def run(self):
+        self.result = self._target(*self._args, **self._kwargs)
+
+    def join(self, timeout=None):
+        super().join(timeout)
+        return self.result
 
 
 def with_signature(to_f, keep=False):
@@ -53,8 +77,11 @@ def squeeze(*args, n=1):
     on our choice of n. We effectively treat n as a boolean. This is used by
     the query_gpt_{} functions to return either a (str, dict) tuple or a
     (list[str], list[dict]) tuple, depending on the number of completions
-    we ask for.
+    we ask for. If first arg is not some kind of list/tuple (e.g. a str), we
+    simply return the args unchanged.
     """
+    if not listlike(args[0]):
+        return args
     return tuple(arg[0] for arg in args) if n == 1 else args
 
 
@@ -387,3 +414,42 @@ class Partial:
 
     def __str__(self):
         return str(self.func).replace(self.old_name, self.__name__)
+
+
+def stream_words(text):
+    """Like stream_chars but splits on spaces. Realized stream_chars was a bad
+    idea because we risk giving SPEAKER turns like
+    "This is over. W" and "hat are you doing next?", neither of which would be
+    pronounced as intended. We yield with a space for consistency with the
+    other streaming interfaces which require no further postprocessing.
+    """
+    for word in text.split(' '):
+        yield word + ' '
+
+
+def stream_response(text, full):
+    """Generator used to stream gpt completions for backends that don't
+    natively support it.
+
+    Parameters
+    ----------
+    text: str
+    full: dict
+
+    Returns
+    --------
+    >>> text, full = query_gpt_huggingface()
+    >>> text
+    "It is hot"
+    >>> full
+    {'generated_text': 'It is hot'}
+
+    # Notice we don't change the full response - there's no consistent
+    # pattern all the non-streaming backends share.
+    >>> for t, f in stream_response(text, full):
+    >>>     print(repr(t), f)
+    'It ' {'generated_text': 'It is hot'}
+    'is ' {'generated_text': 'It is hot'}
+    'hot' {'generated_text': 'It is hot'}
+    """
+    yield from zip(stream_words(text), cycle([full]))
