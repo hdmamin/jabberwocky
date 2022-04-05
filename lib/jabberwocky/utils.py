@@ -1,5 +1,6 @@
 """General purpose utilities."""
 
+from collections import deque
 from colorama import Fore
 from functools import update_wrapper, partial
 from inspect import _empty, Parameter, signature
@@ -453,3 +454,89 @@ def stream_response(text, full):
     'hot' {'generated_text': 'It is hot'}
     """
     yield from zip(stream_words(text), cycle([full]))
+
+
+def stream_multi_response(texts, fulls):
+    """Generator that lets us stream tokens and metadata from gpt query
+    functions for backends that don't natively provide streaming. (Obviously,
+    this won't prevent backends like Huggingface from having to generate the
+    full response first, but it will provide a consistent interface for us to
+    use once the text has been generated). Adds some additional metadata
+    compared to stream_response() which allows us to use this when n
+    (# of completions) is > 1.
+
+    Parameters
+    ----------
+    texts: str or list[str]
+    fulls: dict or list[dict]
+
+    Yields
+    ------
+    tuple[str, dict]: First item is a single word, second is a dict. In
+    addition to whatever data the dict already had, we add a key
+    'finish_reason' which is set to None unless we've hit the last token in
+    the completion, in which case it's set to "dummy" (you can simply check for
+    a truthy value since it's None otherwise). We also add a key 'index'
+    corresponding to which completion we're in (i.e. if we have two completions
+    of 3 words each, we'd want to know which completion each new token belongs
+    to).
+
+    Examples
+    --------
+    >>> with gpt('huggingface'):
+    >>>     texts, fulls = gpt.query(prompt, n=2, max_tokens=3)
+    >>> for tok, full in stream_multi_response(texts, fulls):
+    >>>     print(tok, full)
+    The {'generated_text': 'The dog barked', 'index': 0, 'finish_reason': None}
+    dog {'generated_text': 'The dog barked', 'index': 0, 'finish_reason': None}
+    barked {'generated_text': 'The dog barked', 'index': 0,
+            'finish_reason': 'dummy'}
+    See {'generated_text': 'See Spot run', 'index': 1, 'finish_reason': None}
+    Spot {'generated_text': 'See Spot run', 'index': 1, 'finish_reason': None}
+    run {'generated_text': 'See Spot Run', 'index': 1,
+            'finish_reason': 'dummy'}
+    """
+    texts, fulls = containerize(texts, fulls)
+    for i, (text, full) in enumerate(zip(texts, fulls)):
+        queue = deque()
+        gen = stream_response(text,
+                              {**full, 'index': i, 'finish_reason': None})
+        done = False
+        # Yield items while checking if we're at the last item so we can mark
+        # it with a finish_reason. This lets us know when one completion ends.
+        while True:
+            try:
+                tok, tok_full = next(gen)
+                queue.append((tok, tok_full))
+            except StopIteration:
+                done = True
+
+            while len(queue) > 1:
+                tok, tok_full = queue.popleft()
+                yield tok, tok_full
+            if done: break
+        tok, tok_full = queue.popleft()
+        tok_full['finish_reason'] = 'dummy'
+        yield tok, tok_full
+
+
+def containerize(*args):
+    """Basically applies tolist() to a bunch of objects, except that tolist
+    doesn't work on dicts. I considered changing that but I'd have to check
+    what went into that decision - I have a vague suspicion that that behavior
+    is important to incendio.
+
+    Returns
+    -------
+    tuple[list]: Each item in the returned tuple is a list-like object. If the
+    corresponding input arg was not like-like, it becomes the first value in
+    a new list, otherwise we keep the input type (so it could be a tuple, for
+    example).
+    """
+    res = []
+    for arg in args:
+        if listlike(arg):
+            res.append(arg)
+        else:
+            res.append([arg])
+    return res
