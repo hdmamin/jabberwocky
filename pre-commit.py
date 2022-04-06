@@ -5,6 +5,18 @@ import sys
 
 
 OPENAI_KEY_PATTERN = 'sk-[a-zA-Z0-9]{48}'
+YELLOW = '\033[93m'
+RED = '\033[91m'
+END = '\033[0m'
+BOLD = '\033[1m'
+
+
+def warn(text):
+    print(YELLOW + BOLD + text + END)
+
+
+def error(text):
+    print(RED + BOLD + text + END)
 
 
 def main():
@@ -16,14 +28,14 @@ def main():
     # Ack returns return code of 0 when matches are found.
     code = 1 - git_matches.returncode
     if code:
-        print('\nERROR: FOUND POSSIBLE EXPOSED API KEY. \nCommit aborted. '
+        error('\nERROR: FOUND POSSIBLE EXPOSED API KEY. \nCommit aborted. '
               'Use the `--no-verify` to force commit anyway.\n')
     else:
         all_matches = subprocess.run(
             ['ack', OPENAI_KEY_PATTERN, Path('~/jabberwocky/').expanduser()]
         )
         if not all_matches.returncode:
-            print('\nWARNING: FOUND POSSIBLE EXPOSED API KEY. \nAllowing '
+            warn('\nWARNING: FOUND POSSIBLE EXPOSED API KEY. \nAllowing '
                   'commit to proceed because it doesn\'t appear to be in a '
                   'file you\'ve committed to git, but be very careful.')
     sys.exit(code)
