@@ -800,7 +800,6 @@ class GPTBackend:
         mock_func. Mostly useful for debugging and sanity checks.
         """
         print('\nBase:', openai.api_base)
-        print('Key:', openai.api_key)
         print('Query func:', cls._get_query_func())
 
     @classmethod
