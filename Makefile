@@ -37,3 +37,7 @@ ngrok:
 
 run_alexa:
 	python alexa/app.py
+
+hooks:
+	ln -sf ~/jabberwocky/pre-commit.py .git/hooks/pre-commit
+	chmod u+x .git/hooks/pre-commit
