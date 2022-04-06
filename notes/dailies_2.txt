@@ -1019,3 +1019,5 @@ Long term backlog (i.e. things I decided are outside the current scope)
 -update gui to support newer jabberwocky version
     -adjust gui accordingly (cur offer different radio buttons for each neo size; could instead have 1 radio and have it actually use the engine_i slider)
     -add gooseai backend option
+
+
