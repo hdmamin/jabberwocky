@@ -8,8 +8,9 @@ OPENAI_KEY_PATTERN = 'sk-[a-zA-Z0-9]{48}'
 
 
 def main():
+    # Piping in subprocess requires str arg instead of list and shell=True.
     git_matches = subprocess.run(
-        ['git', 'ls-files', '|', 'ack', '-x', OPENAI_KEY_PATTERN],
+        f'git ls-files | ack -x {OPENAI_KEY_PATTERN}',
         shell=True
     )
     # Ack returns return code of 0 when matches are found.
