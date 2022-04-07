@@ -993,7 +993,7 @@ X -add line in readme about using make hooks
         -update backend.query logging to file to work w/ threads (or whatever method I use in above bullet point)
             X -write JsonlinesFormatter
             X -write JsonlinesLogger
-            UPDATE: decided writing custom logger might be good way to go since logging (IIRC) natively supports multithreading. Could have used lock approach but let's try this first.
+            UPDATE: decided writing custom logger might be good way to go since logging (IIRC) natively supports multithreading. Could have used lock approach but let's try this first. Also like the idea of keeping all calls rather than overwriting each time.
         -figure out how to integrate new query_batch func into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
     -figure out how to support stream mode w/ np=1 and nc>1 for backends w/ builtin streaming (think this may be achieved w/ native behavior + slightly tweaked version of stream_multi_response)
         -implement
