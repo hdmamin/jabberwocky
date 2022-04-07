@@ -4,6 +4,7 @@ from flask_ask import session, Ask
 from functools import wraps, partial
 from fuzzywuzzy import fuzz, process
 from itertools import product
+import json
 import logging
 import pandas as pd
 from pathlib import Path
@@ -12,7 +13,7 @@ import sys
 from werkzeug.local import LocalProxy
 
 from htools.meta import Callback, callbacks, params, MultiLogger, func_name,\
-    deprecated, select, save
+    deprecated, select, save, count_calls
 from htools.structures import FuzzyKeyDict
 from jabberwocky.openai_utils import query_gpt3
 
@@ -299,6 +300,41 @@ class IndentedFormatter(logging.Formatter):
         msg = super().format(record)
         indent = max(0, self.ask.stack_size * 4) * self.filler
         return '\n'.join(indent + line for line in msg.splitlines())
+
+
+class JsonlinesFormatter(logging.Formatter):
+    """Formatter for logging python data structures to a jsonlines file.
+    Used by JsonLogger.
+    """
+
+    @count_calls
+    def format(self, record):
+        return json.dumps(record.msg)
+
+
+class JsonlinesLogger(MultiLogger):
+    """Logger to save python data structures to jsonlines files. Also prints
+    results to stdout but doesn't json dump those. Used to log gpt.query()
+    kwargs.
+    """
+
+    fmt = '%(message)s'
+
+    def __init__(self, path, fmode='w'):
+        super().__init__(path, fmode=fmode, fmt=self.fmt)
+        self.formatter = self._add_json_formatter()
+
+    def _add_json_formatter(self):
+        handlers = [handler for handler in self.handlers
+                    if isinstance(handler, logging.FileHandler)]
+        if len(handlers) != 1:
+            raise RuntimeError(
+                'Expected JsonlinesLogger to have 1 FileHandler, '
+                f'found {len(handlers)}.'
+            )
+        formatter = JsonlinesFormatter(self.fmt)
+        handlers[0].setFormatter(formatter)
+        return formatter
 
 
 class CustomAsk(Ask):

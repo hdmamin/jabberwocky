@@ -70,6 +70,8 @@ Or with `make`:
 make run
 ```
 
+I also recommend using the command `make hooks` to install a git pre-commit hook to prevent you from accidentally exposing your openai API key. You only need to run this once.
+
 ## Usage
 
 ### Conversation Mode
@@ -113,3 +115,8 @@ jabberwocky/
 ```
 
 The `docker` and `setup` dirs contain remnants from previous attempts to package the app. While I ultimately decided to go with a simpler approach, I left them in the repo so I have the option of picking up where I left off if I decide to work on a new version.
+
+### Updates
+
+**4/6/22**: The library is currently undergoing some fairly major changes to support my Jabberwocky alexa skill (still a work in progress) and future projects. The GUI should still work using the pinned version of jabberwocky in requirements.txt - just note that the installed library's source code will no longer correspond to the current state of the `lib` directory.
+
