@@ -5,6 +5,8 @@ from colorama import Fore
 from functools import update_wrapper, partial
 from inspect import _empty, Parameter, signature
 from itertools import cycle
+import json
+import logging
 from pathlib import Path
 from PIL import Image
 import sys
@@ -12,7 +14,7 @@ from threading import Thread
 import yaml
 
 from htools import select, bound_args, copy_func, xor_none, add_docstring, \
-    listlike
+    listlike, MultiLogger
 from jabberwocky.config import C
 
 
@@ -35,6 +37,62 @@ class ReturningThread(Thread):
     def join(self, timeout=None):
         super().join(timeout)
         return self.result
+
+
+class JsonlinesFormatter(logging.Formatter):
+    """Formatter for logging python data structures to a jsonlines file.
+    Used by JsonLogger.
+    """
+
+    def format(self, record):
+        return json.dumps(record.msg)
+
+
+class JsonlinesLogger(MultiLogger):
+    fmt = '%(message)s'
+
+    def __init__(self, path):
+        super().__init__(path, fmode='a', fmt=self.fmt)
+        self.formatter = self._add_json_formatter()
+        self.path = self._get_file_handler()[0].baseFilename
+
+    def _get_file_handler(self):
+        """
+        Returns
+        -------
+        tuple: First item is FileHandler, second is its index in the logger's
+        file handlers. This allows us to effectively edit it.
+        """
+        handlers = [(handler, i) for i, handler in enumerate(self.handlers)
+                    if isinstance(handler, logging.FileHandler)]
+        if len(handlers) != 1:
+            raise RuntimeError(
+                'Expected JsonlinesLogger to have 1 FileHandler, '
+                f'found {len(handlers)}.'
+            )
+        return handlers[0]
+
+    def _add_json_formatter(self):
+        formatter = JsonlinesFormatter(self.fmt)
+        handler, _ = self._get_file_handler()
+        handler.setFormatter(formatter)
+        return formatter
+
+    def change_path(self, path):
+        """Change the path of the file we log to by creating a new FileHandler
+        because the filepath affects other attributes that are set in the
+        constructor.
+        """
+        _, i = self._get_file_handler()
+        self.handlers[i] = self._change_path(self.handlers[i], path)
+        self.path = self.handlers[i].baseFilename
+
+    def _change_path(self, handler, path):
+        kwargs = {key: getattr(handler, key) for key in
+                  ('mode', 'encoding', 'delay')}
+        handler = type(handler)(filename=path, **kwargs)
+        handler.setFormatter(self.formatter)
+        return handler
 
 
 def with_signature(to_f, keep=False):

@@ -302,40 +302,6 @@ class IndentedFormatter(logging.Formatter):
         return '\n'.join(indent + line for line in msg.splitlines())
 
 
-class JsonlinesFormatter(logging.Formatter):
-    """Formatter for logging python data structures to a jsonlines file.
-    Used by JsonLogger.
-    """
-
-    @count_calls
-    def format(self, record):
-        return json.dumps(record.msg)
-
-
-class JsonlinesLogger(MultiLogger):
-    """Logger to save python data structures to jsonlines files. Also prints
-    results to stdout but doesn't json dump those. Used to log gpt.query()
-    kwargs.
-    """
-
-    fmt = '%(message)s'
-
-    def __init__(self, path, fmode='w'):
-        super().__init__(path, fmode=fmode, fmt=self.fmt)
-        self.formatter = self._add_json_formatter()
-
-    def _add_json_formatter(self):
-        handlers = [handler for handler in self.handlers
-                    if isinstance(handler, logging.FileHandler)]
-        if len(handlers) != 1:
-            raise RuntimeError(
-                'Expected JsonlinesLogger to have 1 FileHandler, '
-                f'found {len(handlers)}.'
-            )
-        formatter = JsonlinesFormatter(self.fmt)
-        handlers[0].setFormatter(formatter)
-        return formatter
-
 
 class CustomAsk(Ask):
     """Slightly customized version of flask-ask's Ask object. See `intent`

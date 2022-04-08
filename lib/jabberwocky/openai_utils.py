@@ -4,6 +4,7 @@ import banana_dev as banana
 from collections.abc import Iterable, Mapping
 from collections import Counter
 from contextlib import contextmanager
+from datetime import datetime
 from itertools import zip_longest
 import json
 from nltk.tokenize import sent_tokenize
@@ -22,7 +23,7 @@ from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     hooked_generator, load_api_key, with_signature, squeeze, stream_response, \
-    stream_multi_response
+    stream_multi_response, JsonlinesLogger
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -720,6 +721,10 @@ class GPTBackend:
     gooseai_res_2 = gpt.query(**kwargs)
     """
 
+    logger = JsonlinesLogger(
+        f'./data/logs/{datetime.today().strftime("%Y.%m.%d")}.jsonlines'
+    )
+
     # Only include backends here that actually should change the
     # openai.api_base value (these will probably be backends that require no
     # or minimal mock_funcs).
@@ -895,14 +900,17 @@ class GPTBackend:
     @classmethod
     @with_signature(query_gpt3)
     @add_docstring(query_gpt3)
-    def query(cls, prompt, strip_output=True, log_path=None, **kwargs):
+    def query(cls, prompt, strip_output=True, log=True, **kwargs):
         """
 
         Parameters
         ----------
         prompt
         strip_output
-        log_path
+        log: bool or str
+            If True, the logfile defaults to a path like
+            './data/logs/2022.04.07.jsonlines' (current year, month, day).
+            If str, use that as the log path. If False or None, do not log.
         kwargs
 
         Returns
@@ -942,7 +950,7 @@ class GPTBackend:
             )
 
         kwargs['prompt'] = prompt
-        cls._log_query_kwargs(log_path, query_func=query_func, **kwargs)
+        cls._log_query_kwargs(log=log, query_func=query_func, **kwargs)
 
         # Possibly easier for caller to check for errors this way? Mostly a
         # holdover from v1 library design, but I'm not 100% sure if the
@@ -980,16 +988,18 @@ class GPTBackend:
         return squeeze(clean_text, full_response, n=kwargs.get('n', 1))
 
     @classmethod
-    def _log_query_kwargs(cls, path, query_func=None, **kwargs):
+    def _log_query_kwargs(cls, log, query_func=None, **kwargs):
         """Log kwargs for troubleshooting purposes."""
-        if path:
+        if log:
             # Meta key is used to store any info we want to log but that should
             # not be passed to the actual query_gpt3 call.
             kwargs['meta'] = {
                 'backend_name': cls.current(),
                 'query_func': func_name(query_func) if query_func else None
             }
-            save(kwargs, path, verbose=False)
+            if isinstance(log, (str, Path)) and log != cls.logger.path:
+                cls.logger.change_path(path)
+            cls.logger.info(kwargs)
 
     def __repr__(self):
         return f'{func_name(self)} <current_name: {self.current()}>'
@@ -1173,7 +1183,7 @@ class PromptManager:
             print('fully resolved kwargs:\n',
                   dict(bound_args(query_gpt3, [], kwargs)))
             return
-        return GPTBackend.query(prompt, log_path=self.log_path, **kwargs)
+        return GPTBackend.query(prompt, log=self.log_path, **kwargs)
 
     def kwargs(self, task, fully_resolved=True, return_prompt=False,
                extra_kwargs=None, **kwargs):
@@ -1725,7 +1735,7 @@ class ConversationManager:
 
         # Query and return generator. This allows us to use streaming mode in
         # GUI while still updating this instance with gpt3's response.
-        res = GPTBackend.query(prompt, log_path=self.log_path, **kwargs)
+        res = GPTBackend.query(prompt, log=self.log_path, **kwargs)
         if not kwargs.get('stream', False):
             self.gpt3_turns.append(res[1])
             return res

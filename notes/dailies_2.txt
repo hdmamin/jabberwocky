@@ -1000,9 +1000,19 @@ X -add line in readme about using make hooks
 
 4/7/22 thurs
 ------------
--update gptbackend to log using jsonlines logger instead of htools.save
+X -update gptbackend to log using jsonlines logger instead of htools.save
 -qpt query redesign
     -query_batch
+        -figure out how to integrate new query_batch func into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
+    -figure out how to support stream mode w/ np=1 and nc>1 for backends w/ builtin streaming (think this may be achieved w/ native behavior + slightly tweaked version of stream_multi_response)
+        -implement
+
+4/8/22 fri
+----------
+-easy: clean up all the old messy query funcs in openai_utils.py (mostly deleting)
+-qpt query redesign
+    -query_batch
+        -in nb13, test if new logging functionality works with multi-threaded approach
         -figure out how to integrate new query_batch func into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
     -figure out how to support stream mode w/ np=1 and nc>1 for backends w/ builtin streaming (think this may be achieved w/ native behavior + slightly tweaked version of stream_multi_response)
         -implement
