@@ -1022,13 +1022,31 @@ X -easy: clean up all the old messy query funcs in openai_utils.py (mostly delet
 4/9/22 fri
 ----------
 [NOTE: most up to date version of GPTBackend is in nb13 cell]
--update htools.save to support jsonlines format
+_ -update htools.save to support jsonlines format
+    UPDATE: looked into options for implementing this and it's not super straightforward with the current interface. Could add jsonlines lib but I'd like to cut down on deps if anything.
 -qpt query redesign
     -query_batch
-        -consider switching to use this in log_query_kwargs? See discussion in yesterday's daily notes.
+        _ -consider switching to use htools.save in log_query_kwargs? See discussion in yesterday's daily notes.
         -figure out how to integrate new query_batch func into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
-    -figure out how to support stream mode w/ np=1 and nc>1 for backends w/ builtin streaming (think this may be achieved w/ native behavior + slightly tweaked version of stream_multi_response)
+    ~ -figure out how to support stream mode w/ np=1 and nc>1 for backends w/ builtin streaming (think this may be achieved w/ native behavior + slightly tweaked version of stream_multi_response)
+        UPDATE: think maybe can just return the native response (note: can't yield from since that makes python treat the method as a generator and all responses are lazily evaluated, even in stream=False mode).
+        ~ -implement
+            UPDATE: very simple for reasons described above and need to test more, but I think this should work.
+        -build default support for nc>1 for backends that don't provide it
+            UPDATE: solution is to make all of those backend query funcs return (str, dict) and not provide n in params. Then use new threaded_starmap function to make nc calls. Tentatively seems to work, though I'm surprised - query_batch also uses threads and I read threads within threads are not possible. UPDATE 2: actually might have spoken too soon. Investigate tomorrow.
+X -fix new threading bug after deleting files
+    UPDATE: realized I needed to move lock to include a bit more logic. Might just want to lock the whole method if another bug pops up in the future, but seems ok for now.
+
+4/10/22 sun
+-----------
+-query_batch
+    -investigate: does np>1 and nc>1 actually work for funcs w/out native support? Unclear. See cell 129 in nb13.
+    -write tests in new clean nb to figure out which backends/kwargs combos work (so many variants, need to do programmatically)
+        -start with all free backends to root out simplest bugs
+        -then do paid backends
+    -figure out how to integrate into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
         -implement
+
 
 
 Backlog

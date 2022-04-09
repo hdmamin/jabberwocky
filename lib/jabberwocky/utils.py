@@ -531,7 +531,7 @@ def stream_response(text, full):
     yield from zip(stream_words(text), cycle([full]))
 
 
-def stream_multi_response(texts, fulls):
+def stream_multi_response(texts, fulls, start_i=0):
     """Generator that lets us stream tokens and metadata from gpt query
     functions for backends that don't natively provide streaming. (Obviously,
     this won't prevent backends like Huggingface from having to generate the
@@ -574,8 +574,9 @@ def stream_multi_response(texts, fulls):
     texts, fulls = containerize(texts, fulls)
     for i, (text, full) in enumerate(zip(texts, fulls)):
         queue = deque()
-        gen = stream_response(text,
-                              {**full, 'index': i, 'finish_reason': None})
+        gen = stream_response(
+            text, {**full, 'index': i + start_i, 'finish_reason': None}
+        )
         done = False
         # Yield items while checking if we're at the last item so we can mark
         # it with a finish_reason. This lets us know when one completion ends.

@@ -242,19 +242,6 @@ def query_gpt_huggingface(
     return [row['generated_text'] for row in res], res
 
 
-def query_gpt_repeat(prompt, n=1, upper=True, **kwargs):
-    """Mock func that just returns the prompt as the response. By default,
-    we uppercase the responses to make it more obvious when looking at outputs
-    that the function did execute successfully.
-    """
-    if kwargs:
-        warnings.warn(f'Unused kwargs {kwargs} received by query_gpt_repeat.')
-    # Structure: text, full response
-    # List[str], List[dict]
-    return ([prompt.upper() if upper else prompt for _ in range(n)],
-            [{} for _ in range(n)])
-
-
 def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
                frequency_penalty=0.0, presence_penalty=0.0, max_tokens=50,
                logprobs=None, n=1, stream=False, logit_bias=None, **kwargs):
@@ -348,14 +335,26 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
     # Extract text and return. Zip maintains lazy evaluation.
     if stream:
         # Each item in zipped object is (str, dict-like).
-        texts = (chunk.choices[0].text for chunk in res)
-        chunks = (dict(chunk.choices[0]) for chunk in res)
+        texts = (chunk['choices'][0]['text'] for chunk in res)
+        chunks = (dict(chunk['choices'][0]) for chunk in res)
         # Yields (str, dict) tuples.
         return zip(texts, chunks)
 
     # Structure: (List[str], List[dict])
     return [row.text for row in res.choices], \
            [dict(choice) for choice in res.choices]
+
+
+def query_gpt_repeat(prompt, upper=True, **kwargs):
+    """Mock func that just returns the prompt as the response. By default,
+    we uppercase the responses to make it more obvious when looking at outputs
+    that the function did execute successfully.
+    """
+    if kwargs:
+        warnings.warn(f'Unused kwargs {kwargs} received by query_gpt_repeat.')
+    # Structure: text, full response
+    # str, dict
+    return prompt.upper() if upper else prompt, {}
 
 
 @add_docstring(query_gpt3)
@@ -380,6 +379,7 @@ def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
     }
     res = banana.run(api_key=BANANA_API_KEY, model_key='gptj',
                      model_inputs=params)
+    # str, dict
     return res['modelOutputs'][0]['output'], res
 
 
