@@ -23,5 +23,3 @@ tmp/
 alexa/*.log
 alexa/conversations/*
 # Openai api key
-notebooks/nb12-test-backend-selector.ipynb
-notebooks/nb13-multi-prompt-queries.ipynb 

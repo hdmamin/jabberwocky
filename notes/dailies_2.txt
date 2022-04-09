@@ -1010,14 +1010,25 @@ X -update gptbackend to log using jsonlines logger instead of htools.save
 
 4/8/22 fri
 ----------
--easy: clean up all the old messy query funcs in openai_utils.py (mostly deleting)
+X -easy: clean up all the old messy query funcs in openai_utils.py (mostly deleting)
 -qpt query redesign
-    -query_batch
-        -in nb13, test if new logging functionality works with multi-threaded approach
+    ~ -query_batch
+        X -in nb13, test if new logging functionality works with multi-threaded approach
+            UPDATE: found bug where logging to file fails silently if file DNE. Added `touch` func and check if logfile exists before logging. Also had to add a threading Lock here, which probably means I could switch back to htools.save if I wanted since GPTBackend has a lock assigned now anyway. Would have to update htools to be compatible w/ jsonlines which I think would be good to support generally, and I think this would remove a lot of the icky logic around recreating JsonlinesFormatter every query. Downside: if I want to print kwargs to stdout, that would now need to be a separate step from logging to file. I think this would mostly be useful if I change logic to fully resolve kwargs w/ current query func - right now it just logs the user-specified params.
         -figure out how to integrate new query_batch func into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
     -figure out how to support stream mode w/ np=1 and nc>1 for backends w/ builtin streaming (think this may be achieved w/ native behavior + slightly tweaked version of stream_multi_response)
         -implement
 
+4/9/22 fri
+----------
+[NOTE: most up to date version of GPTBackend is in nb13 cell]
+-update htools.save to support jsonlines format
+-qpt query redesign
+    -query_batch
+        -consider switching to use this in log_query_kwargs? See discussion in yesterday's daily notes.
+        -figure out how to integrate new query_batch func into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
+    -figure out how to support stream mode w/ np=1 and nc>1 for backends w/ builtin streaming (think this may be achieved w/ native behavior + slightly tweaked version of stream_multi_response)
+        -implement
 
 
 Backlog

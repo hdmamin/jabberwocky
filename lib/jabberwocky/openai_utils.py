@@ -242,13 +242,17 @@ def query_gpt_huggingface(
     return [row['generated_text'] for row in res], res
 
 
-def query_gpt_repeat(prompt, n=1, **kwargs):
-    """Mock func that just returns the prompt as the response."""
+def query_gpt_repeat(prompt, n=1, upper=True, **kwargs):
+    """Mock func that just returns the prompt as the response. By default,
+    we uppercase the responses to make it more obvious when looking at outputs
+    that the function did execute successfully.
+    """
     if kwargs:
         warnings.warn(f'Unused kwargs {kwargs} received by query_gpt_repeat.')
     # Structure: text, full response
     # List[str], List[dict]
-    return [prompt for _ in range(n)], [{} for _ in range(n)]
+    return ([prompt.upper() if upper else prompt for _ in range(n)],
+            [{} for _ in range(n)])
 
 
 def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
@@ -630,6 +634,7 @@ class GPTBackend:
             )
 
         kwargs['prompt'] = prompt
+        return kwargs
         cls._log_query_kwargs(log=log, query_func=query_func, **kwargs)
 
         # Possibly easier for caller to check for errors this way? Mostly a

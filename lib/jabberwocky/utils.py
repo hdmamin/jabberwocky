@@ -7,6 +7,7 @@ from inspect import _empty, Parameter, signature
 from itertools import cycle
 import json
 import logging
+import os
 from pathlib import Path
 from PIL import Image
 import sys
@@ -55,6 +56,13 @@ class JsonlinesLogger(MultiLogger):
         super().__init__(path, fmode='a', fmt=self.fmt)
         self.formatter = self._add_json_formatter()
         self.path = self._get_file_handler()[0].baseFilename
+
+    def _log(self, level, msg, args, exc_info=None, extra=None,
+             stack_info=False):
+        if not os.path.isfile(self.path):
+            raise RuntimeError('PATH DOES NOT EXIST.')
+        super()._log(level, msg, args, exc_info=exc_info, extra=extra,
+                     stack_info=stack_info)
 
     def _get_file_handler(self):
         """
@@ -142,6 +150,15 @@ def squeeze(*args, n=1):
     if not listlike(args[0]):
         return args
     return tuple(arg[0] for arg in args) if n == 1 else args
+
+
+def touch(path):
+    """Create an empty file, like bash `touch` command. If necessary, we
+    create the parent dir as well.
+    """
+    os.makedirs(Path(path).parent, exist_ok=True)
+    with open(path, 'a'):
+        pass
 
 
 def load_booste_api_key():
