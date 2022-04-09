@@ -1001,6 +1001,7 @@ X -add line in readme about using make hooks
 4/7/22 thurs
 ------------
 X -update gptbackend to log using jsonlines logger instead of htools.save
+    UPDATE: had to update JsonlinesFormatter to allow logfile name switch, but after that it seems to work well.
 -qpt query redesign
     -query_batch
         -figure out how to integrate new query_batch func into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)

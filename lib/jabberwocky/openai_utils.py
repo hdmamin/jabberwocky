@@ -138,62 +138,9 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
                         params=params)
     res.raise_for_status()
     res = res.json()
+    # Structure: text, full response
+    # str, dict
     return res['text'], res
-
-
-# def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
-#     """Queries free GPT-J API. GPT-J has 6 billion parameters and is, roughly
-#     speaking, the open-source equivalent of Curie (3/19/22 update: size sounds
-#     more like Babbage actually). It was trained on more
-#     code than GPT3 though so it may do surprisingly well at those kinds of
-#     tasks. This function should be usable as a mock_func argument in
-#     query_gpt_3.
-#
-#     API uptime may be questionable though. There's an accompanying front end
-#     here:
-#     http://api.vicgalle.net:8000/
-#
-#     Parameters
-#     ----------
-#     prompt: str
-#     temperature: float
-#     max_tokens: int
-#     kwargs: any
-#         Only supported options are top_p (float) and stop (Iterable[str]).
-#         Notice that stream mode is not supported.
-#
-#     Returns
-#     -------
-#     tuple[str]: Prompt, response.
-#     """
-#     params = {'context': prompt,
-#               'token_max_length': max_tokens,
-#               'temperature': temperature,
-#               'top_p': kwargs.pop('top_p', 1.0)}
-#
-#     # Ensure that we end up with a list AND that stop is still Falsy if user
-#     # explicitly passes in stop=None.
-#     stop = tolist(kwargs.pop('stop', None) or [])
-#     if stop: params['stop_sequence'] = stop[0]
-#
-#     # Must keep this after the block of stop-related logic above.
-#     if kwargs:
-#         warnings.warn(f'GPT-J api does not support other kwargs: {kwargs}')
-#
-#     try:
-#         res = requests.post('http://api.vicgalle.net:5000/generate',
-#                             params=params)
-#         res.raise_for_status()
-#     except Exception as e:
-#         raise MockFunctionException(str(e)) from None
-#     res = res.json()
-#
-#     # Endpoint doesn't support multiple stop sequences so we have to
-#     # postprocess. Even with a single stop sequence, it includes it while gpt3
-#     # and my gpt-neo function exclude it, so we need to handle that here.
-#     idx = min([i for i in map(res['text'].find, stop) if i >= 0] or [None])
-#     completion = res['text'][:idx]
-#     return res['prompt'], completion
 
 
 @valuecheck
@@ -295,265 +242,13 @@ def query_gpt_huggingface(
     return [row['generated_text'] for row in res], res
 
 
-# @valuecheck
-# def query_gpt_huggingface(
-#         prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
-#         max_tokens=50, top_k=None, top_p=None, **kwargs
-# ):
-#     """Query EleuetherAI gpt models using the Huggingface API. This was called
-#     query_gpt_neo in a former version of the library (which is used by the
-#     GUI) but the API now hosts a GPT-J model as well so I renamed it.
-#
-#     Parameters
-#     ----------
-#     prompt: str
-#     engine_i: int
-#         Determines which Huggingface model API to query. See
-#         config.C.backend_engines['huggingface'].
-#         Those names refer to the number of
-#         parameters in the model, where bigger models generally produce higher
-#         quality results but may be slower (in addition to the actual inference
-#         being slower to produce, the better models are also more popular so the
-#         API is hit with more requests).
-#     temperature: float
-#         Between 0 and 1. 0-0.4 is good for straightforward informational
-#         queries (e.g. reformatting, writing business emails) while 0.7-1 is
-#         good for more creative works.
-#     top_k: None or int
-#         Kind of like top_p in that smaller values may produce more
-#         sensible but less creative responses. While top_p limits options to
-#         a cumulative percentage, top_k limits it to a discrete number of
-#         top choices.
-#     top_p: None or float
-#         Value in [0.0, 1.0] if provided. Kind of like temperature in that
-#         smaller values may produce more sensible but less creative responses.
-#     repetition_penalty
-#     max_tokens: int
-#         Sets max response length. One token is ~.75 words. IIRC 250 is the max
-#         they support.
-#     kwargs: any
-#         Just lets us absorb extra kwargs when used in place of query_gpt3().
-#
-#     Returns
-#     -------
-#     tuple or iterator: When stream=False, we return a tuple where the first
-#     item is the prompt (str) and the second is the response text(str). If
-#     return_full is True, a third item consisting of the whole response object
-#     is returned as well. When stream=True, we return an iterator where each
-#     step contains a single token. This will either be the text response alone
-#     (str) or a tuple of (text, response) if return_full is True. Unlike in
-#     non-streaming mode, we don't return the prompt - that seems less
-#     appropriate for many time steps.
-#     Returns
-#     -------
-#     tuple[str]: Prompt, response tuple, just like query_gpt_3().
-#     """
-#     engine = GPTBackend.engine(engine_i)
-#
-#     # Docs say we can return up to 256 tokens but API sometimes throws errors
-#     # if we go above 250.
-#     headers = {'Authorization':
-#                f'Bearer api_{HF_API_KEY}'}
-#     # Notice the names don't always align with parameter names - I wanted
-#     # those to be more consistent with query_gpt3() function. Also notice
-#     # that types matter: if Huggingface expects a float but gets an int, we'll
-#     # get an error.
-#     if repetition_penalty is not None:
-#         repetition_penalty = float(repetition_penalty)
-#     stop = tolist(kwargs.pop('stop', []))
-#     if kwargs:
-#         warnings.warn('query_gpt_huggingface received unused kwargs '
-#                       f'{kwargs}.')
-#
-#     data = {'inputs': prompt,
-#             'parameters': {'top_k': top_k, 'top_p': top_p,
-#                            'temperature': float(temperature),
-#                            'max_new_tokens': min(max_tokens, 250),
-#                            'repetition_penalty': repetition_penalty,
-#                            'return_full_text': False}}
-#     url = f'https://api-inference.huggingface.co/models/EleutherAI/{engine}'
-#     try:
-#         # Put the request itself inside try too in case of timeout.
-#         r = requests.post(url, headers=headers, data=json.dumps(data))
-#         r.raise_for_status()
-#     except requests.HTTPError as e:
-#         raise MockFunctionException(str(e)) from None
-#
-#     # Huggingface doesn't natively provide the `stop` parameter that OpenAI
-#     # does so we have to do this manually.
-#     res = r.json()[0]['generated_text']
-#     if stop:
-#         idx = [idx for idx in map(res.find, stop) if idx >= 0]
-#         stop_idx = min(idx) if idx else None
-#         res = res[:stop_idx]
-#     return prompt, res
-
-
 def query_gpt_repeat(prompt, n=1, **kwargs):
     """Mock func that just returns the prompt as the response."""
     if kwargs:
         warnings.warn(f'Unused kwargs {kwargs} received by query_gpt_repeat.')
+    # Structure: text, full response
+    # List[str], List[dict]
     return [prompt for _ in range(n)], [{} for _ in range(n)]
-
-
-# def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
-#                frequency_penalty=0.0, presence_penalty=0.0,
-#                max_tokens=50, logprobs=None, n=1, stream=False,
-#                logit_bias=None, mock=False, return_full=False,
-#                strip_output=True,
-#                mock_func=None, mock_mode:('raise', 'warn', 'ignore')='raise',
-#                **kwargs):
-#     """Convenience function to query gpt3. Mostly serves 2 purposes:
-#     1. Build in some mocking functionality for cheaper/free testing.
-#     2. Explicitly add some parameters and descriptions to the function
-#     docstring, since openai.Completion.create does not include most kwargs.
-#
-#     Parameters
-#     ----------
-#     prompt: str
-#     engine_i: int
-#         Corresponds to engines defined in config, where 0 is the cheapest, 3
-#         is the most expensive, etc.
-#     temperature: float
-#         Between 0 and 1. 0-0.4 is good for straightforward informational
-#         queries (e.g. reformatting, writing business emails) while 0.7-1 is
-#         good for more creative works.
-#     top_p: float
-#         Value in (0.0, 1.0] that limits the model to sample from tokens making
-#         up the top_p percent combined. I.e. higher values allow for more
-#         creativity (like high temperature) and low values are closer to argmax
-#         sampling (like low temperature). API recommends setting a sub-maximal
-#         value for at most one of this and temperature, not both.
-#     frequency_penalty: float
-#         Value in [-2.0, 2.0] where larger (more positive) values more heavily
-#         penalize words that have already occurred frequently in the text.
-#         Usually reasonable to keep this in [0, 1].
-#     presence_penalty: float
-#         Value in [-2.0, 2.0] where larger (more positive) values more heavily
-#         penalize words that have already occurred in the text. Usually
-#         reasonable to keep this in [0, 1].
-#     max_tokens: int
-#         Sets max response length. One token is ~.75 words.
-#     logprobs: int or None
-#         Get log probabilities for top n candidates at each time step. This
-#         will only be useful if you set return_full=True.
-#     n: int
-#         Number of possible completions to return. Careful: values > 1 can add
-#         up quickly w.r.t. cost.
-#     stream: bool
-#         If True, return an iterator instead of a str/tuple. See the returns
-#         section as the output is slightly different. I believe each chunk
-#         returns one token when stream is True.
-#     logit_bias: dict or None
-#         If provided, should map string(s) (NUMERIC INDEX of word tokens,
-#         not the tokens themselves) to ints between -100 and 100 (inclusive?).
-#         Values in (-1, 1) should be used to nudge the model, while larger
-#         values can effectively ban/compel the model to use certain words.
-#     mock: bool
-#         If True and no mock_func is provided, return a saved sample response
-#         instead of hitting the API
-#         in order to save tokens. Note that your other gpt3 kwargs
-#         (max_tokens, logprobs, kwargs) will be ignored. return_full will be
-#         respected since it affects the number of items returned - it's not a
-#         kwarg passed to the actual query function. Text is surrounded by
-#         <MOCK></MOCK> tags to make it obvious when mock is True (it's easy to
-#         forget to change the value of mock when switching back and forth).
-#     return_full: bool
-#         If True, return a third item which is the full response object.
-#         Otherwise we just return the prompt and response text.
-#     strip_output: bool
-#         If True, strip text returned by gpt3. Without this, many prompts have a
-#         leading space and/or trailing newlines due to the way examples are
-#         formatted.
-#     mock_func: None or function
-#         You can provide a function here that accepts the prompt
-#         and returns something which will be used as the mock text.
-#         As of version 1.1.0, this automatically sets mock=True. Sample use
-#         case: when punctuating a transcript, the text realignment process may
-#         raise an error when loading a saved mock response. Therefore, we may
-#         want to write a mock_func that extracts the new input portion of the
-#         prompt (discarding instructions and examples). This option is
-#         unavailable in stream mode. [3/24/22: that last line might not be true
-#         with gooseAI. Need to investigate further.]
-#     mock_mode: str
-#         Determines what to do if using mock mode and mock_func is not None and
-#         it fails. Either 'raise' an error, 'warn' the user and proceed with the
-#         saved response, or silently proceed with the saved response.
-#     kwargs: any
-#         Additional kwargs to pass to gpt3 or mock_func. Most useful openai
-#         API kwargs are already in the docstring so mostly intended for the
-#         latter.
-#
-#     Returns
-#     -------
-#     tuple or iterator: When stream=False, we return a tuple where the first
-#     item is the prompt (str) and the second is the response text(str). If
-#     return_full is True, a third item consisting of the whole response object
-#     is returned as well. When stream=True, we return an iterator where each
-#     step contains a single token. This will either be the text response alone
-#     (str) or a tuple of (text, response) if return_full is True. Unlike in
-#     non-streaming mode, we don't return the prompt - that seems less
-#     appropriate for many time steps.
-#     """
-#     if stream and strip_output:
-#         warnings.warn('strip_output is automatically set to False when stream '
-#                       'is True. It would be impossible to correctly '
-#                       'reconstruct outputs otherwise.')
-#     if temperature < 1 and top_p < 1:
-#         warnings.warn('You set both temperature and top_p to values < 1. '
-#                       'API recommends setting only one of these to '
-#                       'sub-maximal value.')
-#     if logprobs and not return_full:
-#         warnings.warn('You set logprobs to a nonzero value but '
-#                       'return_full=False. If you want to access the logprobs, '
-#                       'you should set return_full=True.')
-#
-#     # Realized GPT-J was often being called without setting mock=True, leading
-#     # to unexpected charges 😬. Trying to prevent this in the future.
-#     mock = mock or bool(mock_func)
-#     kwargs = {
-#         **kwargs,
-#         'prompt': prompt,
-#         'temperature': temperature,
-#         'top_p': top_p,
-#         'frequency_penalty': frequency_penalty,
-#         'presence_penalty': presence_penalty,
-#         'max_tokens': max_tokens,
-#         'logprobs': logprobs,
-#         'n': n,
-#         'stream': stream,
-#         'logit_bias': logit_bias
-#     }
-#     if mock:
-#         res = MOCK_RESPONSE[stream]
-#         if mock_func:
-#             if stream:
-#                 raise NotImplementedError('mock_func unavailable when '
-#                                           'stream=True.')
-#
-#             # Replace text with results of mocked call if possible. Mock_funcs
-#             # return response as the second item, just like this function, so
-#             # we can also use them in place of it instead of specifying a
-#             # mock_func parameter.
-#             try:
-#                 res.choices[0].text = mock_func(engine_i=engine_i, **kwargs)[1]
-#             except MockFunctionException as e:
-#                 if mock_mode == 'raise':
-#                     raise e
-#                 elif mock_mode == 'warn':
-#                     warnings.warn(str(e))
-#     else:
-#         res = openai.Completion.create(engine=GPTBackend.engine(engine_i),
-#                                        **kwargs)
-#
-#     if stream:
-#         # In this case, we get 1 response for each new token. Zip does maintain
-#         # lazy evaluation.
-#         texts = (chunk.choices[0].text for chunk in res)
-#         return zip(texts, res) if return_full else texts
-#     else:
-#         output = (prompt, strip(res.choices[0].text, strip_output), res)
-#         return output if return_full else output[:-1]
 
 
 def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
@@ -626,19 +321,10 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
     """
     if stream and n > 1:
         raise RuntimeError('Stream=True and n>1 not supported.')
-
-    #     if stream and strip_output:
-    #         warnings.warn('strip_output is automatically set to False when stream '
-    #                       'is True. It would be impossible to correctly '
-    #                       'reconstruct outputs otherwise.')
     if temperature < 1 and top_p < 1:
         warnings.warn('You set both temperature and top_p to values < 1. '
                       'API recommends setting only one of these to '
                       'sub-maximal value.')
-    #     if logprobs and not return_full:
-    #         warnings.warn('You set logprobs to a nonzero value but '
-    #                       'return_full=False. If you want to access the logprobs, '
-    #                       'you should set return_full=True.')
 
     res = openai.Completion.create(
         engine=GPTBackend.engine(engine_i),
@@ -660,9 +346,10 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
         # Each item in zipped object is (str, dict-like).
         texts = (chunk.choices[0].text for chunk in res)
         chunks = (dict(chunk.choices[0]) for chunk in res)
+        # Yields (str, dict) tuples.
         return zip(texts, chunks)
 
-    # Structure: (List[str], List[dict-like])
+    # Structure: (List[str], List[dict])
     return [row.text for row in res.choices], \
            [dict(choice) for choice in res.choices]
 
@@ -687,16 +374,9 @@ def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
         'topP': top_p,
         'topK': top_k,
     }
-    try:
-        res = banana.run(api_key=BANANA_API_KEY, model_key='gptj',
-                         model_inputs=params)
-        # Do this in separate line to make it easier for humans to parse error
-        # messages.
-        # res = res['modelOutputs'][0]
-        return res['modelOutputs'][0]['output'], res
-        # return res['input'], res['output']
-    except Exception as e:
-        raise MockFunctionException(str(e)) from None
+    res = banana.run(api_key=BANANA_API_KEY, model_key='gptj',
+                     model_inputs=params)
+    return res['modelOutputs'][0]['output'], res
 
 
 class GPTBackend:
@@ -931,7 +611,7 @@ class GPTBackend:
             if strip_output:
                 warnings.warn('strip_output=True is not supported in stream '
                               'mode. Automatically setting it to False.')
-                strip_output = True
+                strip_output = False
             if trunc_full:
                 warnings.warn(
                     'Streaming mode does not support manual truncation of '
