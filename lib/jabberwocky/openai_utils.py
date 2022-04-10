@@ -204,8 +204,9 @@ def query_gpt_huggingface(
     -------
     tuple[str]: Prompt, response tuple, just like query_gpt_3().
     """
-    if not isinstance(prompt, str):
-        raise TypeError(f'Prompt must be str, not {type(prompt)}.')
+    # TODO: testing
+    # if not isinstance(prompt, str):
+    #     raise TypeError(f'Prompt must be str, not {type(prompt)}.')
 
     # Hardcode backend in case we use this function outside of the
     # GPTBackend.query wrapper.
@@ -213,8 +214,7 @@ def query_gpt_huggingface(
 
     # Docs say we can return up to 256 tokens but API sometimes throws errors
     # if we go above 250.
-    headers = {'Authorization':
-                   f'Bearer api_{HF_API_KEY}'}
+    headers = {'Authorization': f'Bearer api_{HF_API_KEY}'}
     # Notice the names don't always align with parameter names - I wanted
     # those to be more consistent with query_gpt3() function. Also notice
     # that types matter: if Huggingface expects a float but gets an int, we'll
@@ -240,6 +240,26 @@ def query_gpt_huggingface(
     # Structure: text, full response
     # List[str], List[dict]
     return [row['generated_text'] for row in res], res
+
+
+def postprocess_gpt_response(response, stream=False):
+    """Convert a raw gpt3 (openai/gooseai) response to the output returned by
+    query_gpt3 (a list or generator of (text, dict) tuples). Keeping this as a
+    separate function makes it easier to test out new functionality: we can
+    pass a saved API response into this function to make sure everything works
+    without calling a paid API every time.
+    """
+    # Extract text and return. Zip maintains lazy evaluation.
+    if stream:
+        # Each item in zipped object is (str, dict-like).
+        texts = (chunk['choices'][0]['text'] for chunk in response)
+        chunks = (dict(chunk['choices'][0]) for chunk in response)
+        # Yields (str, dict) tuples.
+        return zip(texts, chunks)
+
+    # Structure: (List[str], List[dict])
+    return [row.text for row in response.choices], \
+           [dict(choice) for choice in response.choices]
 
 
 def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
@@ -332,17 +352,9 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
         **kwargs
     )
 
-    # Extract text and return. Zip maintains lazy evaluation.
-    if stream:
-        # Each item in zipped object is (str, dict-like).
-        texts = (chunk['choices'][0]['text'] for chunk in res)
-        chunks = (dict(chunk['choices'][0]) for chunk in res)
-        # Yields (str, dict) tuples.
-        return zip(texts, chunks)
-
-    # Structure: (List[str], List[dict])
-    return [row.text for row in res.choices], \
-           [dict(choice) for choice in res.choices]
+    # Keep this step in a separate function so we can easily apply it to new
+    # response objects when developing new functionality.
+    return postprocess_gpt_response(res)
 
 
 def query_gpt_repeat(prompt, upper=True, **kwargs):

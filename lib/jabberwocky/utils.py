@@ -596,7 +596,7 @@ def stream_multi_response(texts, fulls, start_i=0):
         yield tok, tok_full
 
 
-def containerize(*args):
+def containerize(*args, dtype=list):
     """Basically applies tolist() to a bunch of objects, except that tolist
     doesn't work on dicts. I considered changing that but I'd have to check
     what went into that decision - I have a vague suspicion that that behavior
@@ -611,8 +611,7 @@ def containerize(*args):
     """
     res = []
     for arg in args:
-        if listlike(arg):
-            res.append(arg)
-        else:
-            res.append([arg])
+        if not listlike(arg):
+            arg = [arg]
+        res.append(dtype(arg))
     return res

@@ -1019,7 +1019,7 @@ X -easy: clean up all the old messy query funcs in openai_utils.py (mostly delet
     -figure out how to support stream mode w/ np=1 and nc>1 for backends w/ builtin streaming (think this may be achieved w/ native behavior + slightly tweaked version of stream_multi_response)
         -implement
 
-4/9/22 fri
+4/9/22 sat
 ----------
 [NOTE: most up to date version of GPTBackend is in nb13 cell]
 _ -update htools.save to support jsonlines format
@@ -1040,14 +1040,32 @@ X -fix new threading bug after deleting files
 4/10/22 sun
 -----------
 -query_batch
-    -investigate: does np>1 and nc>1 actually work for funcs w/out native support? Unclear. See cell 129 in nb13.
+    X -investigate: does np>1 and nc>1 actually work for funcs w/out native support? Unclear. See cell 129 in nb13.
+        UPDATE: unable to reproduce error. Seems fine.
+    ~ -adjust interface so returned val has same format for backends w/ native support for np or nc > 1 and those without (realized gooseai and maybe openai charge by the request too, so it's more efficient if we can use the native functionality when possible instead of always using multithreaded approach).
+        UPDATE: WIP. Adjusted query_batch to return (texts, fulls) instead of old behavior so we now match openai/gooseai. Still need better testing.
+    ~ -add prompt_index (decided rather than overriding openai/gooseai index to create prompt_index and completion_index, just keep index (which is effectively "overall_index") and add prompt_index.)
+        UPDATE: seems okay for some cases but still very buggy. See query(str, n=1).
     -write tests in new clean nb to figure out which backends/kwargs combos work (so many variants, need to do programmatically)
         -start with all free backends to root out simplest bugs
         -then do paid backends
+            X -write script to save sample response from all relevant combinations of params
+                UPDATE: did this for gooseai. Shouldn't need to for openai since it's nearly identical (only known difference I recall is that in streaming mode, openai may shuffle completions together, which I account for elsewhere).
     -figure out how to integrate into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
         -implement
 
-
+4/11/22 mon
+-----------
+-query_batch
+    -start new clean nb and use pickled responses in data/misc instead of adhoc
+    -try passing each pickled response through postprocess_gpt_response
+    -try passing each of those ^ outputs through postprocess_response
+    -add prompt_index to all gooseai/openai responses
+    -write tests in new clean nb to figure out which backends/kwargs combos work (so many variants, need to do programmatically)
+        -start with all free backends to root out simplest bugs
+        -then do paid backends using pickled responses
+    -figure out how to integrate into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
+        -implement
 
 Backlog
 -------
