@@ -1057,15 +1057,30 @@ X -fix new threading bug after deleting files
 4/11/22 mon
 -----------
 -query_batch
-    -start new clean nb and use pickled responses in data/misc instead of adhoc
-    -try passing each pickled response through postprocess_gpt_response
-    -try passing each of those ^ outputs through postprocess_response
+    X -start new clean nb and use pickled responses in data/misc instead of adhoc
+    _ -try passing each pickled response through postprocess_gpt_response
+    _ -try passing each of those ^ outputs through postprocess_response
+        UPDATE: wrote new query_gpt_mock func that makes it easier to get fake openai/gooseai responses.
     -add prompt_index to all gooseai/openai responses
-    -write tests in new clean nb to figure out which backends/kwargs combos work (so many variants, need to do programmatically)
-        -start with all free backends to root out simplest bugs
+    ~ -write tests in new clean nb to figure out which backends/kwargs combos work (so many variants, need to do programmatically)
+        X -start with all free backends to root out simplest bugs
         -then do paid backends using pickled responses
-    -figure out how to integrate into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
-        -implement
+    X -figure out how to integrate into GPTBackend (should it actually have a public interface or just call it under the hood inside query() depending on the args?)
+        ~ -implement
+        UPDATE: query() calls _query_batch under the hood and _query_batch calls query n times (str prompt each time instead of list).
+X -fix bug in stream_response
+    UPDATE: itertools.cycle was returning the same dict repeatedly. We want it to return a new dict at each step.
+X -kwarg_grid func to iterate over all relevant kwarg combos
+
+4/12/22 tues
+------------
+-look into issue where logfile is being generated in notebooks dir
+-add prompt_index when stream=True
+    -figure out what the issue is
+    -implement
+-add support for backends w/ builtin batch queries? (Recall: at least w/ gooseai, it's cheaper to make 1 query w/ 100 prompts than 100 queries w/ 1 prompt each)
+-[BLOCKED: need to figure out if the above bullet is necessary first. Not sure if we can proceed with this yet.] test_backend('mock') and examine results
+
 
 Backlog
 -------

@@ -22,4 +22,3 @@ output/
 tmp/
 alexa/*.log
 alexa/conversations/*
-# Openai api key

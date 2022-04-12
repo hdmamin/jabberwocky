@@ -5,7 +5,7 @@ from collections.abc import Iterable, Mapping
 from collections import Counter
 from contextlib import contextmanager
 from datetime import datetime
-from itertools import zip_longest
+from itertools import zip_longest, chain
 import json
 from nltk.tokenize import sent_tokenize
 import numpy as np
@@ -24,7 +24,8 @@ from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     hooked_generator, load_api_key, with_signature, squeeze, stream_response, \
-    stream_multi_response, JsonlinesLogger, thread_starmap
+    stream_multi_response, JsonlinesLogger, thread_starmap, ReturningThread, \
+    containerize
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -457,6 +458,7 @@ class GPTBackend:
     logger = JsonlinesLogger(
         f'./data/logs/{datetime.today().strftime("%Y.%m.%d")}.jsonlines'
     )
+    lock = Lock()
 
     # Only include backends here that actually should change the
     # openai.api_base value (these will probably be backends that require no
@@ -471,22 +473,19 @@ class GPTBackend:
         'openai': query_gpt3,
         'gooseai': query_gpt3,
         'huggingface': query_gpt_huggingface,
-        'banana': query_gpt_banana,
         'hobby': query_gpt_j,
         'repeat': query_gpt_repeat,
-        'mock': query_gpt_mock
+        'banana': query_gpt_banana
     }
 
     # Names of backends that perform stop word truncation how we want (i.e.
     # allow us to specify stop phrases AND truncate before the phrase rather
-    # than after, if we encounter one). Note that mock technically used the
-    # gooseai backend, which does require truncation.
+    # than after, if we encounter one).
     skip_trunc = {'openai'}
 
     name2key = {}
     for name in name2func:
-        # Some backends don't require an API key.
-        if name in {'hobby', 'repeat', 'mock'}:
+        if name in {'hobby', 'repeat'}:
             name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
         else:
             name2key[name] = load_api_key(name)
@@ -522,7 +521,7 @@ class GPTBackend:
         # this implementation).
         openai.curr_name = self.new_name
         self.old_key, openai.api_key = openai.api_key, \
-            self.name2key[self.new_name]
+                                       self.name2key[self.new_name]
         if self.new_name in self.name2base:
             openai.api_base = self.name2base[self.new_name]
 
@@ -537,7 +536,7 @@ class GPTBackend:
 
     @classmethod
     def ls(cls):
-        """Print current state of the backend: api_base, api_key, and 
+        """Print current state of the backend: api_base, api_key, and
         mock_func. Mostly useful for debugging and sanity checks.
         """
         print('\nBase:', openai.api_base)
@@ -653,10 +652,11 @@ class GPTBackend:
         -------
         list[str, dict]
         """
-        if not isinstance(prompt, str):
-            raise NotImplementedError(
-                f'Prompt must be str, not {type(prompt).__name__}.'
-            )
+        if listlike(prompt):
+            # TODO: maybe only use this for backends that don't implement
+            # multi-prompt queries natively?
+            return cls._query_batch(prompt, strip_output=strip_output,
+                                    log=log, **kwargs)
 
         # Keep trunc_full definition here so we can provide warnings if user
         # is in stream mode.
@@ -685,33 +685,49 @@ class GPTBackend:
                 'supported.'
             )
 
+        start_i = kwargs.pop('start_i', 0)
+        n = kwargs.get('n', 1)
         kwargs['prompt'] = prompt
         cls._log_query_kwargs(log=log, query_func=query_func, **kwargs)
+        func_params = params(query_func)
 
         # Possibly easier for caller to check for errors this way? Mostly a
         # holdover from v1 library design, but I'm not 100% sure if the
         # benefits still hold given the new design.
         try:
-            text, full_response = query_func(**kwargs)
+            #             text, full_response = query_func(**kwargs)
+            if n > 1 and n not in func_params:
+                del kwargs['n']
+                # If current query function doesn't natively support multiple
+                # completions, we can make multiple threaded requests. Need
+                # to unzip afterwards to regain the (texts, full_responses)
+                # structure.
+                response = thread_starmap(query_func,
+                                          [kwargs for _ in range(n)])
+                response = list(zip(*response))
+            else:
+                response = query_func(**kwargs)
         except Exception as e:
             raise MockFunctionException(str(e)) from None
         if stream:
-            if 'stream' in params(query_func):
-                return text, full_response
-            # TODO: this isn't yet compatible w/ backends w/ native streaming
-            # functionality. Think it should be simple to tweak though since
-            # they provide 99% of what I want.
-            return stream_multi_response(text, full_response)
+            #             if 'stream' in params(query_func):
+            #                 return text, full_response
+            #             # TODO: this isn't yet compatible w/ backends w/ native streaming
+            #             # functionality. Think it should be simple to tweak though since
+            #             # they provide 99% of what I want.
+            #             return stream_multi_response(text, full_response, start_i=start_i)
 
+            if 'stream' in func_params:
+                return response
+            return stream_multi_response(*response, start_i=start_i)
+
+        text, full_response = containerize(*response)
         # Manually check for stop phrases because most backends either don't
         # or truncate AFTER the stop phrase which is rarely what we want.
         stop = kwargs.get('stop', [])
         clean_text = []
-        # tolist doesn't know how to handle dicts so we check explicitly.
-        if not listlike(text):
-            text = tolist(text)
-            full_response = [full_response]
-        for text_, resp_ in zip(text, full_response):
+        clean_full = []
+        for i, (text_, resp_) in enumerate(zip(text, full_response)):
             text_ = truncate_at_first_stop(
                 text_,
                 stop_phrases=stop,
@@ -720,8 +736,47 @@ class GPTBackend:
                 trunc_partial=True
             )
             clean_text.append(strip(text_, strip_output))
+            clean_full.append({**resp_, 'prompt_index': i // n})
 
-        return squeeze(clean_text, full_response, n=kwargs.get('n', 1))
+        return clean_text, clean_full  # TODO: try keeping lists always
+
+    #         return squeeze(clean_text, full_response, n=n)
+
+    @classmethod
+    @with_signature(query_gpt3)
+    @add_docstring(query_gpt3)
+    def _query_batch(cls, prompts, strip_output=True, log=True, **kwargs):
+        """
+        Returns
+        -------
+        # TODO: update. this is wrong now.
+        list: k tuples where the k'th tuple is the result of calling
+        GPTBackend.query() on the k'th input prompt. If stream=True, we instead
+        yield a series of (token_text, full_response) tuples. Depending on the
+        backend, different prompts' completions may be interspersed. You can use
+        the 'index' key in full_response to identify which response a token
+        belongs to.
+        """
+        kwargs.update(strip_output=strip_output, log=log)
+        # Setting start_i to i*n ensures that the 'index' returned in streamed
+        # responses is different for each prompt's completion(s). Otherwise,
+        # because each query is run separately, each prompt's completion(s) would
+        # start at 0.
+        n = kwargs.get('n', 1)
+        threads = [ReturningThread(target=cls.query, args=(prompt,),
+                                   kwargs={**kwargs, 'start_i': i * n})
+                   for i, prompt in enumerate(prompts)]
+        for thread in threads: thread.start()
+        res = [thread.join() for thread in threads]
+        if kwargs.get('stream', False):
+            return chain(*res)
+        texts, fulls = map(list, zip(*res))
+        #         print('fulls:', fulls) # TODO
+        return sum(texts, []), \
+               sum([[{**d, 'prompt_index': d.get('prompt_index', 0) + i}
+                     for d in row]
+                    for i, row in enumerate(fulls)],
+                   [])
 
     @classmethod
     def _log_query_kwargs(cls, log, query_func=None, **kwargs):
@@ -733,8 +788,17 @@ class GPTBackend:
                 'backend_name': cls.current(),
                 'query_func': func_name(query_func) if query_func else None
             }
-            if isinstance(log, (str, Path)) and log != cls.logger.path:
-                cls.logger.change_path(path)
+            with cls.lock:
+                if not isinstance(log, (str, Path)):
+                    log = cls.logger.path
+
+                # If log file was deleted, we must recreate it AND use
+                # change_path to reopen the file object.
+                if not os.path.exists(log):
+                    touch(log)
+                    cls.logger.path = None
+                if log != cls.logger.path:
+                    cls.logger.change_path(log)
             cls.logger.info(kwargs)
 
     def __repr__(self):
@@ -1832,6 +1896,32 @@ def conversation_formatter(text_fmt, prompt, **kwargs):
     # the most recently created/changed file in the temp dir.
     summary, *_ = wiki_data(name, **kwargs)
     return text_fmt.format(name=name, summary=summary, message=prompt)
+
+
+def query_kwargs_grid(verbose=True):
+    """Generator that yields kwargs for gpt.query() to generate all variations
+    of responses (n_prompts = 1 or > 1, n_completions = 1 or > 1,
+    stream = True or False). There are therefore 8 different sets of kwargs.
+    Other kwargs (max_tokens, engine_i) are set such that they match the
+    saved responses generated by s01.
+    """
+    txts = ['Yesterday was', 'How many']
+    # Just like keys (multi_in, multi_out, stream) in pickled MOCKS dict in
+    # this same module.
+    for multi_in in (True, False):
+        for multi_out in (True, False):
+            for stream in (True, False):
+                prompt = txts if multi_in else txts[0]
+                nc = 1 + multi_out
+                if verbose:
+                    print(f'np>1: {multi_in}\nnc>1: {multi_out}'
+                          f'\nstream: {stream}')
+                yield dict(prompt=prompt,
+                           n=nc,
+                           stream=stream,
+                           engine_i=0,
+                           max_tokens=3,
+                           logprobs=3)
 
 
 TASK2FORMATTER = {'conversation': conversation_formatter}

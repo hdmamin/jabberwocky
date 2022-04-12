@@ -25,7 +25,6 @@ from utils import slot, Settings, model_type, CustomAsk, infer_intent, \
     getdefaults
 
 
-
 # Define these before functions since endpoints use ask method as decorators.
 # Unclutter terminal output because it's hard to debug otherwise.
 logging.getLogger('flask_ask').setLevel(logging.WARNING)

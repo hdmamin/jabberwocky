@@ -15,7 +15,7 @@ from threading import Thread
 import yaml
 
 from htools import select, bound_args, copy_func, xor_none, add_docstring, \
-    listlike, MultiLogger
+    listlike, MultiLogger, tolist
 from jabberwocky.config import C
 
 
@@ -539,7 +539,12 @@ def stream_response(text, full):
     'is ' {'generated_text': 'It is hot'}
     'hot' {'generated_text': 'It is hot'}
     """
-    yield from zip(stream_words(text), cycle([full]))
+    # Old function used zip and itertools.cycle but this inadvertently used
+    # the same dict object at each step, which can be problematic if we want
+    # to save the final results (all steps' finish_reason will be set to
+    # 'dummy' since we were mutating the same object.
+    for tok in stream_words(text):
+        yield tok, dict(full)
 
 
 def stream_multi_response(texts, fulls, start_i=0):
