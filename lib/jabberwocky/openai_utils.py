@@ -15,6 +15,7 @@ from pathlib import Path
 import requests
 import shutil
 import sys
+from threading import Lock
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
@@ -23,13 +24,17 @@ from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     hooked_generator, load_api_key, with_signature, squeeze, stream_response, \
-    stream_multi_response, JsonlinesLogger
+    stream_multi_response, JsonlinesLogger, thread_starmap
 
 
 HF_API_KEY = load_api_key('huggingface')
 BANANA_API_KEY = load_api_key('banana')
 MOCK_RESPONSE = [load(C.mock_stream_paths[False]),
                  load(C.mock_stream_paths[True])]
+# Ex: MOCKS[True, True, False] means
+# n_prompts > 1, n_completions > 1, stream=False. N > 1 always means 2 in this
+# case.
+MOCKS = load(C.all_mocks_path)
 
 
 def truncate_at_first_stop(text, stop_phrases, finish_reason='',
@@ -369,6 +374,38 @@ def query_gpt_repeat(prompt, upper=True, **kwargs):
     return prompt.upper() if upper else prompt, {}
 
 
+def query_gpt_mock(prompt, n=1, stream=False, **kwargs):
+    """Return mocked openai/gooseai responses without actually hitting the API.
+    We provide 8 different types of responses based on varying values of n,
+    stream, and whether the prompt is a single string or list of strings.
+    It is therefore only useful to vary these arguments when calling this
+    function.
+
+    Returns
+    -------
+    tuple[list[str], list[dict]] or generator[str, dict]
+    """
+    if n > 2:
+        warnings.warn(f'query_gpt_mock only supports n=1 or n=2, not n={n}. '
+                      'Because you passed in a value > 1, we default to n=2.')
+        n = 2
+    if kwargs.get('engine_i', 0):
+        warnings.warn(f'query_gpt_mock actually used engine_i=0.')
+    if kwargs.get('max_tokens', 3) != 3:
+        warnings.warn(f'query_gpt_mock actually used max_tokens=3.')
+    if kwargs.get('logprobs', 3) != 3:
+        warnings.warn(f'query_gpt_mock actually used logprobs=3.')
+    if kwargs:
+        warnings.warn(f'query_gpt_mock received unused kwargs: {kwargs}')
+
+    np = False
+    if listlike(prompt) and len(prompt) > 1:
+        np = True
+    nc = n > 1
+    resp = MOCKS[np, nc, stream]
+    return postprocess_gpt_response(resp, stream=stream)
+
+
 @add_docstring(query_gpt3)
 def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
                      top_k=False, **kwargs):
@@ -434,19 +471,22 @@ class GPTBackend:
         'openai': query_gpt3,
         'gooseai': query_gpt3,
         'huggingface': query_gpt_huggingface,
+        'banana': query_gpt_banana,
         'hobby': query_gpt_j,
         'repeat': query_gpt_repeat,
-        'banana': query_gpt_banana
+        'mock': query_gpt_mock
     }
 
     # Names of backends that perform stop word truncation how we want (i.e.
     # allow us to specify stop phrases AND truncate before the phrase rather
-    # than after, if we encounter one).
+    # than after, if we encounter one). Note that mock technically used the
+    # gooseai backend, which does require truncation.
     skip_trunc = {'openai'}
 
     name2key = {}
     for name in name2func:
-        if name in {'hobby', 'repeat'}:
+        # Some backends don't require an API key.
+        if name in {'hobby', 'repeat', 'mock'}:
             name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
         else:
             name2key[name] = load_api_key(name)
@@ -646,7 +686,6 @@ class GPTBackend:
             )
 
         kwargs['prompt'] = prompt
-        return kwargs
         cls._log_query_kwargs(log=log, query_func=query_func, **kwargs)
 
         # Possibly easier for caller to check for errors this way? Mostly a

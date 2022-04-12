@@ -40,6 +40,17 @@ class ReturningThread(Thread):
         return self.result
 
 
+def thread_starmap(func, kwargs_list=None):
+    """Similar to multiprocessing.Pool.starmap but with my ReturningThread
+    instead.
+    """
+    kwargs_list = kwargs_list or [{}]
+    threads = [ReturningThread(target=func, kwargs=kwargs)
+               for kwargs in tolist(kwargs_list)]
+    for thread in threads: thread.start()
+    return [thread.join() for thread in threads]
+
+
 class JsonlinesFormatter(logging.Formatter):
     """Formatter for logging python data structures to a jsonlines file.
     Used by JsonLogger.
