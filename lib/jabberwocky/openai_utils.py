@@ -25,7 +25,7 @@ from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     hooked_generator, load_api_key, with_signature, squeeze, stream_response, \
     stream_multi_response, JsonlinesLogger, thread_starmap, ReturningThread, \
-    containerize
+    containerize, touch
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -474,8 +474,9 @@ class GPTBackend:
         'gooseai': query_gpt3,
         'huggingface': query_gpt_huggingface,
         'hobby': query_gpt_j,
+        'banana': query_gpt_banana,
         'repeat': query_gpt_repeat,
-        'banana': query_gpt_banana
+        'mock': query_gpt_mock
     }
 
     # Names of backends that perform stop word truncation how we want (i.e.
@@ -485,7 +486,7 @@ class GPTBackend:
 
     name2key = {}
     for name in name2func:
-        if name in {'hobby', 'repeat'}:
+        if name in {'hobby', 'repeat', 'mock'}:
             name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
         else:
             name2key[name] = load_api_key(name)
@@ -685,7 +686,11 @@ class GPTBackend:
                 'supported.'
             )
 
+        # Including indices in responses makes it easier to tell which
+        # completions correspond to which prompts when we use multiple prompts
+        # and/or multiple completions per prompt.
         start_i = kwargs.pop('start_i', 0)
+        prompt_i = kwargs.pop('prompt_i', 0)
         n = kwargs.get('n', 1)
         kwargs['prompt'] = prompt
         cls._log_query_kwargs(log=log, query_func=query_func, **kwargs)
@@ -695,8 +700,7 @@ class GPTBackend:
         # holdover from v1 library design, but I'm not 100% sure if the
         # benefits still hold given the new design.
         try:
-            #             text, full_response = query_func(**kwargs)
-            if n > 1 and n not in func_params:
+            if n > 1 and 'n' not in func_params:
                 del kwargs['n']
                 # If current query function doesn't natively support multiple
                 # completions, we can make multiple threaded requests. Need
@@ -710,16 +714,10 @@ class GPTBackend:
         except Exception as e:
             raise MockFunctionException(str(e)) from None
         if stream:
-            #             if 'stream' in params(query_func):
-            #                 return text, full_response
-            #             # TODO: this isn't yet compatible w/ backends w/ native streaming
-            #             # functionality. Think it should be simple to tweak though since
-            #             # they provide 99% of what I want.
-            #             return stream_multi_response(text, full_response, start_i=start_i)
-
             if 'stream' in func_params:
                 return response
-            return stream_multi_response(*response, start_i=start_i)
+            return stream_multi_response(*response, start_i=start_i,
+                                         prompt_i=prompt_i)
 
         text, full_response = containerize(*response)
         # Manually check for stop phrases because most backends either don't
@@ -727,6 +725,7 @@ class GPTBackend:
         stop = kwargs.get('stop', [])
         clean_text = []
         clean_full = []
+        # clean_full.append({**resp_, 'prompt_index': i // n})
         for i, (text_, resp_) in enumerate(zip(text, full_response)):
             text_ = truncate_at_first_stop(
                 text_,
@@ -763,15 +762,17 @@ class GPTBackend:
         # because each query is run separately, each prompt's completion(s) would
         # start at 0.
         n = kwargs.get('n', 1)
-        threads = [ReturningThread(target=cls.query, args=(prompt,),
-                                   kwargs={**kwargs, 'start_i': i * n})
-                   for i, prompt in enumerate(prompts)]
+        threads = [
+            ReturningThread(target=cls.query, args=(prompt,),
+                            kwargs={**kwargs, 'start_i': i * n, 'prompt_i': i})
+            for i, prompt in enumerate(prompts)
+        ]
         for thread in threads: thread.start()
         res = [thread.join() for thread in threads]
         if kwargs.get('stream', False):
             return chain(*res)
         texts, fulls = map(list, zip(*res))
-        #         print('fulls:', fulls) # TODO
+        print('fulls:', fulls) # TODO
         return sum(texts, []), \
                sum([[{**d, 'prompt_index': d.get('prompt_index', 0) + i}
                      for d in row]
@@ -1907,10 +1908,11 @@ def query_kwargs_grid(verbose=True):
     """
     txts = ['Yesterday was', 'How many']
     # Just like keys (multi_in, multi_out, stream) in pickled MOCKS dict in
-    # this same module.
-    for multi_in in (True, False):
-        for multi_out in (True, False):
-            for stream in (True, False):
+    # this same module. Start with easier cases (multiple prompts/completions
+    # and/or streaming complicate things a bit).
+    for multi_in in (False, True):
+        for multi_out in (False, True):
+            for stream in (False, True):
                 prompt = txts if multi_in else txts[0]
                 nc = 1 + multi_out
                 if verbose:

@@ -547,7 +547,7 @@ def stream_response(text, full):
         yield tok, dict(full)
 
 
-def stream_multi_response(texts, fulls, start_i=0):
+def stream_multi_response(texts, fulls, start_i=0, prompt_i=0):
     """Generator that lets us stream tokens and metadata from gpt query
     functions for backends that don't natively provide streaming. (Obviously,
     this won't prevent backends like Huggingface from having to generate the
@@ -591,7 +591,11 @@ def stream_multi_response(texts, fulls, start_i=0):
     for i, (text, full) in enumerate(zip(texts, fulls)):
         queue = deque()
         gen = stream_response(
-            text, {**full, 'index': i + start_i, 'finish_reason': None}
+            text,
+            {**full,
+             'index': i + start_i,
+             'prompt_index': prompt_i,
+             'finish_reason': None}
         )
         done = False
         # Yield items while checking if we're at the last item so we can mark

@@ -1074,12 +1074,22 @@ X -kwarg_grid func to iterate over all relevant kwarg combos
 
 4/12/22 tues
 ------------
--look into issue where logfile is being generated in notebooks dir
--add prompt_index when stream=True
-    -figure out what the issue is
-    -implement
--add support for backends w/ builtin batch queries? (Recall: at least w/ gooseai, it's cheaper to make 1 query w/ 100 prompts than 100 queries w/ 1 prompt each)
--[BLOCKED: need to figure out if the above bullet is necessary first. Not sure if we can proceed with this yet.] test_backend('mock') and examine results
+~ -look into issue where logfile is being generated in notebooks dir
+    UPDATE: could not reproduce.
+X -add prompt_index when stream=True
+    X -figure out what the issue is
+        UPDATE: prompt_index was only assigned in query method, but we return early when stream=True. Needed to add logic to stream_multi_response().
+    X -implement
+~ -add support for backends w/ builtin batch queries? (Recall: at least w/ gooseai, it's cheaper to make 1 query w/ 100 prompts than 100 queries w/ 1 prompt each)
+    UPDATE: fiddled around a bit and it seems like maybe query should work anyway? Probably easier to diagnose by just trying it.
+~ -[BLOCKED: need to figure out if the above bullet is necessary first. Not sure if we can proceed with this yet.] test_backend('mock') and examine results
+    UPDATE: initially failed on first set of kwargs so I switched kwarg grid func to do them in an easier order. Now they all execute BUT doesn't work correctly when np > 1. Seems to repeat completions - I sense it's related to the fact that query_batch is still being used on it. So we're making 2 calls to query_mock w/ n=1 rather than 1 call to it with n=2, which is why we get the results for the n=1 response. Fix this tomorrow.
+
+4/13/22 wed
+-----------
+-update query to only use query_batch if the backend doesn't natively support list prompts (or update query_batch to handle that itself)
+-update query (stream_multi_response?) to add prompt_index when backend supports streaming
+-clean up query/query_batch so prompt_index isn't set in so many places (currently 3? end of query, end of query_batch, stream_mluti_response)
 
 
 Backlog
