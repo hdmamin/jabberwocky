@@ -547,7 +547,25 @@ def stream_response(text, full):
         yield tok, dict(full)
 
 
-def stream_multi_response(texts, fulls, start_i=0, prompt_i=0):
+def stream_openai_generator(gen, np=1, n=1):
+    """Add a prompt_index key to the dict-like full response returned by the
+    openai or gooseai api when using query_gpt3(). This is only used in
+    streaming mode.
+    """
+    for text, full in gen:
+        #######################################################################
+        # Looks like GPT backend effectively sets index like this:
+        # for i, prompt in enumerate(prompts):
+        #     completions = get_completions(prompt, n)
+        #     for j, resp in enumerate(completions):
+        #         resp['index'] = i + j
+        #         yield resp
+        #######################################################################
+        full['prompt_index'] = full['index'] // n
+        yield text, full
+
+
+def stream_multi_response(response, start_i=0, prompt_i=0):
     """Generator that lets us stream tokens and metadata from gpt query
     functions for backends that don't natively provide streaming. (Obviously,
     this won't prevent backends like Huggingface from having to generate the
@@ -558,8 +576,9 @@ def stream_multi_response(texts, fulls, start_i=0, prompt_i=0):
 
     Parameters
     ----------
-    texts: str or list[str]
-    fulls: dict or list[dict]
+    response: tuple
+        First item is texts (either str or list[str]). Second item is full
+        responses (either dict or list[dict]).
 
     Yields
     ------
@@ -574,10 +593,11 @@ def stream_multi_response(texts, fulls, start_i=0, prompt_i=0):
 
     Examples
     --------
+    # This is essentially what happens inside of gpt.query():
     >>> with gpt('huggingface'):
-    >>>     texts, fulls = gpt.query(prompt, n=2, max_tokens=3)
-    >>> for tok, full in stream_multi_response(texts, fulls):
-    >>>     print(tok, full)
+    >>>     resp = query_gpt3(prompt, n=2, max_tokens=3)
+    >>>     for tok, full in stream_multi_response(resp, fulls):
+    >>>         print(tok, full)
     The {'generated_text': 'The dog barked', 'index': 0, 'finish_reason': None}
     dog {'generated_text': 'The dog barked', 'index': 0, 'finish_reason': None}
     barked {'generated_text': 'The dog barked', 'index': 0,
@@ -587,7 +607,7 @@ def stream_multi_response(texts, fulls, start_i=0, prompt_i=0):
     run {'generated_text': 'See Spot Run', 'index': 1,
             'finish_reason': 'dummy'}
     """
-    texts, fulls = containerize(texts, fulls)
+    texts, fulls = containerize(*response)
     for i, (text, full) in enumerate(zip(texts, fulls)):
         queue = deque()
         gen = stream_response(

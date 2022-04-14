@@ -22,3 +22,5 @@ output/
 tmp/
 alexa/*.log
 alexa/conversations/*
+# Logger is accidentally saving logs here for some reason. Will try to fix but in the meantime block them from being committed.
+notebooks/data/

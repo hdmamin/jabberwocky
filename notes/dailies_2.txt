@@ -1083,27 +1083,47 @@ X -add prompt_index when stream=True
 ~ -add support for backends w/ builtin batch queries? (Recall: at least w/ gooseai, it's cheaper to make 1 query w/ 100 prompts than 100 queries w/ 1 prompt each)
     UPDATE: fiddled around a bit and it seems like maybe query should work anyway? Probably easier to diagnose by just trying it.
 ~ -[BLOCKED: need to figure out if the above bullet is necessary first. Not sure if we can proceed with this yet.] test_backend('mock') and examine results
-    UPDATE: initially failed on first set of kwargs so I switched kwarg grid func to do them in an easier order. Now they all execute BUT doesn't work correctly when np > 1. Seems to repeat completions - I sense it's related to the fact that query_batch is still being used on it. So we're making 2 calls to query_mock w/ n=1 rather than 1 call to it with n=2, which is why we get the results for the n=1 response. Fix this tomorrow.
+    UPDATE: initially failed on first set of kwargs so I switched kwarg grid func to do them in an easier order. Bug turned out to be I was checking if n the number rather than 'n' the param name was in query signature. Now they all execute BUT doesn't work correctly when np > 1. Seems to repeat completions - I sense it's related to the fact that query_batch is still being used on it. So we're making 2 calls to query_mock w/ n=1 rather than 1 call to it with n=2, which is why we get the results for the n=1 response. Fix this tomorrow.
 
 4/13/22 wed
 -----------
--update query to only use query_batch if the backend doesn't natively support list prompts (or update query_batch to handle that itself)
--update query (stream_multi_response?) to add prompt_index when backend supports streaming
+X -update query to only use query_batch if the backend doesn't natively support list prompts (or update query_batch to handle that itself)
+~ -make sure prompt_index is correct when stream=True
+    X -works for backend does NOT support stream natively case
+        UPDATE: added assert in nb test_backend() func to check this. Repeat and banana pass.
+    X -works for backend DOES support stream natively case
+        UPDATE: wrote new stream_openai_generator func. All tests pass.
+    -test huggingface backend
+        UPDATE: tried to run but unsurprisingly got 400 error. Maybe if I manually insert wait times or alternate between engine_i values it would work? Try again later.
+    -test gptj backend (if back up)
+        X -check if back up
+        -[BLOCKED: api down] test
 -clean up query/query_batch so prompt_index isn't set in so many places (currently 3? end of query, end of query_batch, stream_mluti_response)
+
+4/14/22 thurs
+-------------
+-notebooks/data/logs is back. Want to stop this from happening.
+    -Try to reproduce error and identify cause
+    -fix
+-investigate what happens when 1 returningthread fails. Think it might not raise the error to the calling context.
+    -try w/ toy example (no query gpt)
+-think about moving hardcoded params to backend.query and leaving most new funcs to accept mostly kwargs?
+-general cleanup of mock_funcs, backend methods, etc. - very messy atm
+    -better document what these funcs need to return
+-clean up query/query_batch so prompt_index isn't set in so many places (currently 3? end of query, end of query_batch, stream_mluti_response)
+-check if there are any more warnings from query_gpt3 that need to be moved to gpt.query()
+
 
 
 Backlog
 -------
+-[BLOCKED: api down] test gptj backend using nb14's test_backend func
+-[BLOCKED: possible rate limiting? 400 client error again] test huggingface backend
 -repercussions of gpt.query redesign
-    -update docs for various query funcs
-    -polish draft of backend query method so it adds more warnings that used to be in query_gpt3
-        -think about moving hardcoded params to backend.query and leaving most new funcs to accept mostly kwargs?
     -update convmanager (careful w/ hookedgenerator)
         -maybe change kwargs() depending on active backend?
     -update promptmanager 
         -maybe change kwargs() depending on active backend?
-        -general cleanup of mock_funcs, backend methods, etc. - very messy atm
--allow (or force?) query_gpt3 to make mock functions overwriting other parts of mocked response besides text, e.g. finish_reason and logprobs. (Currently only text is changed.)
 -handle error when wiki person generation fails
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)

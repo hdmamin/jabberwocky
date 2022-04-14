@@ -19,13 +19,13 @@ from threading import Lock
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
-    listlike, Results, flatten, add_docstring, func_name, params
+    listlike, Results, flatten, add_docstring, func_name, params, mark
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     hooked_generator, load_api_key, with_signature, squeeze, stream_response, \
     stream_multi_response, JsonlinesLogger, thread_starmap, ReturningThread, \
-    containerize, touch
+    containerize, touch, stream_openai_generator
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -101,6 +101,7 @@ def truncate_at_first_stop(text, stop_phrases, finish_reason='',
     return text
 
 
+@mark(batch_support=False)
 def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
     """Queries free GPT-J API. GPT-J has 6 billion parameters and is, roughly
     speaking, the open-source equivalent of Curie (3/19/22 update: size sounds
@@ -149,6 +150,7 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
     return res['text'], res
 
 
+@mark(batch_support=True)
 @valuecheck
 def query_gpt_huggingface(
         prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
@@ -267,7 +269,7 @@ def postprocess_gpt_response(response, stream=False):
     return [row.text for row in response.choices], \
            [dict(choice) for choice in response.choices]
 
-
+@mark(batch_support=True)
 def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
                frequency_penalty=0.0, presence_penalty=0.0, max_tokens=50,
                logprobs=None, n=1, stream=False, logit_bias=None, **kwargs):
@@ -363,6 +365,7 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
     return postprocess_gpt_response(res)
 
 
+@mark(batch_support=False)
 def query_gpt_repeat(prompt, upper=True, **kwargs):
     """Mock func that just returns the prompt as the response. By default,
     we uppercase the responses to make it more obvious when looking at outputs
@@ -375,6 +378,7 @@ def query_gpt_repeat(prompt, upper=True, **kwargs):
     return prompt.upper() if upper else prompt, {}
 
 
+@mark(batch_support=True)
 def query_gpt_mock(prompt, n=1, stream=False, **kwargs):
     """Return mocked openai/gooseai responses without actually hitting the API.
     We provide 8 different types of responses based on varying values of n,
@@ -407,6 +411,7 @@ def query_gpt_mock(prompt, n=1, stream=False, **kwargs):
     return postprocess_gpt_response(resp, stream=stream)
 
 
+@mark(batch_support=False)
 @add_docstring(query_gpt3)
 def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
                      top_k=False, **kwargs):
@@ -461,14 +466,16 @@ class GPTBackend:
     lock = Lock()
 
     # Only include backends here that actually should change the
-    # openai.api_base value (these will probably be backends that require no
-    # or minimal mock_funcs).
+    # openai.api_base value, a.k.a. those that use the openai.Completion.create
+    # method.
     name2base = {
         'openai': 'https://api.openai.com',
         'gooseai': 'https://api.goose.ai/v1',
     }
 
     # Order matters: keep openai first so name2key initialization works.
+    # 4/13/22 update: Is the above comment still true? I don't think so but
+    # leave it for now just in case.
     name2func = {
         'openai': query_gpt3,
         'gooseai': query_gpt3,
@@ -653,15 +660,13 @@ class GPTBackend:
         -------
         list[str, dict]
         """
-        if listlike(prompt):
-            # TODO: maybe only use this for backends that don't implement
-            # multi-prompt queries natively?
+        query_func = cls._get_query_func()
+        if listlike(prompt) and not query_func.batch_support:
             return cls._query_batch(prompt, strip_output=strip_output,
                                     log=log, **kwargs)
 
         # Keep trunc_full definition here so we can provide warnings if user
         # is in stream mode.
-        query_func = cls._get_query_func()
         trunc_full = cls.current() not in cls.skip_trunc
         stream = kwargs.get('stream', False)
         if stream:
@@ -692,6 +697,7 @@ class GPTBackend:
         start_i = kwargs.pop('start_i', 0)
         prompt_i = kwargs.pop('prompt_i', 0)
         n = kwargs.get('n', 1)
+        np = 1 if isinstance(prompt, str) else len(prompt)
         kwargs['prompt'] = prompt
         cls._log_query_kwargs(log=log, query_func=query_func, **kwargs)
         func_params = params(query_func)
@@ -715,8 +721,8 @@ class GPTBackend:
             raise MockFunctionException(str(e)) from None
         if stream:
             if 'stream' in func_params:
-                return response
-            return stream_multi_response(*response, start_i=start_i,
+                return stream_openai_generator(response, np=np, n=n)
+            return stream_multi_response(response, start_i=start_i,
                                          prompt_i=prompt_i)
 
         text, full_response = containerize(*response)
@@ -759,8 +765,8 @@ class GPTBackend:
         kwargs.update(strip_output=strip_output, log=log)
         # Setting start_i to i*n ensures that the 'index' returned in streamed
         # responses is different for each prompt's completion(s). Otherwise,
-        # because each query is run separately, each prompt's completion(s) would
-        # start at 0.
+        # because each query is run separately, each prompt's completion(s)
+        # would start at 0.
         n = kwargs.get('n', 1)
         threads = [
             ReturningThread(target=cls.query, args=(prompt,),
