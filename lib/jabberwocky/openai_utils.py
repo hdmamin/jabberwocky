@@ -775,7 +775,6 @@ class GPTBackend:
         stop = kwargs.get('stop', [])
         clean_text = []
         clean_full = []
-        # clean_full.append({**resp_, 'prompt_index': i // n})
         for i, (text_, resp_) in enumerate(zip(text, full_response)):
             text_ = truncate_at_first_stop(
                 text_,
@@ -787,7 +786,7 @@ class GPTBackend:
             clean_text.append(strip(text_, strip_output))
             clean_full.append({**resp_, 'prompt_index': i // n})
 
-        return clean_text, clean_full  # TODO: try keeping lists always
+        return clean_text, clean_full
 
     @classmethod
     def _query_batch(cls, prompts, strip_output=True, log=True, **kwargs):
@@ -814,9 +813,11 @@ class GPTBackend:
             for i, prompt in enumerate(prompts)
         ]
         for thread in threads: thread.start()
+        # Each item is a tuple of (list[str], list[dict]).
         res = [thread.join() for thread in threads]
         if kwargs.get('stream', False):
             return chain(*res)
+        # Texts and fulls are now both lists of lists.
         texts, fulls = map(list, zip(*res))
         return sum(texts, []), \
                sum([[{**d, 'prompt_index': d.get('prompt_index', 0) + i}
