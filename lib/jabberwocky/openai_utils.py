@@ -1,4 +1,46 @@
-"""Utility functions for interacting with the gpt3 api."""
+"""Utility functions for interacting with the gpt3 api.
+
+A note on query functions:
+There are a number of different services (both paid and free) that provide
+access to GPT-like models. GPTBackend.query() provides a convenient interface
+to them by calling different query functions under the hood. These query
+functions are all defined in this module and have names starting with
+'query_gpt'. There are a number of things to be aware of when defining a new
+query function.
+
+1. Use the `mark` decorator to set "batch_support" to either True or False.
+True means you can pass in a list of prompts, False means the prompt must be a
+single string. GPTBackend will support batching either way, but it needs to
+know whether each query function supports this natively in order to determine
+how to do this.
+2. The first parameter should be 'prompt' with no default. The other parameters
+should have defaults, but keep in mind many of these will be ignored when
+called by GPTBackend.query - the latter has its own defaults which are passed
+in as kwargs. Speaking of which...
+3. It must accept kwargs.
+4. If it supports multiple completions, include a parameter "n" with a default
+value of 1 in the signature. GPTBackend.query will support it either way, but
+again it needs to know how to achieve this.
+5. If multiple engines are available through this backend, update
+jabberwocky.config.C.backend_engines, using the other examples as guidance. In
+addition, in this scenario we recommend retrieving the engine name explicitly
+as query_gpt_huggingface does:
+```engine = GPTBackend.engine(engine_i, backend='huggingface')```
+rather than simply calling ```GPTBackend.engine(engine_i)```.
+6. We recommend popping off kwargs that you actually do want to use and then
+providing a warning so the user can see the remaining unused kwargs if there
+are any.
+7. The fuction should either return a (str, dict-like) tuple or
+(list[str], list[dict-like]). Use the latter if batch_support is True and
+multiple completions per prompt are supported (i.e. n is in its parameters).
+Technically I suppose there could be a backend that supported 1 but not the
+other, but I haven't seen it yet so I'll figure that case out if/when needed.
+8. When done, update some or all of the following GPTBackend class attributes.
+- name2base
+- name2func
+- skip_trunc
+Use the comments and examples in the class as guidance.
+"""
 
 import banana_dev as banana
 from collections.abc import Iterable, Mapping
@@ -102,7 +144,7 @@ def truncate_at_first_stop(text, stop_phrases, finish_reason='',
 
 
 @mark(batch_support=False)
-def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
+def query_gpt_j(prompt, temperature=0.7, max_tokens=50, top_p=1.0, **kwargs):
     """Queries free GPT-J API. GPT-J has 6 billion parameters and is, roughly
     speaking, the open-source equivalent of Curie (3/19/22 update: size sounds
     more like Babbage actually). It was trained on more
@@ -118,6 +160,10 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
     ----------
     prompt: str
     temperature: float
+    top_p: float
+        Value in (0.0, 1.0] that determines how surprising the generation is.
+        Lower values are more predictable (closer to argmax sampling). Often
+        see the recommendation to change either this OR temperature, not both.
     max_tokens: int
     kwargs: any
         Only supported options are top_p (float) and stop (Iterable[str]).
@@ -130,7 +176,7 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
     params = {'context': prompt,
               'token_max_length': max_tokens,
               'temperature': temperature,
-              'top_p': kwargs.pop('top_p', 1.0)}
+              'top_p': top_p}
 
     # Ensure that we end up with a list AND that stop is still Falsy if user
     # explicitly passes in stop=None.
@@ -151,7 +197,6 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, **kwargs):
 
 
 @mark(batch_support=True)
-@valuecheck
 def query_gpt_huggingface(
         prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
         max_tokens=50, top_k=None, top_p=None, n=1, **kwargs
@@ -195,27 +240,10 @@ def query_gpt_huggingface(
 
     Returns
     -------
-    # TODO update
-    # Currently returns List[str], List[dict] where index i in each list gives
-    # us the ith completion. We always pass in a single prompt.
-
-    tuple or iterator: When stream=False, we return a tuple where the first
-    item is the prompt (str) and the second is the response text(str). If
-    return_full is True, a third item consisting of the whole response object
-    is returned as well. When stream=True, we return an iterator where each
-    step contains a single token. This will either be the text response alone
-    (str) or a tuple of (text, response) if return_full is True. Unlike in
-    non-streaming mode, we don't return the prompt - that seems less
-    appropriate for many time steps.
-
-    Returns
-    -------
-    tuple[str]: Prompt, response tuple, just like query_gpt_3().
+    tuple[List[str], List[dict]]: First item contains string completions,
+    second contains dicts with some additional metadata.  Index i in each list
+    gives us the ith completion.
     """
-    # TODO: testing
-    # if not isinstance(prompt, str):
-    #     raise TypeError(f'Prompt must be str, not {type(prompt)}.')
-
     # Hardcode backend in case we use this function outside of the
     # GPTBackend.query wrapper.
     engine = GPTBackend.engine(engine_i, backend='huggingface')
@@ -269,6 +297,7 @@ def postprocess_gpt_response(response, stream=False):
     return [row.text for row in response.choices], \
            [dict(choice) for choice in response.choices]
 
+
 @mark(batch_support=True)
 def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
                frequency_penalty=0.0, presence_penalty=0.0, max_tokens=50,
@@ -278,7 +307,15 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
     2. Explicitly add some parameters and descriptions to the function
     docstring, since openai.Completion.create does not include most kwargs.
 
-    # TODO: update docs
+    This function's signature and docstring are used to update
+    GPTBackend.query's corresponding attributes, as well as the docstring of
+    a few other backend functions. This setup is largely a holdover from the
+    original design where queries for all backends were routed through
+    query_gpt3 rather than GPTBackend.query, but it's also slightly more
+    convenient to have the source of truth be a fucntion rather than a method.
+    For instance, I don't think we could use a method's signature/docstring
+    to decorate another method from the same class if that need came up at some
+    point.
 
     Parameters
     ----------
@@ -326,17 +363,14 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
 
     Returns
     -------
-    # TODO: update
-    tuple[list[str], List[dict]]
-
-    tuple or iterator: When stream=False, we return a tuple where the first
-    item is the prompt (str) and the second is the response text(str). If
-    return_full is True, a third item consisting of the whole response object
-    is returned as well. When stream=True, we return an iterator where each
-    step contains a single token. This will either be the text response alone
-    (str) or a tuple of (text, response) if return_full is True. Unlike in
-    non-streaming mode, we don't return the prompt - that seems less
-    appropriate for many time steps.
+    tuple[list[str], List[dict]] or generator-like: When stream=False, we
+    return a tuple where the first item is the response text(str) and the
+    second item is the whole response object (technically the value
+    corresponding to the "choices" key, but that contains pretty much
+    everything of interest). When stream=True, we return a generator-like
+    (technically I forget if this is a generator or iterator, but basically
+    it lets us get results on the fly) where each step contains a single
+    token's worth of results (still a text, dict-like tuple).
     """
     if stream and n > 1:
         raise RuntimeError('Stream=True and n>1 not supported.')
@@ -370,6 +404,12 @@ def query_gpt_repeat(prompt, upper=True, **kwargs):
     """Mock func that just returns the prompt as the response. By default,
     we uppercase the responses to make it more obvious when looking at outputs
     that the function did execute successfully.
+
+    Returns
+    -------
+    tuple[str, dict]: First item just repeats the prompt back to us but
+    uppercases it to distinguish it from the input. Second item is an empty
+    dict to match the interface for all our query functions.
     """
     if kwargs:
         warnings.warn(f'Unused kwargs {kwargs} received by query_gpt_repeat.')
@@ -421,6 +461,10 @@ def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
     only those visible in the signature are (all kwargs are ignored here). For
     example, this does not natively support stop phrases or n_prompts > 1 or
     n_completions > 1.
+
+    Returns
+    -------
+    tuple[str, dict]
     """
     if kwargs:
         warnings.warn(f'query_gpt_banana received unused kwargs {kwargs}.')
@@ -461,7 +505,7 @@ class GPTBackend:
     """
 
     logger = JsonlinesLogger(
-        f'./data/logs/{datetime.today().strftime("%Y.%m.%d")}.jsonlines'
+        C.root/f'data/logs/{datetime.today().strftime("%Y.%m.%d")}.jsonlines'
     )
     lock = Lock()
 
@@ -493,10 +537,10 @@ class GPTBackend:
 
     name2key = {}
     for name in name2func:
-        if name in {'hobby', 'repeat', 'mock'}:
-            name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
-        else:
+        try:
             name2key[name] = load_api_key(name)
+        except FileNotFoundError:
+            name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
 
     def __init__(self):
         self.new_name = ''
@@ -745,11 +789,7 @@ class GPTBackend:
 
         return clean_text, clean_full  # TODO: try keeping lists always
 
-    #         return squeeze(clean_text, full_response, n=n)
-
     @classmethod
-    @with_signature(query_gpt3)
-    @add_docstring(query_gpt3)
     def _query_batch(cls, prompts, strip_output=True, log=True, **kwargs):
         """
         Returns
@@ -778,7 +818,6 @@ class GPTBackend:
         if kwargs.get('stream', False):
             return chain(*res)
         texts, fulls = map(list, zip(*res))
-        print('fulls:', fulls) # TODO
         return sum(texts, []), \
                sum([[{**d, 'prompt_index': d.get('prompt_index', 0) + i}
                      for d in row]
@@ -931,7 +970,7 @@ class PromptManager:
         (including the prompt template).
         """
         name2kwargs = {}
-        dir_ = Path('data/prompts')
+        dir_ = C.root/'data/prompts'
         paths = (dir_/t for t in tasks) if tasks else dir_.iterdir()
         if skip_tasks: paths = (p for p in paths if p.stem not in skip_tasks)
         for path in paths:
@@ -1812,7 +1851,7 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
     be relevant, while 'max_tokens' or 'engine_i' may depend on the specific
     usage.
     """
-    dir_ = Path(f'data/prompts/{name}')
+    dir_ = C.root/f'data/prompts/{name}'
     prompt_fmt = load(dir_/'prompt.txt')
     kwargs = load_yaml(dir_/'config.yaml')
     # If no prompt is passed in, we load the template and store it for later.

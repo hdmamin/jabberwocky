@@ -2,7 +2,7 @@
 
 from collections import deque
 from colorama import Fore
-from functools import update_wrapper, partial
+from functools import update_wrapper, partial, wraps
 from inspect import _empty, Parameter, signature
 from itertools import cycle
 import json
@@ -13,6 +13,7 @@ from PIL import Image
 import sys
 from threading import Thread
 import yaml
+import _thread
 
 from htools import select, bound_args, copy_func, xor_none, add_docstring, \
     listlike, MultiLogger, tolist
@@ -40,12 +41,97 @@ class ReturningThread(Thread):
         return self.result
 
 
-def thread_starmap(func, kwargs_list=None):
+def interrupt_on_complete(meth):
+    """Decorator that powers PropagatingThread. We do this here rather than
+    interrupting directly from run() method because run must return in order
+    for thread to stop, but of course we can't do anything directly from the
+    method after returning.
+    """
+    @wraps(meth)
+    def wrapper(*args, **kwargs):
+        res = meth(*args, **kwargs)
+        if args[0].exception and args[0].raise_immediately:
+            print('INTERRUPTING')
+            _thread.interrupt_main()
+        return res
+    return wrapper
+
+
+class PropagatingThread(Thread):
+    """Ported from gui/utils.py since I realized ReturningThread never raises
+    error to calling context if it fails.
+
+    Thread that will raise an exception in the calling thread as soon as one
+    occurs in the worker thread. You must use a KeyboardInterrupt or
+    BaseException in your try/except block since that is the only type of
+    exception we can raise. If you don't need the exception to be raised
+    immediately, you can set raise_immediately=False and it won't be propagated
+    until the thread is joined.
+
+    thread.join() also returns the value returned by the thread's target
+    function.
+
+    Partially based on version here, though that can only raise on join():
+    https://stackoverflow.com/questions/2829329/catch-a-threads-exception-in-the-caller-thread
+    """
+
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs=None, *, daemon=None,
+                 raise_immediately=False):
+        """
+        Parameters
+        ----------
+        raise_immediately: bool
+            If True, raise any exception as soon as it occurs. In order to
+            propagate this to the calling thread, we are forced to use a
+            KeyboardInterrupt. No information about the actual exception will
+            be propagated. If False, the actual exception will be raised on
+            the call to thread.join().
+        """
+        super().__init__(group=group, target=target, name=name,
+                         args=args, kwargs=kwargs, daemon=daemon)
+        self.raise_immediately = raise_immediately
+        self.exception = None
+        self.result = None
+
+    @interrupt_on_complete
+    def run(self):
+        try:
+            self.result = self._target(*self._args, **self._kwargs)
+        except Exception as e:
+            self.exception = e
+
+    def join(self, timeout=None):
+        super().join(timeout)
+        if not self.raise_immediately and self.exception:
+            raise self.exception
+        return self.result
+
+
+def thread_starmap(func, kwargs_list=None, raise_errors=True,
+                   raise_immediately=False):
     """Similar to multiprocessing.Pool.starmap but with my ReturningThread
     instead.
+
+    Parameters
+    ----------
+    raise_errors: bool
+        If True, any error in one of the underlying threads will result in an
+        error being raised to the calling context. If False, no error will be
+        raised and the corresponding list item will simply be None.
+    raise_immediately: bool
+        If raise_errors is False, this is unused. If it's True, it determines
+        whether exceptions that occur in threads are raised immediately when
+        they happen (if True) or only when the failed thread is joined
+        (if False).
     """
     kwargs_list = kwargs_list or [{}]
-    threads = [ReturningThread(target=func, kwargs=kwargs)
+    if raise_errors:
+        thread_cls = partial(PropagatingThread,
+                             raise_immediately=raise_immediately)
+    else:
+        thread_cls = ReturningThread
+    threads = [thread_cls(target=func, kwargs=kwargs)
                for kwargs in tolist(kwargs_list)]
     for thread in threads: thread.start()
     return [thread.join() for thread in threads]

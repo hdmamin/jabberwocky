@@ -34,3 +34,6 @@ class C:
     # Contains more variants of responses (see script docstring for details).
     all_mocks_path = root/'data/misc/gooseai_sample_responses.pkl'
 
+    # Project root directory.
+    root = Path('/Users/hmamin/jabberwocky')
+
