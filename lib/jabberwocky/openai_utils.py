@@ -65,9 +65,9 @@ from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
-    hooked_generator, load_api_key, with_signature, squeeze, stream_response, \
-    stream_multi_response, JsonlinesLogger, thread_starmap, ReturningThread, \
-    containerize, touch, stream_openai_generator
+    hooked_generator, load_api_key, with_signature, squeeze, stream_response,\
+    JsonlinesLogger, thread_starmap, ReturningThread, \
+    containerize, touch
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -764,10 +764,10 @@ class GPTBackend:
         except Exception as e:
             raise MockFunctionException(str(e)) from None
         if stream:
-            if 'stream' in func_params:
-                return stream_openai_generator(response, np=np, n=n)
-            return stream_multi_response(response, start_i=start_i,
-                                         prompt_i=prompt_i)
+            return stream_response(
+                response, real_stream='stream' in func_params,
+                start_i=start_i, prompt_i=prompt_i, n=n
+            )
 
         text, full_response = containerize(*response)
         # Manually check for stop phrases because most backends either don't
@@ -784,7 +784,10 @@ class GPTBackend:
                 trunc_partial=True
             )
             clean_text.append(strip(text_, strip_output))
-            clean_full.append({**resp_, 'prompt_index': i // n})
+            # Add prompt i so index is correct when calling this from
+            # _query_batch. When not calling it from there, prompt_i is always
+            # 0 so this does not affect the calculation.
+            clean_full.append({**resp_, 'prompt_index': prompt_i + (i // n)})
 
         return clean_text, clean_full
 
@@ -817,13 +820,9 @@ class GPTBackend:
         res = [thread.join() for thread in threads]
         if kwargs.get('stream', False):
             return chain(*res)
-        # Texts and fulls are now both lists of lists.
+        # Convert results to 2 lists of lists, then flatten each outer list.
         texts, fulls = map(list, zip(*res))
-        return sum(texts, []), \
-               sum([[{**d, 'prompt_index': d.get('prompt_index', 0) + i}
-                     for d in row]
-                    for i, row in enumerate(fulls)],
-                   [])
+        return sum(texts, []), sum(fulls, [])
 
     @classmethod
     def _log_query_kwargs(cls, log, query_func=None, **kwargs):

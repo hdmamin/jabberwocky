@@ -1119,23 +1119,34 @@ _ -check if there are any more warnings from query_gpt3 that need to be moved to
 
 4/15/22 fri
 -----------
--clean up query/query_batch so prompt_index isn't set in so many places (currently 3? end of query, end of query_batch, stream_mluti_response)
+X -clean up query/query_batch so prompt_index isn't set in so many places (currently 3? end of query, end of query_batch, stream_mluti_response)
+    UPDATE: technically it was 4 before and I got it down to 3 (removed query_batch one). Also refactored stream_response (formerly stream_multi_response) to include stream_openai_generator (the 4th case I previously forgot) so it's sort of like 2 places.
 -repercussions of gpt.query redesign
     -update convmanager (careful w/ hookedgenerator)
         -maybe change kwargs() depending on active backend?
--clean up query/query_batch so prompt_index isn't set in so many places (currently 3? end of query, end of query_batch, stream_mluti_response)
 -repercussions of gpt.query redesign
     -update convmanager (careful w/ hookedgenerator)
         -maybe change kwargs() depending on active backend?
     -update promptmanager 
         -maybe change kwargs() depending on active backend?
+X -fix docs in stream_openai_generator explaining how calculation works
+
+4/16/22 sat
+-----------
+-make logging use fully resolved kwargs?
+-handle error when wiki person generation fails
+-repercussions of gpt.query redesign
+    -update convmanager (careful w/ hookedgenerator)
+        -maybe change kwargs() method depending on active backend?
+    -update promptmanager 
+        -maybe change kwargs() method depending on active backend?
+
 
 
 Backlog
 -------
 -[BLOCKED: api down] test gptj backend using nb14's test_backend func
 -[BLOCKED: possible rate limiting? 400 client error again] test huggingface backend
--handle error when wiki person generation fails
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time

@@ -600,7 +600,7 @@ def stream_words(text):
         yield word + ' '
 
 
-def stream_response(text, full):
+def _stream_response(text, full):
     """Generator used to stream gpt completions for backends that don't
     natively support it.
 
@@ -619,7 +619,7 @@ def stream_response(text, full):
 
     # Notice we don't change the full response - there's no consistent
     # pattern all the non-streaming backends share.
-    >>> for t, f in stream_response(text, full):
+    >>> for t, f in _stream_response(text, full):
     >>>     print(repr(t), f)
     'It ' {'generated_text': 'It is hot'}
     'is ' {'generated_text': 'It is hot'}
@@ -633,25 +633,33 @@ def stream_response(text, full):
         yield tok, dict(full)
 
 
-def stream_openai_generator(gen, np=1, n=1):
+def _stream_openai_generator(gen, n=1):
     """Add a prompt_index key to the dict-like full response returned by the
     openai or gooseai api when using query_gpt3(). This is only used in
     streaming mode.
+
+    Math notes: looks like openai backend effectively sets index like this:
+
+    ```
+    for i, prompt in enumerate(prompts):
+        completions = get_completions(prompt, n)
+        for j, resp in enumerate(completions):
+            resp['index'] = i*nc + j
+            yield resp
+    ```
+
+    We want to solve for i.
+    index = j + i*n
+    index - j = i * n
+    (index - j) / n = i
+    We don't have j but I think index // n is equivalent in this case.
     """
     for text, full in gen:
-        #######################################################################
-        # Looks like GPT backend effectively sets index like this:
-        # for i, prompt in enumerate(prompts):
-        #     completions = get_completions(prompt, n)
-        #     for j, resp in enumerate(completions):
-        #         resp['index'] = i + j
-        #         yield resp
-        #######################################################################
         full['prompt_index'] = full['index'] // n
         yield text, full
 
 
-def stream_multi_response(response, start_i=0, prompt_i=0):
+def stream_response(response, real_stream, start_i=0, prompt_i=0, **kwargs):
     """Generator that lets us stream tokens and metadata from gpt query
     functions for backends that don't natively provide streaming. (Obviously,
     this won't prevent backends like Huggingface from having to generate the
@@ -665,6 +673,15 @@ def stream_multi_response(response, start_i=0, prompt_i=0):
     response: tuple
         First item is texts (either str or list[str]). Second item is full
         responses (either dict or list[dict]).
+    start_i: int
+        When using multiple prompts, GPTBackend._query_batch passes these
+        values to GPTBackend._query which in turn passes them here. They are
+        used to set the index and prompt_index correctly.
+    prompt_i: int
+    kwargs:
+        If streaming an openai response, pass in parameter n (int) which was
+        used to determine the number of completions to generate per prompt.
+        This is necessary in order to recover the prompt index.
 
     Yields
     ------
@@ -682,7 +699,7 @@ def stream_multi_response(response, start_i=0, prompt_i=0):
     # This is essentially what happens inside of gpt.query():
     >>> with gpt('huggingface'):
     >>>     resp = query_gpt3(prompt, n=2, max_tokens=3)
-    >>>     for tok, full in stream_multi_response(resp, fulls):
+    >>>     for tok, full in stream_response(resp, fulls):
     >>>         print(tok, full)
     The {'generated_text': 'The dog barked', 'index': 0, 'finish_reason': None}
     dog {'generated_text': 'The dog barked', 'index': 0, 'finish_reason': None}
@@ -693,10 +710,20 @@ def stream_multi_response(response, start_i=0, prompt_i=0):
     run {'generated_text': 'See Spot Run', 'index': 1,
             'finish_reason': 'dummy'}
     """
+    # Backends that support streaming (openai/gooseai) must be handled a bit
+    # differently. We must return after yield from because otherwise this
+    # generator proceeds to the next yield statement, which is supposed to only
+    # occur in the real_stream=False case.
+    if real_stream:
+        assert 'n' in kwargs, \
+            'Must pass in parameter n when streaming openai response.'
+        yield from _stream_openai_generator(response, n=kwargs['n'])
+        return
+
     texts, fulls = containerize(*response)
     for i, (text, full) in enumerate(zip(texts, fulls)):
         queue = deque()
-        gen = stream_response(
+        gen = _stream_response(
             text,
             {**full,
              'index': i + start_i,
