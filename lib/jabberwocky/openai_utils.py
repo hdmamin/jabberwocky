@@ -5,8 +5,7 @@ There are a number of different services (both paid and free) that provide
 access to GPT-like models. GPTBackend.query() provides a convenient interface
 to them by calling different query functions under the hood. These query
 functions are all defined in this module and have names starting with
-'query_gpt'. There are a number of things to be aware of when defining a new
-query function.
+'query_gpt'. There are a number of steps to defining a new query function:
 
 1. Use the `mark` decorator to set "batch_support" to either True or False.
 True means you can pass in a list of prompts, False means the prompt must be a
@@ -149,8 +148,7 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, top_p=1.0, **kwargs):
     speaking, the open-source equivalent of Curie (3/19/22 update: size sounds
     more like Babbage actually). It was trained on more
     code than GPT3 though so it may do surprisingly well at those kinds of
-    tasks. This function should be usable as a mock_func argument in
-    query_gpt_3.
+    tasks.
 
     API uptime may be questionable though. There's an accompanying front end
     here:
@@ -589,7 +587,7 @@ class GPTBackend:
     @classmethod
     def ls(cls):
         """Print current state of the backend: api_base, api_key, and
-        mock_func. Mostly useful for debugging and sanity checks.
+        query_func. Mostly useful for debugging and sanity checks.
         """
         print('\nBase:', openai.api_base)
         print('Query func:', cls._get_query_func())
@@ -647,7 +645,7 @@ class GPTBackend:
         """
         # More reliable than checking name2key because the openai attribute
         # is what's actually used (at least for openai vs. gooseai -
-        # huggingface mock_func technically uses a global).
+        # huggingface query_func technically uses a global).
         return openai.api_key
 
     @classmethod
@@ -683,17 +681,21 @@ class GPTBackend:
                              f'Should be one of {list(range(len(engines)))} '
                              f'when using backend {cls.current()}.')
 
-    # Decorator order matters - doesn't work if we flip these.
+    # Decorator order matters - doesn't work if we flip these. Keep=True in
+    # with_signature makes kwargs resolution work when passing in kwargs not
+    # present in query_gpt3 (some backends may accept args that openai backend
+    # doesn't. We could pass these in regardless, but
+    # signature(query_func).bind_partial(**kwargs) only works with keep=True).
     @classmethod
-    @with_signature(query_gpt3)
+    @with_signature(query_gpt3, keep=True)
     @add_docstring(query_gpt3)
     def query(cls, prompt, strip_output=True, log=True, **kwargs):
-        """
+        """Query gpt3 with whatever the current backend is.
 
         Parameters
         ----------
-        prompt
-        strip_output
+        prompt: str
+        strip_output: bool
         log: bool or str
             If True, the logfile defaults to a path like
             './data/logs/2022.04.07.jsonlines' (current year, month, day).
@@ -702,7 +704,7 @@ class GPTBackend:
 
         Returns
         -------
-        list[str, dict]
+        list[str, dict] or generator[str, dict]
         """
         query_func = cls._get_query_func()
         if listlike(prompt) and not query_func.batch_support:
@@ -730,8 +732,8 @@ class GPTBackend:
         kwargs_func = kwargs.pop('mock_func', None)
         if kwargs_func:
             raise ValueError(
-                f'Encountered unexpected mock_func {kwargs_func} with this '
-                'interface. This was part of the v1 library but is no longer '
+                f'Encountered unexpected mock_func {kwargs_func}. '
+                'This was part of the v1 library but is no longer '
                 'supported.'
             )
 
@@ -832,7 +834,8 @@ class GPTBackend:
             # not be passed to the actual query_gpt3 call.
             kwargs['meta'] = {
                 'backend_name': cls.current(),
-                'query_func': func_name(query_func) if query_func else None
+                'query_func': func_name(query_func) if query_func else None,
+                'datetime': datetime.now().ctime()
             }
             with cls.lock:
                 if not isinstance(log, (str, Path)):
@@ -1070,18 +1073,11 @@ class PromptManager:
             raise RuntimeError('Arg "prompt" should not be in query kwargs. '
                                'It will be constructed within this method and '
                                'passing it in will override the new version.')
-        mock_func = GPTBackend._get_query_func()
-        kwargs_mock = kwargs.get('mock_func', None)
-        # If user doesn't pass in a mock_func explicitly, this shouldn't raise
-        # an error even if our backend will automatically use one.
-        if kwargs_mock and kwargs_mock != mock_func:
+        query_func = GPTBackend._get_query_func()
+        if 'mock_func' in kwargs:
             raise ValueError(
-                f'Encountered unexpected mock_func {kwargs_mock}. The current '
-                f'backend expects a mock_func of {mock_func}. Note: you '
-                'typically shouldn\'t pass in mock_func explicitly since '
-                'GPTBackend handles this for you. '
-                '(Technically, we do allow this due to the way PromptManager '
-                'and ConversationManager implement kwargs() methods).'
+                'Encountered unexpected argument "mock_func". This was a part '
+                'of the Jabberwocky 1.0 API but is no longer used.'
             )
 
         kwargs = {**self.prompts[task], **kwargs}
@@ -1099,8 +1095,8 @@ class PromptManager:
                                 '`extra_kwargs`.')
             kwargs[k] = curr_val
 
-        if fully_resolved: kwargs = dict(bound_args(query_gpt3, [], kwargs))
-        kwargs['mock_func'] = mock_func
+        if fully_resolved:
+            kwargs = dict(bound_args(GPTBackend.query, [], kwargs))
         return kwargs if return_prompt else select(kwargs, drop=['prompt'])
 
     def prompt(self, task, text='', print_=False):
@@ -1491,18 +1487,10 @@ class ConversationManager:
                 'constructed within this method and passing it in will '
                 'override the new version.'
             )
-        mock_func = GPTBackend._get_query_func()
-        kwargs_mock = kwargs.get('mock_func', None)
-        # If user doesn't pass in a mock_func explicitly, this shouldn't raise
-        # an error even if our backend will automatically use one.
-        if kwargs_mock and kwargs_mock != mock_func:
+        if 'mock_func' in kwargs:
             raise ValueError(
-                f'Encountered unexpected mock_func {kwargs_mock}. The current '
-                f'backend expects a mock_func of {mock_func}. Note: you '
-                'typically shouldn\'t pass in mock_func explicitly since '
-                'GPTBackend handles this for you. '
-                '(Technically, we do allow this due to the way PromptManager '
-                'and ConversationManager implement kwargs() methods).'
+                'Encountered unexpected argument mock_func. This was a part '
+                'of the Jabberwocky 1.0 API but is no longer used.'
             )
 
         kwargs = {**self._kwargs, **kwargs}
@@ -1520,8 +1508,8 @@ class ConversationManager:
                                 '`extra_kwargs`.')
             kwargs[k] = curr_val
 
-        if fully_resolved: kwargs = dict(bound_args(query_gpt3, [], kwargs))
-        kwargs['mock_func'] = mock_func
+        if fully_resolved:
+            kwargs = dict(bound_args(GPTBackend.query, [], kwargs))
 
         # Note: should this return an updated prompt? Right now it looks like
         # it always returns the base one.
@@ -1583,17 +1571,21 @@ class ConversationManager:
         # GUI while still updating this instance with gpt3's response.
         res = GPTBackend.query(prompt, log=self.log_path, **kwargs)
         if not kwargs.get('stream', False):
-            self.gpt3_turns.append(res[1])
+            # In v2 api, response is a tuple of (text, full) where text is a
+            # list of strings. At least right now, ConversationManager only
+            # supports a single prompt with single completion.
+            self.gpt3_turns.append(res[0][0])
             return res
         return hooked_generator(res, self.turn_hook)
 
     def turn_hook(self, item, i, is_post=False):
+        text = item[0]
         if is_post:
             self.gpt3_turns[-1] = self.gpt3_turns[-1].strip()
         elif i == 0:
-            self.gpt3_turns.append(item)
+            self.gpt3_turns.append(text)
         else:
-            self.gpt3_turns[-1] += item
+            self.gpt3_turns[-1] += text
 
     def _format_prompt(self, user_text='', do_full=False,
                        include_trailing_name=True, include_summary=True):

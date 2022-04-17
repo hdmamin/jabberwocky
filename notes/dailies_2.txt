@@ -1150,13 +1150,25 @@ X -document a couple CustomAsk methods
 
 4/17/22 sun
 -----------
--make logging use fully resolved kwargs?
+X -add datetime to log meta
+X -make logging use fully resolved kwargs?
+    UPDATE: investigated this and decided this is no different - individual query_func defaults are basically all overridden by gpt.query defaults.
+X -update convmanager and promptmanager kwargs()
+    UPDATE: rm refs to mock_func, use GPTBackend.query for bound args. Also added keep=True to with_signature deco so kwargs that are not in query_gpt3 are accepted in bound_args().
 -handle error when wiki person generation fails
--repercussions of gpt.query redesign
-    -update convmanager (careful w/ hookedgenerator)
-        -maybe change kwargs() method depending on active backend?
-    -update promptmanager 
-        -maybe change kwargs() method depending on active backend?
+X -repercussions of gpt.query redesign
+    X -update convmanager (careful w/ hookedgenerator)
+        _ -maybe change kwargs() method depending on active backend?
+    X -update promptmanager 
+        _ -maybe change kwargs() method depending on active backend?
+~ -test convmanager
+    UPDATE: after some fixes to handle new list outputs, seems to work. One remaining issue: confirmed my suspicion that stream mode does not respect my stop_words.
+
+4/18/22 mon
+-----------
+-test promptmanager
+-handle error when wiki person generation fails
+-make stream mode respect stop words
 
 
 Backlog

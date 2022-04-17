@@ -40,3 +40,8 @@ class C:
     # Project root directory.
     root = Path('/Users/hmamin/jabberwocky')
 
+    # Use with datetime.strptime() to convert from format like
+    # 'Sun Apr 17 13:18:23 2022' back to datetime object. This is the format
+    # GPTBackend.query logger uses in the meta.datetime field.
+    ctime_fmt = '%a %b %d %H:%M:%S %Y'
+
