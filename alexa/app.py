@@ -5,13 +5,11 @@ so it might be more convenient to run locally with ngrok anyway.
 """
 
 from datetime import datetime
-from functools import partial
 import logging
 from pathlib import Path
 
 from flask import Flask, request
 from flask_ask import question, context, statement
-from fuzzywuzzy import fuzz, process
 # openai appears unused but is actually used by GPTBackend instance.
 import openai
 import requests
@@ -20,9 +18,8 @@ from config import EMAIL, LOG_FILE
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load
 from jabberwocky.openai_utils import ConversationManager, PromptManager,\
-    GPTBackend, query_gpt3
-from utils import slot, Settings, model_type, CustomAsk, infer_intent, \
-    getdefaults
+    GPTBackend
+from utils import slot, Settings, model_type, CustomAsk, infer_intent
 
 
 # Define these before functions since endpoints use ask method as decorators.
@@ -132,7 +129,7 @@ def send_transcript(conv, user_email='', cleanup=False):
 # TODO: might want to change default backend arg, but for now use free model
 # for testing.
 def reset_app_state(end_conv=True, clear_queue=True,
-                    backend_='huggingface', auto_punct=True,
+                    backend_='banana', auto_punct=True,
                     attrs=('name', 'email')):
     """Reset some app-level attributes in `state`, `ask`, and `conv` objects.
 
@@ -202,19 +199,6 @@ def change_backend(backend=None):
         .replace(' ', '')
     msg = f'I\'ve switched your backend to {backend_name}.'
     try:
-        # TODO: should be able to rm once I confirm new slot extraction works.
-        # Try to guess backend because alexa has trouble transcribing
-        # 'gooseAI'.
-        # if backend_name not in backend.name2base:
-        #     best_match, best_score = process.extractOne(
-        #         backend_name,
-        #         [name.replace('ai', ' ai') for name in backend.name2base],
-        #         scorer=fuzz.partial_token_set_ratio
-        #     )
-        #     if best_score >= 80:
-        #         backend_name = best_match
-        #     else:
-        #         raise RuntimeError('Invalid backend name.')
         gpt.switch(backend_name)
     except RuntimeError:
         msg = f'It sounded like you asked for backend ' \
@@ -444,19 +428,15 @@ def _reply(prompt=None):
     # TODO: maybe add setting to make punctuation optional? Prob slows things
     # down significantly, but potentially could improve completions a lot.
     ask.logger.info('BEFORE PUNCTUATION: ' + prompt)
-    # TODO: maybe change eventually but for now just use free version. I think
-    # I prefer to keep this separate from the actual response backend.
-    # UPDATE: just comment out punctuation for now.
-    # with gpt('huggingface'):
-    #     _, prompt = prompter.query(task='punctuate_alexa', engine_i=2,
-    #                                text=prompt, strip_output=True,
-    #                                max_tokens=2 * len(prompt.split()))
+    # Banana.dev is the only reliable free API. I think it should be good
+    # enough for punctuation. I'm choosing to keep this separate from the
+    # user-selected backend.
+    with gpt('banana'):
+        _, prompt = prompter.query(task='punctuate_alexa',
+                                   text=prompt, strip_output=True,
+                                   max_tokens=2 * len(prompt.split()))
     ask.logger.info('AFTER PUNCTUATION: ' + prompt)
-    # TODO: rm Hardcoding to gooseai. Just testing if no response is due to hf
-    # being slow.
-    with gpt('gooseai'):
-        _, text = conv.query(prompt, **state)
-    # _, text = conv.query(prompt, **state)
+    _, text = conv.query(prompt, **state)
     return question(text)
 
 
@@ -469,10 +449,9 @@ def delegate():
     matches = infer_intent(response, utt2meta)
     ask.logger.info('\nInferred intent match scores:')
     ask.logger.info(matches)
-    # TODO: should a matching intent override even when there IS a func in the
-    # queue waiting to be called? Have to consider tradeoffs. Currently
-    # inferred intents take precedence because I'm still wary of relying too
-    # much on queue correctness.
+    # Currently inferred intents take precedence over enqueued functions -
+    # I'm still a bit wary of how much faith to place in the queue's
+    # correctness (though the same could be said about inferred intents 😬).
     if matches['intent']:
         ask.logger.info(f'CALLING INFERRED INTENT: {matches["intent"]}')
         inferred_func = ask.intent2func(matches['intent'])
@@ -490,9 +469,6 @@ def delegate():
 def yes():
     func = ask.func_pop()
     if not func:
-        # TODO: better validation to ensure the user meant to send this as a
-        # reply, not just bc the queue is empty.
-        # TODO: what to do when nothing in queue? Maybe send to reply()?
         return _reply(prompt='Yes.')
     return func(choice=True, **state.kwargs)
 
@@ -501,9 +477,6 @@ def yes():
 def no():
     func = ask.func_pop()
     if not func:
-        # TODO: better validation to ensure the user meant to send this as a
-        # reply, not just bc the queue is empty.
-        # TODO: what to do when nothing in queue? Maybe send to reply()?
         return _reply(prompt='No.')
     return func(choice=False, **state.kwargs)
 
@@ -578,23 +551,6 @@ def _end_chat(choice):
     else:
         msg = 'Okay.'
 
-    # TODO: prob rm. Just wait to see what user consent for email looks like
-    # (IE is there any chane someone could forget to give consent and not
-    # realize it until now? Prob should design experience so that
-    # doesn't happen).
-    # if choice:
-    #     if state.email:
-    #         sent = send_transcript(conv, state.email)
-    #         if sent:
-    #             msg = 'I\'ve emailed you a transcript of your conversation. '
-    #         else:
-    #             msg = 'Something went wrong and I wasn\'t able to send you ' \
-    #                   'a transcript. Sorry about that.'
-    #     # Defaults to empty str when no email is provided.
-    #     else:
-    #         msg = 'Sorry, I can\'t because I don\'t have your email on file.'
-    # else:
-    #     msg = 'Okay.'
     conv.end_conversation()
     ask.func_clear()
     return question(

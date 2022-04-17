@@ -302,7 +302,6 @@ class IndentedFormatter(logging.Formatter):
         return '\n'.join(indent + line for line in msg.splitlines())
 
 
-
 class CustomAsk(Ask):
     """Slightly customized version of flask-ask's Ask object. See `intent`
     method for a summary of main changes.
@@ -338,6 +337,13 @@ class CustomAsk(Ask):
         return logger
 
     def intent2func(self, intent_name:str):
+        """Map from name of an intent to the function (flask endpoint) that
+        executes it. This is used when inferring intents.
+
+        Returns
+        -------
+        FunctionType
+        """
         return getattr(sys.modules['__main__'],
                        self._intent2funcname[intent_name])
 
@@ -376,11 +382,12 @@ class CustomAsk(Ask):
                 self._queue.extend(funcs)
 
     def func_pop(self):
-        """
+        """Remove the first function in the queue (the oldest one, and
+        therefore the next to be processed.
 
         Returns
         -------
-
+        FunctionType
         """
         try:
             return self._queue.popleft()
@@ -640,14 +647,18 @@ def getglobal(attr):
 
 
 def slot(request, name, lower=True, default=''):
-    """
-    # TODO: docs
+    """Extract a slot value from flask_ask response object. I thought the
+    library was supposed to do this automatically but it doesn't seem to.
 
     Parameters
     ----------
     request: werkzeug.local.LocalProxy or dict
-    name
-    lower
+    name: str
+        Name of slot to extract. This was set in the Alexa UI.
+    lower: bool
+        If True, lowercase the resulting value before returning.
+    default: str
+        Value to return if slot could not successfully be extracted.
     """
     if isinstance(request, LocalProxy): request = request.get_json()
     failed_parse_symbol = '?'

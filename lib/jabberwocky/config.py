@@ -20,8 +20,11 @@ class C:
         'gooseai': ['gpt-neo-2-7b', 'gpt-j-6b', 'fairseq-13b', 'gpt-neo-20b'],
         'huggingface': ['gpt-neo-125M', 'gpt-neo-1.3B', 'gpt-neo-2.7B',
                         'gpt-j-6B'],
-        # Filler names.
-        'hobby': ['', '', '', '']
+        # These backends only provide 1 model so these are just filler names.
+        # (They give GPTBackend.engine() something to return but they don't
+        # actually affect the query results.)
+        'hobby': ['gpt-j-6B' for _ in range(4)],
+        'banana': ['gpt-j-6B' for _ in range(4)]
     }
 
     prices = IndexedDict(zip(engines, [.0008, .0012, .006, .06]))

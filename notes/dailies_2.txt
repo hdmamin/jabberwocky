@@ -1133,6 +1133,13 @@ X -fix docs in stream_openai_generator explaining how calculation works
 
 4/16/22 sat
 -----------
+X -clean up misc todos in alexa/app.py (rm old commented out code, etc.)
+    X -update app to use banana.dev by default for now
+X -update engine names in config
+    X -add banana.dev engine names
+    X -replace hobby empty strings with engine names
+X -document alexa.utils.slot function
+X -document a couple CustomAsk methods
 -make logging use fully resolved kwargs?
 -handle error when wiki person generation fails
 -repercussions of gpt.query redesign
@@ -1141,6 +1148,15 @@ X -fix docs in stream_openai_generator explaining how calculation works
     -update promptmanager 
         -maybe change kwargs() method depending on active backend?
 
+4/17/22 sun
+-----------
+-make logging use fully resolved kwargs?
+-handle error when wiki person generation fails
+-repercussions of gpt.query redesign
+    -update convmanager (careful w/ hookedgenerator)
+        -maybe change kwargs() method depending on active backend?
+    -update promptmanager 
+        -maybe change kwargs() method depending on active backend?
 
 
 Backlog
@@ -1167,7 +1183,7 @@ Backlog
 
 Easy Backlog
 ------------
--docs (intentcallback, probably a bunch of others too)
+-look for things to document
 
 Long term backlog (i.e. things I decided are outside the current scope)
 -----------------------------------------------------------------------
