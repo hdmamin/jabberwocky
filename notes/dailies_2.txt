@@ -1166,15 +1166,32 @@ X -repercussions of gpt.query redesign
 
 4/18/22 mon
 -----------
--test promptmanager
--handle error when wiki person generation fails
+X -test promptmanager
+    UPDATE: seems fine.
+~ -handle error when wiki person generation fails
+    UPDATE: the error actually does seem to be handled. The problem is if we try to add a new contact and fail, and then try to add another new contact that ALSO does not exist. If we add an existing contact or a new contact that DOES exist, we seem to be okay. Possible fix: I updated _generate_person to use _maybe_choose_persona(), which it was previously missing. Haven't tested this yet.
+X -shorten conversation default max_tokens a bit
+    UPDATE: dropped this down from 250 to 100 in prompt config - unsure if this will really help or not. I was annoyed at responses getting cut off and I suppose this might actually make it worse - there doesn't seem to be any ability to ask for gpt to actually generate a shorter response, we can just interrupt it sooner.
+X -fix bug where choose_person no longer checks response kwarg
+    UPDATE: this was that case in delegates where I forgot what it was doing for a while. I think any func that gets called with func_push needs to accept either kwargs or a "response" arg and I'd removed it from choose_person when building out the intent inference system.
 -make stream mode respect stop words
+
+4/19/22 tues
+------------
+-test possible solution to wiki person generation (recall that trying to generate 2 people without wiki pages in a row was causing an error, but I THINK I fixed this).
+-make stream mode respect stop words
+
 
 
 Backlog
 -------
 -[BLOCKED: api down] test gptj backend using nb14's test_backend func
 -[BLOCKED: possible rate limiting? 400 client error again] test huggingface backend
+-avoid ending a reply mid-sentence? (Ideally api would do this automatically but it doesn't seem to)
+-try to reduce amount of repetition in gpt responses
+    -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
+    -try tweaking prompt a bit.
+    -try with better model (maybe this task just really needs davinci?)
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time

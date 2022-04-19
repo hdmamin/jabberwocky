@@ -209,7 +209,7 @@ def change_backend(backend=None):
 
 
 @ask.intent('choosePerson')
-def choose_person(person=None):
+def choose_person(person=None, **kwargs):
     """Allow the user to choose which person to talk to. If the user isn't
     recognized in their "contacts", we can autogenerate the persona for them
     if the person is relatively well known.
@@ -219,7 +219,7 @@ def choose_person(person=None):
     Person: str
         Name of a person to chat with.
     """
-    person = person or slot(request, 'Person')
+    person = person or kwargs.get('response') or slot(request, 'Person')
     # Handle case where conversation is already ongoing. This should have been
     # a reply - it just happened to consist of only a name.
     if conv.current_persona:
@@ -260,9 +260,10 @@ def _generate_person(choice, **kwargs):
     else:
         # Case: user declines to auto-generate. Maybe they misspoke or changed
         # their mind.
-        msg = f'Okay. {_choose_person_text()}'
-    return question(msg) \
-        .reprompt('I didn\'t get that. Who would you like to speak to next?')
+        msg = f'Okay.'
+    # TODO: maybe rm reprompt? Since we don't know if user is mid-conv or not.
+    return question(_maybe_choose_person(msg))#\
+        # .reprompt('I didn\'t get that. Who would you like to speak to next?')
 
 
 @ask.intent('changeModel')
@@ -432,12 +433,12 @@ def _reply(prompt=None):
     # enough for punctuation. I'm choosing to keep this separate from the
     # user-selected backend.
     with gpt('banana'):
-        _, prompt = prompter.query(task='punctuate_alexa',
+        prompt, _ = prompter.query(task='punctuate_alexa',
                                    text=prompt, strip_output=True,
                                    max_tokens=2 * len(prompt.split()))
-    ask.logger.info('AFTER PUNCTUATION: ' + prompt)
-    _, text = conv.query(prompt, **state)
-    return question(text)
+    ask.logger.info('AFTER PUNCTUATION: ' + prompt[0])
+    text, _ = conv.query(prompt[0], **state)
+    return question(text[0])
 
 
 @ask.intent('delegate')
@@ -460,9 +461,7 @@ def delegate():
         # No chained intents are in the queue so we assume this is just another
         # turn in the conversation.
         return _reply(response)
-    # TODO
-    raise ValueError('How does this work again? I forget.')
-    # return func(response=response, **state.kwargs or {})
+    return func(response=response, **state.kwargs or {})
 
 
 @ask.intent('AMAZON.YesIntent')
@@ -534,14 +533,23 @@ def end_chat():
     return _end_chat(False)
 
 
-def _end_chat(choice):
+def _end_chat(choice=None, **kwargs):
     """End conversation and optionally send transcript to user.
 
     Parameters
     ----------
     choice: bool
         If True, email transcript to user.
+    kwargs: any
+        Not entirely sure if this is needed but my thinking is since end_chat
+        calls ask.func_push on this, it might need to allow kwargs in case it's
+        passed "response=response" by delegate intent.
     """
+    if choice is None:
+        choice = kwargs.get('response')
+    if not isinstance(choice, bool):
+        raise ValueError(f'Choice must be a bool, not {type(choice)}.')
+
     if choice:
         if send_transcript(conv, state.email):
             msg = 'I\'ve emailed you a transcript of your conversation. '
