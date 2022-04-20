@@ -1204,10 +1204,12 @@ Backlog
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
     -try tweaking prompt a bit.
     -try with better model (maybe this task just really needs davinci?)
+    -try one of the "instruct" models
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time
     -fix if necessary
+-rewrite engine mappings to map from i to "nearest" match? I.e. engine_i=3 for huggingface is currently more like engine_i=1 (or something lower than 3, anyway) for openai.
 -support custom persona (speak bio yourself)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
@@ -1219,6 +1221,7 @@ Backlog
 
 Easy Backlog
 ------------
+-read up on newly released engines, maybe take some notes
 -look for things to document
 
 Long term backlog (i.e. things I decided are outside the current scope)
