@@ -1178,8 +1178,19 @@ X -fix bug where choose_person no longer checks response kwarg
 
 4/19/22 tues
 ------------
--test possible solution to wiki person generation (recall that trying to generate 2 people without wiki pages in a row was causing an error, but I THINK I fixed this).
+X -test possible solution to wiki person generation (recall that trying to generate 2 people without wiki pages in a row was causing an error, but I THINK I fixed this).
+    UPDATE: confirmed this works. Also updated queueing interface to push kwargs directly into the same queue - this way, we don't have to worry about forgetting to reset state.kwargs (previously, I was seeing that the generate_person attempt after a failed generation used the same name as the previous call because I wasn't resetting kwargs). Removed state.kwargs entirely.
+X -generate new single file prompts from my current 2 file setup
+    UPDATE: func to do so is in ipython - might want to save that somewhere. Still need to figure out what to do with old prompt dirs (keep around somewhere for legacy gui) and update load_prompt to use new cfg files.
 -make stream mode respect stop words
+
+4/20/22 wed
+-----------
+-port yaml generation func to lib/scripts somewhere
+-consider best way to store new prompts (maybe should have a separate ~/prompts dir and repo entirely?)
+-mv either old or new prompts to a new dir (i.e. 1 dir should hold only legacy 2-file prompts, another should hold only new format 1-file prompts)
+-update load_prompt to use new single-file format
+-resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 
 
 
@@ -1187,6 +1198,7 @@ Backlog
 -------
 -[BLOCKED: api down] test gptj backend using nb14's test_backend func
 -[BLOCKED: possible rate limiting? 400 client error again] test huggingface backend
+-make stream mode respect stop words
 -avoid ending a reply mid-sentence? (Ideally api would do this automatically but it doesn't seem to)
 -try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
@@ -1196,12 +1208,7 @@ Backlog
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time
     -fix if necessary
--adjust prompt files to be stored in a single file instead of 2? Tried to do this initially but I recall running into problems with newlines and/or quotes. I think some other people have managed to do this so might be able to use those repos as guidance. This would be quite an involved process though:
-    -port all prompts to new format
-    -update load_prompt func
-    -test that everything still works
 -support custom persona (speak bio yourself)
--resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
 -update end of conv to erase conv-level settings

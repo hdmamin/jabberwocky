@@ -347,7 +347,7 @@ class CustomAsk(Ask):
         return getattr(sys.modules['__main__'],
                        self._intent2funcname[intent_name])
 
-    def func_push(self, *funcs):
+    def func_push(self, func, **kwargs):
         """Schedule a function (usually NOT an intent - that should be
         recognized automatically) to call after a user response. We push
         functions so that delegate(), yes() and no() know where to direct the
@@ -362,11 +362,11 @@ class CustomAsk(Ask):
 
         Parameters
         ----------
-        funcs: FunctionType(s)
-            These should usually not be intents because those should already be
-            recognized by Alexa. Pushing non-intents into the queue is useful
-            if we want to say something to prompt the user to provide a value
-            (guessing this is related to what elicit_slot in
+        func: FunctionType
+            This should usually not be an intent because those should already
+            be recognized by Alexa. Pushing non-intents into the queue is
+            useful if we want to say something to prompt the user to provide a
+            value (guessing this is related to what elicit_slot in
             flask-ask does, but I couldn't figure out that interface).
 
             Pushing intents into the queue is only useful as a fallback - if
@@ -374,12 +374,12 @@ class CustomAsk(Ask):
             falls through to delegate(), it should then be forwarded to the
             correct intent.
         """
-        for func in funcs:
-            if func in self._queue:
-                self.logger.warning(f'Tried to add function {func} to the '
-                                    f'queue when it is alread present.')
-            else:
-                self._queue.extend(funcs)
+        if func in (func_ for func_, kwargs_ in self._queue):
+            self.logger.warning(f'Tried to add function {func} to the '
+                                f'queue when it is already present. '
+                                f'Skipping push operations.')
+        else:
+            self._queue.append((func, kwargs))
 
     def func_pop(self):
         """Remove the first function in the queue (the oldest one, and
@@ -387,21 +387,20 @@ class CustomAsk(Ask):
 
         Returns
         -------
-        FunctionType
+        FunctionType, dict: second item are the kwargs to pass to the first
+        item.
         """
         try:
             return self._queue.popleft()
         except IndexError:
             self.logger.warning('Tried to pop chained function from empty '
                                 'queue.')
+            # Return 2 items since we try to assign result to `func, kwargs`.
+            return None, {}
 
     def func_clear(self):
         """Call this at the end of a chain of intents."""
         self._queue.clear()
-        # Place default value outside of getattr since it is auto-initialized
-        # to None.
-        kwargs = getattr(self.state, 'kwargs') or {}
-        kwargs.clear()
 
     def func_dedupe(self, func):
         """If we enqueue an intent and Alexa recognizes it by itself
@@ -415,7 +414,7 @@ class CustomAsk(Ask):
         """
         # Slightly hacky by this way if one or both functions is decorated,
         # we should still be able to identify duplicates.
-        if self._queue and func_name(self._queue[0]) == func_name(func):
+        if self._queue and func_name(self._queue[0][0]) == func_name(func):
             self.func_pop()
 
     def intent_name(self, func) -> str:
@@ -522,7 +521,7 @@ class Settings(Mapping):
 
     def __init__(
             self, global_=None, person_=None, conversation_=None,
-            reserved_keys=('prev_intent', 'email', 'kwargs', 'auto_punct')
+            reserved_keys=('prev_intent', 'email', 'auto_punct')
     ):
         # Alter underlying dict directly to avoid recursion errors. Custom
         # __setattr__ method relies on custom __getattr__ so we run into

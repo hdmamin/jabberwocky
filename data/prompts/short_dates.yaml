@@ -1,0 +1,17 @@
+engine_i: 0
+temperature: 0.1
+max_tokens: 10
+stop: "Input:"
+reminder: 'This prompt takes no input.'
+prompt: |-
+    Input: 3/1/20
+    Output: March 1, 2020
+    
+    Input: 09-04-99
+    Output: September 4, 1999
+    
+    Input: 11/01/2017
+    Output: November 1, 2017
+    
+    Input: 04/11/21
+    Output:

@@ -1,0 +1,38 @@
+engine_i: 3
+temperature: .3
+max_tokens: 200
+frequency_penalty: 0.3
+stop: 
+- "Translate to "
+- "Translation:"
+reminder: "User input should consist of 1 line like 'Translate to German:' followed by a second line with a sentence in English. You may want to use a variable number of tokens defined as a function of the input length. Weaker engines sometimes work but sometimes translate into the wrong language."
+prompt: |-
+    Translate the English input text into whatever language the user requests.
+    
+    Translate to German:
+    Hello, how are you? It's a beautiful day.
+    Translation:
+    Hallo wie geht's dir? Es ist ein schöner Tag.
+    
+    Translate to Dutch:
+    The building was constructed in 1874 by a famous architect with a taste for rustic materials.
+    Translation:
+    Het gebouw werd in 1874 gebouwd door een beroemde architect met een voorliefde voor rustieke materialen.
+    
+    Translate to French:
+    The waves had calmed and he waded in, ignoring the icy shock and the tickle of some small sea creature scrambling across his foot.
+    Translation:
+    Les vagues s'étaient calmées et il entra, ignorant le choc glacial et le chatouillement d'une petite créature marine se précipitant sur son pied. 
+    
+    Translate to Spanish:
+    The crowd roared in approval as McGregor broke into his trademark strut.
+    Translation:
+    La multitud rugió de aprobación cuando McGregor se puso en marcha con su paso característico.
+    
+    Translate to Italian:
+    The bicycle is old, its paint chipped, and one tire is beginning to show signs of wear.
+    Translation:
+    Il bicicletta è vecchia, il suo vernice scrostata e una delle gomme sta cominciando a mostrare segni di usura.
+    
+    {}
+    Translation:

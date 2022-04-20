@@ -1,0 +1,11 @@
+engine_i: 3
+temperature: .3
+stop: 
+- "I rephrased this for my daughter, in plain language"
+- "prompt:"
+- "tl;dr"
+reminder: "This uses the expensive davinci model and doesn't work so well without it."
+prompt: |-
+    {} 
+    
+    I rephrased this for my daughter, in plain language a second grader can understand:

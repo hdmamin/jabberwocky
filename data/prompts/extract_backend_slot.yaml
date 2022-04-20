@@ -1,0 +1,35 @@
+engine_i: 1
+temperature: 0.0
+stop: 
+- 'Raw transcription:'
+- 'Backend:'
+- 'These messy transcriptions contain'
+reminder: 'WARNING: This seemed to work okay when testing in the gooseai console but further testing suggests it needs more work.'
+strip_output: true
+prompt: |-
+    These messy transcriptions contain user requests to switch to a different backend. Select which of the following backends sounds like the closest match. Your answer must be one of the following backends:
+    - goose ai
+    - open ai
+    - hugging face
+    - hobby
+    
+    Raw transcription: lou use goose backend
+    Backend: goose ai
+    
+    Raw transcription: lou switch backend to open i
+    Backend: open ai
+    
+    Raw transcription: lou set the backend to hug and face
+    Backend: hugging face
+    
+    Raw transcription: lou change backend to hobby
+    Backend: hobby
+    
+    Raw transcription: lou use gooseai backend
+    Backend: goose ai
+    
+    Raw transcription: lou change backend to hug in fate
+    Backend: hugging face
+    
+    Raw transcription: {}
+    Backend:

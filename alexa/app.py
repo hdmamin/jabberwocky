@@ -153,7 +153,6 @@ def reset_app_state(end_conv=True, clear_queue=True,
         ask.func_clear()
     if backend_:
         gpt.switch(backend_)
-    state.kwargs = {}
     state.auto_punct = auto_punct
     for k, v in get_user_info(attrs).items():
         setattr(state, k, v)
@@ -163,7 +162,8 @@ def reset_app_state(end_conv=True, clear_queue=True,
     # this must remain after changing conv.me (see line above) since that
     # changes the stop phrases.
     state.init_settings(conv)
-    # TODO: keeping things cheaper for testing.
+    # TODO: keeping things cheaper for testing, though it actually doesn't
+    # matter atm now that I'm using banana backend.
     state.set('global', engine_i=0)
 
 
@@ -235,8 +235,7 @@ def choose_person(person=None, **kwargs):
         if len(matches) == 1:
             person = matches[0]
         else:
-            state.kwargs = {'person': person}
-            ask.func_push(_generate_person)
+            ask.func_push(_generate_person, person=person)
             return question(
                 f'I don\'t see anyone named {person} in your contacts. '
                 'Would you like to create a new contact?'
@@ -263,7 +262,7 @@ def _generate_person(choice, **kwargs):
         msg = f'Okay.'
     # TODO: maybe rm reprompt? Since we don't know if user is mid-conv or not.
     return _maybe_choose_person(
-        msg, chose_msg='Who would you like to speak to instead?'
+        msg, choose_msg='Who would you like to speak to instead?'
     )#\
         # .reprompt('I didn\'t get that. Who would you like to speak to next?')
 
@@ -447,7 +446,7 @@ def _reply(prompt=None):
 def delegate():
     """Delegate to the right function when no intent is detected.
     """
-    func = ask.func_pop()
+    func, kwargs = ask.func_pop()
     response = slot(request, 'response', lower=False)
     matches = infer_intent(response, utt2meta)
     ask.logger.info('\nInferred intent match scores:')
@@ -463,23 +462,23 @@ def delegate():
         # No chained intents are in the queue so we assume this is just another
         # turn in the conversation.
         return _reply(response)
-    return func(response=response, **state.kwargs or {})
+    return func(response=response, **kwargs)
 
 
 @ask.intent('AMAZON.YesIntent')
 def yes():
-    func = ask.func_pop()
+    func, kwargs = ask.func_pop()
     if not func:
         return _reply(prompt='Yes.')
-    return func(choice=True, **state.kwargs)
+    return func(choice=True, **kwargs)
 
 
 @ask.intent('AMAZON.NoIntent')
 def no():
-    func = ask.func_pop()
+    func, kwargs = ask.func_pop()
     if not func:
         return _reply(prompt='No.')
-    return func(choice=False, **state.kwargs)
+    return func(choice=False, **kwargs)
 
 
 @ask.intent('readContacts')

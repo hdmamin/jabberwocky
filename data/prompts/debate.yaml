@@ -1,0 +1,26 @@
+engine_i: 3
+temperature: .3
+max_tokens: 600
+frequency_penalty: 0.3
+stop: 
+- "Claim:"
+- "Provide reasons to support the claim."
+- "Reasons to support:"
+reminder: "Non-zero frequency penalty was initially included by accident, but in at least 1 test removing it noticeably worsened results."
+prompt: |-
+    Provide reasons to support the claim. Then provide reasons to oppose the claim.
+    
+    Claim:
+    Colleges  should pay college athletes.
+    Reasons to support:
+    -Colleges profit unfairly from the work and likenesses of college athletes. The NCAA reported over $1.06 billion in revenue in 2017, but college athletes, arguably the stars of the show, are forbidden by the NCAA from being paid for their work and from seeking other related compensation such as endorsement deals.
+    -College athletes are risking their bodies and their future careers and earning potential to play for colleges while often receiving a sub-par education. In 2017, 67% of former Division I athletes had sustained a major injury and 50% had chronic injuries, 2.5% higher than non-athletes. 
+    -While college athletes are often valued at more than $1 million, they (and their families) frequently live below the poverty line. If college players earned about 50% of their teams’ revenues like the NFL and NBA players do, the average football player’s yearly salary would be $360,000 and the average basketball player’s yearly salary would be $500,000. In reality, roughly 25% of Division I athletes reported food poverty in the past year and almost 14% reported being homeless in the past year. The NCAA keeps players in poverty and denies them ways to earn money, while making millions on their performance.
+    Reasons to oppose:
+    -Scholarships are fair financial compensation for college athletes, especially considering the precarious finances of athletic departments. According to the NCAA, the organization provides “more than $3.6 billion in athletic scholarships annually to more than 180,000 student-athletes.” If students were paid, many colleges and universities would have to offer fewer scholarships and the remaining scholarships would be distributed unfairly to top football and men’s basketball players because those two sports bring in the most revenue. Schools would also have to cut unprofitable sports including gymnastics, tennis, and wrestling.
+    -Very few college athletes will go pro, so athletes should take advantage of the education being offered in exchange for playing a college sport. In football and basketball (the most profitable college sports), only 1.2% of college athletes go on to play professionally. College athletes should focus on education as a more practical form of compensation.
+    -Paying college athletes would not solve the real problem: the American amateur sports system is broken. Most players have no real “amateur” sport option and those who would rather not go to college have no other established feeder system to make it to a professional team. Paying college athletes is a bandaid solution to avoid building a true amateur or minor league that feeds into professional sports.
+    
+    Claim:
+    {}
+    Reasons to support:
