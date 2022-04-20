@@ -256,13 +256,15 @@ def _generate_person(choice, **kwargs):
             ask.logger.error(f'Failed to generate {kwargs["person"]}. '
                              f'\nError: {e}')
             msg = f'I\'m sorry, I wasn\'t able to add {kwargs["person"]} ' \
-                  f'as a contact. Who would you like to speak to instead?'
+                  f'as a contact.'
     else:
         # Case: user declines to auto-generate. Maybe they misspoke or changed
         # their mind.
         msg = f'Okay.'
     # TODO: maybe rm reprompt? Since we don't know if user is mid-conv or not.
-    return question(_maybe_choose_person(msg))#\
+    return _maybe_choose_person(
+        msg, chose_msg='Who would you like to speak to instead?'
+    )#\
         # .reprompt('I didn\'t get that. Who would you like to speak to next?')
 
 
