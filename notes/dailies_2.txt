@@ -1189,17 +1189,24 @@ X -generate new single file prompts from my current 2 file setup
 X -port yaml generation func to lib/scripts somewhere
 X -consider best way to store new prompts (maybe should have a separate ~/prompts dir and repo entirely?)
     UPDATE: eventually, a ~/.jabberwocky or ~/.prompts would probably be a good idea, but for now let's keep everything in 1 repo. Old format prompts are now in data/legacy_prompts, new single-file prompts are in data/prompts.
--mv either old or new prompts to a new dir (i.e. 1 dir should hold only legacy 2-file prompts, another should hold only new format 1-file prompts)
--update load_prompt to use new single-file format
+X -mv either old or new prompts to a new dir (i.e. 1 dir should hold only legacy 2-file prompts, another should hold only new format 1-file prompts)
+X -update load_prompt to use new single-file format
+    UPDATE: supports both formats (and infers v1 vs v2 format automatically). Also supports different prompt dirs in case I decide to move this eventually.
 -resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 
+4/21/22 thurs
+-------------
+-rewrite engine mappings to map from i to "nearest" match? I.e. engine_i=3 for huggingface is currently more like engine_i=1 (or something lower than 3, anyway) for openai. Or maybe support passing in either a name OR a number?
+-read up on newly released engines, maybe take some notes
+-resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
+-update jabberwocky version and upload to pypi
+-Harder option: make stream mode respect stop words
 
 
 Backlog
 -------
 -[BLOCKED: api down] test gptj backend using nb14's test_backend func
 -[BLOCKED: possible rate limiting? 400 client error again] test huggingface backend
--make stream mode respect stop words
 -avoid ending a reply mid-sentence? (Ideally api would do this automatically but it doesn't seem to)
 -try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
@@ -1210,7 +1217,6 @@ Backlog
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time
     -fix if necessary
--rewrite engine mappings to map from i to "nearest" match? I.e. engine_i=3 for huggingface is currently more like engine_i=1 (or something lower than 3, anyway) for openai.
 -support custom persona (speak bio yourself)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
@@ -1222,7 +1228,6 @@ Backlog
 
 Easy Backlog
 ------------
--read up on newly released engines, maybe take some notes
 -look for things to document
 
 Long term backlog (i.e. things I decided are outside the current scope)

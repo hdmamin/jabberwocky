@@ -1802,8 +1802,8 @@ def print_response(prompt, response, sep=' '):
     print(response)
 
 
-def load_prompt(name, prompt='', rstrip=True, verbose=True, v2_format=True,
-                **format_kwargs):
+def load_prompt(name, prompt='', rstrip=True, verbose=True,
+                prompt_dir=C.root/'data/prompts', **format_kwargs):
     """Load a gpt3 prompt from data/prompts. Note that this function went
     through several iterations and early versions of this function didn't
     allow for an input prompt parameter. This worked fine for toy examples
@@ -1821,10 +1821,14 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, v2_format=True,
     ----------
     name: str
         Name of subdirectory in data/prompts. Ex: 'simplify_ml'
-    prompt: str
+    prompt: str or dict
         Additional input to be inserted into the prompt template. For example,
         our tldr template prompt is "{}\n\ntl;dr:". We need to pass in text
         to summarize (this replaces the brackets like in a python f-string).
+        A str input is required if the prmopt template expects 1 variable, like
+        the tldr example above. Prompts with multiple variables expect a dict
+        (e.g. we might have the template 'I am {name} and I am from {state}.',
+        then pass in prompt={'name': Sam, 'state': 'California'}).
     rstrip: bool
         This is a safety measure to prevent us from accidentally leaving a
         trailing space after the end of the prompt (which leads to worse gpt3
@@ -1842,16 +1846,18 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, v2_format=True,
     be relevant, while 'max_tokens' or 'engine_i' may depend on the specific
     usage.
     """
-    path = C.root / f'data/prompts/{name}'
-    if v2_format:
+    path = Path(prompt_dir)/name
+    # V1 style prompt files are stored in dir, v2 style are stored in
+    # single config.
+    if path.is_dir():
+        prompt_fmt = load(path / 'prompt.txt')
+        kwargs = load_yaml(path / 'config.yaml')
+    else:
         kwargs = load_yaml(f'{path}.yaml')
         prompt_fmt = kwargs.pop('prompt')
-    else:
-        dir_ = C.root/f'data/legacy_prompts/{name}'
-        prompt_fmt = load(dir_/'prompt.txt')
-        kwargs = load_yaml(dir_/'config.yaml')
 
-    # If no prompt is passed in, we load the template and store it for later.
+    # If no prompt is passed in, we load the template and leave variable
+    # imputation for later.
     if prompt:
         formatter = TASK2FORMATTER.get(name, default_formatter)
         prompt = formatter(prompt_fmt, prompt, **format_kwargs)
@@ -1865,6 +1871,10 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, v2_format=True,
     # but this is the only one I've used here, I think. Newline chars can be
     # useful in stop terms because I often use them to distinguish between
     # different examples in a prompt.
+    # 4/20/22 update: not seeing any '\\n' even if I remove the str replacement
+    # below. A bit hesitant to remove this now since it's not causing any harm
+    # and I must have observed this behavior at one point to feel the need to
+    # add and document it.
     if 'stop' in kwargs:
         kwargs['stop'] = [x.replace('\\n', '\n') for x in kwargs['stop']]
     kwargs['prompt'] = prompt
