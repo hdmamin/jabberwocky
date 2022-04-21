@@ -1,0 +1,35 @@
+Describe the author's writing style:
+
+Passage:
+If I'm to be regarded as an authority on anything - and I hope that one day I am - I would guess it would be on the subject of flatmates. I’ve had my fair share, and probably yours, too.
+Ranging from the freakish to the unutterably dull, more people have bought me a pint of milk than they have a pint of lager, and that’s the way I like it.
+There was Tony the Greek, for example; a man whose nickname stemmed not from a shady gangster background but from the fact that his name was Tony and he came from Greece. I’m quite proud of the fact that it was me who came up with the name. Before then, he’d just been Tony, which, to be honest, made him sound a bit common.
+
+Writing Style:
+-funny
+-sarcastic
+-casual
+-accessible
+
+Passage:
+Remembers the cold that gnawed at her fingers and toes before swallowing them whole. Cold, and hunger. They had lean months in Villon, of course, when the cold snap stole the last of a harvest, or a late freeze ruined new growth—but this is a new kind of hunger. It rakes at her from the inside, drags its nails along her ribs. It wears her down, and while Addie knows it cannot kill her, the knowing does nothing to dull the urgent ache, the fear. She has not lost an ounce of flesh, but her stomach twists, gnawing on itself, and just as her feet refuse to callus, so her nerves refuse to learn. There is no numbing, none of the ease that comes with a habit. This pain is always fresh, brittle and bright, the feeling as sharp as her memory.
+
+Writing Style:
+-evocative
+-vivid
+-fluid
+-eloquent
+-literary
+
+Passage:
+Learning reusable feature representations from large unlabeled datasets has been an area of active research. In the context of computer vision, one can leverage the practically unlimited amount of unlabeled images and videos to learn good intermediate representations, which can then be used on a variety of supervised learning tasks such as image classification. We propose that one way to build good image representations is by training Generative Adversarial Networks (GANs) (Goodfellow et al., 2014), and later reusing parts of the generator and discriminator networks as feature extractors for supervised tasks. GANs provide an attractive alternative to maximum likelihood techniques.
+
+Writing Style:
+-analytical
+-academic
+-scientific
+-formal
+
+Passage:
+{}
+Writing Style:

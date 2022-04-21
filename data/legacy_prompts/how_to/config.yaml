@@ -1,0 +1,7 @@
+engine_i: 1
+temperature: .3
+stop: 
+- 'How to '
+- '10. '
+max_tokens: 100
+reminder: 'Should be a single line starting with the words "How to" and ending in a colon. You may need a stronger engine for good results.'

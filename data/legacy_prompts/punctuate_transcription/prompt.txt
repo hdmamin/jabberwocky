@@ -1,0 +1,16 @@
+Add any missing punctuation and fix any small grammatical errors in these raw transcriptions.
+
+Raw transcription: What are your plans for this afternoon
+Punctuated transcription: What are your plans for this afternoon?
+
+Raw transcription: Advice would you give someone who is early in their career
+Punctuated transcription: What advice would you give someone who is early in their career?
+
+Raw transcription: Can you elaborate I'm not sure I understand
+Punctuated transcription: Can you elaborate? I'm not sure I understand.
+
+Raw transcription: I want to write a short science fiction novel can you suggest a prompts thank you
+Punctuated transcription: I want to write a short science fiction novel. Can you suggest a prompt? Thank you.
+
+Raw transcription: {}
+Punctuated transcription:

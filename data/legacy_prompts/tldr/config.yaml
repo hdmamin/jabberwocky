@@ -1,0 +1,6 @@
+engine_i: 2
+temperature: 0.3
+max_tokens: 64
+reminder: 'This sets max tokens to 64. You may wish to adjust that value. The default engine is Curie (2) but you could try a different engine.'
+stop:
+- "tl;dr"

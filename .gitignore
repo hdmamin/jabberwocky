@@ -4,6 +4,7 @@ __pycache__/
 .idea/
 data/*
 !data/prompts
+!data/legacy_prompts
 !data/completions
 !data/clips/demo/
 !data/fonts

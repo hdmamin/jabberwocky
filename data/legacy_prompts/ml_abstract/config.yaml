@@ -1,0 +1,7 @@
+engine_i: 2
+temperature: .3
+max_tokens: 250
+stop: 
+- "Abstract:"
+- "Idea:"
+reminder: "I haven't tuned hyperparameters much - even engine_i=1 sometimes provides good resuls but it seems a bit inconsistent."

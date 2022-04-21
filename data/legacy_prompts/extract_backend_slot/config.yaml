@@ -1,0 +1,8 @@
+engine_i: 1
+temperature: 0.0
+stop: 
+- 'Raw transcription:'
+- 'Backend:'
+- 'These messy transcriptions contain'
+reminder: 'WARNING: This seemed to work okay when testing in the gooseai console but further testing suggests it needs more work.'
+strip_output: true
