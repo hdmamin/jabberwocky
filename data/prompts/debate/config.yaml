@@ -1,9 +1,0 @@
-engine_i: 3
-temperature: .3
-max_tokens: 600
-frequency_penalty: 0.3
-stop: 
-- "Claim:"
-- "Provide reasons to support the claim."
-- "Reasons to support:"
-reminder: "Non-zero frequency penalty was initially included by accident, but in at least 1 test removing it noticeably worsened results."

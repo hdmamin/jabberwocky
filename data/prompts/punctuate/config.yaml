@@ -1,8 +1,0 @@
-engine_i: 1
-temperature: 0.1
-stop: 
-- 'Passage:'
-- '\n\nPassage'
-- 'Passage with punctuation:'
-reminder: 'You should probably adjust max_tokens based on the length of the input. Bumping up to engine 2 or 3 might help a little, but engine 1 is serviceable (probably best to avoid 0 though). You should probably try training a huggingface model to add punctuation instead of using gpt3 credits though.'
-strip_output: true

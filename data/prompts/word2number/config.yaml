@@ -1,9 +1,0 @@
-engine_i: 2
-temperature: 0.1
-stop: 
-- 'Word:'
-- 'Number:'
-- 'Convert a '
-max_tokens: 10
-reminder: "This was not designed to work with negatives or terms like 'half', 'quarter', etc."
-strip_output: true

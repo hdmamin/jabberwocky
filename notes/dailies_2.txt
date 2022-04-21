@@ -1186,8 +1186,9 @@ X -generate new single file prompts from my current 2 file setup
 
 4/20/22 wed
 -----------
--port yaml generation func to lib/scripts somewhere
--consider best way to store new prompts (maybe should have a separate ~/prompts dir and repo entirely?)
+X -port yaml generation func to lib/scripts somewhere
+X -consider best way to store new prompts (maybe should have a separate ~/prompts dir and repo entirely?)
+    UPDATE: eventually, a ~/.jabberwocky or ~/.prompts would probably be a good idea, but for now let's keep everything in 1 repo. Old format prompts are now in data/legacy_prompts, new single-file prompts are in data/prompts.
 -mv either old or new prompts to a new dir (i.e. 1 dir should hold only legacy 2-file prompts, another should hold only new format 1-file prompts)
 -update load_prompt to use new single-file format
 -resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)

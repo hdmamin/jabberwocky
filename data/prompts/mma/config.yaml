@@ -1,7 +1,0 @@
-engine_i: 3
-temperature: .7
-max_tokens: 250
-stop: 
-- "Matchup:"
-- "Analysis:"
-reminder: "Haven't really experimented with hyperparameters."

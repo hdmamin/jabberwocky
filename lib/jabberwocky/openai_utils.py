@@ -929,8 +929,8 @@ class PromptManager:
     performing tasks on a video Transcript object.
     """
 
-    def __init__(self, tasks=(), verbose=True, log_dir='data/logs',
-                 skip_tasks=()):
+    def __init__(self, tasks=(), verbose=True, log_dir=C.root/'data/logs',
+                 prompt_dir=C.root/'data/prompts', skip_tasks=()):
         """
         Parameters
         ----------
@@ -948,6 +948,7 @@ class PromptManager:
         # Maps task name to query kwargs. Prompt templates have not yet been
         # evaluated at this point (i.e. still contain literal '{}' where values
         # will later be filled in).
+        self.prompt_dir = prompt_dir
         self.prompts = self._load_templates(tasks, skip_tasks)
         self.log_dir = log_dir
         if log_dir:
@@ -973,8 +974,8 @@ class PromptManager:
         (including the prompt template).
         """
         name2kwargs = {}
-        dir_ = C.root/'data/prompts'
-        paths = (dir_/t for t in tasks) if tasks else dir_.iterdir()
+        paths = (self.prompt_dir/t for t in tasks) if tasks \
+            else self.prompt_dir.iterdir()
         if skip_tasks: paths = (p for p in paths if p.stem not in skip_tasks)
         for path in paths:
             if not path.is_dir():
@@ -1129,11 +1130,8 @@ class PromptManager:
         # Handle tasks like "conversation" where we need to do some special
         # handling to integrate user-provided text into the prompt.
         if text:
-            formatter = TASK2FORMATTER.get(task)
-            if formatter:
-                res = formatter(template, text)
-            else:
-                res = template.format(text)
+            formatter = TASK2FORMATTER.get(task, default_formatter)
+            res = formatter(template, text)
         else:
             res = template
         return res
@@ -1153,7 +1151,7 @@ class ConversationManager:
 
     img_exts = {'.jpg', '.jpeg', '.png'}
 
-    def __init__(self, names=(), custom_names=(), data_dir='./data',
+    def __init__(self, names=(), custom_names=(), data_dir=C.root/'data',
                  backup_image='data/misc/unknown_person.png',
                  turn_window=3, me='me', verbose=True):
 
@@ -1804,7 +1802,8 @@ def print_response(prompt, response, sep=' '):
     print(response)
 
 
-def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
+def load_prompt(name, prompt='', rstrip=True, verbose=True, v2_format=True,
+                **format_kwargs):
     """Load a gpt3 prompt from data/prompts. Note that this function went
     through several iterations and early versions of this function didn't
     allow for an input prompt parameter. This worked fine for toy examples
@@ -1843,16 +1842,19 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
     be relevant, while 'max_tokens' or 'engine_i' may depend on the specific
     usage.
     """
-    dir_ = C.root/f'data/prompts/{name}'
-    prompt_fmt = load(dir_/'prompt.txt')
-    kwargs = load_yaml(dir_/'config.yaml')
+    path = C.root / f'data/prompts/{name}'
+    if v2_format:
+        kwargs = load_yaml(f'{path}.yaml')
+        prompt_fmt = kwargs.pop('prompt')
+    else:
+        dir_ = C.root/f'data/legacy_prompts/{name}'
+        prompt_fmt = load(dir_/'prompt.txt')
+        kwargs = load_yaml(dir_/'config.yaml')
+
     # If no prompt is passed in, we load the template and store it for later.
     if prompt:
-        formatter = TASK2FORMATTER.get(name)
-        if formatter:
-            prompt = formatter(prompt_fmt, prompt, **format_kwargs)
-        else:
-            prompt = prompt_fmt.format(prompt)
+        formatter = TASK2FORMATTER.get(name, default_formatter)
+        prompt = formatter(prompt_fmt, prompt, **format_kwargs)
     else:
         prompt = prompt_fmt
 
@@ -1900,6 +1902,41 @@ def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
             )
         text = ' '.join(new_words)
     return prompt, text
+
+
+def default_formatter(text_fmt, prompt, **kwargs):
+    """Default formatter to insert args into a prompt template. Called by
+    load_prompt.
+
+    Parameters
+    ----------
+    text_fmt: str
+        Prompt template. If it only contains 1 variable, it should be unnamed
+        (sample template: 'My name is {}.'). If there are multiple, each
+        must be named (sample template:
+        'My name is {name} and I am {age} years old'). Positional args are not
+        allowed.
+    prompt: str or dict
+        Str if it's a 1-variable prompt, dict if it uses multiple variables.
+        If it contains zero variables, either are fine.
+    kwargs: any
+        Just included for compatibility with other formatters. These should not
+        be passed in when using this formatter.
+
+    Returns
+    -------
+    str
+    """
+    if kwargs:
+        raise ValueError('Kwargs should not be provided when using the '
+                         f'default prompt formatter. You passed in {kwargs}.')
+
+    if isinstance(prompt, str):
+        return text_fmt.format(prompt)
+    if isinstance(prompt, Mapping):
+        return text_fmt.format(**prompt)
+    raise ValueError(f'Prompt should either be a str or a dict. '
+                     f'You passed in {type(prompt)}.')
 
 
 def conversation_formatter(text_fmt, prompt, **kwargs):
@@ -1961,6 +1998,39 @@ def query_kwargs_grid(verbose=True):
                            engine_i=0,
                            max_tokens=3,
                            logprobs=3)
+
+
+def convert_old_prompt_files(prompt_dir, dest_dir=None):
+    """Convert a directory prompts using the jabberwocky v1 format/conventions
+    (where a prompt was defined by a dir (named with the name of the prompt,
+    e.g. data/prompts/summarize/) containing two files: a config.yaml
+    containing model hyperparameters and a prompt.txt containing the
+    natural language prompt) to the new prompt format
+    (consisting of a single prompt.yaml file named something like
+    data/prompts/summarize.yaml). I think I initially had trouble getting
+    special characters and multiline strings to play nicely together in yaml
+    files, but I think they're working now so I want to convert them. This
+    doesn't delete the old dir because I want to encourage keeping the old
+    prompts around for maintainability.
+
+    Parameters
+    ----------
+    prompt_dir: str or Path
+    dest_dir: str or Path or None
+        If None, dest_dir will be set to the same dir as prompt_dir.
+    """
+    dest_dir = Path(dest_dir or prompt_dir)
+    os.makedirs(dest_dir, exist_ok=True)
+    for dir_ in Path(prompt_dir).iterdir():
+        if not dir_.is_dir(): continue
+        print(f'Generating yaml for {dir_}...')
+        with open(dir_/'prompt.txt', 'r') as f:
+            text = f.read()
+        with open(dir_/'config.yaml', 'r') as f:
+            cfg = f.read()
+        cfg += f'prompt: |-\n{text.strip()}'.replace('\n', '\n    ')
+        with open(dest_dir/f'{dir_.name}.yaml', 'w') as f:
+            f.write(cfg)
 
 
 TASK2FORMATTER = {'conversation': conversation_formatter}

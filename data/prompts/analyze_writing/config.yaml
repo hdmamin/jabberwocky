@@ -1,8 +1,0 @@
-engine_i: 2
-temperature: .3
-max_tokens: 50
-frequency_penalty: 0.4
-stop: 
-- "Passage:"
-- "Writing Style:"
-reminder: "Lower engines could get quite repetitive."
