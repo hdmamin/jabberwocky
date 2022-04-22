@@ -60,7 +60,8 @@ from threading import Lock
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
-    listlike, Results, flatten, add_docstring, func_name, params, mark
+    listlike, Results, flatten, add_docstring, func_name, params, mark, \
+    random_str
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
@@ -2041,6 +2042,63 @@ def convert_old_prompt_files(prompt_dir, dest_dir=None):
         cfg += f'prompt: |-\n{text.strip()}'.replace('\n', '\n    ')
         with open(dest_dir/f'{dir_.name}.yaml', 'w') as f:
             f.write(cfg)
+
+
+# TODO: allow classification mode to add labels
+# TODO: allow passing in metadata (looks like this can be a dict, not just a
+# str)
+@valuecheck
+def upload_openai_files(paths,
+                        purpose:('search', 'answers', 'classifications'),
+                        out_path=None):
+    """Upload files to openai for semantic search. I believe it's (potentially)
+    slightly cheaper to pre-upload this way than to pass in all documents
+    at search time.
+
+    Parameters
+    ----------
+    paths: list[str or Path]
+    purpose: str
+        Think this determines how openai indexes input files
+        (Basically, ask yourself: do you plan to use these for semantic search,
+        question answering, etc.?).
+    out_path: str or Path or None
+        If provided, this should be a path to output the resulting file to
+        (should be jsonlines format). The resulting file will essentially
+        contain a dictionary on each line with keys "text" (pointing to a str
+        containing the content of one of the files) and "metadata" containing
+        the local file path.
+
+    Returns
+    -------
+    OpenAIObject: Dict-like object with various metadata about the upload.
+
+    Ex:
+    <OpenAIObject file id=file-ymFoe5t2hW5v9VJrJUmPacCE at 0x125a2ed00> JSON: {
+        "bytes": 8011,
+        "created_at": 1650598850,
+        "filename": "/tmp/5cCjHuNcTmMBAOX4HIgvFCUPCXBMCf.jsonlines",
+        "id": "file-ymFoe5t2hW5v9VJrJUmPacCE",
+        "object": "file",
+        "purpose": "search",
+        "status": "uploaded",
+        "status_details": null
+    }
+    """
+    rm_after = not out_path
+    out_path = out_path or f'/tmp/{random_str(30)}.jsonlines'
+    touch(out_path)
+    with open(out_path, mode='r+') as outfile:
+        for path in paths:
+            with open(path, 'r') as f:
+                content = f.read()
+            json.dump({'text': content, 'metadata': str(path)}, outfile)
+            outfile.write('\n')
+
+        outfile.seek(0)
+        res = openai.File.create(file=outfile, purpose=purpose)
+    if rm_after: os.remove(out_path)
+    return res
 
 
 TASK2FORMATTER = {'conversation': conversation_formatter}

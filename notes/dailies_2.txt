@@ -1196,15 +1196,35 @@ X -update load_prompt to use new single-file format
 
 4/21/22 thurs
 -------------
--rewrite engine mappings to map from i to "nearest" match? I.e. engine_i=3 for huggingface is currently more like engine_i=1 (or something lower than 3, anyway) for openai. Or maybe support passing in either a name OR a number?
--read up on newly released engines, maybe take some notes
+_ -rewrite engine mappings to map from i to "nearest" match? I.e. engine_i=3 for huggingface is currently more like engine_i=1 (or something lower than 3, anyway) for openai. Or maybe support passing in either a name OR a number?
+	UPDATE: decided I need a better understanding of the available engines and api endpoints before settling on a method.
+~ -read up on newly released engines, maybe take some notes
+	UPDATE: took notes in misc.txt. Still have more reading to do on classification, maybe others.
+~ -function to upload files to openai (used for search, q&a, classification)
+	UPDATE: needs some tweaks to support passing in metadata, labels.
+X -write random_str func and add to htools
+	UPDATE: haven't uploaded to pypi yet though. This was a used in my upload_openai_files func.
+X -skim post on gpt instruct
+	UPDATE: sounds like you don't need to use it that differently, the results should just be a bit better for instruct-style prompts.
 -resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
 -update jabberwocky version and upload to pypi
 -Harder option: make stream mode respect stop words
 
+4/22/22 fri
+-----------
+-finish upload_openai_files func
+	-support labels for clf mode
+	-support metadata for all modes
+-finish reading clf docs re using logprobs
+-finish reading any other docs that seem relevant in near term
+-revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
+
 
 Backlog
 -------
+-resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
+-update jabberwocky version and upload to pypi
+-make stream mode respect stop words
 -[BLOCKED: api down] test gptj backend using nb14's test_backend func
 -[BLOCKED: possible rate limiting? 400 client error again] test huggingface backend
 -avoid ending a reply mid-sentence? (Ideally api would do this automatically but it doesn't seem to)

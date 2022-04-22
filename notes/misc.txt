@@ -253,3 +253,108 @@ To measure similarity between consonants, I would probably use phonological feat
 
 My sense is that manner of articulation is somehow the most important — I imagine that misperception/mishearing tends to have more to do with manner of articulation than with place or voicing. For example, “s” and “t” have the same voicing and place of articulation, but different manners of articulation, and they probably don’t seem very intuitively similar to most English speakers. But “s” and “th” have the same voicing and manner of articulation, but different places of articulation, and probably seem more intuitively similar and are probably more likely to be confused with each other auditorily.
 """
+
+4/21/22 thurs
+-------------
+openai documentation notes
+
+Pricing
+-fine tuned completion models are 2x the cost of vanilla models
+-embeddings models are 10x the cost of vanilla models (!)
+-seems like Search/Answers/Classification can easily eat up a lot of tokens
+
+Search
+-query + longest doc must be <= 2k tokens combined
+-can upload files separately rather than including "documents" in request, and this may be slightly more cost effective
+-Scores are usually between 0 and ~300, but sounds like technically no upper bound. Docs suggest 200 as a good threshold for "similar".
+-Returned files are not sorted by score.
+-can only store 1gb of files at a time.
+-initial filtering is done w/ keyword search to select `max_rerank` docs. Then gpt model is used to compute similarity scores.
+
+# Sample Search input
+openai.Engine("ada").search(
+    search_model="ada", 
+    query="happy", 
+    max_rerank=5,
+    file="file-Lwjuy0q2ezi00jdpfCbl28CO"
+)
+
+# Sample output
+[{
+  "document": "puppy A is happy",
+  "file_id": "file-Lwjuy0q2ezi00jdpfCbl28CO",
+  "score": 587.767
+}]
+
+Answers
+-basically seems to stack Search and Completion endpoints together. search_model finds relevant docs, model generates answer.
+
+# Sample Answer input
+openai.Answer.create(
+    search_model="ada", 
+    model="curie", 
+    question="which puppy is happy?", 
+    file="file-2ksWL61f0Q5c5vCYOLwUuhPk", 
+    examples_context="In 2017, U.S. life expectancy was 78.6 years.", 
+    examples=[["What is human life expectancy in the United States?", "78 years."]], 
+    max_rerank=10,
+    max_tokens=5,
+    stop=["\n", "<|endoftext|>"]
+)
+
+Embeddings
+-many different model variants. For simple clustering/regression/visualization, names like 'text-similarity-ada-001'. There are also text search models and code search models (in each case, there are different versions depending on whether you want to encode the query or the document).
+-unless input is code, they suggest replacing newlines with spaces
+
+# Sample function
+def get_embedding(text, engine="text-similarity-davinci-001"):
+   text = text.replace("\n", " ")
+   return openai.Embedding.create(input = [text], engine=engine)['data'][0]['embedding']
+
+Completions
+-ada/davinci etc. are outdated! Whoops. Newer versions are 'text-davinci-002', 'text-curie-001', 'text-babbage-001', 'text-ada-001'. I think these are from the Instruct series but need to confirm that.
+	-old versions are still recommended for other tasks like search/q&a
+
+Classifications
+
+# Sample input
+openai.Classification.create(
+    file="file-hRsoFZ4J3dNoiTeudHesgPoh",
+    query="movie is very good",
+    search_model="ada", 
+    model="curie", 
+    max_examples=3
+)
+
+# Sample output
+{
+  "completion": "cmpl-2clicODHMMKQnAVW9TpipNzJCWA5t",
+  "file": "file-hRsoFZ4J3dNoiTeudHesgPoh",
+  "label": "Positive",
+  "model": "curie",
+  "object": "classification",
+  "search_model": "ada",
+  "selected_examples": [
+    {
+      "document": 0,
+      "label": "Positive",
+      "object": "search_result",
+      "score": 178.353,
+      "text": "the very definition of the `small' movie, but it is a good stepping stone for director sprecher."
+    },
+    {
+      "document": 3,
+      "label": "Positive",
+      "object": "search_result",
+      "score": 183.586,
+      "text": "good film, but very glum."
+    },
+    {
+      "document": 1,
+      "label": "Negative",
+      "object": "search_result",
+      "score": 180.673,
+      "text": "i sympathize with the plight of these families, but the movie doesn't do a very good job conveying the issue at hand."
+    }
+  ]
+}
