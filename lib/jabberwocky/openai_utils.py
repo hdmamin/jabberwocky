@@ -802,17 +802,20 @@ class GPTBackend:
 
         Returns
         -------
-        # TODO: update. this is wrong now.
         tuple[list] or generator: When stream is False (the default), we get
-        a list of strings (completions) and a list of dicts (full responses).
+        a list of strings (completions) and a list of dicts (full responses),
+        just like with query(). When stream is True, we get a generator (or
+        something similar) of (text, full_response_dict) tuples. Note that
+        prompts may be interleaved, i.e. we might get a token from prompt 1,
+        then 1 from prompt 2, the prompt 1 again. For that reason, the full
+        response dict is updated to include a prompt_index key-value pair,
+        where prompt_index=0 means the completion corresponds to the first
+        prompt you passed in.
 
-
-        k tuples where the k'th tuple is the result of calling
-        GPTBackend.query() on the k'th input prompt. If stream=True, we instead
-        yield a series of (token_text, full_response) tuples. Depending on the
-        backend, different prompts' completions may be interspersed. You can use
-        the 'index' key in full_response to identify which response a token
-        belongs to.
+        When stream=True, each full response also includes an "index" key-value
+        pair. This is a completion index, which is useful because each tuple
+        in this mode contains a single token so the response is generally
+        only meaningful in context.
         """
         kwargs.update(strip_output=strip_output, log=log)
         # Setting start_i to i*n ensures that the 'index' returned in streamed
