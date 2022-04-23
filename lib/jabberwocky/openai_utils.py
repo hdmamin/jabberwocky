@@ -442,11 +442,11 @@ def query_gpt_mock(prompt, n=1, stream=False, **kwargs):
     if kwargs:
         warnings.warn(f'query_gpt_mock received unused kwargs: {kwargs}')
 
-    np = False
+    np_ = False
     if listlike(prompt) and len(prompt) > 1:
-        np = True
+        np_ = True
     nc = n > 1
-    resp = MOCKS[np, nc, stream]
+    resp = MOCKS[np_, nc, stream]
     return postprocess_gpt_response(resp, stream=stream)
 
 
@@ -744,7 +744,7 @@ class GPTBackend:
         start_i = kwargs.pop('start_i', 0)
         prompt_i = kwargs.pop('prompt_i', 0)
         n = kwargs.get('n', 1)
-        np = 1 if isinstance(prompt, str) else len(prompt)
+        # np_ = 1 if isinstance(prompt, str) else len(prompt) # TODO: unused?
         kwargs['prompt'] = prompt
         cls._log_query_kwargs(log=log, query_func=query_func, **kwargs)
         func_params = params(query_func)
@@ -796,11 +796,19 @@ class GPTBackend:
 
     @classmethod
     def _query_batch(cls, prompts, strip_output=True, log=True, **kwargs):
-        """
+        """Get completions for k prompts in parallel using threads. This is
+        only necessary for backends that don't natively support lists of
+        prompts - both openai and gooseai provide similar functionality
+        natively.
+
         Returns
         -------
         # TODO: update. this is wrong now.
-        list: k tuples where the k'th tuple is the result of calling
+        tuple[list] or generator: When stream is False (the default), we get
+        a list of strings (completions) and a list of dicts (full responses).
+
+
+        k tuples where the k'th tuple is the result of calling
         GPTBackend.query() on the k'th input prompt. If stream=True, we instead
         yield a series of (token_text, full_response) tuples. Depending on the
         backend, different prompts' completions may be interspersed. You can use
