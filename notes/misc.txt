@@ -358,3 +358,11 @@ openai.Classification.create(
     }
   ]
 }
+
+
+Considerations re specifying engine:
+-looks like openai engine names may continue to change frequently
+-openai has a ton of different engines now - search alone probably has over a dozen variants (though jabberwocky doesn't support that atm anyway)
+	UPDATE: as of 4/22/22, openai has 50 and gooseai has 14.
+-using numbers seems increasingly infeasible. Worked fine when there were just 4 models, but that's no longer true and we're moving further and further from that state.
+-the option to pass in an int for engine was mostly nice when making an adhoc query (not from a prompt config). It's less necessary for openai's 4 main engines since they have the abcd naming, though other backends don't necessarily have that.

@@ -15,7 +15,10 @@ class C:
 
     # OpenAI constants
     # Parameter Counts: 2.7B, 6.7B, 13B, 175B
-    engines = ['ada', 'babbage', 'curie', 'davinci']
+    engines = ['text-ada-001',
+               'text-babbage-001',
+               'text-curie-001',
+               'text-davinci-002']
     backend_engines = {
         'openai': engines,
         'gooseai': ['gpt-neo-2-7b', 'gpt-j-6b', 'fairseq-13b', 'gpt-neo-20b'],
@@ -28,6 +31,7 @@ class C:
         'banana': ['gpt-j-6B' for _ in range(4)]
     }
 
+    # Dollars per thousand tokens with openai backend.
     prices = IndexedDict(zip(engines, [.0008, .0012, .006, .06]))
 
     # Data

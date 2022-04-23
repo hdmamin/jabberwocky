@@ -61,7 +61,7 @@ import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
     listlike, Results, flatten, add_docstring, func_name, params, mark, \
-    random_str
+    random_str, identity
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
@@ -2044,20 +2044,22 @@ def convert_old_prompt_files(prompt_dir, dest_dir=None):
             f.write(cfg)
 
 
-# TODO: allow classification mode to add labels
-# TODO: allow passing in metadata (looks like this can be a dict, not just a
-# str)
 @valuecheck
-def upload_openai_files(paths,
-                        purpose:('search', 'answers', 'classifications'),
-                        out_path=None):
+def upload_openai_files(purpose:('search', 'answers', 'classifications'), *,
+                        path2meta=None, doc2meta=None, out_path=None):
     """Upload files to openai for semantic search. I believe it's (potentially)
     slightly cheaper to pre-upload this way than to pass in all documents
     at search time.
 
     Parameters
     ----------
-    paths: list[str or Path]
+    path2meta: None or dict[str or Path, dict] or list[str or Path]
+        Maps file paths (each containing text) to a dict of metadata. If using
+        purpose='classifications', that metadata dict must include a key
+        'label'. Always provide either this OR doc2meta (that is the same but
+        instead of file paths, you provide strings which are the "documents"
+        themselves. If listlike is provided, there will be no metadata.
+    doc2meta: None or dict[str, dict] or list[str or Path]
     purpose: str
         Think this determines how openai indexes input files
         (Basically, ask yourself: do you plan to use these for semantic search,
@@ -2084,15 +2086,35 @@ def upload_openai_files(paths,
         "status": "uploaded",
         "status_details": null
     }
+
+    Note that you can call openai.File.delete(res.id) on the result of this
+    function to delete the file you uploaded.
     """
+    assert bool(path2meta) + bool(doc2meta) == 1, \
+        'Pass in either path2meta OR doc2meta.'
+    if path2meta:
+        def get_data(path, meta):
+            with open(path, 'r') as f:
+                text = f.read()
+            return {'text': text, 'metadata': {**meta, 'path': str(obj)}}
+        items = path2meta
+    else:
+        def get_data(doc, meta):
+            return {'text': doc, 'metadata': meta}
+        items = doc2meta
+
+    if not isinstance(items, Mapping):
+        items = {item: {} for item in items}
+
     rm_after = not out_path
     out_path = out_path or f'/tmp/{random_str(30)}.jsonlines'
     touch(out_path)
     with open(out_path, mode='r+') as outfile:
-        for path in paths:
-            with open(path, 'r') as f:
-                content = f.read()
-            json.dump({'text': content, 'metadata': str(path)}, outfile)
+        for obj, meta in items.items():
+            data = get_data(obj, meta)
+            if purpose == 'classifications':
+                data['label'] = data['metadata'].pop('label')
+            json.dump(data, outfile)
             outfile.write('\n')
 
         outfile.seek(0)

@@ -1212,17 +1212,27 @@ X -skim post on gpt instruct
 
 4/22/22 fri
 -----------
--finish upload_openai_files func
-	-support labels for clf mode
-	-support metadata for all modes
--finish reading clf docs re using logprobs
--finish reading any other docs that seem relevant in near term
--revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
+X -finish upload_openai_files func
+	X -support labels for clf mode
+	X -support metadata for all modes
+~ -finish reading clf docs re using logprobs
+	UPDATE: read a bit more but I'm finding the classification endpoint kind of puzzling, and I don't have a pressing need for it. Cut this short.
+~ -finish reading any other docs that seem relevant in near term
+~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
+	UPDATE: openai is up to 50 models now and will probably continue to grow (though it's basically still 4 for the instruct use case), so specifying engines as ints may be hard to maintain. Also: looked at gooseai pricing again since that's the only one besides openai that is fairly reliable (over, say, 80% uptime) and has multiple engines. And idk if they changed prices or I'm screwing up the math somehow but it seems like it is often more expensive (sometimes 10x!?) than openai. Maybe the answer is just say forget all the other backends and just use openai. But anyway, I think it's clear we should be passing in engine rather than engine_i, perhaps with some extra logic to handle a few special ints.
+X -mark some old todos as "NOFIX"
+
+4/23/22 sat
+-----------
+-easy: write docs (including updating returns section) for gpt._query_batch method
+-look into codex "invalid url" error (see ipython pane below)
+-resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
+
 
 
 Backlog
 -------
--resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
+~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
 -update jabberwocky version and upload to pypi
 -make stream mode respect stop words
 -[BLOCKED: api down] test gptj backend using nb14's test_backend func

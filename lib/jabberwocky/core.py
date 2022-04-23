@@ -125,12 +125,13 @@ def na_index_chunks(chunk, mode='isnull', flat=False, col='text') -> list:
 class UnpunctuatedTranscript:
     """An auto-generated transcript (probably from a youtube video). This
     provides some functionality to get punctuated or unpunctuated chunks.
+
+    NOFIX: some methods are undocumented but this isn't used for anything
+    at the moment so that's not a priority.
     """
 
     def __init__(self, df_gen, **kwargs):
         """
-        # TODO: docs for lots of methods
-
         Parameters
         ----------
         df_gen
@@ -205,6 +206,9 @@ class PunctuatedTranscript:
     like punctuation, capitalization, and is generally high quality). Like
     UnpunctuatedTranscript, this will usually come from YouTube (some popular
     videos have been transcribed by creators or fans).
+
+    NOFIX: some methods are undocumented but this isn't used for anything
+    at the moment so that's not a priority.
     """
 
     # Automated YouTube transcripts seem to skip all punctuation except single
@@ -219,7 +223,6 @@ class PunctuatedTranscript:
 
     def __init__(self, df_gen, df_punct, **kwargs):
         """
-        # TODO: many methods to document
         kwargs:
             Just for compatibility with UnpunctuatedTranscript, which needs
             these to specify args like 'rstrip' when loading a prompt.
