@@ -744,7 +744,6 @@ class GPTBackend:
         start_i = kwargs.pop('start_i', 0)
         prompt_i = kwargs.pop('prompt_i', 0)
         n = kwargs.get('n', 1)
-        # np_ = 1 if isinstance(prompt, str) else len(prompt) # TODO: unused?
         kwargs['prompt'] = prompt
         cls._log_query_kwargs(log=log, query_func=query_func, **kwargs)
         func_params = params(query_func)
