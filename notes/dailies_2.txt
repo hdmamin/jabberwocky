@@ -1239,20 +1239,19 @@ X -rename np vars in openai_utils to np_ to avoid collision w/ numpy
 
 4/24/22 sun
 -----------
--continue investigating inability to query any openai engine (invalid URL error) after importing openai explicitly
-	-try uninstall and reinstall old version from lib/requirements.txt
+X -continue investigating inability to query any openai engine (invalid URL error) after importing openai explicitly
+	X -try uninstall and reinstall old version from lib/requirements.txt
+	UPDATE: Could not reproduce. Everything seems to work now though /shrug.
+X -resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
+	UPDATE: two collisions are "oh no" and "hush", which are both mistakenly mapped to changePerson rather than built in intents (StopIntent and NoIntent.) Couldn't figure out a godo way to stop this in the UI but I updated choosePerson endpoint to handle it (either use as a response when a conv is in progress or reroute to choosing a person if not).
+X -fix prompt loading bug in PromptManager (caused by switching from prompt dirs to single files)
+X -write some thoughts on dropping partial sentences due to max length
+	UPDATE: see bullets in backlog.
 
-
-Backlog
--------
--resolve 2 utterance conflicts (changePerson apparently soaking up 2 unintended commands in Hush and Oh No)
--try to reproduce error w/ gpt banana: querying w/ np=2 and n=3 only produced 2 text responses. Second try worked as expected (6 responses - unsure why the difference. Maybe autoreload in ipython reset something since I edited docs first call?)
-~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
--update jabberwocky version and upload to pypi
+4/25/22 mon
+-----------
 -make stream mode respect stop words
--[BLOCKED: api down] test gptj backend using nb14's test_backend func
--[BLOCKED: possible rate limiting? 400 client error again] test huggingface backend
--avoid ending a reply mid-sentence? (Ideally api would do this automatically but it doesn't seem to)
+-easier option: email gooseai asking about claims of being cheaper than openai
 -try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
     -try tweaking prompt a bit.
@@ -1262,6 +1261,21 @@ Backlog
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time
     -fix if necessary
+
+
+
+Backlog
+-------
+-try to reproduce error w/ gpt banana: querying w/ np=2 and n=3 only produced 2 text responses. Second try worked as expected (6 responses - unsure why the difference. Maybe autoreload in ipython reset something since I edited docs first call?)
+-idea: prompt mixin? I.e. add snippet of text to start/end of a prompt, e.g. "You are a friendly, polite AI assistant.".
+~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
+-update jabberwocky version and upload to pypi
+-[BLOCKED: api down] test gptj backend using nb14's test_backend func
+-[BLOCKED: possible rate limiting? 400 client error again] test huggingface backend
+-avoid ending a reply mid-sentence? (Ideally api would do this automatically but it doesn't seem to)
+	-option 1: update postprocessing to check for cutoff sentences and leave off the end bit. Maybe simple rule, maybe nltk/spacy - depends what I want to use this for. Some completions may be valid when not ending in a period/full sentence, others may not be.
+	-option 2: try prompting gpt3 to generate a specific number of sentences/words, and/or only generate full sentences. (Basically, making it "aware" of its own hyperparameters.)
+	-option 3: additional model (could be gpt) to trim off any partial sentences.
 -support custom persona (speak bio yourself)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)

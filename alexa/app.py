@@ -224,6 +224,15 @@ def choose_person(person=None, **kwargs):
     # a reply - it just happened to consist of only a name.
     if conv.current_persona:
         return _reply(prompt=person)
+    # This handles our 2 alexa utterance collisions, "oh no" and "hush"
+    # which alexa mistakenly maps to the choosePerson intent. If we're already
+    # in a conversation, the above if clause handles it.
+    if person.lower() in ('hush', 'oh no'):
+        return _maybe_choose_person(
+            'Sorry, I\'m confused.',
+            choose_msg='You don\'t have a conversation in progress. I can '
+                       'start one if you like - who do you want to speak to?'
+        )
 
     if person not in conv:
         matches = [p for p in map(str.lower, conv.personas())

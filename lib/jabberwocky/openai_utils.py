@@ -959,7 +959,7 @@ class PromptManager:
         # Maps task name to query kwargs. Prompt templates have not yet been
         # evaluated at this point (i.e. still contain literal '{}' where values
         # will later be filled in).
-        self.prompt_dir = prompt_dir
+        self.prompt_dir = Path(prompt_dir)
         self.prompts = self._load_templates(tasks, skip_tasks)
         self.log_dir = log_dir
         if log_dir:
@@ -985,12 +985,13 @@ class PromptManager:
         (including the prompt template).
         """
         name2kwargs = {}
-        paths = (self.prompt_dir/t for t in tasks) if tasks \
+        paths = (self.prompt_dir/f'{t}.yaml' for t in tasks) if tasks \
             else self.prompt_dir.iterdir()
         if skip_tasks: paths = (p for p in paths if p.stem not in skip_tasks)
         for path in paths:
-            if not path.is_dir():
-                if tasks: warnings.warn(f'{path} is not a directory.')
+            if path.suffix != '.yaml':
+                if tasks:
+                    warnings.warn(f'Skipping {path} due to unrecognized name.')
                 continue
             name2kwargs[path.stem] = load_prompt(path.stem,
                                                  verbose=self.verbose)
@@ -1085,7 +1086,6 @@ class PromptManager:
             raise RuntimeError('Arg "prompt" should not be in query kwargs. '
                                'It will be constructed within this method and '
                                'passing it in will override the new version.')
-        query_func = GPTBackend._get_query_func()
         if 'mock_func' in kwargs:
             raise ValueError(
                 'Encountered unexpected argument "mock_func". This was a part '
