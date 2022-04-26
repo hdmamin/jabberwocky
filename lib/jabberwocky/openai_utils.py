@@ -286,15 +286,22 @@ def postprocess_gpt_response(response, stream=False):
     """
     # Extract text and return. Zip maintains lazy evaluation.
     if stream:
-        # Each item in zipped object is (str, dict-like).
-        texts = (chunk['choices'][0]['text'] for chunk in response)
-        chunks = (dict(chunk['choices'][0]) for chunk in response)
-        # Yields (str, dict) tuples.
-        return zip(texts, chunks)
+        # # Each item in zipped object is (str, dict-like).
+        # texts = (chunk['choices'][0]['text'] for chunk in response)
+        # chunks = (dict(chunk['choices'][0]) for chunk in response)
+        # # Yields (str, dict) tuples.
+        # return zip(texts, chunks)
+
+        # Yields (str, dict) tuples. Initially tried to construct two
+        # generators separately and zip them, but we end up skipping every
+        # other token in each generator.
+        # See https://www.pythonmorsels.com/iterator-zip/
+        return ((chunk['choices'][0]['text'], dict(chunk['choices'][0]))
+                for chunk in response)
 
     # Structure: (List[str], List[dict])
-    return [row.text for row in response.choices], \
-           [dict(choice) for choice in response.choices]
+    return [row.text for row in response['choices']], \
+           [dict(choice) for choice in response['choices']]
 
 
 @mark(batch_support=True)
@@ -395,7 +402,7 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
 
     # Keep this step in a separate function so we can easily apply it to new
     # response objects when developing new functionality.
-    return postprocess_gpt_response(res)
+    return postprocess_gpt_response(res, stream=stream)
 
 
 @mark(batch_support=False)
@@ -512,7 +519,7 @@ class GPTBackend:
     # openai.api_base value, a.k.a. those that use the openai.Completion.create
     # method.
     name2base = {
-        'openai': 'https://api.openai.com',
+        'openai': 'https://api.openai.com/v1',
         'gooseai': 'https://api.goose.ai/v1',
     }
 

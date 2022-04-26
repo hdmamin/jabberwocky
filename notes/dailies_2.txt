@@ -1250,8 +1250,18 @@ X -write some thoughts on dropping partial sentences due to max length
 
 4/25/22 mon
 -----------
--make stream mode respect stop words
--easier option: email gooseai asking about claims of being cheaper than openai
+~ -make stream mode respect stop words
+	X -look into pickled stream response format - is it really 1 token per item? How often are common words split up?
+		UPDATE: yeah, 1 token.
+	X -use gpt tokenizer to see if I can identify a more reliable single token stop word, consistent for all prompts (i.e. let us put some STOP_TOKEN in every prompt and not have to dynamically update that param)
+		UPDATE: 1 token prompt is risky in case we accidentally generate it. Uncommon tokens aren't ideal either - mostly random things like "[space]informants". "<|endoftext|>" might work though...I wonder if gooseai would know to omit that. Probably not.
+	~ -start prototyping function
+		UPDATE: see stream_with_stop func in nb15. Works decently for np=1, nc=1, 1 hardcoded stopword case. May be a bit tricky to generalize to all cases and integrate into existing codebase.
+X -fix bug in openai stream mode
+	UPDATE: turned out I haven't been passing stream=True to postprocess_gpt_response func in query_gpt3. No clue how those pickled responses work.
+X -fix bug #2 in query_gpt3
+	UPDATE: turns out zipping a generator with itself was too good to be true. It ends up doing something weird, as documented in the comment above my fix.
+X -easier option: email gooseai asking about claims of being cheaper than openai
 -try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
     -try tweaking prompt a bit.
@@ -1262,10 +1272,25 @@ X -write some thoughts on dropping partial sentences due to max length
     -if that works, re-enable HF reply as well and time
     -fix if necessary
 
+4/26/22 tues
+------------
+-update nb15 stream_with_stop func to use <|endoftext|> as stopword (this conveniently gets tokenized as 1 token. While I suspect gooseai will still return the token itself, it should actually stop it from generating more tokens, saving us money.).
+-write func to compute gooseai cost vs. openai cost, given a prompt of known length and an output of max_tokens length (realized gooseai's claim is still plausible given that they don't charge for input tokens, but it's not intuitive in a given situation which backend will be cheaper)
+
 
 
 Backlog
 -------
+-easier option: email gooseai asking about claims of being cheaper than openai
+-try to reduce amount of repetition in gpt responses
+    -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
+    -try tweaking prompt a bit.
+    -try with better model (maybe this task just really needs davinci?)
+    -try one of the "instruct" models
+-more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
+    -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
+    -if that works, re-enable HF reply as well and time
+    -fix if necessary
 -try to reproduce error w/ gpt banana: querying w/ np=2 and n=3 only produced 2 text responses. Second try worked as expected (6 responses - unsure why the difference. Maybe autoreload in ipython reset something since I edited docs first call?)
 -idea: prompt mixin? I.e. add snippet of text to start/end of a prompt, e.g. "You are a friendly, polite AI assistant.".
 ~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
