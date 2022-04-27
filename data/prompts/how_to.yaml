@@ -2,9 +2,9 @@ engine_i: 1
 temperature: .3
 stop: 
 - 'How to '
-- '10. '
+- '11. '
 max_tokens: 100
-reminder: 'Should be a single line starting with the words "How to" and ending in a colon. You may need a stronger engine for good results.'
+reminder: 'Should be a single line starting with the words "How to" and ending in a colon. You may need a stronger engine for good results. We limit completions to 10 steps for now for the sake of keeping them short and simple.'
 prompt: |-
     How to change a lightbulb:
     1. Turn off the light switch. 

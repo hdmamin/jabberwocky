@@ -1274,14 +1274,34 @@ X -easier option: email gooseai asking about claims of being cheaper than openai
 
 4/26/22 tues
 ------------
--update nb15 stream_with_stop func to use <|endoftext|> as stopword (this conveniently gets tokenized as 1 token. While I suspect gooseai will still return the token itself, it should actually stop it from generating more tokens, saving us money.).
--write func to compute gooseai cost vs. openai cost, given a prompt of known length and an output of max_tokens length (realized gooseai's claim is still plausible given that they don't charge for input tokens, but it's not intuitive in a given situation which backend will be cheaper)
+-stream_with_stop func
+	X -update nb15 stream_with_stop func to use <|endoftext|> as stopword (this conveniently gets tokenized as 1 token. While I suspect gooseai will still return the token itself, it should actually stop it from generating more tokens, saving us money.).
+	-determine if it needs to support np>1 and/or nc>1
+	-determine how to integrate into gpt.query
+	-determine how/whether to support more stopwords - can we feasibly update prompts to make every task use the same stopword?
+		UPDATE: most few shot prompts would support this no problem. Zero shot prompts probably won't, though they should lean less heavily on stop words anywa.
+~ -write func to compute gooseai cost vs. openai cost, given a prompt of known length and an output of max_tokens length (realized gooseai's claim is still plausible given that they don't charge for input tokens, but it's not intuitive in a given situation which backend will be cheaper)
+	UPDATE: decided it would help to do this before deciding how much time/effort to devote into stop word removal in stream mode, since that really only helps gooseai. Wrote basic function that doesn't yet support passing in an engine and doesn't make an explicit recommendation of the better choice, but it does return a df with engines/backends sorted by cost.
+X -rm use of conversation_formatter func (no longer ideal to use that prompt this way) from openai_utils promptmanager etc.
 
+4/27/22 wed
+-----------
+-cost estimator func
+	-support openai names like ada AND 'text-ada-001'
+	-support passing in engine_i int
+	-add sugestion of which backend/engine to use
+	-come up with some helpful visualizations/metrics to begin to understand results
+		-plot heatmap/3d scatter (something w/ meshgrid, probably) w/ input len and output len as x and y axes and price as color/z dim (prob need to pick single engine "size" to compare? Maybe 1 plot for each "pair".)
+		-similar to above bullet but something heatmap-like where each box is 1 of 2 colors, just shows which backend was cheaper? Have to think about how to implement.
 
 
 Backlog
 -------
--easier option: email gooseai asking about claims of being cheaper than openai
+-continue stream_with_stop func
+	-determine if it needs to support np>1 and/or nc>1
+	-determine how to integrate into gpt.query
+	-how to deal w/ zero shot prompts that can't easily incorporate <|endoftext|>
+	-test my <|endoftext|> stopword in gooseai ui - need to make sure this is even a valid strategy
 -try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
     -try tweaking prompt a bit.

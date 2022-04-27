@@ -61,7 +61,7 @@ import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
     listlike, Results, flatten, add_docstring, func_name, params, mark, \
-    random_str, identity
+    random_str, identity, deprecated
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
@@ -1000,6 +1000,12 @@ class PromptManager:
                 if tasks:
                     warnings.warn(f'Skipping {path} due to unrecognized name.')
                 continue
+                if path.stem == 'conversation':
+                    warnings.warn(
+                        'Skipping loading "conversation" prompt. Use '
+                        'ConversationManager if you want to use this.'
+                    )
+                    continue
             name2kwargs[path.stem] = load_prompt(path.stem,
                                                  verbose=self.verbose)
         return name2kwargs
@@ -1145,8 +1151,8 @@ class PromptManager:
             return res
 
     def format_prompt(self, task, template, text=''):
-        # Handle tasks like "conversation" where we need to do some special
-        # handling to integrate user-provided text into the prompt.
+        # Handle tasks that require some special handling to integrate
+        # user-provided text into the prompt.
         if text:
             formatter = TASK2FORMATTER.get(task, default_formatter)
             res = formatter(template, text)
@@ -1508,6 +1514,9 @@ class ConversationManager:
                 'Encountered unexpected argument mock_func. This was a part '
                 'of the Jabberwocky 1.0 API but is no longer used.'
             )
+        if return_prompt and not name:
+            warnings.warn('You set return_prompt=True but we cannot return a '
+                          'prompt because you didn\'t provide a `name`.')
 
         kwargs = {**self._kwargs, **kwargs}
         for k, v in (extra_kwargs or {}).items():
@@ -1527,8 +1536,8 @@ class ConversationManager:
         if fully_resolved:
             kwargs = dict(bound_args(GPTBackend.query, [], kwargs))
 
-        # Note: should this return an updated prompt? Right now it looks like
-        # it always returns the base one.
+        # Note: this just returns the base prompt. In query(), we use the
+        # format_prompt() method to attach the conversational turns.
         if name and return_prompt:
             kwargs['prompt'] = self.name2base[self.process_name(name)]
         return kwargs
@@ -1932,6 +1941,16 @@ def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
     return prompt, text
 
 
+###############################################################################
+#  Formatter functions accept text_fmt (a str prompt template where variables
+#  have not yet been inserted), prompt (a str or dict containing the variables
+# to insert into text_fmt), and optional kwargs. It should return a fully
+# resolved prompt str ready to be sent to a gpt-like model. default_formatter
+# should be general enough to handle most cases, but you could define new
+# format functions for different prompts - just make sure to add them to
+# the TASK2FORMATTER dict below.
+###############################################################################
+
 def default_formatter(text_fmt, prompt, **kwargs):
     """Default formatter to insert args into a prompt template. Called by
     load_prompt.
@@ -1967,6 +1986,7 @@ def default_formatter(text_fmt, prompt, **kwargs):
                      f'You passed in {type(prompt)}.')
 
 
+@deprecated
 def conversation_formatter(text_fmt, prompt, **kwargs):
     """Integrate user-provided values into the pre-existing template. This is
     necessary (rather than a simple str.format call, as the other tasks so far
@@ -2140,7 +2160,12 @@ def upload_openai_files(purpose:('search', 'answers', 'classifications'), *,
     return res
 
 
-TASK2FORMATTER = {'conversation': conversation_formatter}
+# In theory, this can be used to map task name to prompt formatter function.
+# This used to map 'conversation' to conversation_formatter, but I now
+# recommend against using that interface - it was only useful with
+# PromptManager, but ConversationManager now provides a better version of that
+# for the conversation use case.
+TASK2FORMATTER = {}
 
 # I figure if we're importing these functions, we'll need to authenticate.
 openai_auth()
