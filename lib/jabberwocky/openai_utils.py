@@ -488,6 +488,143 @@ def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
     return res['modelOutputs'][0]['output'], res
 
 
+class EngineMap:
+    """Lets us specify engines more flexibly and obtain equivalents for
+    different backends. E.g. for an openai engine=0 or engine='ada' or
+    engine='text-ada-001', what gooseai engine does this map to?
+    """
+
+    bases = [
+        'ada',
+        'babbage',
+        'curie',
+        'davinci'
+    ]
+    backend_engines = C.backend_engines
+
+    @classmethod
+    def get(cls, engine, backend=None, infer=False, default=None,
+            basify=True):
+        """
+
+        Parameters
+        ----------
+        engine: int or str
+            See class docstring for .
+        backend
+        infer: bool
+            If true and the specified backend does not have an engine matching
+            the desired engine, we check for progressively weaker engines
+            trying to find something to return.
+        default: any
+            Value to return if we fail to resolve the engine under the current
+            backend.
+        openai_passthrough: bool
+            If True and openai is the specified backend and engine is a str,
+            we simply return the input.
+            E.g. if True, 'code-ada-001' -> 'code-ada-001' and 'ada' .
+
+        Returns
+        -------
+        str or None: Technically, can be any value if you specify a different
+        `default`. But typically it will be the name of the current/specified
+        backend's equivalent engine. This is best explained by example (below).
+
+        Examples
+        --------
+        >>> EngineMap.get(1, 'gooseai')
+        'gpt-j-6b'
+
+        >>> with gpt('huggingface'):
+        >>>     print(EngineMap.get('ada'))
+        'gpt-neo-2.7B'
+
+        >>> EngineMap.get('text-davinci-002', 'huggingface', infer=True)
+        # UserWarning: No engine=text-davinci-002 equivalent for backend
+        # huggingface.Trying to auto-infer best option.
+        'gpt-j-6B'
+        """
+        # Store this for potential error message later.
+        user_engine = engine
+        if isinstance(engine, int):
+            if engine not in range(4):
+                raise ValueError(
+                    f'Received invalid engine value: {engine}. If engine is '
+                    'specified as an integer, it must lie in [0, 3].'
+                )
+            engine_i = engine
+        else:
+            base = cls._openai_base_engine(engine)
+            engine_i = cls.bases.index(base)
+
+        backend = backend or GPTBackend.current()
+        if backend not in cls.backend_engines:
+            return default
+
+        backend_engines = cls.backend_engines[backend]
+        engine = backend_engines[engine_i]
+        if not engine:
+            msg = f'No engine={user_engine} equivalent for backend {backend}.'
+            if infer:
+                warnings.warn(msg + 'Trying to auto-infer best option.')
+                while engine_i > 0 and not engine:
+                    engine_i -= 1
+                    engine = backend_engines[engine_i]
+            else:
+                return default
+        return engine
+
+    @classmethod
+    def _openai_base_engine(cls, engine: str):
+        """Extract openai base engine name (e.g. 'ada') from a potentially
+        longer string (e.g. 'text-ada-001'). If you pass in the short name, it
+        should just return itself.
+
+        Parameters
+        ----------
+        engine: str
+            E.g. 'code-babbage-001', 'text-ada-001', 'davinci'
+
+        Returns
+        -------
+        str
+        """
+        matches = [chunk for chunk in engine.split('-')
+                   if chunk in cls.bases]
+        if not matches:
+            raise ValueError(f'Engine "{engine}" does not contain any of the '
+                             f'recognized openai bases {cls.bases}.')
+        if len(matches) > 1:
+            raise ValueError(f'Engine "{engine}" contains multiple matches '
+                             f'among the recognized openai bases '
+                             f'{cls.bases}.')
+
+        return matches[0]
+
+    # TODO: rm?
+    @classmethod
+    def _nonbase_openai_name(cls, engine):
+        """Check if engine is plausibly an openai engine name but not a base
+        one (e.g. 'text-davinci-001' or 'code-ada-001' map to True,
+        'ada' or 'other word' map to False).
+
+        Parameters
+        ----------
+        engine: str
+
+        Returns
+        -------
+        bool
+        """
+        try:
+            _ = cls._openai_base_engine(engine)
+            assert engine not in cls.bases, \
+                f'Engine {engine} found in cls.bases.'
+            return True
+        except Exception as e:
+            return False
+
+
 class GPTBackend:
     """
     Examples
