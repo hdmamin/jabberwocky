@@ -557,7 +557,7 @@ class Settings(Mapping):
         raise AttributeError
 
     def init_settings(self, conv=None,
-                      args=('engine_i', 'temperature', 'max_tokens',
+                      args=('engine', 'temperature', 'max_tokens',
                             'frequency_penalty')):
         """Don't call this in __init__ automatically because flask session
         object is not yet not available. Instead, we call it in the
@@ -842,9 +842,9 @@ def getdefaults(func, *args):
     >>> getdefaults(query_gpt3, 'temperature')
     {'temperature': 0.7}
 
-    >>> getdefaults(query_gpt3, 'temperature', 'engine_i')
+    >>> getdefaults(query_gpt3, 'temperature', 'engine')
     {'temperature': 0.7,
-     'engine_i': 0}
+     'engine': 0}
     """
     params_ = params(func)
     return {k: v.default for k, v in params_.items() if k in args}

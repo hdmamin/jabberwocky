@@ -164,7 +164,7 @@ def reset_app_state(end_conv=True, clear_queue=True,
     state.init_settings(conv)
     # TODO: keeping things cheaper for testing, though it actually doesn't
     # matter atm now that I'm using banana backend.
-    state.set('global', engine_i=0)
+    state.set('global', engine=0)
 
 
 @ask.launch
@@ -517,8 +517,8 @@ def read_settings():
             v = f'a list containing the following items: {v}'
         strings.append(f'{k.replace("_", " ")} is {v}')
         # Do this in for loop rather than after to model name is read right
-        # after engine_i.
-        if k == 'engine_i':
+        # after engine.
+        if k == 'engine':
             strings.append(f'model name is {GPTBackend.engine(v)}')
     msg = f'Here are your settings: {"; ".join(strings)}. ' \
           f'Your api backend is {gpt.current()}. ' \

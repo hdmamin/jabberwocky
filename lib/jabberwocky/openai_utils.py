@@ -24,8 +24,8 @@ again it needs to know how to achieve this.
 jabberwocky.config.C.backend_engines, using the other examples as guidance. In
 addition, in this scenario we recommend retrieving the engine name explicitly
 as query_gpt_huggingface does:
-```engine = GPTBackend.engine(engine_i, backend='huggingface')```
-rather than simply calling ```GPTBackend.engine(engine_i)```.
+```engine = GPTBackend.engine(engine, backend='huggingface')```
+rather than simply calling ```GPTBackend.engine(engine)```.
 6. We recommend popping off kwargs that you actually do want to use and then
 providing a warning so the user can see the remaining unused kwargs if there
 are any.
@@ -197,7 +197,7 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, top_p=1.0, **kwargs):
 
 @mark(batch_support=True)
 def query_gpt_huggingface(
-        prompt, engine_i=0, temperature=1.0, repetition_penalty=None,
+        prompt, engine=0, temperature=1.0, repetition_penalty=None,
         max_tokens=50, top_k=None, top_p=None, n=1, **kwargs
 ):
     """Query EleuetherAI gpt models using the Huggingface API. This was called
@@ -207,7 +207,7 @@ def query_gpt_huggingface(
     Parameters
     ----------
     prompt: str
-    engine_i: int
+    engine: int or str
         Determines which Huggingface model API to query. See
         config.C.backend_engines['huggingface'].
         Those names refer to the number of
@@ -245,7 +245,9 @@ def query_gpt_huggingface(
     """
     # Hardcode backend in case we use this function outside of the
     # GPTBackend.query wrapper.
-    engine = GPTBackend.engine(engine_i, backend='huggingface')
+    engine = GPTBackend.engine(engine, backend='huggingface')
+    if engine is None:
+        raise ValueError('Could not resolve engine for huggingface backend.')
 
     # Docs say we can return up to 256 tokens but API sometimes throws errors
     # if we go above 250.
@@ -305,7 +307,7 @@ def postprocess_gpt_response(response, stream=False):
 
 
 @mark(batch_support=True)
-def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
+def query_gpt3(prompt, engine=0, temperature=0.7, top_p=1.0,
                frequency_penalty=0.0, presence_penalty=0.0, max_tokens=50,
                logprobs=None, n=1, stream=False, logit_bias=None, **kwargs):
     """Convenience function to query gpt3. Mostly serves 2 purposes:
@@ -326,7 +328,7 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
     Parameters
     ----------
     prompt: str
-    engine_i: int
+    engine: int or str
         Corresponds to engines defined in config, where 0 is the cheapest, 3
         is the most expensive, etc.
     temperature: float
@@ -385,8 +387,11 @@ def query_gpt3(prompt, engine_i=0, temperature=0.7, top_p=1.0,
                       'API recommends setting only one of these to '
                       'sub-maximal value.')
 
+    # Do not hardcode backend in GPTBackend.engine() call because we use this
+    # function for both openai and gooseai. Rely on method to get the current
+    # backend.
     res = openai.Completion.create(
-        engine=GPTBackend.engine(engine_i),
+        engine=GPTBackend.engine(engine),
         prompt=prompt,
         temperature=temperature,
         top_p=top_p,
@@ -440,8 +445,8 @@ def query_gpt_mock(prompt, n=1, stream=False, **kwargs):
         warnings.warn(f'query_gpt_mock only supports n=1 or n=2, not n={n}. '
                       'Because you passed in a value > 1, we default to n=2.')
         n = 2
-    if kwargs.get('engine_i', 0):
-        warnings.warn(f'query_gpt_mock actually used engine_i=0.')
+    if kwargs.get('engine', 0):
+        warnings.warn(f'query_gpt_mock actually used engine=0.')
     if kwargs.get('max_tokens', 3) != 3:
         warnings.warn(f'query_gpt_mock actually used max_tokens=3.')
     if kwargs.get('logprobs', 3) != 3:
@@ -503,15 +508,16 @@ class EngineMap:
     backend_engines = C.backend_engines
 
     @classmethod
-    def get(cls, engine, backend=None, infer=False, default=None,
-            basify=True):
+    def get(cls, engine, backend=None, infer=True, default=None,
+            openai_passthrough=True):
         """
-
         Parameters
         ----------
         engine: int or str
             See class docstring for .
-        backend
+        backend: str or None
+            Name of backend to use, e.g. "openai", "gooseai", etc. If none is
+            provided, the current backend will be used.
         infer: bool
             If true and the specified backend does not have an engine matching
             the desired engine, we check for progressively weaker engines
@@ -521,8 +527,14 @@ class EngineMap:
             backend.
         openai_passthrough: bool
             If True and openai is the specified backend and engine is a str,
-            we simply return the input.
-            E.g. if True, 'code-ada-001' -> 'code-ada-001' and 'ada' .
+            we simply return the input (we do at least check that it contains
+            one of the bases, i.e. that "ada" or "davinci" etc. is present in
+            the name. But otherwise we trust you to ensure this is a real
+            engine name.
+            E.g. if True, 'code-ada-001' -> 'code-ada-001'
+            and 'ada' -> 'ada'.
+            If False, 'code-ada-001' -> 'text-ada-001'
+            and 'ada' -> 'text-ada-001'.
 
         Returns
         -------
@@ -562,6 +574,18 @@ class EngineMap:
             return default
 
         backend_engines = cls.backend_engines[backend]
+        if backend == 'openai' and openai_passthrough \
+                and isinstance(user_engine, str):
+            if user_engine not in cls.bases + backend_engines:
+                # We do still have some basic validation above that checks
+                # that one of the openai bases is present in the name.
+                warnings.warn(
+                    f'Allowing engine "{engine}" to pass through because '
+                    f'openai_passthrough=True. We trust you to make sure this '
+                    f'is a valid engine.'
+                )
+            return user_engine
+
         engine = backend_engines[engine_i]
         if not engine:
             msg = f'No engine={user_engine} equivalent for backend {backend}.'
@@ -571,7 +595,16 @@ class EngineMap:
                     engine_i -= 1
                     engine = backend_engines[engine_i]
             else:
+                warnings.warn(
+                    f'No matching engine found. With backend {backend}, your '
+                    f'options are {list(filter(None, backend_engines))}.'
+                )
                 return default
+
+        if 'code' in engine and backend != 'openai':
+            warnings.warn(f'{backend} backend does not provide code-specific '
+                          'models at the moment. We\'re returning the closest'
+                          ' generic model.')
         return engine
 
     @classmethod
@@ -600,29 +633,6 @@ class EngineMap:
                              f'{cls.bases}.')
 
         return matches[0]
-
-    # TODO: rm?
-    @classmethod
-    def _nonbase_openai_name(cls, engine):
-        """Check if engine is plausibly an openai engine name but not a base
-        one (e.g. 'text-davinci-001' or 'code-ada-001' map to True,
-        'ada' or 'other word' map to False).
-
-        Parameters
-        ----------
-        engine: str
-
-        Returns
-        -------
-        bool
-        """
-        try:
-            _ = cls._openai_base_engine(engine)
-            assert engine not in cls.bases, \
-                f'Engine {engine} found in cls.bases.'
-            return True
-        except Exception as e:
-            return False
 
 
 class GPTBackend:
@@ -794,17 +804,20 @@ class GPTBackend:
         return openai.api_key
 
     @classmethod
-    def engine(cls, engine_i, backend=None):
-        """Get appropriate engine name depending on current api backend and
-        selected engine_i.
+    @add_docstring(EngineMap.get)
+    def engine(cls, engine, backend=None, **kwargs):
+        """Get appropriate engine name depending on current api backend.
 
         Parameters
         ----------
-        engine_i: int
-            Number from 0-3 (inclusive) specifying which model to use. The two
-            backends *should* perform similar for values of 0-2, but openai's
-            3 (davinci, 175 billion parameters) is a much bigger model than
-            gooseai's 3 (NEO-X, 20 billion parameters). Mostly used in
+        engine: int or str
+            If a str, this is an engine name like 'davinci' or
+            'text-davinci-002' (both work, but depending on other args may
+            behave differently). If an int, this is a number from 0-3
+            (inclusive). Openai
+            and gooseai *should* perform similar for values of 0-2, but
+            openai's 3 (davinci, 175 billion parameters) is a much bigger model
+            than gooseai's 3 (NEO-X, 20 billion parameters). Mostly used in
             query_gpt3().
         backend: str or None
             If provided, should be the name of a backend (e.g. 'huggingface'
@@ -812,19 +825,10 @@ class GPTBackend:
 
         Returns
         -------
-        str: Name of an engine, e.g. "davinci" if we're in openai mode or
-        "gpt-neo-20b" if we're in gooseai mode.
+        str: Name of an engine, e.g. "text-davinci-002" if we're in openai mode
+        or "gpt-neo-20b" if we're in gooseai mode.
         """
-        engines = C.backend_engines[backend or cls.current()]
-
-        # Adds better error message if user passes in a number too big for the
-        # current backend.
-        try:
-            return engines[engine_i]
-        except IndexError:
-            raise ValueError(f'Encountered invalid engine_i value: {engine_i}.'
-                             f'Should be one of {list(range(len(engines)))} '
-                             f'when using backend {cls.current()}.')
+        return EngineMap.get(engine, backend=backend, **kwargs)
 
     # Decorator order matters - doesn't work if we flip these. Keep=True in
     # with_signature makes kwargs resolution work when passing in kwargs not
@@ -1171,10 +1175,10 @@ class PromptManager:
             not clear what the desired behavior would be otherwise.
         kwargs: any
             Overwrite default query_gpt3 kwargs for this single call. For
-            example, maybe our 'tldr' task usually uses engine_i=3, but we want
-            to test it with engine_i=0 once. We can pass in that value here,
+            example, maybe our 'tldr' task usually uses engine=3, but we want
+            to test it with engine=0 once. We can pass in that value here,
             but future method calls without that kwarg will use the expected
-            default behavior of engine_i=3.
+            default behavior of engine=3.
 
         Returns
         -------
@@ -2007,7 +2011,7 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True,
     dict: Keys are all kwargs for query_gpt3(). You may want to override some
     of these at times, but they at least provide reasonable defaults. Some are
     more important than others: for example, a 'stop' value will likely always
-    be relevant, while 'max_tokens' or 'engine_i' may depend on the specific
+    be relevant, while 'max_tokens' or 'engine' may depend on the specific
     usage.
     """
     path = Path(prompt_dir)/name
@@ -2162,7 +2166,7 @@ def query_kwargs_grid(verbose=True):
     """Generator that yields kwargs for gpt.query() to generate all variations
     of responses (n_prompts = 1 or > 1, n_completions = 1 or > 1,
     stream = True or False). There are therefore 8 different sets of kwargs.
-    Other kwargs (max_tokens, engine_i) are set such that they match the
+    Other kwargs (max_tokens, engine) are set such that they match the
     saved responses generated by s01.
     """
     txts = ['Yesterday was', 'How many']
@@ -2180,7 +2184,7 @@ def query_kwargs_grid(verbose=True):
                 yield dict(prompt=prompt,
                            n=nc,
                            stream=stream,
-                           engine_i=0,
+                           engine=0,
                            max_tokens=3,
                            logprobs=3)
 

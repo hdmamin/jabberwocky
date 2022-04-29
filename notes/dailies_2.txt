@@ -1298,23 +1298,31 @@ X -rm use of conversation_formatter func (no longer ideal to use that prompt thi
 
 4/28/22 thurs
 -------------
--finish EngineMap
-	-write down desired input-output pairs (given an engine name and backend, what should output be? Focus on cases like 'code-ada-001'.
-	-based on input-output pairs, implement changes (latest version is in pychar, not jupyter)
--integrate EngineMap into rest of openai_utils and alexa and anywhere else in project that refs it (recall now some engine() callscould return None)
+X -finish EngineMap
+	X -write down desired input-output pairs (given an engine name and backend, what should output be? Focus on cases like 'code-ada-001'.
+	X -based on input-output pairs, implement changes (latest version is in pychar, not jupyter)
+X -integrate EngineMap into rest of openai_utils and alexa and anywhere else in project that refs it (recall now some engine() callscould return None)
 -cost estimator func
 	-integrate EngineMap
 	-support openai names like ada AND 'text-ada-001'
 	-support passing in engine_i int
 	-add sugestion of which backend/engine to use
 
-
-Backlog
--------
--cost visualizaitons
+4/29/22 fri
+-----------
+-cost estimator func
+	-integrate EngineMapa for engine resolution
+	-support openai names like ada AND 'text-ada-001'
+	-support passing in engine_i int
+	-add suggestion of which backend/engine to use
+-cost visualizations
 	-come up with some helpful visualizations/metrics to begin to understand results
 		-plot heatmap/3d scatter (something w/ meshgrid, probably) w/ input len and output len as x and y axes and price as color/z dim (prob need to pick single engine "size" to compare? Maybe 1 plot for each "pair".)
 		-similar to above bullet but something heatmap-like where each box is 1 of 2 colors, just shows which backend was cheaper? Have to think about how to implement.
+
+
+Backlog
+-------
 -continue stream_with_stop func
 	-determine if it needs to support np>1 and/or nc>1
 	-determine how to integrate into gpt.query

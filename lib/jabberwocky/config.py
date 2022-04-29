@@ -15,10 +15,7 @@ class C:
 
     # OpenAI constants
     # Parameter Counts: 2.7B, 6.7B, 13B, 175B
-    # TODO: developing new strategy where we include empty strings for
-    # engine_i's where the backend doesn't provide an equivalent.
-    # 'huggingface': ['gpt-neo-125M', 'gpt-neo-1.3B', 'gpt-neo-2.7B',
-    #                 'gpt-j-6B'],
+    # Empty strings mean the backend doesn't provide an equivalent engine.
     engines = ['text-ada-001',
                'text-babbage-001',
                'text-curie-001',
@@ -37,7 +34,7 @@ class C:
             '',
             ''
         ],
-        # These backends only provide 1 model so these are just filler names.
+        # These backends only provide 1 model so these are just informational.
         # (They give GPTBackend.engine() something to return but they don't
         # actually affect the query results.)
         'hobby': ['gpt-j-6B' for _ in range(2)] + ['', ''],
