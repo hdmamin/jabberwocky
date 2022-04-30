@@ -509,7 +509,7 @@ class EngineMap:
 
     @classmethod
     def get(cls, engine, backend=None, infer=True, default=None,
-            openai_passthrough=True):
+            openai_passthrough=True, basify=False):
         """
         Parameters
         ----------
@@ -535,6 +535,13 @@ class EngineMap:
             and 'ada' -> 'ada'.
             If False, 'code-ada-001' -> 'text-ada-001'
             and 'ada' -> 'text-ada-001'.
+        basify: bool
+            If True and backend is openai, convert the output to one of the
+            openai base engines, e.g. 'ada' instead of 'text-ada-001'.
+            This will not be applied to your
+            `default` value if that gets returned. openai_passthrough also
+            takes priority, so basify will be ignored in that scenario.
+            It is also ignored if the backend is anything other than 'openai'.
 
         Returns
         -------
@@ -566,7 +573,7 @@ class EngineMap:
                 )
             engine_i = engine
         else:
-            base = cls._openai_base_engine(engine)
+            base = cls.openai_base_engine(engine)
             engine_i = cls.bases.index(base)
 
         backend = backend or GPTBackend.current()
@@ -576,6 +583,9 @@ class EngineMap:
         backend_engines = cls.backend_engines[backend]
         if backend == 'openai' and openai_passthrough \
                 and isinstance(user_engine, str):
+            if basify:
+                warnings.warn('Basify=True is ignored when '
+                              'openai_passthrough=True.')
             if user_engine not in cls.bases + backend_engines:
                 # We do still have some basic validation above that checks
                 # that one of the openai bases is present in the name.
@@ -605,10 +615,12 @@ class EngineMap:
             warnings.warn(f'{backend} backend does not provide code-specific '
                           'models at the moment. We\'re returning the closest'
                           ' generic model.')
+        if basify and backend == 'openai':
+            return cls.openai_base_engine(engine)
         return engine
 
     @classmethod
-    def _openai_base_engine(cls, engine: str):
+    def openai_base_engine(cls, engine: str):
         """Extract openai base engine name (e.g. 'ada') from a potentially
         longer string (e.g. 'text-ada-001'). If you pass in the short name, it
         should just return itself.

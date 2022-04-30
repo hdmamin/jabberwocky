@@ -1310,15 +1310,25 @@ X -integrate EngineMap into rest of openai_utils and alexa and anywhere else in 
 
 4/29/22 fri
 -----------
--cost estimator func
-	-integrate EngineMapa for engine resolution
-	-support openai names like ada AND 'text-ada-001'
-	-support passing in engine_i int
-	-add suggestion of which backend/engine to use
--cost visualizations
-	-come up with some helpful visualizations/metrics to begin to understand results
-		-plot heatmap/3d scatter (something w/ meshgrid, probably) w/ input len and output len as x and y axes and price as color/z dim (prob need to pick single engine "size" to compare? Maybe 1 plot for each "pair".)
-		-similar to above bullet but something heatmap-like where each box is 1 of 2 colors, just shows which backend was cheaper? Have to think about how to implement.
+X -cost estimator func
+	X -integrate EngineMap into estimate_cost func for engine resolution
+	X -support option for output name to be base only (e.g. 'ada' rather than 'text-ada'001')
+        UPDATE: realized this only makes sense in openai backend case since gooseai names don't contain any of these. Added basify option for when backend is openai.
+	X -add suggestion of which backend/engine to use
+        UPDATE: now returns dict where everything corresponds to cheapest option, plus a 'full' key where value is df of all results.
+X -cost visualizations
+	X -come up with some helpful visualizations/metrics to begin to understand results
+        X -plot heatmap/3d scatter (something w/ meshgrid, probably) w/ input len and output len as x and y axes and price as color/z dim (prob need to pick single engine "size" to compare? Maybe 1 plot for each "pair".)
+		_ -similar to above bullet but something heatmap-like where each box is 1 of 2 colors, just shows which backend was cheaper? Have to think about how to implement.
+        X -histogram of diffs between equivalent engines
+
+4/30/22 sat
+-----------
+-integrate estimate_cost func into EngineMap? (prices as class vars, func as a classmethod?)
+-port iter_engine_names and iter_paid_engines
+    -document
+-consider porting visualization funcs? Maybe not.
+-add auto-backend select mode to gpt? (We usually don't know prompt length so we might need to tokenize, which could slow things down a bit. But actually gpt tokenizer isn't that slow, IIRC.)
 
 
 Backlog
