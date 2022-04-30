@@ -1,4 +1,4 @@
-engine_i: 3
+engine: 3
 temperature: .3
 stop: 'Passage:'
 reminder: "This uses the expensive davinci model and doesn't work so well without it. Temperature is set to 0.3 but this hasn't been extensively tuned."

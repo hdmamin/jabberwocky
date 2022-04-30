@@ -52,6 +52,7 @@ from nltk.tokenize import sent_tokenize
 import numpy as np
 import openai
 import os
+import pandas as pd
 from pathlib import Path
 import requests
 import shutil
@@ -61,7 +62,7 @@ import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
     listlike, Results, flatten, add_docstring, func_name, params, mark, \
-    random_str, identity, deprecated
+    random_str, deprecated, xor_none
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
@@ -493,6 +494,55 @@ def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
     return res['modelOutputs'][0]['output'], res
 
 
+class MockTokenizer:
+    """Mock tokenizer that should only be used when trying to estimate the
+    number of tokens in a piece of text. This can be used as a tokenizer in
+    EngineMap.estimate_cost(). Slight advantages: it's 2-3 orders of
+    magnitude faster than actually tokenizing text with huggingface's gpt2
+    tokenizer, and it's very fast/simple to load (don't even have to
+    instantiate it, just call MockTokenizer.tokenize()). That being said,
+    the huggingface tokenizer is still quite fast.
+    """
+
+    def __init__(self, multiplier=1.33):
+        self.multiplier = multiplier
+        self.tokenize = self._instance_tokenize
+
+    @classmethod
+    def tokenize(cls, text, multiplier=1.33):
+        """
+        multiplier: float
+            Specifies the estimated number of tokens per word. Default is based
+            on openai docs' estimate of its tokenizer's ratio.
+
+        Returns
+        -------
+        list[str]
+        """
+        return cls._tokenize(text, multiplier=multiplier)
+
+    def _instance_tokenize(self, text, multiplier=None):
+        """If we instantiate a MockTokenizer object, this method will be used
+        as the tokenize method (see how constructor overwrites self.tokenize).
+        This lets us use self.multiplier as a fallback while still allowing
+        the class to provide the user with the option of using the classmethod
+        version instead. (To be clear: the classmethod will not be available
+        from an instantiated object. You get one or the other for each
+        class/object).
+
+        Returns
+        -------
+        list[str]
+        """
+        return self._tokenize(text, multiplier=multiplier or self.multiplier)
+
+    @classmethod
+    def _tokenize(cls, text, multiplier=None):
+        text = text.split()
+        n_new = int(round(len(text) * (multiplier - 1)))
+        return text + ['']*n_new
+
+
 class EngineMap:
     """Lets us specify engines more flexibly and obtain equivalents for
     different backends. E.g. for an openai engine=0 or engine='ada' or
@@ -506,6 +556,31 @@ class EngineMap:
         'davinci'
     ]
     backend_engines = C.backend_engines
+
+    # Unlike gooseai, openai charges for both prompt and generation tokens.
+    # We convert their prices to cents per token.
+    # And/or support passing in engine_i int?
+    openai_prices = {
+        'ada': {'per': .0008 / 1_000},
+        'babbage': {'per': .0012 / 1_000},
+        'curie': {'per': .0060 / 1_000},
+        'davinci': {'per': .0600 / 1_000},
+    }
+
+    # Gooseai base prices (in cents) cover the input and the first 25
+    # tokens of the output. `Per` prices are cents per token.
+    gooseai_prices = {
+        'gpt-neo-20b': {'base': 0.002650, 'per': 0.000063},
+        'fairseq-13b': {'base': 0.001250, 'per': 0.000036},
+        'fairseq-6-7b': {'base': 0.000450, 'per': 0.000012},
+        'gpt-j-6b': {'base': 0.000450, 'per': 0.000012},
+        'gpt-neo-2-7b': {'base': 0.000300, 'per': 0.000008},
+        'fairseq-2-7b': {'base': 0.000300, 'per': 0.000008},
+        'gpt-neo-1-3b': {'base': 0.000110, 'per': 0.000003},
+        'fairseq-1-3b': {'base': 0.000110, 'per': 0.000003},
+        'gpt-neo-125m': {'base': 0.000035, 'per': 0.000001},
+        'fairseq-125m': {'base': 0.000035, 'per': 0.000001},
+    }
 
     @classmethod
     def get(cls, engine, backend=None, infer=True, default=None,
@@ -645,6 +720,88 @@ class EngineMap:
                              f'{cls.bases}.')
 
         return matches[0]
+
+    @classmethod
+    def estimate_cost(cls, completion_length, prompt_length=None, prompt=None,
+                      engines=(0, 1, 2, 3), tokenizer=None, return_full=True):
+        """Estimate the cost of a query when using gooseai vs. openai. This
+        requires you to know (or estimate) the completion length. The simplest
+        way to do this is to use the max_tokens, but for some prompts
+        estimating may be more appropriate (e.g. if you mostly use stop words
+        as guardrails and leave max_tokens higher than you expect to use in
+        order to avoid truncating completions mid-sentence).
+
+        Parameters
+        ----------
+        completion_length
+        prompt_length
+        prompt
+        engines: Iterable[int or str]
+            Engine numbers to consider when computing prices. This should work
+            with strings too (e.g. ["ada", "text-davinci-002"]), though note
+            that price computations will only be based on the openai base
+            engine (i.e. "text-davinci-002" -> "davinci").
+        tokenizer: None or transformers.GPT2Tokenizer
+            If you don't know the number of tokens in the input, you must pass
+            in a tokenizer so this method can tokenize the input and count.
+            My vague recollection is that some of the open source models may
+            use a slightly different tokenizer but I'm not sure - regardless,
+            this should still give a decent estimate. An alternative is to
+            pass in a mock tokenizer (e.g. MockTokenizer(), but anything with a
+            tokenize method, would work. If you're okay with MockTokenizer's
+            default multiplier, you don't even have to instantiate it since it
+            provides a classmethod version of tokenize as well.)
+            if you want something faster/simpler. I benchmarked a
+            ~500-600 token prompt and it only took ~3-7ms with the gpt2
+            tokenizer, so speed probably isn't a big concern (though the mock
+            version is 2-3 orders of magnitude faster).
+
+        Returns
+        -------
+        dict: Keys "backend" and "engine" are strings corresponding to the
+        cheapest option of the specified engines. "cost_cents" is a float
+        specifying the cost of the query (in cents) using the recommended
+        backend and engine. If return_full=True, and additional key "full" is
+        included, which maps to a df containing the cost in cents for all
+        specified backend/engine options.
+        """
+        # Pass in engines=None to get ALL possible engine prices.
+        xor_none(prompt_length, prompt)
+        xor_none(prompt_length, tokenizer)
+
+        if engines:
+            engines = tolist(engines)
+            openai_names = [cls.get(engine, 'openai', openai_passthrough=False,
+                                    basify=True)
+                            for engine in engines]
+            gooseai_names = [cls.get(engine, backend='gooseai')
+                             for engine in engines]
+
+        prompt_length = prompt_length or len(tokenizer.tokenize(prompt))
+        openai_prices = cls.openai_prices
+        gooseai_prices = cls.gooseai_prices
+        if engines:
+            openai_prices = select(openai_prices, keep=openai_names)
+            gooseai_prices = select(gooseai_prices, keep=gooseai_names)
+        gooseai_resolved = [
+            ('gooseai', name,
+             prices['base'] + prices['per'] * max(0, completion_length - 25))
+            for name, prices in gooseai_prices.items()
+        ]
+        openai_resolved = [
+            ('openai', name,
+             prices['per'] * (prompt_length + completion_length))
+            for name, prices in openai_prices.items()
+        ]
+
+        # Prices are returned in cents.
+        df = pd.DataFrame(
+            gooseai_resolved + openai_resolved,
+            columns=['backend', 'engine', 'cost_cents']
+        ).sort_values('cost_cents', ascending=True).reset_index(drop=True)
+        res = df.iloc[0].to_dict()
+        if return_full: res['full'] = df
+        return res
 
 
 class GPTBackend:
@@ -850,7 +1007,7 @@ class GPTBackend:
     @classmethod
     @with_signature(query_gpt3, keep=True)
     @add_docstring(query_gpt3)
-    def query(cls, prompt, strip_output=True, log=True, **kwargs):
+    def query(cls, prompt, strip_output=True, log=True, dev_mode=True, **kwargs):
         """Query gpt3 with whatever the current backend is.
 
         Parameters
@@ -871,6 +1028,25 @@ class GPTBackend:
         if listlike(prompt) and not query_func.batch_support:
             return cls._query_batch(prompt, strip_output=strip_output,
                                     log=log, **kwargs)
+
+        # TODO: rm dev mode here and in signature
+        # For now, just thought this might be a good way to build up some
+        # intuition about which backend is cheaper when. Eventually might add
+        # option to auto-select backend based on this. Would probably want to
+        # find a way to only do this once - right now I think we'd do this
+        # multiple times in some situations due to query_batch implementation.
+        if dev_mode:
+            # Use gpt3 func instead of query_func because we only care about
+            # openai and gooseai when considering cost.
+            defaults = {k: v.default for k, v in params(query_gpt3).items()}
+            c_len = kwargs.get('max_tokens', defaults['max_tokens'])
+            cost_res = EngineMap.estimate_cost(
+                completion_length=c_len,
+                prompt=prompt,
+                engines=kwargs.get('engine', defaults['engine']),
+                tokenizer=MockTokenizer
+            )
+            print(cost_res)
 
         # Keep trunc_full definition here so we can provide warnings if user
         # is in stream mode.

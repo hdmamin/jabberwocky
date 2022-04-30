@@ -1324,20 +1324,29 @@ X -cost visualizations
 
 4/30/22 sat
 -----------
--integrate estimate_cost func into EngineMap? (prices as class vars, func as a classmethod?)
+X -integrate estimate_cost func into EngineMap? (prices as class vars, func as a classmethod?)
 -port iter_engine_names and iter_paid_engines
     -document
--consider porting visualization funcs? Maybe not.
+_ -consider porting visualization funcs? Maybe not.
+    UPDATE: I did do some more plots and cost estimation for conv-specific prompts though. Seems like I start using much longer prompts (which is highly possible if I work on a NLCA style agent in the future), it's fine to stick with openai for the most part.
+~ -add auto-backend select mode to gpt? (We usually don't know prompt length so we might need to tokenize, which could slow things down a bit. But actually gpt tokenizer isn't that slow, IIRC.)
+    UPDATE: not yet, but did add a dev_mode option to print out estimated costs for now.
+
+5/1/22 sun
+-----------
+-port iter_engine_names and iter_paid_engines
+    -document
 -add auto-backend select mode to gpt? (We usually don't know prompt length so we might need to tokenize, which could slow things down a bit. But actually gpt tokenizer isn't that slow, IIRC.)
-
-
-Backlog
--------
 -continue stream_with_stop func
+    -consider: is this still necessary given my findings that gooseai isn't really saving money in most cases?
 	-determine if it needs to support np>1 and/or nc>1
 	-determine how to integrate into gpt.query
 	-how to deal w/ zero shot prompts that can't easily incorporate <|endoftext|>
 	-test my <|endoftext|> stopword in gooseai ui - need to make sure this is even a valid strategy
+
+
+Backlog
+-------
 -try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
     -try tweaking prompt a bit.

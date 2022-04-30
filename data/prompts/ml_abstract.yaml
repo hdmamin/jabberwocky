@@ -1,10 +1,10 @@
-engine_i: 2
+engine: 2
 temperature: .3
 max_tokens: 250
 stop: 
 - "Abstract:"
 - "Idea:"
-reminder: "I haven't tuned hyperparameters much - even engine_i=1 sometimes provides good resuls but it seems a bit inconsistent."
+reminder: "I haven't tuned hyperparameters much - even engine=1 sometimes provides good resuls but it seems a bit inconsistent."
 prompt: |-
     A fellow grad student came up with an interesting idea for a machine learning paper. Please write a more detailed abstract expanding on their idea.
     

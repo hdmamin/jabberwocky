@@ -1,4 +1,4 @@
-engine_i: 3
+engine: 3
 temperature: .3
 stop: 
 - "I rephrased this for my daughter, in plain language"

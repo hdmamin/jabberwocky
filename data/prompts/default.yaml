@@ -1,4 +1,4 @@
-engine_i: 0
+engine: 0
 temperature: 0.7
 max_tokens: 100
 reminder: 'This uses the weakest engine by default.'

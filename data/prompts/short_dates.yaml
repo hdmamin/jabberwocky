@@ -1,4 +1,4 @@
-engine_i: 0
+engine: 0
 temperature: 0.1
 max_tokens: 10
 stop: "Input:"
