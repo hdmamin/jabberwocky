@@ -246,7 +246,7 @@ def query_gpt_huggingface(
     """
     # Hardcode backend in case we use this function outside of the
     # GPTBackend.query wrapper.
-    engine = GPTBackend.engine(engine, backend='huggingface')
+    engine = GPT.engine(engine, backend='huggingface')
     if engine is None:
         raise ValueError('Could not resolve engine for huggingface backend.')
 
@@ -392,7 +392,7 @@ def query_gpt3(prompt, engine=0, temperature=0.7, top_p=1.0,
     # function for both openai and gooseai. Rely on method to get the current
     # backend.
     res = openai.Completion.create(
-        engine=GPTBackend.engine(engine),
+        engine=GPT.engine(engine),
         prompt=prompt,
         temperature=temperature,
         top_p=top_p,
@@ -651,7 +651,7 @@ class EngineMap:
             base = cls.openai_base_engine(engine)
             engine_i = cls.bases.index(base)
 
-        backend = backend or GPTBackend.current()
+        backend = backend or GPT.current()
         if backend not in cls.backend_engines:
             return default
 
@@ -999,15 +999,17 @@ class GPTBackend:
         """
         return EngineMap.get(engine, backend=backend, **kwargs)
 
-    # Decorator order matters - doesn't work if we flip these. Keep=True in
-    # with_signature makes kwargs resolution work when passing in kwargs not
-    # present in query_gpt3 (some backends may accept args that openai backend
-    # doesn't. We could pass these in regardless, but
+    # Decorator order matters - doesn't work if we flip these. [5/1/22 update:
+    # previous statement was true when this was a classmethod but not sure if
+    # it's still true.
+    # Keep=True in with_signature makes kwargs resolution work when passing in
+    # kwargs not present in query_gpt3 (some backends may accept args that
+    # openai backend doesn't. We could pass these in regardless, but
     # signature(query_func).bind_partial(**kwargs) only works with keep=True).
-    @classmethod
     @with_signature(query_gpt3, keep=True)
     @add_docstring(query_gpt3)
-    def query(cls, prompt, strip_output=True, log=True, optimize_cost=True, **kwargs):
+    def query(cls, prompt, strip_output=True, log=True, optimize_cost=True,
+              **kwargs):
         """Query gpt3 with whatever the current backend is.
 
         Parameters
@@ -1131,8 +1133,7 @@ class GPTBackend:
 
         return clean_text, clean_full
 
-    @classmethod
-    def _query_batch(cls, prompts, strip_output=True, log=True, **kwargs):
+    def _query_batch(self, prompts, strip_output=True, log=True, **kwargs):
         """Get completions for k prompts in parallel using threads. This is
         only necessary for backends that don't natively support lists of
         prompts - both openai and gooseai provide similar functionality
@@ -1162,7 +1163,7 @@ class GPTBackend:
         # would start at 0.
         n = kwargs.get('n', 1)
         threads = [
-            ReturningThread(target=cls.query, args=(prompt,),
+            ReturningThread(target=self.query, args=(prompt,),
                             kwargs={**kwargs, 'start_i': i * n, 'prompt_i': i})
             for i, prompt in enumerate(prompts)
         ]
@@ -1230,7 +1231,7 @@ def iter_engine_names(*backends, **kwargs):
     one at a time) corresponding to our 4 base engine levels.
     """
     for i in range(4):
-        yield tuple(GPTBackend.engine(i, backend=backend, **kwargs)
+        yield tuple(GPT.engine(i, backend=backend, **kwargs)
                     for backend in backends)
 
 
@@ -1423,7 +1424,7 @@ class PromptManager:
             print('fully resolved kwargs:\n',
                   dict(bound_args(query_gpt3, [], kwargs)))
             return
-        return GPTBackend.query(prompt, log=self.log_path, **kwargs)
+        return GPT.query(prompt, log=self.log_path, **kwargs)
 
     def kwargs(self, task, fully_resolved=True, return_prompt=False,
                extra_kwargs=None, **kwargs):
@@ -1486,7 +1487,7 @@ class PromptManager:
             kwargs[k] = curr_val
 
         if fully_resolved:
-            kwargs = dict(bound_args(GPTBackend.query, [], kwargs))
+            kwargs = dict(bound_args(GPT.query, [], kwargs))
         return kwargs if return_prompt else select(kwargs, drop=['prompt'])
 
     def prompt(self, task, text='', print_=False):
@@ -1899,7 +1900,7 @@ class ConversationManager:
             kwargs[k] = curr_val
 
         if fully_resolved:
-            kwargs = dict(bound_args(GPTBackend.query, [], kwargs))
+            kwargs = dict(bound_args(GPT.query, [], kwargs))
 
         # Note: this just returns the base prompt. In query(), we use the
         # format_prompt() method to attach the conversational turns.
@@ -1959,7 +1960,7 @@ class ConversationManager:
 
         # Query and return generator. This allows us to use streaming mode in
         # GUI while still updating this instance with gpt3's response.
-        res = GPTBackend.query(prompt, log=self.log_path, **kwargs)
+        res = GPT.query(prompt, log=self.log_path, **kwargs)
         if not kwargs.get('stream', False):
             # In v2 api, response is a tuple of (text, full) where text is a
             # list of strings. At least right now, ConversationManager only

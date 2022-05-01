@@ -17,8 +17,7 @@ import requests
 from config import EMAIL, LOG_FILE
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load
-from jabberwocky.openai_utils import ConversationManager, PromptManager,\
-    GPTBackend
+from jabberwocky.openai_utils import ConversationManager, PromptManager, GPT
 from utils import slot, Settings, model_type, CustomAsk, infer_intent
 
 
@@ -152,7 +151,7 @@ def reset_app_state(end_conv=True, clear_queue=True,
     if clear_queue:
         ask.func_clear()
     if backend_:
-        gpt.switch(backend_)
+        GPT.switch(backend_)
     state.auto_punct = auto_punct
     for k, v in get_user_info(attrs).items():
         setattr(state, k, v)
@@ -199,12 +198,12 @@ def change_backend(backend=None):
         .replace(' ', '')
     msg = f'I\'ve switched your backend to {backend_name}.'
     try:
-        gpt.switch(backend_name)
+        GPT.switch(backend_name)
     except RuntimeError:
         msg = f'It sounded like you asked for backend ' \
               f'{backend_name or "no choice specified"}, but the only ' \
               'valid options are: "Open AI" and "Goose AI". You are ' \
-              f'currently still using backend {gpt.current()}.'
+              f'currently still using backend {GPT.current()}.'
     return _maybe_choose_person(msg)
 
 
@@ -442,7 +441,7 @@ def _reply(prompt=None):
     # Banana.dev is the only reliable free API. I think it should be good
     # enough for punctuation. I'm choosing to keep this separate from the
     # user-selected backend.
-    with gpt('banana'):
+    with GPT('banana'):
         prompt, _ = prompter.query(task='punctuate_alexa',
                                    text=prompt, strip_output=True,
                                    max_tokens=2 * len(prompt.split()))
@@ -519,9 +518,9 @@ def read_settings():
         # Do this in for loop rather than after to model name is read right
         # after engine.
         if k == 'engine':
-            strings.append(f'model name is {GPTBackend.engine(v)}')
+            strings.append(f'model name is {GPT.engine(v)}')
     msg = f'Here are your settings: {"; ".join(strings)}. ' \
-          f'Your api backend is {gpt.current()}. ' \
+          f'Your api backend is {GPT.current()}. ' \
           f'You are {"" if state.auto_punct else "not"} using automatic '\
           'punctuation to improve transcription quality.'
     return _maybe_choose_person(msg)
@@ -587,7 +586,6 @@ def end_session():
 if __name__ == '__main__':
     conv = ConversationManager(['Albert Einstein'])  # TODO: load all personas?
     prompter = PromptManager(['punctuate_alexa'], verbose=False)
-    gpt = GPTBackend()
     utt2meta = load('data/alexa/utterance2meta.pkl')
 
     decorate_functions(debug_decorator)
