@@ -58,6 +58,7 @@ import requests
 import shutil
 import sys
 from threading import Lock
+import time
 import warnings
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
@@ -833,7 +834,8 @@ class GPTBackend:
 
     # Only include backends here that actually should change the
     # openai.api_base value, a.k.a. those that use the openai.Completion.create
-    # method.
+    # method. I also treat this as a record of which backends are paid, though
+    # it's plausible that may change eventually.
     name2base = {
         'openai': 'https://api.openai.com/v1',
         'gooseai': 'https://api.goose.ai/v1',
@@ -999,6 +1001,52 @@ class GPTBackend:
         """
         return EngineMap.get(engine, backend=backend, **kwargs)
 
+    # TODO
+    @contextmanager
+    def _optimized(self, prompt, optimized=False, warning_sleep=3, **kwargs):
+        """Context manager to optionally change the backend to optimize cost.
+
+        Parameters
+        ----------
+        optimized
+        warning_sleep
+
+        Returns
+        -------
+
+        """
+        try:
+            if optimized:
+                if self.current() not in self.name2base:
+                    warnings.warn(
+                        'To avoid accidental charges, auto-cost optimization '
+                        'is disabled when the current backend is free. Your '
+                        f'current backend is {self.current()}. Waiting '
+                        f'{warning_sleep} seconds to give you time to '
+                        'cancel your query...'
+                    )
+                    time.sleep(warning_sleep)
+
+                # Use gpt3 func instead of query_func because we only care
+                # about openai and gooseai when considering cost.
+                defaults = {k: v.default for k, v in
+                            params(query_gpt3).items()}
+                c_len = kwargs.get('max_tokens', defaults['max_tokens'])
+                cost_res = EngineMap.estimate_cost(
+                    completion_length=c_len,
+                    prompt=prompt,
+                    engines=kwargs.get('engine', defaults['engine']),
+                    tokenizer=MockTokenizer
+                )
+                optimize_cost = False
+                print(cost_res.pop('full'))
+                with self(cost_res['backend']):
+                    yield
+            else:
+                yield
+        finally:
+            pass
+
     # Decorator order matters - doesn't work if we flip these. [5/1/22 update:
     # previous statement was true when this was a classmethod but not sure if
     # it's still true.
@@ -1032,19 +1080,19 @@ class GPTBackend:
         # option to auto-select backend based on this. Would probably want to
         # find a way to only do this once - right now I think we'd do this
         # multiple times in some situations due to query_batch implementation.
-        if optimize_cost:
+        # if optimize_cost:
             # Use gpt3 func instead of query_func because we only care about
             # openai and gooseai when considering cost.
-            defaults = {k: v.default for k, v in params(query_gpt3).items()}
-            c_len = kwargs.get('max_tokens', defaults['max_tokens'])
-            cost_res = EngineMap.estimate_cost(
-                completion_length=c_len,
-                prompt=prompt,
-                engines=kwargs.get('engine', defaults['engine']),
-                tokenizer=MockTokenizer
-            )
-            optimize_cost = False
-            print(cost_res.pop('full'))
+            # defaults = {k: v.default for k, v in params(query_gpt3).items()}
+            # c_len = kwargs.get('max_tokens', defaults['max_tokens'])
+            # cost_res = EngineMap.estimate_cost(
+            #     completion_length=c_len,
+            #     prompt=prompt,
+            #     engines=kwargs.get('engine', defaults['engine']),
+            #     tokenizer=MockTokenizer
+            # )
+            # optimize_cost = False
+            # print(cost_res.pop('full'))
 
         query_func = cls._get_query_func()
         if listlike(prompt) and not query_func.batch_support:
@@ -1058,7 +1106,7 @@ class GPTBackend:
         stream = kwargs.get('stream', False)
         if stream:
             if strip_output:
-                warnings.warn('strip_output=True is not supported in stream '
+                warnings.warn('strip_output=True is ignored in stream '
                               'mode. Automatically setting it to False.')
                 strip_output = False
             if trunc_full:

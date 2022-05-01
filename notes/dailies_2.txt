@@ -1337,7 +1337,8 @@ _ -consider porting visualization funcs? Maybe not.
 X -port iter_engine_names and iter_paid_engines
     X -document
 X -try out dev_mode a bit (debug, also build intuition)
--add auto-backend select mode to gpt? (We usually don't know prompt length so we might need to tokenize, which could slow things down a bit. But actually gpt tokenizer isn't that slow, IIRC.)
+~ -add auto-backend select mode to gpt? (We usually don't know prompt length so we might need to tokenize, which could slow things down a bit. But actually gpt tokenizer isn't that slow, IIRC.)
+    UPDATE: a bit tricky. Converted gpt.query and query_batch to instance methods and made GPTBackend instance part of the module automatically so we have access to the contextmanager in query. Then started implementing optimized() contextmanager. Still needs work.
 -continue stream_with_stop func
     -consider: is this still necessary given my findings that gooseai isn't really saving money in most cases?
 	-determine if it needs to support np>1 and/or nc>1
@@ -1345,14 +1346,27 @@ X -try out dev_mode a bit (debug, also build intuition)
 	-how to deal w/ zero shot prompts that can't easily incorporate <|endoftext|>
 	-test my <|endoftext|> stopword in gooseai ui - need to make sure this is even a valid strategy
 
-
-Backlog
--------
--try to reduce amount of repetition in gpt responses
+5/2/22 mon
+----------
+-finish optimized() contextmanager to auto-optimize query cost
+    -consider interface more: should this instead RETURN a ctx manager (either self(best_backend) or dummy()) and then run the rest of the query in that? Or should it actually allow us to enter the manager itself (as I have with the current implementation)?
+        -key consideration: how to avoid calling this on every query call in query_batch case? Previous integration into query method achieved this by setting optimize_cost=True, but with my current implementation that var is obscured inside the optimized() method so I don't think that works.
+-alternate option: try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
     -try tweaking prompt a bit.
     -try with better model (maybe this task just really needs davinci?)
     -try one of the "instruct" models
+
+
+
+Backlog
+-------
+-continue stream_with_stop func
+    -consider: is this still necessary given my findings that gooseai isn't really saving money in most cases?
+	-determine if it needs to support np>1 and/or nc>1
+	-determine how to integrate into gpt.query
+	-how to deal w/ zero shot prompts that can't easily incorporate <|endoftext|>
+	-test my <|endoftext|> stopword in gooseai ui - need to make sure this is even a valid strategy
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time
