@@ -1007,7 +1007,7 @@ class GPTBackend:
     @classmethod
     @with_signature(query_gpt3, keep=True)
     @add_docstring(query_gpt3)
-    def query(cls, prompt, strip_output=True, log=True, dev_mode=True, **kwargs):
+    def query(cls, prompt, strip_output=True, log=True, optimize_cost=True, **kwargs):
         """Query gpt3 with whatever the current backend is.
 
         Parameters
@@ -1024,18 +1024,13 @@ class GPTBackend:
         -------
         list[str, dict] or generator[str, dict]
         """
-        query_func = cls._get_query_func()
-        if listlike(prompt) and not query_func.batch_support:
-            return cls._query_batch(prompt, strip_output=strip_output,
-                                    log=log, **kwargs)
-
         # TODO: rm dev mode here and in signature
         # For now, just thought this might be a good way to build up some
         # intuition about which backend is cheaper when. Eventually might add
         # option to auto-select backend based on this. Would probably want to
         # find a way to only do this once - right now I think we'd do this
         # multiple times in some situations due to query_batch implementation.
-        if dev_mode:
+        if optimize_cost:
             # Use gpt3 func instead of query_func because we only care about
             # openai and gooseai when considering cost.
             defaults = {k: v.default for k, v in params(query_gpt3).items()}
@@ -1046,7 +1041,14 @@ class GPTBackend:
                 engines=kwargs.get('engine', defaults['engine']),
                 tokenizer=MockTokenizer
             )
-            print(cost_res)
+            optimize_cost = False
+            print(cost_res.pop('full'))
+
+        query_func = cls._get_query_func()
+        if listlike(prompt) and not query_func.batch_support:
+            return cls._query_batch(prompt, strip_output=strip_output,
+                                    log=log, optimize_cost=optimize_cost,
+                                    **kwargs)
 
         # Keep trunc_full definition here so we can provide warnings if user
         # is in stream mode.
@@ -1201,8 +1203,42 @@ class GPTBackend:
         return f'{func_name(self)} <current_name: {self.current()}>'
 
 
+GPT = GPTBackend()
+
+
 class MockFunctionException(Exception):
     """Allow all mock query functions to return a common exception."""
+
+
+def iter_engine_names(*backends, **kwargs):
+    """Yields tuples of engine name strings for all user-specified backends.
+    Mostly useful for testing purposes.
+
+    Parameters
+    ----------
+    backends: str(s)
+        E.g. 'gooseai', 'openai'. The order will correspond to the order of the
+        names in each returned tuple.
+    kwargs: any
+        Additional kwargs passed on to GPTBackend.engine()
+        (e.g. openai_passthrough, basify, etc.).
+
+    Yields
+    ------
+    tuple[str]: Each tuple contains one string for each backend in the input
+    backends arg (in the same order). There are a total of 4 tuples (yielded
+    one at a time) corresponding to our 4 base engine levels.
+    """
+    for i in range(4):
+        yield tuple(GPTBackend.engine(i, backend=backend, **kwargs)
+                    for backend in backends)
+
+
+def iter_paid_engines(basify=True, **kwargs):
+    """Yield tuple containing names for the two paid backends, openai and
+    gooseai. Mostly useful for testing purposes.
+    """
+    yield from iter_engine_names('openai', 'gooseai', basify=basify, **kwargs)
 
 
 def load_openai_api_key():

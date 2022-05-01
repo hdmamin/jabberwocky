@@ -1334,8 +1334,9 @@ _ -consider porting visualization funcs? Maybe not.
 
 5/1/22 sun
 -----------
--port iter_engine_names and iter_paid_engines
-    -document
+X -port iter_engine_names and iter_paid_engines
+    X -document
+X -try out dev_mode a bit (debug, also build intuition)
 -add auto-backend select mode to gpt? (We usually don't know prompt length so we might need to tokenize, which could slow things down a bit. But actually gpt tokenizer isn't that slow, IIRC.)
 -continue stream_with_stop func
     -consider: is this still necessary given my findings that gooseai isn't really saving money in most cases?
