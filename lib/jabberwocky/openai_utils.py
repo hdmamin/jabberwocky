@@ -1003,12 +1003,13 @@ class GPTBackend:
 
     # TODO
     @contextmanager
-    def _optimized(self, prompt, optimized=False, warning_sleep=3, **kwargs):
+    def _optimized(self, prompt, optimize_cost=False, warning_sleep=3,
+                   **kwargs):
         """Context manager to optionally change the backend to optimize cost.
 
         Parameters
         ----------
-        optimized
+        optimize_cost
         warning_sleep
 
         Returns
@@ -1016,12 +1017,12 @@ class GPTBackend:
 
         """
         try:
-            if optimized:
+            if optimize_cost:
                 if self.current() not in self.name2base:
                     warnings.warn(
-                        'To avoid accidental charges, auto-cost optimization '
-                        'is disabled when the current backend is free. Your '
-                        f'current backend is {self.current()}. Waiting '
+                        'You\'re currently using a free backend '
+                        f'({self.current()}), but you set optimize_cost=True '
+                        'which will result in charges. Waiting '
                         f'{warning_sleep} seconds to give you time to '
                         'cancel your query...'
                     )
@@ -1038,7 +1039,6 @@ class GPTBackend:
                     engines=kwargs.get('engine', defaults['engine']),
                     tokenizer=MockTokenizer
                 )
-                optimize_cost = False
                 print(cost_res.pop('full'))
                 with self(cost_res['backend']):
                     yield
@@ -1056,7 +1056,7 @@ class GPTBackend:
     # signature(query_func).bind_partial(**kwargs) only works with keep=True).
     @with_signature(query_gpt3, keep=True)
     @add_docstring(query_gpt3)
-    def query(self, prompt, strip_output=True, log=True, optimize_cost=True,
+    def query(self, prompt, strip_output=True, log=True, optimize_cost=False,
               **kwargs):
         """Query gpt3 with whatever the current backend is.
 
@@ -1074,56 +1074,43 @@ class GPTBackend:
         -------
         list[str, dict] or generator[str, dict]
         """
-        # TODO: rm dev mode here and in signature
-        # For now, just thought this might be a good way to build up some
-        # intuition about which backend is cheaper when. Eventually might add
-        # option to auto-select backend based on this. Would probably want to
-        # find a way to only do this once - right now I think we'd do this
-        # multiple times in some situations due to query_batch implementation.
-        # if optimize_cost:
-            # Use gpt3 func instead of query_func because we only care about
-            # openai and gooseai when considering cost.
-            # defaults = {k: v.default for k, v in params(query_gpt3).items()}
-            # c_len = kwargs.get('max_tokens', defaults['max_tokens'])
-            # cost_res = EngineMap.estimate_cost(
-            #     completion_length=c_len,
-            #     prompt=prompt,
-            #     engines=kwargs.get('engine', defaults['engine']),
-            #     tokenizer=MockTokenizer
-            # )
-            # optimize_cost = False
-            # print(cost_res.pop('full'))
+        stream = kwargs.get('stream', False)
+        if stream and strip_output:
+            warnings.warn('strip_output=True is ignored in stream '
+                          'mode. Automatically setting it to False.')
+            strip_output = False
 
-        query_func = self._get_query_func()
-        if listlike(prompt) and not query_func.batch_support:
-            return self._query_batch(prompt, strip_output=strip_output,
-                                     log=log, optimize_cost=optimize_cost,
-                                     **kwargs)
+        # V2 library no longer supports user passing in mock_func. We want to
+        # remove this from the kwargs we pass to our actual function.
+        if kwargs.pop('mock_func', None):
+            warnings.warn(
+                f'Encountered unexpected arg `mock_func`. This was part of '
+                f'the v1 library but is no longer supported. The arg will be '
+                f'ignored.'
+            )
 
+        with self._optimized(prompt, optimize_cost=optimize_cost,
+                             **kwargs):
+            query_func = self._get_query_func()
+            if listlike(prompt) and not query_func.batch_support:
+                return self._query_batch(prompt, query_func=query_func,
+                                         strip_output=strip_output, log=log,
+                                         **kwargs)
+
+            return self._query(prompt, query_func=query_func,
+                               strip_output=strip_output, log=log, **kwargs)
+
+    def _query(self, prompt, query_func, strip_output=True, log=True,
+               **kwargs):
         # Keep trunc_full definition here so we can provide warnings if user
         # is in stream mode.
         trunc_full = self.current() not in self.skip_trunc
         stream = kwargs.get('stream', False)
-        if stream:
-            if strip_output:
-                warnings.warn('strip_output=True is ignored in stream '
-                              'mode. Automatically setting it to False.')
-                strip_output = False
-            if trunc_full:
-                warnings.warn(
-                    'Streaming mode does not support manual truncation of '
-                    'stop phrases and your current backend has limited '
-                    'support for truncation.'
-                )
-
-        # V2 library no longer supports user passing in mock_func. We want to
-        # remove this from the kwargs we pass to our actual function.
-        kwargs_func = kwargs.pop('mock_func', None)
-        if kwargs_func:
-            raise ValueError(
-                f'Encountered unexpected mock_func {kwargs_func}. '
-                'This was part of the v1 library but is no longer '
-                'supported.'
+        if stream and trunc_full:
+            warnings.warn(
+                'Streaming mode does not support manual truncation of '
+                'stop phrases and your current backend has limited '
+                'support for truncation.'
             )
 
         # Including indices in responses makes it easier to tell which
@@ -1181,7 +1168,7 @@ class GPTBackend:
 
         return clean_text, clean_full
 
-    def _query_batch(self, prompts, strip_output=True, log=True, **kwargs):
+    def _query_batch(self, prompts, query_func, **kwargs):
         """Get completions for k prompts in parallel using threads. This is
         only necessary for backends that don't natively support lists of
         prompts - both openai and gooseai provide similar functionality
@@ -1204,14 +1191,14 @@ class GPTBackend:
         in this mode contains a single token so the response is generally
         only meaningful in context.
         """
-        kwargs.update(strip_output=strip_output, log=log)
+        kwargs.update(query_func=query_func)
         # Setting start_i to i*n ensures that the 'index' returned in streamed
         # responses is different for each prompt's completion(s). Otherwise,
         # because each query is run separately, each prompt's completion(s)
         # would start at 0.
         n = kwargs.get('n', 1)
         threads = [
-            ReturningThread(target=self.query, args=(prompt,),
+            ReturningThread(target=self._query, args=(prompt,),
                             kwargs={**kwargs, 'start_i': i * n, 'prompt_i': i})
             for i, prompt in enumerate(prompts)
         ]
