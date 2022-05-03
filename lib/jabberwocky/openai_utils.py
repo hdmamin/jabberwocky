@@ -1235,6 +1235,17 @@ class GPTBackend:
                     cls.logger.change_path(log)
             cls.logger.info(kwargs)
 
+    @classmethod
+    def refresh_api_keys(cls):
+        """Sometimes I change api keys in my local filesystem and re-importing
+        the class doesn't seem to reload them. This does.
+        """
+        for name in cls.name2func:
+            try:
+                cls.name2key[name] = load_api_key(name)
+            except FileNotFoundError:
+                cls.name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
+
     def __repr__(self):
         return f'{func_name(self)} <current_name: {self.current()}>'
 
@@ -1989,13 +2000,12 @@ class ConversationManager:
                   dict(bound_args(query_gpt3, [], kwargs)))
             return
 
-        # Update these after format_prompt() call and debug check.
+        # Update turns after query in case something goes wrong and it
+        # doesn't actually execute.
+        res = GPT.query(prompt, log=self.log_path, **kwargs)
         self.user_turns.append(text.strip())
         self.cached_query = ''
 
-        # Query and return generator. This allows us to use streaming mode in
-        # GUI while still updating this instance with gpt3's response.
-        res = GPT.query(prompt, log=self.log_path, **kwargs)
         if not kwargs.get('stream', False):
             # In v2 api, response is a tuple of (text, full) where text is a
             # list of strings. At least right now, ConversationManager only

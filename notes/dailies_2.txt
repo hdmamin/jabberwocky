@@ -1348,25 +1348,36 @@ X -try out dev_mode a bit (debug, also build intuition)
 
 5/2/22 mon
 ----------
--finish optimized() contextmanager to auto-optimize query cost
-    -consider interface more: should this instead RETURN a ctx manager (either self(best_backend) or dummy()) and then run the rest of the query in that? Or should it actually allow us to enter the manager itself (as I have with the current implementation)?
-        -key consideration: how to avoid calling this on every query call in query_batch case? Previous integration into query method achieved this by setting optimize_cost=True, but with my current implementation that var is obscured inside the optimized() method so I don't think that works.
+X -finish optimized() contextmanager to auto-optimize query cost
+    X -consider interface more: should this instead RETURN a ctx manager (either self(best_backend) or dummy()) and then run the rest of the query in that? Or should it actually allow us to enter the manager itself (as I have with the current implementation)?
+        X -key consideration: how to avoid calling this on every query call in query_batch case? Previous integration into query method achieved this by setting optimize_cost=True, but with my current implementation that var is obscured inside the optimized() method so I don't think that works.
+    X -briefly test out new functionality (2 changes: separate query/_query methods and optimize_cost option).
+    UPDATE: separated functionality into _query and query methods, where the latter is the only one to possess an optimize_cost arg.
+X -bug(ish) fix: replace all old cls refs w/ self in query since its no longer a classmethod
 -alternate option: try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
     -try tweaking prompt a bit.
     -try with better model (maybe this task just really needs davinci?)
     -try one of the "instruct" models
 
-
-
-Backlog
--------
+5/3/22 tues
+-----------
 -continue stream_with_stop func
     -consider: is this still necessary given my findings that gooseai isn't really saving money in most cases?
 	-determine if it needs to support np>1 and/or nc>1
 	-determine how to integrate into gpt.query
 	-how to deal w/ zero shot prompts that can't easily incorporate <|endoftext|>
 	-test my <|endoftext|> stopword in gooseai ui - need to make sure this is even a valid strategy
+-fun option: support custom persona (speak bio yourself) in alexa
+-yet another alternate option: try to reduce amount of repetition in gpt responses
+    -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
+    -try tweaking prompt a bit.
+    -try with better model (maybe this task just really needs davinci?)
+    -try one of the "instruct" models
+
+
+Backlog
+-------
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time
@@ -1381,7 +1392,6 @@ Backlog
 	-option 1: update postprocessing to check for cutoff sentences and leave off the end bit. Maybe simple rule, maybe nltk/spacy - depends what I want to use this for. Some completions may be valid when not ending in a period/full sentence, others may not be.
 	-option 2: try prompting gpt3 to generate a specific number of sentences/words, and/or only generate full sentences. (Basically, making it "aware" of its own hyperparameters.)
 	-option 3: additional model (could be gpt) to trim off any partial sentences.
--support custom persona (speak bio yourself)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
 -update end of conv to erase conv-level settings
