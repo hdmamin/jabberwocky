@@ -1056,7 +1056,7 @@ class GPTBackend:
     # signature(query_func).bind_partial(**kwargs) only works with keep=True).
     @with_signature(query_gpt3, keep=True)
     @add_docstring(query_gpt3)
-    def query(cls, prompt, strip_output=True, log=True, optimize_cost=True,
+    def query(self, prompt, strip_output=True, log=True, optimize_cost=True,
               **kwargs):
         """Query gpt3 with whatever the current backend is.
 
@@ -1094,15 +1094,15 @@ class GPTBackend:
             # optimize_cost = False
             # print(cost_res.pop('full'))
 
-        query_func = cls._get_query_func()
+        query_func = self._get_query_func()
         if listlike(prompt) and not query_func.batch_support:
-            return cls._query_batch(prompt, strip_output=strip_output,
-                                    log=log, optimize_cost=optimize_cost,
-                                    **kwargs)
+            return self._query_batch(prompt, strip_output=strip_output,
+                                     log=log, optimize_cost=optimize_cost,
+                                     **kwargs)
 
         # Keep trunc_full definition here so we can provide warnings if user
         # is in stream mode.
-        trunc_full = cls.current() not in cls.skip_trunc
+        trunc_full = self.current() not in self.skip_trunc
         stream = kwargs.get('stream', False)
         if stream:
             if strip_output:
@@ -1133,7 +1133,7 @@ class GPTBackend:
         prompt_i = kwargs.pop('prompt_i', 0)
         n = kwargs.get('n', 1)
         kwargs['prompt'] = prompt
-        cls._log_query_kwargs(log=log, query_func=query_func, **kwargs)
+        self._log_query_kwargs(log=log, query_func=query_func, **kwargs)
         func_params = params(query_func)
 
         # Possibly easier for caller to check for errors this way? Mostly a
