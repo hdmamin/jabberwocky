@@ -1363,11 +1363,14 @@ X -bug(ish) fix: replace all old cls refs w/ self in query since its no longer a
 5/3/22 tues
 -----------
 -continue stream_with_stop func
-    -consider: is this still necessary given my findings that gooseai isn't really saving money in most cases?
+    ~ -consider: is this still necessary given my findings that gooseai isn't really saving money in most cases?
+        UPDATE: marginally useful and strongly considered skipping, but this felt like an excuse to avoid having to get it working. Ended up writing StopWordStreamer class using trie that supports multiple stop words and seems to work pretty well. Still needs some work to integrate it into lib though.
 	-determine if it needs to support np>1 and/or nc>1
 	-determine how to integrate into gpt.query
-	-how to deal w/ zero shot prompts that can't easily incorporate <|endoftext|>
-	-test my <|endoftext|> stopword in gooseai ui - need to make sure this is even a valid strategy
+	~ -how to deal w/ zero shot prompts that can't easily incorporate <|endoftext|>
+        UPDATE: seems like we can't rely ONLY on endoftext as stopword. If we're really going to support stop words for streaming, we need to allow any stopwords.
+	~ -test my <|endoftext|> stopword in gooseai ui - need to make sure this is even a valid strategy
+        UPDATE: tried briefly and it seemed ok in the cases I tried, but in the openai forums an openai employee recommended against using this (David Shapiro was actually the asker lol). They said the instruct models should be pretty good at this already. But I suppose I'm thinking more about the gooseai case, which doesn't yet have instruct-tuned models.
 -fun option: support custom persona (speak bio yourself) in alexa
 -yet another alternate option: try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
@@ -1375,9 +1378,24 @@ X -bug(ish) fix: replace all old cls refs w/ self in query since its no longer a
     -try with better model (maybe this task just really needs davinci?)
     -try one of the "instruct" models
 
+5/5/22 wed
+----------
+-continue StopWordStreamer class
+    -does this need to implement its own logic about index/prompt_index/finish_reason? Or is it possible to sneak this into an existing function?
+	-determine how to integrate into gpt.query
+        -determine if it needs to support np>1 and/or nc>1
+        -need to make stream method accept a (text, full) tuple?
+
 
 Backlog
 -------
+-fun option: support custom persona (speak bio yourself) in alexa
+-yet another alternate option: try to reduce amount of repetition in gpt responses
+    -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
+    -try tweaking prompt a bit.
+    -try with better model (maybe this task just really needs davinci?)
+    -try one of the "instruct" models
+
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time
