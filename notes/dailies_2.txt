@@ -1381,15 +1381,27 @@ X -bug(ish) fix: replace all old cls refs w/ self in query since its no longer a
 5/5/22 wed
 ----------
 -continue StopWordStreamer class
-    -does this need to implement its own logic about index/prompt_index/finish_reason? Or is it possible to sneak this into an existing function?
-	-determine how to integrate into gpt.query
-        -determine if it needs to support np>1 and/or nc>1
-        -need to make stream method accept a (text, full) tuple?
+    X -does this need to implement its own logic about index/prompt_index/finish_reason? Or is it possible to sneak this into an existing function?
+        UPDATE: we either need to add it here or integrate it into another func. This interface seems more promising tbh so I'm thinking we can try to add it here.
+    X -determine if it needs to support np>1 and/or nc>1
+        UPDATE: yes, just pay attention to index (NOT prompt_index - the decision to stop should affect a single completion, not all completions for a prompt). Threading is used when we have np > 1 but that's irrelevant here.
+    X -need to make stream method accept a (text, full) tuple?
+        UPDATE: yes, we'd be streaming from a generator of (text, full) tuples.
+    X -update finish_reason
+    X -accept (text, full) tuple
+    X -add support for nc > 1
+    -integrate into gpt.query (replace/build into one of the stream funcs?)
+
+5/5/22 thurs
+------------
+-StopWordStreamer
+    -consider which interface I like: create streamer once and reset each time, or create new streamer for each completion. Depends where I envision making/storing this obj - if it's in GPT (which can use any prompt), we may want to create new obj each time since stop words are diff for each prompt.
+    -integrate into gpt.query (replace/build into one of the stream funcs?)
+-fun option: support custom persona (speak bio yourself) in alexa
 
 
 Backlog
 -------
--fun option: support custom persona (speak bio yourself) in alexa
 -yet another alternate option: try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
     -try tweaking prompt a bit.
