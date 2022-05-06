@@ -1395,8 +1395,27 @@ X -bug(ish) fix: replace all old cls refs w/ self in query since its no longer a
 5/5/22 thurs
 ------------
 -StopWordStreamer
-    -consider which interface I like: create streamer once and reset each time, or create new streamer for each completion. Depends where I envision making/storing this obj - if it's in GPT (which can use any prompt), we may want to create new obj each time since stop words are diff for each prompt.
-    -integrate into gpt.query (replace/build into one of the stream funcs?)
+    X -consider which interface I like: create streamer once and reset each time, or create new streamer for each completion. Depends where I envision making/storing this obj - if it's in GPT (which can use any prompt), we may want to create new obj each time since stop words are diff for each prompt.
+        UPDATE: decided to revert to pattern of new object for each query, since stopwords can vary not just by prompt but also by query (see extra_kwargs).
+    X -fix bug: doesn't work w/ multiple stopwords of diff lengths
+        UPDATE: quite a difficult bug but I think I got it. Updated htools.TrieNode to track its own depth AND allow passing a new TrieClass to htools.Trie. Then make the streaming method return an int instead of bool, telling us how many tokens the found stop word was.
+    ~ -integrate into gpt.query (replace/build into one of the stream funcs?)
+        UPDATE: I think the easiest/safest thing to do would be keep this just for the gooseai case. Useless and potentially buggy for openai, and the rest of stream_response does a bunch of weird logic to assign indices which gooseai doesn't need. Just keep it as a subcase of real_stream I think. Also: I'm realizing I could potentially add this as an intermediate step before calling stream_openai_response, i.e. yield from stream_openai_response(gen=streamer.stream(gen)) but it's unclear if that would be good. Have to consider.
+X -write wrapper func to avoid directly dealing w/ stopwordstreamer
+    UPDATE: written but not yet ported or documented.
+-fun option: support custom persona (speak bio yourself) in alexa
+
+5/6/22 fri
+----------
+-finish stopword streaming functionality
+    -consider: should index handling occur here? Or reuse stream_openai's functionality (see yesterday's notes on integration).
+    -port stopword streamer cls
+    -port stream_gooseai func
+    -add as option to utils.stream_response
+    -update call in GPT.query
+    -update warning messages in GPT.query? Now some stream modes support stop words.
+    -maybe refactor rest of stream_response into stream_static() and make stream_response just delegate to diff generators (which it will already mostly be doing)? Could also potentially make this FAR simpler since these inputs aren't actually generators.
+-integrate into gpt.query (replace/build into one of the stream funcs?)
 -fun option: support custom persona (speak bio yourself) in alexa
 
 

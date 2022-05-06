@@ -652,6 +652,8 @@ def _stream_openai_generator(gen, n=1):
     index = j + i*n
     index - j = i * n
     (index - j) / n = i
+    where j < n
+
     We don't have j but I think index // n is equivalent in this case.
     """
     for text, full in gen:
