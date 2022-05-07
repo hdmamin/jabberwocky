@@ -1407,8 +1407,23 @@ X -write wrapper func to avoid directly dealing w/ stopwordstreamer
 
 5/6/22 fri
 ----------
--finish stopword streaming functionality
-    -consider: should index handling occur here? Or reuse stream_openai's functionality (see yesterday's notes on integration).
+~ -finish stopword streaming functionality
+    X -consider: should index handling occur here? Or reuse stream_openai's functionality (see yesterday's notes on integration).
+        UPDATE: set index in _stream_gooseai_generator(). Sufficiently different from stream_openai that I don't want to rely on that - cleaner to just create new stream gen for each class of backend behavior.
+    X -support np>1 and nc>1 scenario
+        UPDATE: realized streamer can only act on 1 prompt unless we even more deeply nest self.q/self.done/etc. Updated stream_gooseai to create np streamers and call them a step at a time. This required refactoring stream() into something that can be called step by step. Also fixed bug with full['index']: need to modulo nc when there are multiple prompts, even though each streamer only deals with 1, because of how openai assigns indices.
+    -port stopword streamer cls
+    -port stream_gooseai func
+    -add as option to utils.stream_response
+    -update call in GPT.query
+    -update warning messages in GPT.query? Now some stream modes support stop words.
+    -maybe refactor rest of stream_response into stream_static() and make stream_response just delegate to diff generators (which it will already mostly be doing)? Could also potentially make this FAR simpler since these inputs aren't actually generators.
+-integrate into gpt.query (replace/build into one of the stream funcs?)
+-fun option: support custom persona (speak bio yourself) in alexa
+
+5/7/22 sat
+----------
+-finish support for stopword filtering in streaming mode
     -port stopword streamer cls
     -port stream_gooseai func
     -add as option to utils.stream_response

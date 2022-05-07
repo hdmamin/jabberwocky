@@ -644,7 +644,17 @@ def _stream_openai_generator(gen, n=1):
     for i, prompt in enumerate(prompts):
         completions = get_completions(prompt, n)
         for j, resp in enumerate(completions):
-            resp['index'] = i*nc + j
+            resp['index'] = i*n + j
+            yield resp
+
+    # Or, equivalently:
+    index = 0
+    for i, prompt in enumerate(prompts):
+        completions = get_completions(prompt, n)
+        for j, resp in enumerate(completions):
+            resp['index'] = index
+            # Important that update happens after setting dict value.
+            index += 1
             yield resp
     ```
 
