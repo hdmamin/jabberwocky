@@ -1423,15 +1423,33 @@ X -write wrapper func to avoid directly dealing w/ stopwordstreamer
 
 5/7/22 sat
 ----------
--finish support for stopword filtering in streaming mode
-    -port stopword streamer cls
-    -port stream_gooseai func
-    -add as option to utils.stream_response
-    -update call in GPT.query
-    -update warning messages in GPT.query? Now some stream modes support stop words.
-    -maybe refactor rest of stream_response into stream_static() and make stream_response just delegate to diff generators (which it will already mostly be doing)? Could also potentially make this FAR simpler since these inputs aren't actually generators.
--integrate into gpt.query (replace/build into one of the stream funcs?)
+X -finish support for stopword filtering in streaming mode
+    X -port stopword streamer cls
+        X -document
+        X -add constructor for from_trie
+        X -add constructor for from_stopwords
+    X -port stream_gooseai func
+    X -add as option to utils.stream_response
+    X -update call in GPT.query
+    X -update warning messages in GPT.query? Now some stream modes support stop words.
+    X -maybe refactor rest of stream_response into stream_static() and make stream_response just delegate to diff generators (which it will already mostly be doing)? Could also potentially make this FAR simpler since these inputs aren't actually generators.
+    UPDATE: implemented as planned but untested - prob a bunch of small bugs to iron out. Do that tomorrow.
+X -give gptbackend a tokenizer attr to pass to _stream_gooseai_generator
 -fun option: support custom persona (speak bio yourself) in alexa
+
+5/8/22 sun
+----------
+-test new stopword streaming functionality for each backend
+    -confirm: is the stop I pass to stream_response from gpt._query() fully resolved? Should it be? 
+    -confirm: what happens if I pass empty list to StopWordStreamer?
+        -what about if I pass None? There could plausibly be no stopwords, but I guess gpt._query() call uses empty list as backup val.
+    -openai
+    -gooseai
+    -hf
+    -hobby
+    -mock
+    -repeat
+-maybe apply static stopword truncation func to each text response in stream_fake_generator. We actually do have the full strings upfront in this case so that should be very doable.
 
 
 Backlog

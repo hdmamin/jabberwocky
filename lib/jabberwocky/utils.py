@@ -1,10 +1,8 @@
 """General purpose utilities."""
 
-from collections import deque
 from colorama import Fore
 from functools import update_wrapper, partial, wraps
 from inspect import _empty, Parameter, signature
-from itertools import cycle
 import json
 import logging
 import os
@@ -589,178 +587,6 @@ class Partial:
         return str(self.func).replace(self.old_name, self.__name__)
 
 
-def stream_words(text):
-    """Like stream_chars but splits on spaces. Realized stream_chars was a bad
-    idea because we risk giving SPEAKER turns like
-    "This is over. W" and "hat are you doing next?", neither of which would be
-    pronounced as intended. We yield with a space for consistency with the
-    other streaming interfaces which require no further postprocessing.
-    """
-    for word in text.split(' '):
-        yield word + ' '
-
-
-def _stream_response(text, full):
-    """Generator used to stream gpt completions for backends that don't
-    natively support it.
-
-    Parameters
-    ----------
-    text: str
-    full: dict
-
-    Returns
-    --------
-    >>> text, full = query_gpt_huggingface()
-    >>> text
-    "It is hot"
-    >>> full
-    {'generated_text': 'It is hot'}
-
-    # Notice we don't change the full response - there's no consistent
-    # pattern all the non-streaming backends share.
-    >>> for t, f in _stream_response(text, full):
-    >>>     print(repr(t), f)
-    'It ' {'generated_text': 'It is hot'}
-    'is ' {'generated_text': 'It is hot'}
-    'hot' {'generated_text': 'It is hot'}
-    """
-    # Old function used zip and itertools.cycle but this inadvertently used
-    # the same dict object at each step, which can be problematic if we want
-    # to save the final results (all steps' finish_reason will be set to
-    # 'dummy' since we were mutating the same object.
-    for tok in stream_words(text):
-        yield tok, dict(full)
-
-
-def _stream_openai_generator(gen, n=1):
-    """Add a prompt_index key to the dict-like full response returned by the
-    openai or gooseai api when using query_gpt3(). This is only used in
-    streaming mode.
-
-    Math notes: looks like openai backend effectively sets index like this:
-
-    ```
-    for i, prompt in enumerate(prompts):
-        completions = get_completions(prompt, n)
-        for j, resp in enumerate(completions):
-            resp['index'] = i*n + j
-            yield resp
-
-    # Or, equivalently:
-    index = 0
-    for i, prompt in enumerate(prompts):
-        completions = get_completions(prompt, n)
-        for j, resp in enumerate(completions):
-            resp['index'] = index
-            # Important that update happens after setting dict value.
-            index += 1
-            yield resp
-    ```
-
-    We want to solve for i.
-    index = j + i*n
-    index - j = i * n
-    (index - j) / n = i
-    where j < n
-
-    We don't have j but I think index // n is equivalent in this case.
-    """
-    for text, full in gen:
-        full['prompt_index'] = full['index'] // n
-        yield text, full
-
-
-def stream_response(response, real_stream, start_i=0, prompt_i=0, **kwargs):
-    """Generator that lets us stream tokens and metadata from gpt query
-    functions for backends that don't natively provide streaming. (Obviously,
-    this won't prevent backends like Huggingface from having to generate the
-    full response first, but it will provide a consistent interface for us to
-    use once the text has been generated). Adds some additional metadata
-    compared to stream_response() which allows us to use this when n
-    (# of completions) is > 1.
-
-    Parameters
-    ----------
-    response: tuple
-        First item is texts (either str or list[str]). Second item is full
-        responses (either dict or list[dict]).
-    start_i: int
-        When using multiple prompts, GPTBackend._query_batch passes these
-        values to GPTBackend._query which in turn passes them here. They are
-        used to set the index and prompt_index correctly.
-    prompt_i: int
-    kwargs:
-        If streaming an openai response, pass in parameter n (int) which was
-        used to determine the number of completions to generate per prompt.
-        This is necessary in order to recover the prompt index.
-
-    Yields
-    ------
-    tuple[str, dict]: First item is a single word, second is a dict. In
-    addition to whatever data the dict already had, we add a key
-    'finish_reason' which is set to None unless we've hit the last token in
-    the completion, in which case it's set to "dummy" (you can simply check for
-    a truthy value since it's None otherwise). We also add a key 'index'
-    corresponding to which completion we're in (i.e. if we have two completions
-    of 3 words each, we'd want to know which completion each new token belongs
-    to).
-
-    Examples
-    --------
-    # This is essentially what happens inside of gpt.query():
-    >>> with gpt('huggingface'):
-    >>>     resp = query_gpt3(prompt, n=2, max_tokens=3)
-    >>>     for tok, full in stream_response(resp, fulls):
-    >>>         print(tok, full)
-    The {'generated_text': 'The dog barked', 'index': 0, 'finish_reason': None}
-    dog {'generated_text': 'The dog barked', 'index': 0, 'finish_reason': None}
-    barked {'generated_text': 'The dog barked', 'index': 0,
-            'finish_reason': 'dummy'}
-    See {'generated_text': 'See Spot run', 'index': 1, 'finish_reason': None}
-    Spot {'generated_text': 'See Spot run', 'index': 1, 'finish_reason': None}
-    run {'generated_text': 'See Spot Run', 'index': 1,
-            'finish_reason': 'dummy'}
-    """
-    # Backends that support streaming (openai/gooseai) must be handled a bit
-    # differently. We must return after yield from because otherwise this
-    # generator proceeds to the next yield statement, which is supposed to only
-    # occur in the real_stream=False case.
-    if real_stream:
-        assert 'n' in kwargs, \
-            'Must pass in parameter n when streaming openai response.'
-        yield from _stream_openai_generator(response, n=kwargs['n'])
-        return
-
-    texts, fulls = containerize(*response)
-    for i, (text, full) in enumerate(zip(texts, fulls)):
-        queue = deque()
-        gen = _stream_response(
-            text,
-            {**full,
-             'index': i + start_i,
-             'prompt_index': prompt_i,
-             'finish_reason': None}
-        )
-        done = False
-        # Yield items while checking if we're at the last item so we can mark
-        # it with a finish_reason. This lets us know when one completion ends.
-        while True:
-            try:
-                tok, tok_full = next(gen)
-                queue.append((tok, tok_full))
-            except StopIteration:
-                done = True
-
-            while len(queue) > 1:
-                tok, tok_full = queue.popleft()
-                yield tok, tok_full
-            if done: break
-        tok, tok_full = queue.popleft()
-        tok_full['finish_reason'] = 'dummy'
-        yield tok, tok_full
-
-
 def containerize(*args, dtype=list):
     """Basically applies tolist() to a bunch of objects, except that tolist
     doesn't work on dicts. I considered changing that but I'd have to check
@@ -780,3 +606,32 @@ def containerize(*args, dtype=list):
             arg = [arg]
         res.append(dtype(arg))
     return res
+
+
+def register(name, mapping):
+    """Decorator to add a function to some module-level dict mapping a string
+    to a function.
+
+    Parameters
+    ----------
+    name
+    mapping
+
+    Examples
+    --------
+    META = {}
+
+    @register('foo', META)
+    def stream_foo(x, y):
+        return x * y
+
+    >>> META
+    {'foo': <function __main__.stream_foo(x, y, **kwargs)>}
+    """
+    def decorator(func):
+        mapping[name] = func
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator

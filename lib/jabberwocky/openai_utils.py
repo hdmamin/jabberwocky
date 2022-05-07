@@ -58,6 +58,7 @@ import requests
 import shutil
 import sys
 from threading import Lock
+from transformers import GPT2TokenizerFast
 import time
 import warnings
 
@@ -66,10 +67,10 @@ from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
     random_str, deprecated, xor_none
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
+from jabberwocky.streaming import stream_response
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
-    hooked_generator, load_api_key, with_signature, squeeze, stream_response,\
-    JsonlinesLogger, thread_starmap, ReturningThread, \
-    containerize, touch
+    hooked_generator, load_api_key, with_signature, JsonlinesLogger,\
+    thread_starmap, ReturningThread, containerize, touch
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -866,10 +867,14 @@ class GPTBackend:
         except FileNotFoundError:
             name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
 
-    def __init__(self):
+    def __init__(self, pre_load_tokenizer=False):
         self.new_name = ''
         self.old_name = ''
         self.old_key = ''
+        if pre_load_tokenizer:
+            self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
+        else:
+            self.tokenizer = None
 
     def __call__(self, name):
         """__enter__ can't take arguments so we need to specify this here.
@@ -880,6 +885,9 @@ class GPTBackend:
             raise ValueError(f'Invalid name {name}. Valid options are: '
                              f'{list(self.name2func)}')
 
+        if new_name == 'gooseai' and not self.tokenizer:
+            print('Loading gpt2 tokenizer to support gooseai streaming mode.')
+            self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
         self.new_name = new_name
         self.old_name = self.current()
         return self
@@ -1062,7 +1070,7 @@ class GPTBackend:
 
         Parameters
         ----------
-        prompt: str
+        prompt: str or list[str]
         strip_output: bool
         log: bool or str
             If True, the logfile defaults to a path like
@@ -1102,26 +1110,19 @@ class GPTBackend:
 
     def _query(self, prompt, query_func, strip_output=True, log=True,
                **kwargs):
-        # Keep trunc_full definition here so we can provide warnings if user
-        # is in stream mode.
-        trunc_full = self.current() not in self.skip_trunc
-        stream = kwargs.get('stream', False)
-        if stream and trunc_full:
-            warnings.warn(
-                'Streaming mode does not support manual truncation of '
-                'stop phrases and your current backend has limited '
-                'support for truncation.'
-            )
-
         # Including indices in responses makes it easier to tell which
         # completions correspond to which prompts when we use multiple prompts
         # and/or multiple completions per prompt.
         start_i = kwargs.pop('start_i', 0)
         prompt_i = kwargs.pop('prompt_i', 0)
         n = kwargs.get('n', 1)
+        np_ = len(prompt) if listlike(prompt) else 1
         kwargs['prompt'] = prompt
         self._log_query_kwargs(log=log, query_func=query_func, **kwargs)
         func_params = params(query_func)
+        trunc_full = self.current() not in self.skip_trunc
+        stream = kwargs.get('stream', False)
+        stop = kwargs.get('stop', [])
 
         # Possibly easier for caller to check for errors this way? Mostly a
         # holdover from v1 library design, but I'm not 100% sure if the
@@ -1141,15 +1142,16 @@ class GPTBackend:
         except Exception as e:
             raise MockFunctionException(str(e)) from None
         if stream:
-            return stream_response(
-                response, real_stream='stream' in func_params,
-                start_i=start_i, prompt_i=prompt_i, n=n
-            )
+            # TODO: Are these stopwords fully resolved?
+            return stream_response(response, start_i=start_i,
+                                   prompt_i=prompt_i, n=n, np=np_,
+                                   tokenizer=self.tokenizer,
+                                   stop=stop,
+                                   backend=self.current())
 
         text, full_response = containerize(*response)
         # Manually check for stop phrases because most backends either don't
         # or truncate AFTER the stop phrase which is rarely what we want.
-        stop = kwargs.get('stop', [])
         clean_text = []
         clean_full = []
         for i, (text_, resp_) in enumerate(zip(text, full_response)):
@@ -1173,6 +1175,11 @@ class GPTBackend:
         only necessary for backends that don't natively support lists of
         prompts - both openai and gooseai provide similar functionality
         natively.
+
+        Parameters
+        ----------
+        prompts: list[str]
+        query_func: FunctionType
 
         Returns
         -------
@@ -1200,7 +1207,7 @@ class GPTBackend:
         threads = [
             ReturningThread(target=self._query, args=(prompt,),
                             kwargs={**kwargs, 'start_i': i * n, 'prompt_i': i})
-            for i, prompt in enumerate(prompts)
+            for i, prompt in enumerate(tolist(prompts))
         ]
         for thread in threads: thread.start()
         # Each item is a tuple of (list[str], list[dict]).
