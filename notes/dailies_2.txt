@@ -1439,16 +1439,17 @@ X -give gptbackend a tokenizer attr to pass to _stream_gooseai_generator
 
 5/8/22 sun
 ----------
--test new stopword streaming functionality for each backend
+-finish stopword streamer integration
     -confirm: is the stop I pass to stream_response from gpt._query() fully resolved? Should it be? 
     -confirm: what happens if I pass empty list to StopWordStreamer?
         -what about if I pass None? There could plausibly be no stopwords, but I guess gpt._query() call uses empty list as backup val.
-    -openai
-    -gooseai
-    -hf
-    -hobby
-    -mock
-    -repeat
+    -test new stopword streaming functionality for each backend
+        -openai
+        -gooseai
+        -hf
+        -hobby
+        -mock
+        -repeat
 -maybe apply static stopword truncation func to each text response in stream_fake_generator. We actually do have the full strings upfront in this case so that should be very doable.
 
 
