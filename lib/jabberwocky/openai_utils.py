@@ -58,7 +58,6 @@ import requests
 import shutil
 import sys
 from threading import Lock
-from transformers import GPT2TokenizerFast
 import time
 import warnings
 
@@ -261,6 +260,8 @@ def query_gpt_huggingface(
     # get an error.
     if repetition_penalty is not None:
         repetition_penalty = float(repetition_penalty)
+    # Stopword truncation happens in GPT.query(). Remove this here so we don't
+    # get warned about it being unused.
     kwargs.pop('stop', [])
     if kwargs:
         warnings.warn('query_gpt_huggingface received unused kwargs '
@@ -370,7 +371,8 @@ def query_gpt3(prompt, engine=0, temperature=0.7, top_p=1.0,
         Values in (-1, 1) should be used to nudge the model, while larger
         values can effectively ban/compel the model to use certain words.
     kwargs: any
-        Additional kwargs to pass to gpt3. Should rarely be necessary.
+        Additional kwargs to pass to gpt3. Most common one is "stop", a list of
+        up to 4 strings to truncate completions on.
 
     Returns
     -------
@@ -867,14 +869,10 @@ class GPTBackend:
         except FileNotFoundError:
             name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
 
-    def __init__(self, pre_load_tokenizer=False):
+    def __init__(self):
         self.new_name = ''
         self.old_name = ''
         self.old_key = ''
-        if pre_load_tokenizer:
-            self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
-        else:
-            self.tokenizer = None
 
     def __call__(self, name):
         """__enter__ can't take arguments so we need to specify this here.
@@ -885,9 +883,6 @@ class GPTBackend:
             raise ValueError(f'Invalid name {name}. Valid options are: '
                              f'{list(self.name2func)}')
 
-        if new_name == 'gooseai' and not self.tokenizer:
-            print('Loading gpt2 tokenizer to support gooseai streaming mode.')
-            self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
         self.new_name = new_name
         self.old_name = self.current()
         return self
@@ -1084,12 +1079,20 @@ class GPTBackend:
         """
         stream = kwargs.get('stream', False)
         if stream and strip_output:
-            warnings.warn('strip_output=True is ignored in stream '
-                          'mode. Automatically setting it to False.')
+            warnings.warn('Doesn\'t make sense to use strip_output=True in '
+                          'streaming mode. Automatically setting it to False.')
             strip_output = False
 
+        stop = kwargs.get('stop', [])
+        n_stop = len(tolist(stop))
+        if n_stop > 4:
+            warnings.warn('Parameter `stop` should container less than or '
+                          f'equal to 4 strings. Found {stop}.')
+
         # V2 library no longer supports user passing in mock_func. We want to
-        # remove this from the kwargs we pass to our actual function.
+        # remove this from the kwargs we pass to our actual function. This
+        # condition shouldn't ever be triggered but I'm leaving it for now in
+        # case there's some code I missed that still uses mock_func.
         if kwargs.pop('mock_func', None):
             warnings.warn(
                 f'Encountered unexpected arg `mock_func`. This was part of '
@@ -1101,12 +1104,11 @@ class GPTBackend:
                              **kwargs):
             query_func = self._get_query_func()
             if listlike(prompt) and not query_func.batch_support:
-                return self._query_batch(prompt, query_func=query_func,
-                                         strip_output=strip_output, log=log,
-                                         **kwargs)
-
-            return self._query(prompt, query_func=query_func,
-                               strip_output=strip_output, log=log, **kwargs)
+                query_meth = self._query_batch
+            else:
+                query_meth = self._query
+            return query_meth(prompt, query_func=query_func,
+                              strip_output=strip_output, log=log, **kwargs)
 
     def _query(self, prompt, query_func, strip_output=True, log=True,
                **kwargs):
@@ -1142,10 +1144,8 @@ class GPTBackend:
         except Exception as e:
             raise MockFunctionException(str(e)) from None
         if stream:
-            # TODO: Are these stopwords fully resolved?
             return stream_response(response, start_i=start_i,
                                    prompt_i=prompt_i, n=n, np=np_,
-                                   tokenizer=self.tokenizer,
                                    stop=stop,
                                    backend=self.current())
 

@@ -18,6 +18,7 @@ from collections import deque
 
 from htools.structures import Trie
 from jabberwocky.utils import containerize, register
+from tokenizers.pre_tokenizers import ByteLevel
 
 
 BACKEND2STREAMER = {}
@@ -36,19 +37,17 @@ class StopWordStreamer:
     each query, where k is the number of strings in the input prompt.
     """
 
-    def __init__(self, stop_words=None, tokenizer=None, trie=None,
-                 max_len=None, n=1):
+    def __init__(self, stop_words=None, trie=None, max_len=None, n=1):
         """We recommend using one of the factory constructors
         (from_trie or from_stopwords). _stream_gooseai_generator uses from_trie
         to avoid having to construct k separate tries for a query with k
         prompts.
 
-        Either specify (stop_words and tokenizer) or (trie and max_len).
+        Either specify stop_words or (trie and max_len).
 
         Parameters
         ----------
         stop_words: None or list[str]
-        tokenizer: None or transformers.GPT2Tokenizer
         trie: None or htools.Trie
             Trie built on a list of lists of strings. Each nested list
             corresponds to 1 stopword and each string within it corresponds to
@@ -70,20 +69,19 @@ class StopWordStreamer:
         Examples
         --------
         # For a single str prompt:
-        streamer = StopWordStreamer(['\n\nMe:', '\n\nBrandon Sanderson:'],
-                                    gpt2_tokenizer)
+        streamer = StopWordStreamer(['\n\nMe:', '\n\nBrandon Sanderson:'])
         GPT.switch('gooseai')
         response = GPT.query(prompt_str, stream=True)
         for res, full in streamer.stream(response):
             print(res, full)
         """
-        if stop_words and tokenizer:
+        if stop_words:
             assert trie is None and max_len is None, \
                 'Do not pass in trie or max_len when specifying stop_words ' \
                 'and tokenizer.'
-            trie, max_len = self.create_trie(stop_words, tokenizer)
+            trie, max_len = self.create_trie(stop_words)
         elif trie and max_len:
-            assert stop_words is None and tokenizer is None, \
+            assert stop_words is None, \
                 'Do not pass in stop_words or tokenizer when trie and ' \
                 'max_len are provided.'
         else:
@@ -103,16 +101,15 @@ class StopWordStreamer:
         return cls(trie=trie, max_len=max_len, n=n)
 
     @classmethod
-    def from_stopwords(cls, stop_words, tokenizer, n=1):
-        return cls(stop_words=stop_words, tokenizer=tokenizer, n=n)
+    def from_stopwords(cls, stop_words, n=1):
+        return cls(stop_words=stop_words, n=n)
 
     @classmethod
-    def create_trie(cls, stop_words, tokenizer):
+    def create_trie(cls, stop_words):
         """
         Parameters
         ----------
         stop_words
-        tokenizer
 
         Returns
         -------
@@ -120,21 +117,13 @@ class StopWordStreamer:
         pretty-tokenized stop_words. Second item is the length (in # of tokens)
         of the longest stop word.
         """
-        tokenized = [cls._pretty_tokenize(tokenizer, word)
-                     for word in stop_words]
+        if not stop_words:
+            raise ValueError('No stop_words provided.')
+
+        tokenized = [pretty_tokenize(word) for word in stop_words]
         max_len = max(len(toks) for toks in tokenized)
         trie = Trie(tokenized)
         return trie, max_len
-
-    @staticmethod
-    def _pretty_tokenize(tokenizer, text):
-        """Tokenize text but keep all tokens in 'decoded' form. E.g. simply
-        calling tokenizer.tokenize('\n\nMe:') will result in the tokens
-        ['Ċ', 'Ċ', 'Me', ':'], but calling _pretty_tokenize('\n\nMe:')
-        will result in the tokens ['\n', '\n', 'Me', ':']. Since this class
-        is used to filter gpt completions, we need to use the latter version.
-        """
-        return [tokenizer.decode(tok) for tok in tokenizer.encode(text)]
 
     def _drop_last_n(self, token, i):
         # Check if the newest token continues any previously found partial
@@ -248,18 +237,52 @@ class StopWordStreamer:
         self.used = True
 
 
-def stream_words(text):
+def pretty_tokenize(text, pre_tokenizer=ByteLevel()):
+    """Tokenize text but keep all tokens in 'decoded' form. E.g. simply
+    calling tokenizer.tokenize('\n\nMe:') will result in the tokens
+    ['Ċ', 'Ċ', 'Me', ':'], but calling pretty_tokenize('\n\nMe:')
+    will result in the tokens ['\n', '\n', 'Me', ':']. Since this function
+    is typically used to filter gpt completions, we need to use the latter
+    version.
+
+    Note that this is almost equivalent to
+    [tokenizer.decode(tok) for tok in tokenizer.encode(text)]
+    which was my initial implementation of this function. However, the
+    tokenizer version converts GPT2's special apostrophes to weird characters
+    that are used for the model but are confusing for humans. We use a
+    ByteLevel pre_tokenizer to get around this.
+
+    E.g. the old tokenizer function would return this for an input of "I’m":
+    ['I', '�', '�', 'm']
+    while the new one returns:
+    ['I', '’', 'm']
+    """
+    return [text[start:end] for _, (start, end)
+            in pre_tokenizer.pre_tokenize_str(text)]
+
+
+def stream_words(text, subwords=False):
     """Like stream_chars but splits on spaces. Realized stream_chars was a bad
     idea because we risk giving SPEAKER turns like
     "This is over. W" and "hat are you doing next?", neither of which would be
     pronounced as intended. We yield with a space for consistency with the
     other streaming interfaces which require no further postprocessing.
+
+    5/9/22: Now supports streaming subword tokens, like the real openai
+    backend. The benefit is that when using
+    this in a context with stop_words, those are heavily dependent on correct
+    tokenization, and just splitting on spaces will cause us to miss
+    intended truncations.
     """
-    for word in text.split(' '):
-        yield word + ' '
+    if subwords:
+        for word in pretty_tokenize(text):
+            yield word
+    else:
+        for word in text.split(' '):
+            yield word + ' '
 
 
-def _stream_response(text, full):
+def _stream_response(text, full, subwords=False):
     """Generator used to stream gpt completions for backends that don't
     natively support it.
 
@@ -288,7 +311,7 @@ def _stream_response(text, full):
     # the same dict object at each step, which can be problematic if we want
     # to save the final results (all steps' finish_reason will be set to
     # 'dummy' since we were mutating the same object.
-    for tok in stream_words(text):
+    for tok in stream_words(text, subwords=subwords):
         yield tok, dict(full)
 
 
@@ -334,33 +357,58 @@ def _stream_openai_generator(gen, n=1, **kwargs):
 
 
 @register('gooseai', BACKEND2STREAMER)
-def _stream_gooseai_generator(gen, stop, tokenizer, n=1, np=1, **kwargs):
+@register('mock', BACKEND2STREAMER)
+def _stream_gooseai_generator(gen, stop, n=1, np=1, **kwargs):
     """
     Parameters
     ----------
     gen
     stop: list[str]
         List of stopwords to truncate on.
-    tokenizer
     n
     np
     kwargs: any
         Unused - just for compatibility with other stream funcs.
     """
-    trie, max_len = StopWordStreamer.create_trie(stop, tokenizer)
-    streamers = [StopWordStreamer.from_trie(trie, max_len, n=n)
-                 for _ in range(np)]
-    for text, full in gen:
-        full['prompt_index'] = full['index'] // n
-        yield from streamers[full['prompt_index']].stream_step(text, full)
+    if stop:
+        trie, max_len = StopWordStreamer.create_trie(stop)
+        streamers = [StopWordStreamer.from_trie(trie, max_len, n=n)
+                     for _ in range(np)]
+        for text, full in gen:
+            full['prompt_index'] = full['index'] // n
+            yield from streamers[full['prompt_index']].stream_step(text, full)
 
-    for streamer in streamers:
-        yield from streamer.stream_remaining()
+        for streamer in streamers:
+            yield from streamer.stream_remaining()
+    # Remember yields don't terminate functions like return, so this does
+    # require an explicit else block.
+    else:
+        for text, full in gen:
+            full['prompt_index'] = full['index'] // n
+            yield text, full
 
 
 # Do not register this: it's used by many backends so it's easier to use
 # dict.get().
-def _stream_fake_generator(response, start_i=0, prompt_i=0, **kwargs):
+def _stream_fake_generator(response, start_i=0, prompt_i=0, subwords=False,
+                           **kwargs):
+    """Stream (text, dict) pairs from a static response (i.e. a backend that
+    doesn't natively support streaming and just returns a full completion
+    rather than a generator.
+
+    Parameters
+    ----------
+    response
+    start_i
+    prompt_i
+    tokenizer
+    kwargs: any
+        Unused - just for consistent interface with other stream functions.
+
+    Returns
+    -------
+
+    """
     texts, fulls = containerize(*response)
     for i, (text, full) in enumerate(zip(texts, fulls)):
         queue = deque()
@@ -369,7 +417,8 @@ def _stream_fake_generator(response, start_i=0, prompt_i=0, **kwargs):
             {**full,
              'index': i + start_i,
              'prompt_index': prompt_i,
-             'finish_reason': None}
+             'finish_reason': None},
+            subwords=subwords
         )
         done = False
         # Yield items while checking if we're at the last item so we can mark
@@ -390,7 +439,7 @@ def _stream_fake_generator(response, start_i=0, prompt_i=0, **kwargs):
         yield tok, tok_full
 
 
-def stream_response(response, start_i=0, prompt_i=0, backend=None, **kwargs):
+def stream_response(response, backend=None, **kwargs):
     """Generator that lets us stream tokens and metadata from gpt query
     functions for backends that don't natively provide streaming. (Obviously,
     this won't prevent backends like Huggingface from having to generate the
@@ -406,18 +455,21 @@ def stream_response(response, start_i=0, prompt_i=0, backend=None, **kwargs):
         responses (either dict or list[dict]). Alternatively, if the backend
         actually supports streaming, this is a generator that yields tuples of
         (token str, full_response dict).
-    start_i: int
-        When using multiple prompts, GPTBackend._query_batch passes these
-        values to GPTBackend._query which in turn passes them here. They are
-        used to set the index and prompt_index correctly.
-    prompt_i: int
     kwargs:
         If streaming an openai response, n (int; the number of completions per
         prompt) must be provided so we can recover the prompt index.
         If streaming a gooseai response, both n (same as above) and
         np (# of prompt strings we asked for completions for) must be provided,
-        as well as 'stop' (list of stopword strings) and 'tokenizer'
-        (transformers.GPT2Tokenizer or transformers.GPT2TokenizerFast).
+        as well as 'stop' (list of stopword strings).
+
+        For backends that don't support streaming natively, we fall back to
+        _stream_fake_generator which accepts args start_i (int),
+        prompt_i (int), and subwords (bool).
+        When using multiple prompts, GPTBackend._query_batch passes the two
+        index args to GPTBackend._query which in turn passes them here.
+        They are used to set the index and prompt_index correctly.
+        If subwords=False, we simply split on spaces, which may
+        result in failing to truncate on stopwords correctly.
 
     Yields
     ------
@@ -456,4 +508,4 @@ def stream_response(response, start_i=0, prompt_i=0, backend=None, **kwargs):
     # globals() usage just prevents pycharm from complaining.
     backend = backend or globals()['GPT'].current()
     streamer = BACKEND2STREAMER.get(backend, _stream_fake_generator)
-    yield from streamer(response, start_i=start_i, prompt_i=prompt_i, **kwargs)
+    yield from streamer(response, **kwargs)

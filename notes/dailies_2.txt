@@ -1439,18 +1439,41 @@ X -give gptbackend a tokenizer attr to pass to _stream_gooseai_generator
 
 5/8/22 sun
 ----------
--finish stopword streamer integration
-    -confirm: is the stop I pass to stream_response from gpt._query() fully resolved? Should it be? 
-    -confirm: what happens if I pass empty list to StopWordStreamer?
-        -what about if I pass None? There could plausibly be no stopwords, but I guess gpt._query() call uses empty list as backup val.
-    -test new stopword streaming functionality for each backend
+X -refactor method call in gpt.query so call only occurs once instead of repeating with _query and _query_batch.
+~ -finish stopword streamer integration
+    X -confirm: is the stop I pass to stream_response from gpt._query() fully resolved? Should it be? 
+        UPDATE: no, but query funcs don't have default stop values so there's no difference.
+    X -confirm: what happens if I pass empty list to StopWordStreamer?
+        X -what about if I pass None? There could plausibly be no stopwords, but I guess gpt._query() call uses empty list as backup val.
+        UPDATE: added check to error out if we try to create a streamer with no stopwords - no point. Just hardcoded if/else in stream gooseai generator. Considered making a dummy mode for stopword streamer for when no stopwords are present but it seemed kind of pointless.
+    ~ -test new stopword streaming functionality for each backend
         -openai
         -gooseai
-        -hf
-        -hobby
-        -mock
-        -repeat
+        X -hf
+        X -hobby
+        X -mock
+        X -repeat
+X -rewrite pretty_tokenize to avoid bug with special characters
+    X -update stream_gooseai gen to be compatible
+    X -update gpt.query
+    X -update Stopwordstreamer
+    X -remove tokenizer loading from gpt
+X -try removing jupyter files from github language calculations (may need to wait for github to reindex it before changes show up)
 -maybe apply static stopword truncation func to each text response in stream_fake_generator. We actually do have the full strings upfront in this case so that should be very doable.
+
+
+5/9/22 mon
+-----------
+-add subwords option to gpt.query (or somewhere?) so users can choose between streaming words and subwords for static backends.
+-update static stopword truncation func to use ByteLevel() like in pretty_tokenize? (looks like HF, for one, might actually try to truncate before the stopword but it only removes the last 1 token, which doesn't do what we want if stopword is multiple tokens - at least that's what it looks like).
+-maybe apply static stopword truncation func to each text response in stream_fake_generator. We actually do have the full strings upfront in this case so that should be very doable.
+-test new stopword streaming functionality for paid backends
+    -openai
+    -gooseai
+-test backends on other cases
+    -np > 1
+    -nc > 1
+    -nc > 1 AND np > 1
 
 
 Backlog
