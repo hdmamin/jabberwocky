@@ -1469,7 +1469,7 @@ _ -update static stopword truncation func to use ByteLevel() like in pretty_toke
     UPDATE: After some testing, I think my partial_trunc option already takes care of this satisfactory degree.
 X -fix bug in stopwordstreamer (wasn't truncating as expected on a new sample case)
     UPDATE: Added strip_spaces option to deal with this - turned out the issue was I specified a stopword with a trailing space (to try to minimize the chance of unintentional truncation) but spaces are typically assigned to the next token. A more thorough solution might be to completely rewrite streamer trie to be character level but I think this solution works well enough, especially since specifying stopwords with trailing spaces seems difficult with yaml file.)
--maybe apply static stopword truncation func to each text response in stream_fake_generator. We actually do have the full strings upfront in this case so that should be very doable.
+X -maybe apply static stopword truncation func to each text response in stream_fake_generator. We actually do have the full strings upfront in this case so that should be very doable.
 -test new stopword streaming functionality for paid backends
     -openai
     -gooseai
@@ -1478,15 +1478,28 @@ X -fix bug in stopwordstreamer (wasn't truncating as expected on a new sample ca
     -nc > 1
     -nc > 1 AND np > 1
 
-
-Backlog
--------
--yet another alternate option: try to reduce amount of repetition in gpt responses
+5/10/22 tues
+------------
+-consider how to avoid ending a reply mid-sentence? (Ideally api would do this automatically but it doesn't seem to)
+	-option 1: update postprocessing to check for cutoff sentences and leave off the end bit. Maybe simple rule, maybe nltk/spacy - depends what I want to use this for. Some completions may be valid when not ending in a period/full sentence, others may not be.
+	-option 2: try prompting gpt3 to generate a specific number of sentences/words, and/or only generate full sentences. (Basically, making it "aware" of its own hyperparameters.)
+	-option 3: additional model (could be gpt) to trim off any partial sentences.
+-alternate option: try to reduce amount of repetition in gpt responses
     -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
     -try tweaking prompt a bit.
     -try with better model (maybe this task just really needs davinci?)
     -try one of the "instruct" models
 
+
+Backlog
+-------
+-[ON HOLD: so far this seems to work, maybe just let myself stumble upon bugs if they arise during further development] test new stopword streaming functionality for paid backends
+    -openai
+    -gooseai
+    -test backends on other cases
+        -np > 1
+        -nc > 1
+        -nc > 1 AND np > 1
 -more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
     -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
     -if that works, re-enable HF reply as well and time
@@ -1495,12 +1508,6 @@ Backlog
 -idea: prompt mixin? I.e. add snippet of text to start/end of a prompt, e.g. "You are a friendly, polite AI assistant.".
 ~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
 -update jabberwocky version and upload to pypi
--[BLOCKED: api down] test gptj backend using nb14's test_backend func
--[BLOCKED: possible rate limiting? 400 client error again] test huggingface backend
--avoid ending a reply mid-sentence? (Ideally api would do this automatically but it doesn't seem to)
-	-option 1: update postprocessing to check for cutoff sentences and leave off the end bit. Maybe simple rule, maybe nltk/spacy - depends what I want to use this for. Some completions may be valid when not ending in a period/full sentence, others may not be.
-	-option 2: try prompting gpt3 to generate a specific number of sentences/words, and/or only generate full sentences. (Basically, making it "aware" of its own hyperparameters.)
-	-option 3: additional model (could be gpt) to trim off any partial sentences.
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
 -update end of conv to erase conv-level settings
