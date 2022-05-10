@@ -1464,8 +1464,11 @@ X -try removing jupyter files from github language calculations (may need to wai
 
 5/9/22 mon
 -----------
--add subwords option to gpt.query (or somewhere?) so users can choose between streaming words and subwords for static backends.
--update static stopword truncation func to use ByteLevel() like in pretty_tokenize? (looks like HF, for one, might actually try to truncate before the stopword but it only removes the last 1 token, which doesn't do what we want if stopword is multiple tokens - at least that's what it looks like).
+X -add subwords option to gpt.query (or somewhere?) so users can choose between streaming words and subwords for static backends.
+_ -update static stopword truncation func to use ByteLevel() like in pretty_tokenize? (looks like HF, for one, might actually try to truncate before the stopword but it only removes the last 1 token, which doesn't do what we want if stopword is multiple tokens - at least that's what it looks like).
+    UPDATE: After some testing, I think my partial_trunc option already takes care of this satisfactory degree.
+X -fix bug in stopwordstreamer (wasn't truncating as expected on a new sample case)
+    UPDATE: Added strip_spaces option to deal with this - turned out the issue was I specified a stopword with a trailing space (to try to minimize the chance of unintentional truncation) but spaces are typically assigned to the next token. A more thorough solution might be to completely rewrite streamer trie to be character level but I think this solution works well enough, especially since specifying stopwords with trailing spaces seems difficult with yaml file.)
 -maybe apply static stopword truncation func to each text response in stream_fake_generator. We actually do have the full strings upfront in this case so that should be very doable.
 -test new stopword streaming functionality for paid backends
     -openai

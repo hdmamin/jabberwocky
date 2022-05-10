@@ -66,7 +66,7 @@ from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
     random_str, deprecated, xor_none
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
-from jabberwocky.streaming import stream_response
+from jabberwocky.streaming import stream_response, truncate_at_first_stop
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     hooked_generator, load_api_key, with_signature, JsonlinesLogger,\
     thread_starmap, ReturningThread, containerize, touch
@@ -80,69 +80,6 @@ MOCK_RESPONSE = [load(C.mock_stream_paths[False]),
 # n_prompts > 1, n_completions > 1, stream=False. N > 1 always means 2 in this
 # case.
 MOCKS = load(C.all_mocks_path)
-
-
-def truncate_at_first_stop(text, stop_phrases, finish_reason='',
-                           trunc_full=True, trunc_partial=True,
-                           partial_pct=.8, partial_n=4):
-    """Remove stop phrases from gpt completions, since some backends either
-    don't provide this functionality or do but leave the trailing stop word
-    attached. We also provide the option to try to detect if the completion
-    finished mid-stopword and remove it if so. E.g. with a stopword of
-    "\n\nMe:", a completion that ends with "\n\nMe" and finished due to
-    length constraints likely should be stripped.
-
-    Parameters
-    ----------
-    text: str
-        GPT completion.
-    stop_phrases: list[str]
-        One or more words/phrases that signify that a completion should end.
-    finish_reason: str
-        Reason a completion ended (if "length", this means it was cut short due
-        to a max_token limit and therefore is at risk for a possible partial
-        stop_phrase remaining at the end). Currently only provided by
-        gpt3/gooseai backends.
-    trunc_full: bool
-        If True, assume the backend does not automatically remove the
-        truncating stop word and instead stops AFTERWARDS (or not at all).
-        As of 4/2/22, this should only be False for the openai backend.
-    trunc_partial: bool
-        If True and finish_reason is "length", we'll try to truncate if the
-        completion ENDS WITH a partial stop word.
-    partial_pct: float
-        When truncating partial stop phrases, this is the percent
-        of a stop phrase that much be matched. Should lie in (0, 1).
-    partial_n: int
-        When truncating partial stop phrases, this the minimum number of
-        characters that must match. (We might want to ensure that super short
-        matches don't qualify.)
-
-    Returns
-    -------
-    str: Input text truncated right before the first stop phrase (if any), and
-    possibly before a partial stop phrase depending on user-specified options.
-    """
-    if trunc_full:
-        idx = [idx for idx in map(text.find, stop_phrases) if idx >= 0]
-        stop_idx = min(idx or [None])
-        text = text[:stop_idx]
-
-    # If the completion was cut short due to length AND the completion ends
-    # with the majority of a stop phrase, we infer that this should be stripped
-    # from the end. This rule won't be perfect but it seems like a decent bet.
-    if trunc_partial and finish_reason == 'length':
-        for phrase in stop_phrases:
-            thresh = max(int(round(partial_pct * len(phrase))), partial_n)
-            chunk = phrase[:thresh]
-            if text.endswith(chunk):
-                warnings.warn(
-                    'Guessing that truncation is reasonable because '
-                    'finish_reason="length" and completion ends with a '
-                    'partial stop phrase.'
-                )
-                return text.rpartition(chunk)[0]
-    return text
 
 
 @mark(batch_support=False)
@@ -1060,7 +997,7 @@ class GPTBackend:
     @with_signature(query_gpt3, keep=True)
     @add_docstring(query_gpt3)
     def query(self, prompt, strip_output=True, log=True, optimize_cost=False,
-              **kwargs):
+              subwords=True, **kwargs):
         """Query gpt3 with whatever the current backend is.
 
         Parameters
@@ -1071,6 +1008,23 @@ class GPTBackend:
             If True, the logfile defaults to a path like
             './data/logs/2022.04.07.jsonlines' (current year, month, day).
             If str, use that as the log path. If False or None, do not log.
+        subwords: bool
+            If True and stream=True but the currentbackend doesn't natively
+            support streaming, you have a choice of streaming words or
+            subword tokens. In most cases subwords=True should be preferable,
+            but if you're piping words to some kind of audio generation service
+            it may be preferable to use words rather than subwords since
+            subwords may not be pronounced correctly (even then, you'd probably
+            want to pass in larger chunks of text to avoid a very choppy
+            cadence).
+        optimize_cost: bool
+            If True, check if gooseai or openai is projected to be cheaper
+            for the current engine (and based on the input prompt length and
+            the maximum completion length) and automatically choose the cheaper
+            option. This option expects you are already using one of the two
+            paid backends: if you're using a free backend, it will warn you and
+            pause for a few seconds to give you a chance to cancel before
+            switching to a paid one.
         kwargs
 
         Returns
@@ -1108,10 +1062,11 @@ class GPTBackend:
             else:
                 query_meth = self._query
             return query_meth(prompt, query_func=query_func,
-                              strip_output=strip_output, log=log, **kwargs)
+                              strip_output=strip_output, log=log,
+                              subwords=subwords, **kwargs)
 
     def _query(self, prompt, query_func, strip_output=True, log=True,
-               **kwargs):
+               subwords=True, **kwargs):
         # Including indices in responses makes it easier to tell which
         # completions correspond to which prompts when we use multiple prompts
         # and/or multiple completions per prompt.
@@ -1143,11 +1098,12 @@ class GPTBackend:
                 response = query_func(**kwargs)
         except Exception as e:
             raise MockFunctionException(str(e)) from None
+
         if stream:
             return stream_response(response, start_i=start_i,
                                    prompt_i=prompt_i, n=n, np=np_,
-                                   stop=stop,
-                                   backend=self.current())
+                                   stop=stop, backend=self.current(),
+                                   subwords=subwords)
 
         text, full_response = containerize(*response)
         # Manually check for stop phrases because most backends either don't

@@ -15,6 +15,7 @@ changing param names - they must match the stream_response() call in
 jabberwocky.openai_utils.GPTBackend._query().
 """
 from collections import deque
+import warnings
 
 from htools.structures import Trie
 from jabberwocky.utils import containerize, register
@@ -37,7 +38,8 @@ class StopWordStreamer:
     each query, where k is the number of strings in the input prompt.
     """
 
-    def __init__(self, stop_words=None, trie=None, max_len=None, n=1):
+    def __init__(self, stop_words=None, trie=None, max_len=None, n=1,
+                 strip_spaces=True):
         """We recommend using one of the factory constructors
         (from_trie or from_stopwords). _stream_gooseai_generator uses from_trie
         to avoid having to construct k separate tries for a query with k
@@ -77,13 +79,12 @@ class StopWordStreamer:
         """
         if stop_words:
             assert trie is None and max_len is None, \
-                'Do not pass in trie or max_len when specifying stop_words ' \
-                'and tokenizer.'
-            trie, max_len = self.create_trie(stop_words)
+                'Do not pass in trie or max_len when specifying stop_words.'
+            trie, max_len = self.create_trie(stop_words,
+                                             strip_spaces=strip_spaces)
         elif trie and max_len:
             assert stop_words is None, \
-                'Do not pass in stop_words or tokenizer when trie and ' \
-                'max_len are provided.'
+                'Do not pass in stop_words when trie and max_len are provided.'
         else:
             raise RuntimeError('You must either provide stop_words and '
                                'tokenizer OR trie and max_len.')
@@ -105,7 +106,7 @@ class StopWordStreamer:
         return cls(stop_words=stop_words, n=n)
 
     @classmethod
-    def create_trie(cls, stop_words):
+    def create_trie(cls, stop_words, strip_spaces=True):
         """
         Parameters
         ----------
@@ -120,7 +121,10 @@ class StopWordStreamer:
         if not stop_words:
             raise ValueError('No stop_words provided.')
 
-        tokenized = [pretty_tokenize(word) for word in stop_words]
+        tokenized = [
+            pretty_tokenize(word.rstrip(' ') if strip_spaces else word)
+            for word in stop_words
+        ]
         max_len = max(len(toks) for toks in tokenized)
         trie = Trie(tokenized)
         return trie, max_len
@@ -261,8 +265,72 @@ def pretty_tokenize(text, pre_tokenizer=ByteLevel()):
             in pre_tokenizer.pre_tokenize_str(text)]
 
 
-def stream_words(text, subwords=False):
-    """Like stream_chars but splits on spaces. Realized stream_chars was a bad
+def truncate_at_first_stop(text, stop_phrases, finish_reason='',
+                           trunc_full=True, trunc_partial=True,
+                           partial_pct=.8, partial_n=4):
+    """Remove stop phrases from gpt completions, since some backends either
+    don't provide this functionality or do but leave the trailing stop word
+    attached. We also provide the option to try to detect if the completion
+    finished mid-stopword and remove it if so. E.g. with a stopword of
+    "\n\nMe:", a completion that ends with "\n\nMe" and finished due to
+    length constraints likely should be stripped.
+
+    Parameters
+    ----------
+    text: str
+        GPT completion.
+    stop_phrases: list[str]
+        One or more words/phrases that signify that a completion should end.
+    finish_reason: str
+        Reason a completion ended (if "length", this means it was cut short due
+        to a max_token limit and therefore is at risk for a possible partial
+        stop_phrase remaining at the end). Currently only provided by
+        openai/gooseai backends.
+    trunc_full: bool
+        If True, assume the backend does not automatically remove the
+        truncating stop word and instead stops AFTERWARDS (or not at all).
+        As of 4/2/22, this should only be False for the openai backend.
+    trunc_partial: bool
+        If True and finish_reason is "length", we'll try to truncate if the
+        completion ENDS WITH a partial stop word.
+    partial_pct: float
+        When truncating partial stop phrases, this is the percent
+        of a stop phrase that much be matched. Should lie in (0, 1).
+    partial_n: int
+        When truncating partial stop phrases, this the minimum number of
+        characters that must match. (We might want to ensure that super short
+        matches don't qualify.)
+
+    Returns
+    -------
+    str: Input text truncated right before the first stop phrase (if any), and
+    possibly before a partial stop phrase depending on user-specified options.
+    """
+    if trunc_full:
+        idx = [idx for idx in map(text.find, stop_phrases) if idx >= 0]
+        stop_idx = min(idx or [None])
+        text = text[:stop_idx]
+
+    # If the completion was cut short due to length AND the completion ends
+    # with the majority of a stop phrase, we infer that this should be stripped
+    # from the end. This rule won't be perfect but it seems like a decent bet.
+    if trunc_partial and finish_reason == 'length':
+        for phrase in stop_phrases:
+            thresh = max(int(round(partial_pct * len(phrase))), partial_n)
+            chunk = phrase[:thresh]
+            if text.endswith(chunk):
+                warnings.warn(
+                    'Guessing that truncation is reasonable because '
+                    'finish_reason="length" and completion ends with a '
+                    'partial stop phrase.'
+                )
+                return text.rpartition(chunk)[0]
+    return text
+
+
+def stream_words(text, subwords=True):
+    """Ported from gui.
+    Like stream_chars but splits on spaces. Realized stream_chars was a bad
     idea because we risk giving SPEAKER turns like
     "This is over. W" and "hat are you doing next?", neither of which would be
     pronounced as intended. We yield with a space for consistency with the
@@ -282,7 +350,7 @@ def stream_words(text, subwords=False):
             yield word + ' '
 
 
-def _stream_response(text, full, subwords=False):
+def _stream_response(text, full, subwords=True):
     """Generator used to stream gpt completions for backends that don't
     natively support it.
 
@@ -358,7 +426,8 @@ def _stream_openai_generator(gen, n=1, **kwargs):
 
 @register('gooseai', BACKEND2STREAMER)
 @register('mock', BACKEND2STREAMER)
-def _stream_gooseai_generator(gen, stop, n=1, np=1, **kwargs):
+def _stream_gooseai_generator(gen, stop, n=1, np=1, strip_spaces=True,
+                              **kwargs):
     """
     Parameters
     ----------
@@ -371,7 +440,8 @@ def _stream_gooseai_generator(gen, stop, n=1, np=1, **kwargs):
         Unused - just for compatibility with other stream funcs.
     """
     if stop:
-        trie, max_len = StopWordStreamer.create_trie(stop)
+        trie, max_len = StopWordStreamer.create_trie(stop,
+                                                     strip_spaces=strip_spaces)
         streamers = [StopWordStreamer.from_trie(trie, max_len, n=n)
                      for _ in range(np)]
         for text, full in gen:
@@ -390,7 +460,49 @@ def _stream_gooseai_generator(gen, stop, n=1, np=1, **kwargs):
 
 # Do not register this: it's used by many backends so it's easier to use
 # dict.get().
-def _stream_fake_generator(response, start_i=0, prompt_i=0, subwords=False,
+def _stream_fake_generator(response, stop, start_i=0, prompt_i=0,
+                           subwords=True, **kwargs):
+    """Stream (text, dict) pairs from a static response (i.e. a backend that
+    doesn't natively support streaming and just returns a full completion
+    rather than a generator. (Note: old implementation turned each response
+    into a generator which made it much more complex to set a finish reason
+    and also made it harder to truncate at stop words.)
+
+    Parameters
+    ----------
+    response: tuple[list[str], list[dict]]
+    stop: list[str]
+    start_i: int
+    prompt_i: int
+    subwords: bool
+    kwargs: any
+
+    Yields
+    ------
+    tuple[str, dict]
+    """
+    texts, fulls = containerize(*response)
+    for i, (text, full) in enumerate(zip(texts, fulls)):
+        # None of the static backends provide a finish_reason so we stick with
+        # only truncating on full stopwords.
+        trunc_text = truncate_at_first_stop(text, stop)
+        # Converting to list lets us edit the last finish_reason more easily.
+        pairs = [
+            list(pair) for pair in
+            _stream_response(
+                trunc_text,
+                {**full,
+                 'index': i + start_i,
+                 'prompt_index': prompt_i,
+                 'finish_reason': None},
+                subwords=subwords)
+        ]
+        pairs[-1][-1]['finish_reason'] = ('dummy' if trunc_text == text
+                                          else 'stop')
+        yield from pairs
+
+
+def _stream_fake_generator(response, start_i=0, prompt_i=0, subwords=True,
                            **kwargs):
     """Stream (text, dict) pairs from a static response (i.e. a backend that
     doesn't natively support streaming and just returns a full completion
@@ -463,13 +575,14 @@ def stream_response(response, backend=None, **kwargs):
         as well as 'stop' (list of stopword strings).
 
         For backends that don't support streaming natively, we fall back to
-        _stream_fake_generator which accepts args start_i (int),
-        prompt_i (int), and subwords (bool).
+        _stream_fake_generator which accepts args stop (list[str]),
+        start_i (int), prompt_i (int), and subwords (bool).
         When using multiple prompts, GPTBackend._query_batch passes the two
         index args to GPTBackend._query which in turn passes them here.
         They are used to set the index and prompt_index correctly.
-        If subwords=False, we simply split on spaces, which may
-        result in failing to truncate on stopwords correctly.
+        If subwords=False, we simply split on spaces (this should no longer
+        break truncation functionality for static backends because we truncate
+        each full text response in _stream_fake_generator).
 
     Yields
     ------
