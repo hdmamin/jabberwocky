@@ -502,55 +502,6 @@ def _stream_fake_generator(response, stop, start_i=0, prompt_i=0,
         yield from pairs
 
 
-def _stream_fake_generator(response, start_i=0, prompt_i=0, subwords=True,
-                           **kwargs):
-    """Stream (text, dict) pairs from a static response (i.e. a backend that
-    doesn't natively support streaming and just returns a full completion
-    rather than a generator.
-
-    Parameters
-    ----------
-    response
-    start_i
-    prompt_i
-    tokenizer
-    kwargs: any
-        Unused - just for consistent interface with other stream functions.
-
-    Returns
-    -------
-
-    """
-    texts, fulls = containerize(*response)
-    for i, (text, full) in enumerate(zip(texts, fulls)):
-        queue = deque()
-        gen = _stream_response(
-            text,
-            {**full,
-             'index': i + start_i,
-             'prompt_index': prompt_i,
-             'finish_reason': None},
-            subwords=subwords
-        )
-        done = False
-        # Yield items while checking if we're at the last item so we can mark
-        # it with a finish_reason. This lets us know when one completion ends.
-        while True:
-            try:
-                tok, tok_full = next(gen)
-                queue.append((tok, tok_full))
-            except StopIteration:
-                done = True
-
-            while len(queue) > 1:
-                tok, tok_full = queue.popleft()
-                yield tok, tok_full
-            if done: break
-        tok, tok_full = queue.popleft()
-        tok_full['finish_reason'] = 'dummy'
-        yield tok, tok_full
-
-
 def stream_response(response, backend=None, **kwargs):
     """Generator that lets us stream tokens and metadata from gpt query
     functions for backends that don't natively provide streaming. (Obviously,
