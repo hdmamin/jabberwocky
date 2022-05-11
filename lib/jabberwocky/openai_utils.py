@@ -435,6 +435,39 @@ def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
     return res['modelOutputs'][0]['output'], res
 
 
+def drop_last_fragment(text, response=None, punct='.!?:")]\''):
+    """Try to drop a trailing fragment from a gpt completion (sometimes the
+    model gets cut off by max_tokens).
+
+    Parameters
+    ----------
+    text: str
+        GPT string response from our standard query() usage:
+        text, response = GPT.query(...)
+    response: None or dict
+        GPT full response dict from our standard query() usage:
+        text, response = GPT.query(...)
+    punct: str
+        Characters that mark the end of a sentence (we consider each character
+        separately - these are not word tokens). We're pretty generous here -
+        the goal isn't a perfect truncation (if there even is such a thing when
+        a completion is cut off mid-sentence), we just want to outperform
+        the "never truncate" and "always truncate" strategies.
+
+    Returns
+    -------
+    str: Input text with the last fragment removed, if one exists. If the text
+    contains <=1 full sentence, it will be kept automatically, with the
+    justification that no response is worse than a low quality response.
+    """
+    if response and response.get('finish_reason', 'length') != 'length':
+        return text
+    sentences = sent_tokenize(text)
+    if len(sentences) > 1 and not sentences[-1].endswith(tuple(punct)):
+        sentences = sentences[:-1]
+    return ' '.join(sentences)
+
+
 class MockTokenizer:
     """Mock tokenizer that should only be used when trying to estimate the
     number of tokens in a piece of text. This can be used as a tokenizer in
@@ -941,7 +974,6 @@ class GPTBackend:
         """
         return EngineMap.get(engine, backend=backend, **kwargs)
 
-    # TODO
     @contextmanager
     def _optimized(self, prompt, optimize_cost=False, warning_sleep=3,
                    **kwargs):
@@ -997,8 +1029,9 @@ class GPTBackend:
     @with_signature(query_gpt3, keep=True)
     @add_docstring(query_gpt3)
     def query(self, prompt, strip_output=True, log=True, optimize_cost=False,
-              subwords=True, **kwargs):
-        """Query gpt3 with whatever the current backend is.
+              subwords=True, drop_fragment=False, **kwargs):
+        """Query gpt3 with whatever the current backend is. Aside from prompt,
+        you should pass in named arguments.
 
         Parameters
         ----------
@@ -1036,6 +1069,10 @@ class GPTBackend:
             warnings.warn('Doesn\'t make sense to use strip_output=True in '
                           'streaming mode. Automatically setting it to False.')
             strip_output = False
+        if stream and drop_fragment:
+            warnings.warn('Drop_fragment=True is unavailable in streaming '
+                          'mode and will be ignored.')
+            drop_fragment = False
 
         stop = kwargs.get('stop', [])
         n_stop = len(tolist(stop))
@@ -1063,10 +1100,11 @@ class GPTBackend:
                 query_meth = self._query
             return query_meth(prompt, query_func=query_func,
                               strip_output=strip_output, log=log,
-                              subwords=subwords, **kwargs)
+                              subwords=subwords, drop_fragment=drop_fragment,
+                              **kwargs)
 
     def _query(self, prompt, query_func, strip_output=True, log=True,
-               subwords=True, **kwargs):
+               subwords=True, drop_fragment=False, **kwargs):
         # Including indices in responses makes it easier to tell which
         # completions correspond to which prompts when we use multiple prompts
         # and/or multiple completions per prompt.
@@ -1118,6 +1156,7 @@ class GPTBackend:
                 trunc_full=trunc_full,
                 trunc_partial=True
             )
+            if drop_fragment: text_ = drop_last_fragment(text_, resp_)
             clean_text.append(strip(text_, strip_output))
             # Add prompt i so index is correct when calling this from
             # _query_batch. When not calling it from there, prompt_i is always
