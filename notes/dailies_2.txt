@@ -1515,6 +1515,7 @@ X -start prototyping func to support remote prompt loading (would be good if jab
     -finish implementing (see load_remote_prompt draft in ipython below)
 -incorporate new bio cleanup prompt into convmanager
 -add support for "default" section in load_prompt (e.g. if we have a list prompt of n items, we might want to let the user adjust n but fallback to a default of 3)
+-add "docs" arg for prompt yaml files containing more details on what they do?
 -review old notes and online sources re adding email integration. 
 
 
