@@ -1496,12 +1496,27 @@ X -consider how to avoid ending a reply mid-sentence? (Ideally api would do this
 
 5/11/22 wed
 -----------
--try a few short calls in aws console - got sidetracked a bit with library dev tasks so it's been a while, and I want to make sure everything still works
-    -assess repetition problems with different backends/engines
--try to reduce amount of repetition in gpt responses
-    -try with better model (maybe this task just really needs davinci?)
-    -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
-    -try tweaking prompt a bit.
+X -try a few short calls in aws console - got sidetracked a bit with library dev tasks so it's been a while, and I want to make sure everything still works
+    X -assess repetition problems with different backends/engines
+    UPDATE: also found and removed old bug where change_model changed nonexistant "model_i" param (now "engine"). Also updated error message to use "model" instead of "backend".
+~ -try to reduce amount of repetition in gpt responses
+    X -try with better model (maybe this task just really needs davinci?)
+    X -try increasing repetition penalty (or presence penalty? Need to refresh my mind of details/best practices re values to use, etc.)
+    _ -try tweaking prompt a bit.
+    UPDATE: Was seeing a lot of repetition in alexa responses but less in console. Tried upping frequency_penalty anyway (NLCA book recommends .5-1, while openai playground default is 0. I was using 0.1 and moved it to 0.5 now.) Also experimented with bio cleanup prompt (sometimes my regex-based parsing doesn't work perfectly). Had some success in playground but it's also not perfect.
+X -add new bio cleanup prompt
+    UPDATE: "wiki_bio_cleanup". Also added a "social_hypotheses" prompt.
+X -start prototyping func to support remote prompt loading (would be good if jabberwocky was less wedded to local files)
+
+5/12/22 thurs
+-------------
+-add support for remote prompts
+    -select desired interface (maybe one func where you can either pass a local prompt dir or a url fmt)
+    -finish implementing (see load_remote_prompt draft in ipython below)
+-incorporate new bio cleanup prompt into convmanager
+-add support for "default" section in load_prompt (e.g. if we have a list prompt of n items, we might want to let the user adjust n but fallback to a default of 3)
+-review old notes and online sources re adding email integration. 
+
 
 
 Backlog

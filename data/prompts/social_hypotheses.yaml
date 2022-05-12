@@ -1,0 +1,24 @@
+engine: 2
+temperature: .7
+max_tokens: 110
+frequency_penalty: 0.5
+stop: 
+- "\n\nScenario:"
+- "\n6."
+reminder: "Even engine 1 can work pretty well."
+prompt: |-
+    For each social scenario, write five alternate hypotheses for why Person A behaved the way they did.
+
+    Scenario:
+    Person A cried when I told them I was leaving for a new job.
+    Hypotheses:
+    1. Person A sees me as a close friend and is sad they won't get to see me as much.
+    2. Person A has been particularly emotional lately after losing a loved one, and they sometimes cry for relatively innocuous reasons.
+    3. Person A hates me and wanted to fire me, rather than letting me leave voluntarily.
+    4. Person A is in love with me and is sad they lost their chance to be with me.
+    5. Person A is pretending to care about me because they're hoping I'll provide a positive reference for them in the future.
+
+    Scenario:
+    {}
+    Hypotheses:
+    1.

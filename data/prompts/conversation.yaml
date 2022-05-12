@@ -1,10 +1,10 @@
 engine: 3
-temperature: .5
+temperature: .7
 max_tokens: 100
-frequency_penalty: 0.1
+frequency_penalty: 0.5
 stop: 
 - "\n\nMe:"
 - "This is a conversation with"
-reminder: "Might want to try tweaking frequency penalty."
+reminder: "Old version had temperature=.5 and frequency_penalty=0.1."
 prompt: |-
     This is a conversation with {name}. {summary}

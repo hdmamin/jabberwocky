@@ -1,0 +1,27 @@
+engine: 3
+temperature: 0
+max_tokens: 150
+frequency_penalty: 0.1
+stop: 
+- "\n\nMessy:"
+- "\n\nClean:"
+reminder: "While using davinci here feels ridiculous, it does seem to perform noticeably better than the other engines."
+prompt: |-
+    I built a webscraper that extracts excerpts from Wikipedia bios. Sometimes the excerpts are messy. Clean them up by fixing typos, removing pronunciation guidelines and citations, and cleaning up any other mistakes you find.
+
+    Messy:
+    Mark Elliot   Zuckerberg (born (1984-05-14)May 14, 1984) is an American media magnate, internet entrepreneur, and philanthropist. He is known for co-founding the social media website Facebook and its parent company Meta Platforms (formerly, Facebook, Inc.), of which he is the chairman, chief executive officer, and controlling shareholder.Zuckerberg attended Harvard University, where he launched Facebook from his dormitory room in February 2004(.) with his roommates Eduardo Saverin, Andrew McCollum, Dustin Moskovitz, and Chris Hughes.
+
+    Clean:
+    Mark Elliot Zuckerberg (born 1984-05-14) is an American media magnate, internet entrepreneur, and philanthropist. He is known for co-founding the social media website Facebook and its parent company Meta Platforms (formerly Facebook, Inc.), of which he is the chairman, chief executive officer, and controlling shareholder. Zuckerberg attended Harvard University, where he launched Facebook from his dormitory room in February 2004 with his roommates Eduardo Saverin, Andrew McCollum, Dustin Moskovitz, and Chris Hughes.
+
+    Messy:
+    Conor Anthony McGregor (;[] born 14 July 1988) is an Irish professional mixed martial artist. He is a former Ultimate Fighting Championship (,) featherweight and lightweight double-champion.[11] He is also the former Cage Warriors featherweight and lightweight champion.As of 19 July 2021, he is ranked #9 in the UFC lightweight rankings.
+
+    Clean:
+    Conor Anthony McGregor (born 14 July 1988) is an Irish professional mixed martial artist. He is a former Ultimate Fighting Championship featherweight and lightweight double-champion. McGregor is also the former Cage Warriors featherweight and lightweight champion. As of 19 July 2021, he is ranked #9 in the UFC lightweight rankings.
+
+    Messy:
+    {}
+
+    Clean:

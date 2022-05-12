@@ -306,9 +306,9 @@ def change_model(scope=None, model=None):
     print('MODEL pre-conversion:', model, 'type:', type(model))
     model = str2int.get(model, model)
     print('MODEL post-conversion:', model, 'type:', type(model))
-    msg = f'I\'ve switched your {scope} backend to model {model}.'
+    msg = f'I\'ve switched your {scope} model to model {model}.'
     if isinstance(model, int):
-        state.set(scope, model_i=model)
+        state.set(scope, engine=model)
     else:
         msg = f'It sounded like you asked for model ' \
               f'{model or "no choice specified"}, but the only ' \
