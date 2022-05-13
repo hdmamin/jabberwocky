@@ -60,6 +60,7 @@ import sys
 from threading import Lock
 import time
 import warnings
+import yaml
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
     listlike, Results, flatten, add_docstring, func_name, params, mark, \
@@ -2243,7 +2244,7 @@ def print_response(prompt, response, sep=' '):
 
 
 def load_prompt(name, prompt='', rstrip=True, verbose=True,
-                prompt_dir=C.root/'data/prompts', **format_kwargs):
+                prompt_dir=C.root/'data/prompts', base_url=''):
     """Load a gpt3 prompt from data/prompts. Note that this function went
     through several iterations and early versions of this function didn't
     allow for an input prompt parameter. This worked fine for toy examples
@@ -2265,7 +2266,7 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True,
         Additional input to be inserted into the prompt template. For example,
         our tldr template prompt is "{}\n\ntl;dr:". We need to pass in text
         to summarize (this replaces the brackets like in a python f-string).
-        A str input is required if the prmopt template expects 1 variable, like
+        A str input is required if the prompt template expects 1 variable, like
         the tldr example above. Prompts with multiple variables expect a dict
         (e.g. we might have the template 'I am {name} and I am from {state}.',
         then pass in prompt={'name': Sam, 'state': 'California'}).
@@ -2277,6 +2278,25 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True,
         If True, this will print a message on loading if one is specified in
         the prompt config file. This can be some kind of reminder or usage
         note.
+    base_url: str
+        If provided, this should be a url that allows us to load a remote
+        prompt by making an http request to base_url.format(name).
+        The code to load remote prompts expects that this will resolve to a
+        URL for viewing a raw file hosted on github. You can find this type of
+        URL by going to a git repo containing your prompts, clicking on a
+        prompt yaml file, clicking the button to view the raw version, then
+        copying the URL and replacing the file name (but keeping the file
+        extension) with '{}'. See jabberwocky.config.C.prompt_base_url
+        for an example:
+        (
+            'https://raw.githubusercontent.com/hdmamin/'
+            'jabberwocky/main/data/prompts/{}.yaml'
+        )
+        If provided, this will override the prompt_dir arg.
+    format_kwargs: any
+        Mostly just here for compatibility with old conversation_formatter()
+        function which is now basically deprecated. These are unused by the
+        default formatter.
 
     Returns
     -------
@@ -2286,21 +2306,26 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True,
     be relevant, while 'max_tokens' or 'engine' may depend on the specific
     usage.
     """
-    path = Path(prompt_dir)/name
-    # V1 style prompt files are stored in dir, v2 style are stored in
-    # single config.
-    if path.is_dir():
-        prompt_fmt = load(path / 'prompt.txt')
-        kwargs = load_yaml(path / 'config.yaml')
-    else:
-        kwargs = load_yaml(f'{path}.yaml')
+    if base_url:
+        r = requests.get(base_url.format(name))
+        kwargs = yaml.safe_load(r.content.decode())
         prompt_fmt = kwargs.pop('prompt')
+    else:
+        path = Path(prompt_dir)/name
+        # V1 style prompt files are stored in dir, v2 style are stored in
+        # single config.
+        if path.is_dir():
+            prompt_fmt = load(path / 'prompt.txt')
+            kwargs = load_yaml(path / 'config.yaml')
+        else:
+            kwargs = load_yaml(f'{path}.yaml')
+            prompt_fmt = kwargs.pop('prompt')
 
     # If no prompt is passed in, we load the template and leave variable
     # imputation for later.
     if prompt:
         formatter = TASK2FORMATTER.get(name, default_formatter)
-        prompt = formatter(prompt_fmt, prompt, **format_kwargs)
+        prompt = formatter(prompt_fmt, prompt)
     else:
         prompt = prompt_fmt
 

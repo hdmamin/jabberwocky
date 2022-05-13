@@ -1510,18 +1510,31 @@ X -start prototyping func to support remote prompt loading (would be good if jab
 
 5/12/22 thurs
 -------------
--add support for remote prompts
-    -select desired interface (maybe one func where you can either pass a local prompt dir or a url fmt)
-    -finish implementing (see load_remote_prompt draft in ipython below)
+X -add support for remote prompts
+    X -select desired interface (maybe one func where you can either pass a local prompt dir or a url fmt)
+        UPDATE: load local by default, but if url is provided that takes priority.
+    X -finish implementing (see load_remote_prompt draft in ipython below)
 -incorporate new bio cleanup prompt into convmanager
--add support for "default" section in load_prompt (e.g. if we have a list prompt of n items, we might want to let the user adjust n but fallback to a default of 3)
+~ -add support for "default" section in load_prompt (e.g. if we have a list prompt of n items, we might want to let the user adjust n but fallback to a default of 3)
+	UPDATE: seems like best way to do this would be by writing a Prompt class that can store defaults and adding custom logic in the format method. Made a lot of progress on this but prob still have some work to do.
 -add "docs" arg for prompt yaml files containing more details on what they do?
 -review old notes and online sources re adding email integration. 
+
+5/13/22 fri
+-----------
+-finish Prompt class (see data/tmp/prompt.py - maybe good to move to nb now. Getting annoying scrolling through ipython cells.)
+	-test adding default args in prompt
+	-add ability to store more kwargs (e.g. engine, max_tokens, temperature)
+	-try incorporating into a prototype version of load_prompt
+	-if interface seems promising, maybe update prompt_manager/conv_manager etc. to use this instead of storing dicts
+	-potential extensions: specify unit tests (natural language or otherwise)
 
 
 
 Backlog
 -------
+-review old notes and online sources re adding email integration. 
+-incorporate new bio cleanup prompt into convmanager
 -[ON HOLD: so far this seems to work, maybe just let myself stumble upon bugs if they arise during further development] test new stopword streaming functionality for paid backends
     -openai
     -gooseai

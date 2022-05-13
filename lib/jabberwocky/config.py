@@ -66,3 +66,9 @@ class C:
     # GPTBackend.query logger uses in the meta.datetime field.
     ctime_fmt = '%a %b %d %H:%M:%S %Y'
 
+    # Notice this still has a {}: we must call remote_prompt_url.format(task)
+    # to get the fully resolved URL.
+    prompt_base_url = 'https://raw.githubusercontent.com/hdmamin/'\
+        'jabberwocky/main/data/prompts/{}.yaml'
+
+
