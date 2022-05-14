@@ -1,0 +1,22 @@
+engine: 0
+max_tokens: 15
+reminder: "Max_tokens probably should change as a result of the prompt args but this is just for testing purposes. Should probably delete eventually."
+stop:
+  - "1."
+  - "\n1."
+  - "\n1. "
+postprocessors:
+  - name: tmp.reattach_1
+  - name: tmp.indent
+    broken: False
+  - name: tmp.swapcase
+validators:
+  - name: tmp.test_indented
+    mode: all
+defaults:
+  n: 3
+  quality: old
+prompt: |-
+  Make a list of {n} names that sound {quality}:
+
+  1.

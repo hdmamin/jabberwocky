@@ -1,0 +1,19 @@
+reminder: "This doesn't actually work very well but the settings are a good example of what is needed for my envisioned natural language tests."
+engine: 1
+temperature: 0.0
+max_tokens: 1
+presence_penalty: 2
+frequency_penalty: 2
+logprobs: 2
+stop:
+  - "\n"
+# " yes" and " no"
+logit_bias:
+  3763: 100
+  645: 100
+prompt: |-
+    Does the following email maintain a professional tone? (Yes/No)
+
+    Email:
+    {} 
+    Answer:

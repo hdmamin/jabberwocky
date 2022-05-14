@@ -1522,12 +1522,23 @@ X -add support for remote prompts
 
 5/13/22 fri
 -----------
--finish Prompt class (see data/tmp/prompt.py - maybe good to move to nb now. Getting annoying scrolling through ipython cells.)
-	-test adding default args in prompt
-	-add ability to store more kwargs (e.g. engine, max_tokens, temperature)
+~ -finish Prompt class (see data/tmp/prompt.py - maybe good to move to nb now. Getting annoying scrolling through ipython cells.)
+	X -test adding default args in prompt
+	X -add ability to store more kwargs (e.g. engine, max_tokens, temperature)
 	-try incorporating into a prototype version of load_prompt
+	UPDATE: for now, added classmethod to Prompt which loads yaml using load_prompt. This is a little weird so might end up changing it later.
 	-if interface seems promising, maybe update prompt_manager/conv_manager etc. to use this instead of storing dicts
-	-potential extensions: specify unit tests (natural language or otherwise)
+	X -potential extensions: specify unit tests (natural language or otherwise)
+		UPDATE: added postprocessors and validators, 2 lists of functions to apply after querying.
+
+5/14/22 sat
+-----------
+-move tmp.py elsewhere and adjust prompt tmp.yaml accordingly
+-more updates to Prompt class (see data/tmp/prompt.py - maybe good to move to nb now. Getting annoying scrolling through ipython cells.)
+	-validate that if defaults are provided, they are a subset of the available fields
+	-allow passing in *args or **kwargs to resolve. Passing in a dict is a little clunky.
+	-consider: should postprocessors and validators be called automatically after a query? (Either for all queries in GPT or in prompt/conv manager(s)?)
+-if I like Prompt interface, update load_prompt/prompt_manager/conv_manager etc. to use this instead of storing dicts
 
 
 
