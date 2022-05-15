@@ -6,12 +6,12 @@ stop:
   - "\n1."
   - "\n1. "
 postprocessors:
-  - name: tmp.reattach_1
-  - name: tmp.indent
+  - name: data.tmp.test_prompt_postprocessing.reattach_1
+  - name: data.tmp.test_prompt_postprocessing.indent
     broken: False
-  - name: tmp.swapcase
+  - name: data.tmp.test_prompt_postprocessing.swapcase
 validators:
-  - name: tmp.test_indented
+  - name: data.tmp.test_prompt_postprocessing.test_indented
     mode: all
 defaults:
   n: 3

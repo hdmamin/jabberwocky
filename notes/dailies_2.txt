@@ -1533,18 +1533,26 @@ X -add support for remote prompts
 
 5/14/22 sat
 -----------
--move tmp.py elsewhere and adjust prompt tmp.yaml accordingly
--more updates to Prompt class (see data/tmp/prompt.py - maybe good to move to nb now. Getting annoying scrolling through ipython cells.)
-	-validate that if defaults are provided, they are a subset of the available fields
-	-allow passing in *args or **kwargs to resolve. Passing in a dict is a little clunky.
+X -move tmp.py elsewhere and adjust prompt tmp.yaml accordingly
+X -more updates to Prompt class (see data/tmp/prompt.py - maybe good to move to nb now. Getting annoying scrolling through ipython cells.)
+	X -validate that if defaults are provided, they are a subset of the available fields
+	X -allow passing in *args or **kwargs to resolve. Passing in a dict is a little clunky.
 	-consider: should postprocessors and validators be called automatically after a query? (Either for all queries in GPT or in prompt/conv manager(s)?)
 -if I like Prompt interface, update load_prompt/prompt_manager/conv_manager etc. to use this instead of storing dicts
+
+5/15/22 sun
+-----------
+-more prompt class updates
+	-consider: should postprocessors and validators be called automatically after a query? (Either for all queries in GPT or in prompt/conv manager(s)?)
+		-should validator raise an error when broken or return false? Should it return true or the completion str when it passes?
+-if I like Prompt interface, update load_prompt/prompt_manager/conv_manager etc. to use this instead of storing dicts
+-alternate option: review old notes and online sources re adding email integration. 
+	-get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
 
 
 
 Backlog
 -------
--review old notes and online sources re adding email integration. 
 -incorporate new bio cleanup prompt into convmanager
 -[ON HOLD: so far this seems to work, maybe just let myself stumble upon bugs if they arise during further development] test new stopword streaming functionality for paid backends
     -openai
@@ -1562,7 +1570,6 @@ Backlog
 ~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
 -update jabberwocky version and upload to pypi
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
--get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
 -update end of conv to erase conv-level settings
     ~ -consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
         UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.
