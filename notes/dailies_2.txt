@@ -1543,13 +1543,21 @@ X -more updates to Prompt class (see data/tmp/prompt.py - maybe good to move to 
 
 5/15/22 sun
 -----------
--more prompt class updates
-	-consider: should postprocessors and validators be called automatically after a query? (Either for all queries in GPT or in prompt/conv manager(s)?)
-		-should validator raise an error when broken or return false? Should it return true or the completion str when it passes?
--if I like Prompt interface, update load_prompt/prompt_manager/conv_manager etc. to use this instead of storing dicts
+~ -more prompt class updates
+	_ -consider: should postprocessors and validators be called automatically after a query? (Either for all queries in GPT or in prompt/conv manager(s)?)
+		_ -should validator raise an error when broken or return false? Should it return true or the completion str when it passes?
+	UPDATE: made some updates but there are still a lot of issues to work out which will take a while, and because there's no immediate use case, I made the call to postpone this. I'm getting sidetracked with all these openai library wrapper changes which are out of scope of the original alexa project plan.
+_ -if I like Prompt interface, update load_prompt/prompt_manager/conv_manager etc. to use this instead of storing dicts
 -alternate option: review old notes and online sources re adding email integration. 
 	-get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
+X -move tmp.yaml to a new experimental prompts dir (don't want unsupported fields causing any surprise errors)
 
+5/16/22 mon
+-----------
+[THEME: return focus to alexa and start to think about how to wrap up skill v1. Enough getting sidetracked on (admittedly interesting) openai wrapper stuff.]
+-review old notes and online sources re adding email integration. 
+	-get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
+-alternate: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
 
 Backlog
