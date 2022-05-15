@@ -1537,6 +1537,7 @@ X -move tmp.py elsewhere and adjust prompt tmp.yaml accordingly
 X -more updates to Prompt class (see data/tmp/prompt.py - maybe good to move to nb now. Getting annoying scrolling through ipython cells.)
 	X -validate that if defaults are provided, they are a subset of the available fields
 	X -allow passing in *args or **kwargs to resolve. Passing in a dict is a little clunky.
+	X -refactor resolve() to use Signature and bind()
 	-consider: should postprocessors and validators be called automatically after a query? (Either for all queries in GPT or in prompt/conv manager(s)?)
 -if I like Prompt interface, update load_prompt/prompt_manager/conv_manager etc. to use this instead of storing dicts
 
