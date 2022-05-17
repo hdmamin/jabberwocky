@@ -558,15 +558,16 @@ class Settings(Mapping):
 
     def init_settings(self, conv=None,
                       args=('engine', 'temperature', 'max_tokens',
-                            'frequency_penalty')):
+                            'frequency_penalty'), **kwargs):
         """Don't call this in __init__ automatically because flask session
         object is not yet not available. Instead, we call it in the
         reset_app_state function in app.py.
         """
         if conv:
-            kwargs = select(conv._kwargs, keep=args)
+            new_kwargs = select(conv._kwargs, keep=args)
         else:
-            kwargs = getdefaults(query_gpt3, *args)
+            new_kwargs = getdefaults(query_gpt3, *args)
+        kwargs.update(new_kwargs)
         self.set('global', **kwargs)
 
     @classmethod

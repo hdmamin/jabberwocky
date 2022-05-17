@@ -1555,8 +1555,17 @@ X -move tmp.yaml to a new experimental prompts dir (don't want unsupported field
 5/16/22 mon
 -----------
 [THEME: return focus to alexa and start to think about how to wrap up skill v1. Enough getting sidetracked on (admittedly interesting) openai wrapper stuff.]
--review old notes and online sources re adding email integration. 
+~ -review old notes and online sources re adding email integration. 
 	-get consent_card working on use_email endpoint (then refactor to have this automatically done on skill launch?)
+	UPDATE: tried again but still get 403 error (basically unauthorized to access info) when trying to retrieve user email. Also tried voice consent again but still get that weird mystery "audio only" blip response and then the app exits. Enabling permissions on that amazon website seems to briefly work (sometimes?) but it gets reset very easily - maybe after a few minutes or when one session ends?
+X -make default option in alexa conv to drop last fragment
+X -fix bug where auto punct was performed regardless of setting
+-alternate: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
+
+6/17/22 tues
+------------
+-find gmail alternative for sending emails (less secure app access option expires 5/30/22, and even without that it's proving difficult to disable 2FA for just the jabberwocky account)
+-allow user to add api key (openai/gooseai etc.) (Note: maybe this would be an alternate way to get user name/email? Allow them to type it in in app?)
 -alternate: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
 

@@ -44,7 +44,7 @@ def get_user_info(attrs=('name', 'email')):
     system = context.System
     token = system.get("apiAccessToken")
     endpoint = system.get('apiEndpoint')
-    # ask.logger.info(f'token={token}', f'endpoint={endpoint}')  # TODO rm
+    ask.logger.info(f'token={token} \nendpoint={endpoint}')  # TODO rm
     if not (token and endpoint):
         return ''
     res = dict.fromkeys(attrs, '')
@@ -77,7 +77,8 @@ def health():
 def tmp_email_me():
     return statement(
         'Do you mind if I access your name and email address? This will let '
-        'me send you transcripts of your conversations.'
+        'me send you transcripts of your conversations. '
+        'Say "I consent" or "no".'
     ).consent_card('alexa::profile:email:read')
 
 
@@ -127,8 +128,9 @@ def send_transcript(conv, user_email='', cleanup=False):
 
 # TODO: might want to change default backend arg, but for now use free model
 # for testing.
+# TODO: Maybe enabl auto punct with openai but banana backend is too slow.
 def reset_app_state(end_conv=True, clear_queue=True,
-                    backend_='banana', auto_punct=True,
+                    backend_='banana', auto_punct=False,
                     attrs=('name', 'email')):
     """Reset some app-level attributes in `state`, `ask`, and `conv` objects.
 
@@ -160,7 +162,7 @@ def reset_app_state(end_conv=True, clear_queue=True,
     # If we ever want explicitly tracked settings to include stop phrases,
     # this must remain after changing conv.me (see line above) since that
     # changes the stop phrases.
-    state.init_settings(conv)
+    state.init_settings(conv, drop_fragment=True)
     # TODO: keeping things cheaper for testing, though it actually doesn't
     # matter atm now that I'm using banana backend.
     state.set('global', engine=0)
@@ -437,16 +439,19 @@ def _reply(prompt=None):
     # ratio is roughly 1.33 on average.
     # TODO: maybe add setting to make punctuation optional? Prob slows things
     # down significantly, but potentially could improve completions a lot.
-    ask.logger.info('BEFORE PUNCTUATION: ' + prompt)
     # Banana.dev is the only reliable free API. I think it should be good
     # enough for punctuation. I'm choosing to keep this separate from the
     # user-selected backend.
-    with GPT('banana'):
-        prompt, _ = prompter.query(task='punctuate_alexa',
-                                   text=prompt, strip_output=True,
-                                   max_tokens=2 * len(prompt.split()))
-    ask.logger.info('AFTER PUNCTUATION: ' + prompt[0])
-    text, _ = conv.query(prompt[0], **state)
+    ask.logger.info('PROMPT: ' + prompt)
+    if state.auto_punct:
+        ask.logger.info('BEFORE PUNCTUATION: ' + prompt)
+        with GPT('banana'):
+            prompt, _ = prompter.query(task='punctuate_alexa',
+                                       text=prompt, strip_output=True,
+                                       max_tokens=2 * len(prompt.split()))
+            prompt = prompt[0]
+    ask.logger.info('BEFORE QUERY: ' + prompt)
+    text, _ = conv.query(prompt, **state)
     return question(text[0])
 
 
