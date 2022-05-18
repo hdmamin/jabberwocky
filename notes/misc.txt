@@ -375,3 +375,8 @@ thoughts on dropping sentence fragments
 -make optional via arg in query() signature
 -do not apply if response has only one sentence total? Would presumably drop the whole thing then.
 -do not apply if the backend provides a finish_reason and that reason is NOT length
+
+5/17/22 tues
+------------
+Good tutorial for adding account linking (currently disabled since built in permissions started working again but might need to reference this again since that has often been disabled periodically in the past).
+https://www.youtube.com/watch?v=C9fWMYyRWls&ab_channel=DabbleLab

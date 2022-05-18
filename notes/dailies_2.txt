@@ -1564,10 +1564,21 @@ X -fix bug where auto punct was performed regardless of setting
 
 6/17/22 tues
 ------------
--find gmail alternative for sending emails (less secure app access option expires 5/30/22, and even without that it's proving difficult to disable 2FA for just the jabberwocky account)
--allow user to add api key (openai/gooseai etc.) (Note: maybe this would be an alternate way to get user name/email? Allow them to type it in in app?)
+X -find gmail alternative for sending emails (less secure app access option expires 5/30/22, and even without that it's proving difficult to disable 2FA for just the jabberwocky account)
+	UPDATE: outlook seems to work fine.
+~ -try adding account linking instead of user permissions method
+	UPDATE: found good tutorial (link in misc.txt) but I don't think it ended up being used bc for some reason now the regular permissions are still working (recall in the past they would frequently get turned off by amazon for some reason).
+~ -allow user to add api key (openai/gooseai etc.) (Note: maybe this would be an alternate way to get user name/email? Allow them to type it in in app?)
+	UPDATE: did more digging on this and it sounds like there's not a good way to do this natively. Only options are to have the user read it 1 character at a time (very error prone, though maybe doable with some custom logic in the app) or create a site where user can enter it in.
 -alternate: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
+5/18/22
+-------
+-see if I can access polly.ai voices
+	-change speaker gender based on current persona
+	-add emotion markup (start w/ hardcoded)
+	-prototype prompt: gpt3 infers emotion tags based on response text
+-revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
 Backlog
 -------
