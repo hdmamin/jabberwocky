@@ -18,7 +18,7 @@ from config import EMAIL, LOG_FILE
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load
 from jabberwocky.openai_utils import ConversationManager, PromptManager, GPT
-from utils import slot, Settings, model_type, CustomAsk, infer_intent
+from utils import slot, Settings, model_type, CustomAsk, infer_intent, voice
 
 
 # Define these before functions since endpoints use ask method as decorators.
@@ -452,7 +452,8 @@ def _reply(prompt=None):
             prompt = prompt[0]
     ask.logger.info('BEFORE QUERY: ' + prompt)
     text, _ = conv.query(prompt, **state)
-    return question(text[0])
+    text = voice(text[0], conv.current_gender, 'American') # TODO extract country from wikipedia?
+    return question(text)
 
 
 @ask.intent('delegate')

@@ -18,7 +18,26 @@ from htools.structures import FuzzyKeyDict
 from jabberwocky.openai_utils import query_gpt3
 
 
-word2int = FuzzyKeyDict(
+POLLY_NAMES = {
+    'F': {
+        # Standard only.
+        'Australian': 'Nicole',
+        # Standard or Neural. Amy is also a decent option.
+        'British': 'Emma',
+        # Standard or Neural.
+        'American': 'Salli'
+    },
+    'M': {
+        # Standard only.
+        'Australian': 'Russell',
+        # Standard or Neural.
+        'British': 'Brian',
+        # Standard or Neural.
+        'American': 'Matthew'
+    }
+}
+
+WORD2INT = FuzzyKeyDict(
     {num: i for i, num in enumerate([
         'one',
         'two',
@@ -124,7 +143,14 @@ word2int = FuzzyKeyDict(
 )
 
 
-nlp = spacy.load('en_core_web_sm', disable=('parser', 'tagger'))
+NLP = spacy.load('en_core_web_sm', disable=('parser', 'tagger'))
+
+
+def voice(text, gender, country='American'):
+    """Add voice tags to use a custom Amazon Polly voice."""
+    country2name = POLLY_NAMES[gender]
+    name = country2name.get(country) or country2name['American']
+    return f'<speak><voice name="{name}">{text}</voice></speak>'
 
 
 def detokenize(tokens, punct=set('.,;:')):
@@ -154,7 +180,7 @@ rather than trying to extract them each time.
 
 @deprecated
 def get_name(text, skip={'Lou', 'lou'}):
-    names = [ent.text for ent in nlp(text).ents
+    names = [ent.text for ent in NLP(text).ents
              if ent.label_ == 'PERSON' and ent.text not in skip]
     if len(names) == 1:
         return {'value': names[0]}
@@ -164,7 +190,7 @@ def get_name(text, skip={'Lou', 'lou'}):
 
 @deprecated
 def get_number(text):
-    nums = [t.text for t in nlp(text) if t.like_num]
+    nums = [t.text for t in NLP(text) if t.like_num]
     if len(nums) == 1:
         return {'value': nums[0]}
     return {'value': None,

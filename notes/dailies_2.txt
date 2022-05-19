@@ -1572,16 +1572,36 @@ X -find gmail alternative for sending emails (less secure app access option expi
 	UPDATE: did more digging on this and it sounds like there's not a good way to do this natively. Only options are to have the user read it 1 character at a time (very error prone, though maybe doable with some custom logic in the app) or create a site where user can enter it in.
 -alternate: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
-5/18/22
--------
--see if I can access polly.ai voices
-	-change speaker gender based on current persona
+5/18/22 wed
+-----------
+~ -see if I can access polly.ai voices
+	X -change speaker gender based on current persona
+	UPDATE: currently just uses 1 pre-selected voice for each gender, but I just 3 voice options for gender. Need to extract/infer nationality for each speaker for this to work.
 	-add emotion markup (start w/ hardcoded)
 	-prototype prompt: gpt3 infers emotion tags based on response text
 -revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
+5/19/22 thurs
+-------------
+-polly.ai voices
+	-see if alexa lets us check which default voice is currently in use (thinking we could select 1 paid voice and 1 free one, i.e. use default alexa voice for women and polly for men or vice versa)
+	-support both neural and standard modes in alexa.utils.voice() func
+		-find how to specify neural vs. standard in markup
+		-implement
+	-consider how to infer/extract nationality
+		-choose first method to try (e.g. ask gpt, Q&A model on wiki summary, google search)
+		-implement
+	-try emotion markup (see if console lets us do this)
+	-see if we can find somewhere in console showing usage/charges (prob not, knowing amazon)
+-[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)
+	-have gpt3 insert tags directly (i.e. Edit rather than complete)
+	-have gpt3 select from options (almost like classification. Maybe just use logit_bias.) then fill in template programmatically.
+	-smaller model running locally (Q&A model, sentiment scorer, etc.). Limit to a much smaller subset of markup patterns.
+
+
 Backlog
 -------
+-revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 -incorporate new bio cleanup prompt into convmanager
 -[ON HOLD: so far this seems to work, maybe just let myself stumble upon bugs if they arise during further development] test new stopword streaming functionality for paid backends
     -openai
