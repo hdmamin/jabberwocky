@@ -1583,24 +1583,49 @@ X -find gmail alternative for sending emails (less secure app access option expi
 
 5/19/22 thurs
 -------------
--polly.ai voices
-	-see if alexa lets us check which default voice is currently in use (thinking we could select 1 paid voice and 1 free one, i.e. use default alexa voice for women and polly for men or vice versa)
-	-support both neural and standard modes in alexa.utils.voice() func
-		-find how to specify neural vs. standard in markup
+~ -polly.ai voices
+	X -see if alexa lets us check which default voice is currently in use (thinking we could select 1 paid voice and 1 free one, i.e. use default alexa voice for women and polly for men or vice versa)
+		UPDATE: couldn't find any way to get this info from alexa.
+	~ -support both neural and standard modes in alexa.utils.voice() func
+		~ -find how to specify neural vs. standard in markup
+			UPDATE: found "engine" parama in polly python api. Haven't yet found if/how this is exposed to alexa.
 		-implement
 	-consider how to infer/extract nationality
-		-choose first method to try (e.g. ask gpt, Q&A model on wiki summary, google search)
-		-implement
-	-try emotion markup (see if console lets us do this)
-	-see if we can find somewhere in console showing usage/charges (prob not, knowing amazon)
+		X -choose first method to try (e.g. ask gpt, Q&A model on wiki summary, google search)
+		~ -implement
+			UPDATE: started with HF QA model. Results look pretty solid from wiki summary. Need to clean up a bit to align w/ polly voices (map Greek to European, Texas to American, etc.) Also tried Q/A on whole wiki summary rather than my truncated version and it did work better for beyonce. Wiki does have a "Born" section - might be more reliable to use this, or a combination of the two.
+	~ -try emotion markup (see if console lets us do this)
+		UPDATE: only supported by native voices and only supports disappointed and excited, but it is cool. Spent some time trying various sentiment scorers/zero shot models/emotion classification models to see if we can detect these emotions quickly and accurately. Started evaluating on sms dataset. Also messed around a bit in polly console w/ pitch/prosody. See misc.txt for settings I liked for salli voice.
+	X -see if we can find somewhere in console showing usage/charges (prob not, knowing amazon)
+		UPDATE: Looks like no :(
 -[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)
 	-have gpt3 insert tags directly (i.e. Edit rather than complete)
 	-have gpt3 select from options (almost like classification. Maybe just use logit_bias.) then fill in template programmatically.
-	-smaller model running locally (Q&A model, sentiment scorer, etc.). Limit to a much smaller subset of markup patterns.
+	~ -smaller model running locally (Q&A model, sentiment scorer, etc.). Limit to a much smaller subset of markup patterns.
+
+5/20/22 fri
+-----------
+-polly.ai voices
+	-check if polly response includes an "engine" param where we can specify neural or standard
+		-if yes, add support for both
+	-continue work on extracting nationality from wiki (see nb17)
+		-fetch wiki page for each persona
+			-might need to fix func since disambiguation doesn't seem to be working how I expected
+		-try computing QA on full summary
+		-try doing my html extraction technique
+		-check if this q/a model is purely extractive and if so, try one that isn't
+		-postprocess results to be able to map to a polly voice (american/english/australian)
+	-emotion classifier for polly emotion tags
+		-review more emotion samples at various predicted scores (nb17). Try to get a sense of what decision threshold to use.
+		-is this even worth it? Might only be <5% of responses. But maybe that will make things feel more realistic.
+	-update voice func to include all options (voice, pitch, emotion tags). Might need some sort of stack of open tags, sort of like leetcode brackets lol.
 
 
 Backlog
 -------
+-[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)
+	-have gpt3 insert tags directly (i.e. Edit rather than complete)
+	-have gpt3 select from options (almost like classification. Maybe just use logit_bias.) then fill in template programmatically.
 -revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 -incorporate new bio cleanup prompt into convmanager
 -[ON HOLD: so far this seems to work, maybe just let myself stumble upon bugs if they arise during further development] test new stopword streaming functionality for paid backends

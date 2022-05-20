@@ -1,6 +1,6 @@
 from collections import Mapping, deque
 from enum import Enum
-from flask_ask import session, Ask
+from flask_ask import session, Ask, question
 from functools import wraps, partial
 from fuzzywuzzy import fuzz, process
 from itertools import product
@@ -146,11 +146,30 @@ WORD2INT = FuzzyKeyDict(
 NLP = spacy.load('en_core_web_sm', disable=('parser', 'tagger'))
 
 
+class custom_question(question):
+
+    def __init__(self, speech, is_ssml=False):
+        super().__init__(speech)
+        if is_ssml:
+            text = self._response['outputSpeech'].pop('text')
+            self._response['outputSpeech']['type'] = 'SSML'
+            self._response['outputSpeech']['ssml'] = text
+
+
+# def voice(text, gender, country='American'):
+#     """Add voice tags to use a custom Amazon Polly voice."""
+#     country2name = POLLY_NAMES[gender]
+#     name = country2name.get(country) or country2name['American']
+#     return f'<speak><voice name="{name}">{text}</voice></speak>'
+
+# TODO testing
+emotions = ['disappointed', 'excited']
+intensities = ['low', 'high']
+combos = [(e, i) for e in emotions for i in intensities]
 def voice(text, gender, country='American'):
-    """Add voice tags to use a custom Amazon Polly voice."""
-    country2name = POLLY_NAMES[gender]
-    name = country2name.get(country) or country2name['American']
-    return f'<speak><voice name="{name}">{text}</voice></speak>'
+    emotion, intensity = combos.pop(0)
+    combos.append((emotion, intensity))
+    return f'<speak><amazon:emotion name="{emotion}" intensity="{intensity}">I am feeling {intensity} {emotion}. {text}</amazon:emotion></speak>', True
 
 
 def detokenize(tokens, punct=set('.,;:')):

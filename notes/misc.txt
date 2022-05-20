@@ -380,3 +380,12 @@ thoughts on dropping sentence fragments
 ------------
 Good tutorial for adding account linking (currently disabled since built in permissions started working again but might need to reference this again since that has often been disabled periodically in the past).
 https://www.youtube.com/watch?v=C9fWMYyRWls&ab_channel=DabbleLab
+
+5/19/22 thurs
+-------------
+<speak> 
+     Pitch and timbre are connected.
+<amazon:effect vocal-tract-length="-5%"> <prosody pitch="+25%"> 
+   If you are going to reduce the vocal tract length,  you 
+     might consider increasing the pitch, too. </prosody></amazon:effect>  
+</speak>

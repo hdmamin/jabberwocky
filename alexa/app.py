@@ -7,7 +7,6 @@ so it might be more convenient to run locally with ngrok anyway.
 from datetime import datetime
 import logging
 from pathlib import Path
-
 from flask import Flask, request
 from flask_ask import question, context, statement
 # openai appears unused but is actually used by GPTBackend instance.
@@ -18,7 +17,8 @@ from config import EMAIL, LOG_FILE
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load
 from jabberwocky.openai_utils import ConversationManager, PromptManager, GPT
-from utils import slot, Settings, model_type, CustomAsk, infer_intent, voice
+from utils import slot, Settings, model_type, CustomAsk, infer_intent, voice, \
+    custom_question
 
 
 # Define these before functions since endpoints use ask method as decorators.
@@ -452,8 +452,11 @@ def _reply(prompt=None):
             prompt = prompt[0]
     ask.logger.info('BEFORE QUERY: ' + prompt)
     text, _ = conv.query(prompt, **state)
-    text = voice(text[0], conv.current_gender, 'American') # TODO extract country from wikipedia?
-    return question(text)
+    # text = voice(text[0], conv.current_gender, 'American') # TODO extract country from wikipedia?
+    # return question(text)
+
+    text, is_ssml = voice(text[0], conv.current_gender, 'American')
+    return custom_question(text, is_ssml)
 
 
 @ask.intent('delegate')
