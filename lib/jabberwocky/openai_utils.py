@@ -1654,6 +1654,7 @@ class ConversationManager:
         self.current_summary = ''
         self.current_img_path = ''
         self.current_gender = ''
+        self.current_nationality = ''
         self.cached_query = ''
         self.user_turns = []
         self.gpt3_turns = []
@@ -1716,6 +1717,7 @@ class ConversationManager:
         self.current_persona = processed_name
         self.current_img_path = self.name2img_path[processed_name]
         self.current_gender = self.name2gender[processed_name]
+        self.current_nationality = self.name2nationality[processed_name]
         # This one is not returned. Info would be a bit repetitive.
         self.current_summary = self._name2summary(processed_name)
         return (self.current_persona,
@@ -1745,6 +1747,7 @@ class ConversationManager:
         self.current_persona = ''
         self.current_img_path = ''
         self.current_gender = ''
+        self.current_nationality = ''
         self.cached_query = ''
         self.user_turns.clear()
         self.gpt3_turns.clear()
@@ -1810,8 +1813,9 @@ class ConversationManager:
                         'persona that does not yet exist locally.'
                     )
             else:
-                summary, _, img_path, gender = wiki_data(name, img_dir=dir_,
-                                                         fname='profile')
+                summary, _, img_path, gender, nationality = wiki_data(
+                    name, img_dir=dir_, fname='profile'
+                )
 
             save(summary, dir_/'summary.txt')
             save(gender, dir_/'gender.json')
@@ -1845,6 +1849,7 @@ class ConversationManager:
         """Helper to update our various name2{something} dicts."""
         dir_ = self.persona_dir[is_custom]/processed_name
         summary = load(dir_/'summary.txt')
+        # TODO: add nationality
         self.name2gender[processed_name] = load(dir_/'gender.json',
                                                 verbose=self.verbose)
         self.name2img_path[processed_name] = [p for p in dir_.iterdir()

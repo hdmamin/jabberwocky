@@ -1628,7 +1628,7 @@ X -debug why two personas are loaded when only 1 was specified
 5/21/22 sat
 -----------
 -integration voice/nationality extraction
-	-port func to lib (maybe rm scores? Or just ignore them in wiki_data func or whatever calls it. Not bad to have for inforational purposes.)
+	X -port func to lib (maybe rm scores? Or just ignore them in wiki_data func or whatever calls it. Not bad to have for inforational purposes.)
 	-where should this go? Loading q/a model could be slow.
 	-update various openai classes accordingly (wiki_data() is used in a few places)
 	-document how to adjust this if polly adds more voice options

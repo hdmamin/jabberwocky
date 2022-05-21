@@ -8,6 +8,7 @@ import pandas as pd
 from pathlib import Path
 import re
 import requests
+from transformers import pipeline
 import warnings
 import wikipedia as wiki
 from wikipedia import PageError, DisambiguationError
@@ -17,6 +18,7 @@ from htools import DotDict, tolist, Results
 
 
 WIKI_HEADERS = {'User-Agent': 'http://www.github.com/hdmamin/jabberwocky'}
+QA_PIPE = pipeline('question-answering')
 
 
 def text_segment(df, start, end):
@@ -182,6 +184,41 @@ def _infer_gender(text, eps=1e-6):
     return genders[idx], (counts[idx]+eps) / (sum(counts) + 2*eps)
 
 
+def _infer_nationality(summary, name, qa_pipe,
+                       question_fmt='What country is {} from?'):
+    """Infer a person's nationality from their wikipedia summary.
+    Developed in nb17. Note that a `beautiful soup`-based method
+    (extract_birthplace_v3 in the notebook) worked roughly as well without the
+    reliance on a large/slow model, but I think that approach might be a lot
+    more brittle in the future (e.g. if wikipedia changes a single class name,
+    everything would break).
+
+    Parameters
+    ----------
+    summary: str
+        Wikipedia summary. In practice, the nationality info almost always
+        comes in the first sentence or two so we should be fine to use the
+        truncated summary in wiki_data(). In initial experiments, the full
+        summary slowed things down without noticeably helping performance.
+    name: str
+        Pretty-formatted name (e.g. 'Albert Einstein', not 'albert_einstein').
+    qa_pipe: transformers.QuestionAnsweringPipeline. I believe the default
+        model is extractive, not generative.
+    question_fmt: str
+        This defines the question the pipeline tries to answer. It should
+        generally contain 1 unnamed field where we will auto-insert the
+        person's name.
+
+    Returns
+    -------
+    tuple[str, float]: First result is the answer, second is the model
+    confidence.
+    """
+    answer = qa_pipe({'question': question_fmt.format(name),
+                      'context': summary})
+    return answer['answer'], answer['score']
+
+
 def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,
               og_name=None, auto_suggest=False):
     """Note: on a sample of 27 names, setting auto_suggest=True had nearly a
@@ -296,6 +333,7 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
     summary = page.summary.splitlines()[0]
     if truncate_summary_lines:
         summary = ' '.join(sent_tokenize(summary)[:truncate_summary_lines])
+    nationality, _ = _infer_nationality(summary, name, QA_PIPE)
 
     # Download image if possible. Find photo with name closest to the one we
     # searched for (empirically, this seems to be a decent heuristic to give
@@ -316,4 +354,5 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
     return Results(summary=_wiki_text_cleanup(summary),
                    img_url=img_url,
                    img_path=img_path,
-                   gender=gender)
+                   gender=gender,
+                   nationality=nationality)
