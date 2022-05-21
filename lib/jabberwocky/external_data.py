@@ -183,9 +183,29 @@ def _infer_gender(text, eps=1e-6):
 
 
 def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,
-              og_name=None):
+              og_name=None, auto_suggest=False):
+    """Note: on a sample of 27 names, setting auto_suggest=True had nearly a
+    50% failure rate. This dropped to <5% when setting it to False (and the 1
+    failure works if I provide 1 tag).
+
+    Parameters
+    ----------
+    name
+    tags
+    retry
+    min_similarity
+    debug
+    og_name: None or str
+        Never pass this in explicitly - it's only there for when the function
+        recursively calls itself after concating tags with the original name.
+    auto_suggest
+
+    Returns
+    -------
+
+    """
     try:
-        page = wiki.page(name, auto_suggest=False)
+        page = wiki.page(name, auto_suggest=auto_suggest)
         score = fuzz.token_set_ratio((og_name or name).lower(),
                                      page.title.lower())
         if score < min_similarity:

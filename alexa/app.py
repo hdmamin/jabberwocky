@@ -593,7 +593,7 @@ def end_session():
 
 
 if __name__ == '__main__':
-    conv = ConversationManager(['Albert Einstein'])  # TODO: load all personas?
+    conv = ConversationManager()
     prompter = PromptManager(['punctuate_alexa'], verbose=False)
     utt2meta = load('data/alexa/utterance2meta.pkl')
 

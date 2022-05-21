@@ -1605,16 +1605,34 @@ X -find gmail alternative for sending emails (less secure app access option expi
 
 5/20/22 fri
 -----------
+X -debug why two personas are loaded when only 1 was specified
+	UPDATE: forgot that howard was a custom persona. Deleted him from that dir and removed the limitation for loading 1 person, since it takes ~.03seconds and only executes once on app start anyway.
 -polly.ai voices
-	-check if polly response includes an "engine" param where we can specify neural or standard
-		-if yes, add support for both
-	-continue work on extracting nationality from wiki (see nb17)
-		-fetch wiki page for each persona
-			-might need to fix func since disambiguation doesn't seem to be working how I expected
-		-try computing QA on full summary
-		-try doing my html extraction technique
-		-check if this q/a model is purely extractive and if so, try one that isn't
-		-postprocess results to be able to map to a polly voice (american/english/australian)
+	X -check if polly response includes an "engine" param where we can specify neural or standard
+		_ -if yes, add support for both
+		UPDATE: all I could find was a message from 3-4 years ago from an amazon rep saying alexa did not support the engine param yet and only provided the standard voice. No clue if that's still true but I guess I'm stuck with whatever it is.
+	X -continue work on extracting nationality from wiki (see nb17)
+		X -fetch wiki page for each persona
+			_ -might need to fix func since disambiguation doesn't seem to be working how I expected
+		UPDATE: realized lib's builtin fallback method only fixed 1 error but introduced 12 new ones (for 27 people) compared to my method. Stick with mine.
+		X -try computing QA on full summary
+		X -try doing my html extraction technique
+		_ -check if this q/a model is purely extractive and if so, try one that isn't
+		X -postprocess results to be able to map to a polly voice (american/english/australian)
+		UPDATE: finished prototyping func but need to figure out where to fit it into lib.
+	-emotion classifier for polly emotion tags
+		-review more emotion samples at various predicted scores (nb17). Try to get a sense of what decision threshold to use.
+		-is this even worth it? Might only be <5% of responses. But maybe that will make things feel more realistic.
+	-update voice func to include all options (voice, pitch, emotion tags). Might need some sort of stack of open tags, sort of like leetcode brackets lol.
+
+5/21/22 sat
+-----------
+-integration voice/nationality extraction
+	-port func to lib (maybe rm scores? Or just ignore them in wiki_data func or whatever calls it. Not bad to have for inforational purposes.)
+	-where should this go? Loading q/a model could be slow.
+	-update various openai classes accordingly (wiki_data() is used in a few places)
+	-document how to adjust this if polly adds more voice options
+-nb17
 	-emotion classifier for polly emotion tags
 		-review more emotion samples at various predicted scores (nb17). Try to get a sense of what decision threshold to use.
 		-is this even worth it? Might only be <5% of responses. But maybe that will make things feel more realistic.
