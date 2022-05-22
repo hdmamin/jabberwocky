@@ -1645,18 +1645,31 @@ X -debug why two personas are loaded when only 1 was specified
 
 5/22/22 sun
 -----------
--troubleshoot why openai_utils is SO slow to reload now
+X -troubleshoot why openai_utils is SO slow to reload now
+	UPDATE: ~2 seconds seem to be external deps that have been here for a while, ~2 seconds was the addition of a transformers import, ~1s was everything else, and ~3 seconds seems to be from using autoreload in a big notebook (i.e. it's not present when importing the module fresh for the first time). Added default html parsing option for birthplace extraction and adjusted convmanager to handle passing in a qa pipe.
 -nb17
 	-emotion classifier for polly emotion tags
-		-review more emotion samples at various predicted scores (nb17). Try to get a sense of what decision threshold to use.
-		-is this even worth it? Might only be <5% of responses. But maybe that will make things feel more realistic.
+		X -review more emotion samples at various predicted scores (nb17). Try to get a sense of what decision threshold to use.
+		UPDATE: decided this dataset is just not right for my use case. Found a better one in amazon common sense conversations and computed new scores on the validation set (1k samples; train would have been a bit slow at roughly 10x that). Still pinning down rules but results are looking better so far.
+		~ -is this even worth it? Might only be <5% of responses. But maybe that will make things feel more realistic.
+			UPDATE: with commonsense dataset, looks like it could be quite a bit higher. (Probably shouldn't go TOO much higher though - alexa cautions against over-using emotion tags).	
 	-update voice func to include all options (voice, pitch, emotion tags). Might need some sort of stack of open tags, sort of like leetcode brackets lol.
 -makefile/cli command to generate new prompt skeleton
 -makefile/cli command to generate new custom persona skeleton
 
+5/23/22 mon
+-----------
+-nb17
+	-review more samples from commonsense dataset to select thresholds/heuristics for excitement (closest option in classifier is "joy") (NOTE: the level=High rows look pretty good, but the level=Low are a bit weak. Maybe should up that threshold.)
+	-follow a similar process to define thresholds/heuristics for "disappointed" (closest option in classifier is "sadness")
+-update voice func to include all options (voice, pitch, emotion tags). Might need some sort of stack of open tags, sort of like leetcode brackets lol.
+		-examine other negative cats (fear, anger, disgust) to see if some subset of these might belong in "disappointed" voice too
+
 
 Backlog
 -------
+-makefile/cli command to generate new prompt skeleton
+-makefile/cli command to generate new custom persona skeleton
 -[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)
 	-have gpt3 insert tags directly (i.e. Edit rather than complete)
 	-have gpt3 select from options (almost like classification. Maybe just use logit_bias.) then fill in template programmatically.

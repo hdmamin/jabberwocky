@@ -593,7 +593,8 @@ def end_session():
 
 
 if __name__ == '__main__':
-    conv = ConversationManager()
+    # TODO: eventually prob set qa_pipe to True.
+    conv = ConversationManager(load_qa_pipe=False)
     prompter = PromptManager(['punctuate_alexa'], verbose=False)
     utt2meta = load('data/alexa/utterance2meta.pkl')
 

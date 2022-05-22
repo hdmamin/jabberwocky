@@ -1592,7 +1592,8 @@ class ConversationManager:
 
     def __init__(self, names=(), custom_names=(), data_dir=C.root/'data',
                  backup_image='data/misc/unknown_person.png',
-                 turn_window=3, me='me', verbose=True):
+                 turn_window=3, me='me', load_qa_pipe=False,
+                 qa_model_name=None, verbose=True):
 
         """
         Parameters
@@ -1653,6 +1654,13 @@ class ConversationManager:
         self._base_prompt = self._kwargs.pop('prompt')
         self.me = me
 
+        # This QA pipeline can be used to extract nationality from wiki
+        # summaries for auto-generated personas. The import + model loading
+        # can take several seconds so I've set it to False, at least during
+        # development (jupyter autoreload makes slow imports very annoying).
+        # Do this before we add the Albert Einstein persona below.
+        self.qa_pipe = self._load_qa_pipe(load_qa_pipe, qa_model_name)
+
         # Populated by _load_personas().
         self.name2base = {}
         self.name2meta = {}
@@ -1679,6 +1687,44 @@ class ConversationManager:
         self.user_turns = []
         self.gpt3_turns = []
         self.cached_query = ''
+
+    def _load_qa_pipe(self, do_load, model_name=None):
+        """Load QA pipeline to help extract nationality from wikipedia summary
+        for auto-generated personas. Alternative is to use html parsing - this
+        avoids the upfront cost of loading the model but seems to be slower
+        per person (I think the wikipedia lib doesn't fetch the html by default
+        but the html parsing method obviously requires it).
+
+        Parameters
+        ----------
+        do_load: bool
+            If True, load QA model. Otherwise self.qa_pipe will be None and
+            html parsing will be used to infer nationality.
+        model_name: str or None
+            Transformers QA model to use. If None, the dfeault is used
+            (distilbert-base-cased-distilled-squad as of 5/22/22).
+
+        Returns
+        -------
+        transformers.QuestionAnsweringPipeline or None
+        """
+        # We place some imports here because loading them at the module level
+        # slows things down a lot when using jupyter autoreload.
+        if not do_load:
+            return
+
+        from transformers import pipeline
+
+        if model_name:
+            from transformers import AutoModelForQuestionAnswering, \
+                AutoTokenizer
+
+            model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+        else:
+            model = tokenizer = None
+
+        return pipeline('question-answering', model=model, tokenizer=tokenizer)
 
     def _load_personas(self, names, is_custom=False):
         """Load any stored summaries and image paths of existing personas."""
@@ -1812,7 +1858,7 @@ class ConversationManager:
             else:
                 # Autogenerate persona metadata.
                 meta = wiki_data(name, img_dir=dir_, fname='profile',
-                                 tags=wiki_tags)
+                                 tags=wiki_tags, qa_pipe=self.qa_pipe)
                 meta = meta._asdict()
 
             # In custom mode, we always need to move an image (either the
@@ -2300,10 +2346,6 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True,
             'jabberwocky/main/data/prompts/{}.yaml'
         )
         If provided, this will override the prompt_dir arg.
-    format_kwargs: any
-        Mostly just here for compatibility with old conversation_formatter()
-        function which is now basically deprecated. These are unused by the
-        default formatter.
 
     Returns
     -------

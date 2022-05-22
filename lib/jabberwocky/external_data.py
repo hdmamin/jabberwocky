@@ -1,5 +1,5 @@
 """Functionality to fetch and work with YouTube transcripts."""
-
+from bs4 import BeautifulSoup
 from fuzzywuzzy import fuzz, process
 from nltk.tokenize import sent_tokenize
 import numpy as np
@@ -8,7 +8,6 @@ import pandas as pd
 from pathlib import Path
 import re
 import requests
-from transformers import pipeline
 import warnings
 import wikipedia as wiki
 from wikipedia import PageError, DisambiguationError
@@ -150,7 +149,7 @@ def _wiki_text_cleanup(text):
     return re.sub('\s{2,}', ' ', text)
 
 
-def _infer_gender(text, eps=1e-6):
+def infer_gender(text, eps=1e-6):
     """Infer gender from a piece of text by counting pronouns, intended to be a
     person's wikipedia summary. I'm sure there are better ways to do this but
     this is a nice quick method that seems to work pretty well.
@@ -183,14 +182,12 @@ def _infer_gender(text, eps=1e-6):
     return genders[idx], (counts[idx]+eps) / (sum(counts) + 2*eps)
 
 
-def _infer_nationality(summary, name, qa_pipe=None,
-                       question_fmt='What country is {} from?'):
+def infer_nationality(summary, name, page=None, qa_pipe=None,
+                      question_fmt='What country is {} from?'):
     """Infer a person's nationality from their wikipedia summary.
-    Developed in nb17. Note that a `beautiful soup`-based method
-    (extract_birthplace_v3 in the notebook) worked roughly as well without the
-    reliance on a large/slow model, but I think that approach might be a lot
-    more brittle in the future (e.g. if wikipedia changes a single class name,
-    everything would break).
+    Developed in nb17. Note that with no qa pipeline provided, this defaults to
+    an html parsing strategy which may be rather brittle (i.e. if wikipedia
+    renames a single css class, it will likely fail).
 
     Parameters
     ----------
@@ -201,8 +198,11 @@ def _infer_nationality(summary, name, qa_pipe=None,
         summary slowed things down without noticeably helping performance.
     name: str
         Pretty-formatted name (e.g. 'Albert Einstein', not 'albert_einstein').
+    page: None or wikipedia.WikipediaPage
+        Must be provided when qa_pipe is None. Ignored otherwise.
     qa_pipe: transformers.QuestionAnsweringPipeline. I believe the default
-        model is extractive, not generative.
+        model is extractive, not generative. If no pipeline is provided, we
+        fall back to an html-parsing strategy.
     question_fmt: str
         This defines the question the pipeline tries to answer. It should
         generally contain 1 unnamed field where we will auto-insert the
@@ -211,23 +211,39 @@ def _infer_nationality(summary, name, qa_pipe=None,
     Returns
     -------
     tuple[str, float]: First result is the answer, second is the model
-    confidence.
+    confidence. If an answer couldn't be retrieved, the answer will be an empty
+    string and the confidence will be 0. If no qa_pipe is provided, confidence
+    is set to 1.0 since we're using a deterministic method (though in reality
+    there may occasionally still be errors).
     """
-    # TODO: Loading this as a global upfront makes it very slow to load the
-    # module, and openai_utils imports it so code changes to that are VERY
-    # slow with autoreload enabled. However, that seems to be the case even
-    # with the qa pipeline loaded just-in-time so it could be due to other
-    # issues. The current method also risks a response timing out if we're in
-    # alexa.
-    if not qa_pipe:
-        try:
-            qa_pipe = globals()['QA_PIPE']
-        except KeyError:
-            global QA_PIPE
-            qa_pipe = QA_PIPE = pipeline('question-answering')
-    answer = qa_pipe({'question': question_fmt.format(name),
-                      'context': summary})
-    return answer['answer'], answer['score']
+    if qa_pipe:
+        answer = qa_pipe({'question': question_fmt.format(name),
+                          'context': summary})
+        return answer['answer'], answer['score']
+
+    assert page, 'Page must not be None when no Q/A pipe is provided.'
+    soup = BeautifulSoup(page.html(), 'lxml')
+    tds = [row for row in soup.find_all('th', class_='infobox-label')
+           if row.text == 'Born']
+    if not tds:
+        return '', 0.
+    if len(tds) > 1:
+        warnings.warn('Found multiple matching candidates: '
+                      f'{[row.text for row in tds]}')
+    td = tds[0].findNext('td')
+    last = list(td.children)[-1]
+    text = getattr(last, 'text', last)
+    res = re.sub('\[\d{1,2}\]', '', text.split(', ')[-1]).replace('.', '')
+    # Just a hacky fix to make outputs a bit more similar to the QA pipeline
+    # format. Not worth using a complex solution here because the whole point
+    # is to provide a quick stopgap solution for times when I don't want the
+    # QA pipeline import to slow me down, i.e. everytime jupyter autoreloads
+    # the jabberwocky.openai_utils module.
+    mapping = {'US': 'American',
+               'England': 'English',
+               'France': 'French',
+               'Germany': 'German'}
+    return mapping.get(res, res), 1.
 
 
 def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,
@@ -314,7 +330,7 @@ def download_image(url, out_path, verbose=False, **request_kwargs):
 
 
 def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
-              fname=None, truncate_summary_lines=2, verbose=True,
+              fname=None, truncate_summary_lines=2, qa_pipe=None, verbose=True,
               **page_kwargs):
     """Warning: I think name may require title case (may fail for names with
     unusual capitalization though).
@@ -340,11 +356,12 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
         raise e
     except DisambiguationError as e:
         raise RuntimeError from e
-    gender = _infer_gender(page.summary)[0]
+    gender = infer_gender(page.summary)[0]
     summary = page.summary.splitlines()[0]
     if truncate_summary_lines:
         summary = ' '.join(sent_tokenize(summary)[:truncate_summary_lines])
-    nationality, _ = _infer_nationality(summary, name)
+    nationality, _ = infer_nationality(summary, name, page=page,
+                                       qa_pipe=qa_pipe)
 
     # Download image if possible. Find photo with name closest to the one we
     # searched for (empirically, this seems to be a decent heuristic to give
