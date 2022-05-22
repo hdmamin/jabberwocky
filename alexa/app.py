@@ -112,12 +112,12 @@ def send_transcript(conv, user_email='', cleanup=False):
     date = datetime.today().strftime('%m/%d/%Y')
     datetime_ = datetime.today().strftime('%Y.%m.%d__%H.%M.%S')
     tmp_path = Path(
-        f'alexa/conversations/{conv.current_persona}__{datetime_}.txt'
+        f'alexa/conversations/{conv.current["persona"]}__{datetime_}.txt'
     )
     save(conv.full_conversation(), tmp_path)
     message = 'A transcript of your conversation with ' \
-              f'{conv.current_persona}  is attached.'
-    quickmail(f'Your conversation with {conv.current_persona} ({date}).',
+              f'{conv.current["persona"]}  is attached.'
+    quickmail(f'Your conversation with {conv.current["persona"]} ({date}).',
               message=message,
               to_email=user_email,
               from_email=EMAIL,
@@ -138,7 +138,7 @@ def reset_app_state(end_conv=True, clear_queue=True,
     ----------
     end_conv: bool
         If True, end the conversation in our ConversationManager. Useful
-        because we often check its current_persona attribute to determine if
+        because we often check its current['persona'] attribute to determine if
         a conversation is underway.
     clear_queue: bool
         If True, clear Ask's queue of functions to call later.
@@ -223,7 +223,7 @@ def choose_person(person=None, **kwargs):
     person = person or kwargs.get('response') or slot(request, 'Person')
     # Handle case where conversation is already ongoing. This should have been
     # a reply - it just happened to consist of only a name.
-    if conv.current_persona:
+    if conv.current['persona']:
         return _reply(prompt=person)
     # This handles our 2 alexa utterance collisions, "oh no" and "hush"
     # which alexa mistakenly maps to the choosePerson intent. If we're already
@@ -420,8 +420,8 @@ def _maybe_choose_person(
         'You must provide at least one of msg or choose_msg.'
 
     msg = msg.rstrip(' ') + ' '
-    if conv.current_persona:
-        name = conv.process_name(conv.current_persona, inverse=True)
+    if conv.current['persona']:
+        name = conv.process_name(conv.current['persona'], inverse=True)
         msg += return_msg_fmt.format(name)
     else:
         msg += _choose_person_text(choose_msg)
@@ -452,10 +452,10 @@ def _reply(prompt=None):
             prompt = prompt[0]
     ask.logger.info('BEFORE QUERY: ' + prompt)
     text, _ = conv.query(prompt, **state)
-    # text = voice(text[0], conv.current_gender, 'American') # TODO extract country from wikipedia?
+    # text = voice(text[0], conv.current['gender'], 'American') # TODO extract country from wikipedia?
     # return question(text)
 
-    text, is_ssml = voice(text[0], conv.current_gender, 'American')
+    text, is_ssml = voice(text[0], conv.current)
     return custom_question(text, is_ssml)
 
 

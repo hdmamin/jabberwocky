@@ -18,7 +18,6 @@ from htools import DotDict, tolist, Results
 
 
 WIKI_HEADERS = {'User-Agent': 'http://www.github.com/hdmamin/jabberwocky'}
-QA_PIPE = pipeline('question-answering')
 
 
 def text_segment(df, start, end):
@@ -184,7 +183,7 @@ def _infer_gender(text, eps=1e-6):
     return genders[idx], (counts[idx]+eps) / (sum(counts) + 2*eps)
 
 
-def _infer_nationality(summary, name, qa_pipe,
+def _infer_nationality(summary, name, qa_pipe=None,
                        question_fmt='What country is {} from?'):
     """Infer a person's nationality from their wikipedia summary.
     Developed in nb17. Note that a `beautiful soup`-based method
@@ -214,6 +213,18 @@ def _infer_nationality(summary, name, qa_pipe,
     tuple[str, float]: First result is the answer, second is the model
     confidence.
     """
+    # TODO: Loading this as a global upfront makes it very slow to load the
+    # module, and openai_utils imports it so code changes to that are VERY
+    # slow with autoreload enabled. However, that seems to be the case even
+    # with the qa pipeline loaded just-in-time so it could be due to other
+    # issues. The current method also risks a response timing out if we're in
+    # alexa.
+    if not qa_pipe:
+        try:
+            qa_pipe = globals()['QA_PIPE']
+        except KeyError:
+            global QA_PIPE
+            qa_pipe = QA_PIPE = pipeline('question-answering')
     answer = qa_pipe({'question': question_fmt.format(name),
                       'context': summary})
     return answer['answer'], answer['score']
@@ -333,7 +344,7 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
     summary = page.summary.splitlines()[0]
     if truncate_summary_lines:
         summary = ' '.join(sent_tokenize(summary)[:truncate_summary_lines])
-    nationality, _ = _infer_nationality(summary, name, QA_PIPE)
+    nationality, _ = _infer_nationality(summary, name)
 
     # Download image if possible. Find photo with name closest to the one we
     # searched for (empirically, this seems to be a decent heuristic to give

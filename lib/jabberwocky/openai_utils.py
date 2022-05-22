@@ -1647,18 +1647,6 @@ class ConversationManager:
         for dir_ in (*self.persona_dir, self.conversation_dir, self.log_dir):
             os.makedirs(dir_, exist_ok=True)
 
-        # These attributes will be updated when we load a persona and cleared
-        # when we end a conversation. current_persona is the processed name
-        # (i.e. lowercase w/ underscores).
-        self.current_persona = ''
-        self.current_summary = ''
-        self.current_img_path = ''
-        self.current_gender = ''
-        self.current_nationality = ''
-        self.cached_query = ''
-        self.user_turns = []
-        self.gpt3_turns = []
-
         # Load prompt, default query kwargs, and existing personas. Set self.me
         # after loading _kwargs since the setter must update them.
         self._kwargs = load_prompt('conversation', verbose=self.verbose)
@@ -1666,13 +1654,31 @@ class ConversationManager:
         self.me = me
 
         # Populated by _load_personas().
-        self.name2img_path = {}
         self.name2base = {}
-        self.name2gender = {}
+        self.name2meta = {}
 
         # Custom personas are loaded last so they override default personas.
         self._load_personas(names, is_custom=False)
         self._load_personas(custom_names, is_custom=True)
+        # We provide at least 1 default persona. This also ensures that
+        # self.current is populated upfront with the right keys (values are
+        # empty strings, but we want it to know what the fields should be,
+        # e.g. "summary", "gender", etc.).
+        if not self.name2meta:
+            self.add_persona('Albert Einstein')
+
+        # Keep self.current definition after loading persona(s) so we know
+        # what meta fields there are.
+        # self.current stores attributes about the persona currently being
+        # spoken to. It's populated when we load a persona and cleared
+        # when we end a conversation. The 'persona' key must be manually added
+        # the first time since it's not in our meta dicts. It contains the
+        # processed name (i.e. lowercase w/ underscores).
+        self.current = {k: '' for k in next(iter(self.name2meta.values()))}
+        self.current['persona'] = ''
+        self.user_turns = []
+        self.gpt3_turns = []
+        self.cached_query = ''
 
     def _load_personas(self, names, is_custom=False):
         """Load any stored summaries and image paths of existing personas."""
@@ -1714,21 +1720,9 @@ class ConversationManager:
         self.end_conversation()
 
         processed_name = self.process_name(name)
-        self.current_persona = processed_name
-        self.current_img_path = self.name2img_path[processed_name]
-        self.current_gender = self.name2gender[processed_name]
-        self.current_nationality = self.name2nationality[processed_name]
-        # This one is not returned. Info would be a bit repetitive.
-        self.current_summary = self._name2summary(processed_name)
-        return (self.current_persona,
-                self.current_img_path,
-                self.current_gender)
-
-    def _name2summary(self, name):
-        if '_' not in name: name = self.process_name(name)
-        base = self.name2base[name]
-        intro = sent_tokenize(base)[0]
-        return base.replace(intro, '').strip()
+        self.current = {'persona': processed_name,
+                        **self.name2meta[processed_name]}
+        return self.current
 
     def end_conversation(self, fname=None):
         """Resets several variables when a conversation is over. This is also
@@ -1743,14 +1737,10 @@ class ConversationManager:
             automatically be saved in the manager's conversation_dir.
         """
         if fname: self.save_conversation(fname)
-        self.current_summary = ''
-        self.current_persona = ''
-        self.current_img_path = ''
-        self.current_gender = ''
-        self.current_nationality = ''
         self.cached_query = ''
         self.user_turns.clear()
         self.gpt3_turns.clear()
+        self.current = {k: '' for k, v in self.current.items()}
 
     def save_conversation(self, fname):
         if not self.user_turns:
@@ -1758,7 +1748,8 @@ class ConversationManager:
         save(self.full_conversation(), self.conversation_dir/fname)
 
     def add_persona(self, name, summary=None, img_path=None, gender=None,
-                    is_custom=False, return_data=False):
+                    nationality=None, is_custom=False, return_data=False,
+                    wiki_tags=()):
         """Download materials for a new persona. This saves their wikipedia
         summary and profile photo in a directory with their name inside the
         persona_dir.
@@ -1787,24 +1778,26 @@ class ConversationManager:
             you must pass in a summary and gender (img_path is optional). When
             False, you must no pass in any of those three parameters.
         return_data: bool
-            When True, return tuple of summary, image path, gender. Otherwise
-            return None.
+            When True, return dictionary containing summary str and other
+            metadata. Otherwise return None.
         """
-        if (summary or img_path or gender) and not is_custom:
-            raise ValueError('Can only pass in summary/img_path/gender for '
-                             'custom persona.')
+        if (summary or img_path or gender or nationality) and not is_custom:
+            raise ValueError('You can only pass in summary/img_path/gender'
+                             '/nationality for a custom persona.')
 
         processed_name = self.process_name(name)
         dir_ = self.persona_dir[is_custom]/processed_name
+        # Case where we seem to already have the data for this persona.
         if dir_.is_dir():
-            if summary or img_path or gender:
+            if summary or img_path or gender or nationality:
                 raise ValueError(
-                    'Do not pass in summary/img_path/gender for a persona '
-                    'that already exists.'
+                    'Do not pass in summary/img_path/gender/nationality for '
+                    'a persona that already exists.'
                 )
-            summary, img_path, gender = self.update_persona_dicts(
+            meta = self.update_persona_dicts(
                 processed_name, return_values=True, is_custom=is_custom
             )
+            meta = meta._asdict()
         else:
             if is_custom:
                 if not (summary and gender):
@@ -1812,13 +1805,15 @@ class ConversationManager:
                         'Must provide a summary and gender for a custom '
                         'persona that does not yet exist locally.'
                     )
+                meta = {'summary': summary,
+                        'gender': gender,
+                        'img_path': img_path,
+                        'nationality': nationality}
             else:
-                summary, _, img_path, gender, nationality = wiki_data(
-                    name, img_dir=dir_, fname='profile'
-                )
-
-            save(summary, dir_/'summary.txt')
-            save(gender, dir_/'gender.json')
+                # Autogenerate persona metadata.
+                meta = wiki_data(name, img_dir=dir_, fname='profile',
+                                 tags=wiki_tags)
+                meta = meta._asdict()
 
             # In custom mode, we always need to move an image (either the
             # backup image or a user-specified img_path from another dir -
@@ -1827,7 +1822,7 @@ class ConversationManager:
             # download one and revert to the backup. Be careful with logic:
             # Path('abc') != 'abc', and if we convert img_path to a Path
             # immediately, we'd interpret Path('') as truthy.
-            src_path = img_path or self.backup_image
+            src_path = meta['img_path'] or self.backup_image
             img_path = dir_/f'profile{Path(src_path).suffix}'
             try:
                 if str(src_path) != str(img_path):
@@ -1838,30 +1833,37 @@ class ConversationManager:
                 shutil.rmtree(dir_)
                 raise e
 
+            # Do this after moving the image file (if necessary) so meta.json
+            # contains the correct image path.
+            meta.update(img_path=str(img_path))
+            meta.pop('img_url', None)
+            save(meta, dir_/'meta.json')
+
             # It's an empty string if we fail to download an image in
             # non-custom mode, or None if we choose not to pass in a path in
             # custom mode.
             self.update_persona_dicts(processed_name, is_custom=is_custom)
-        if return_data: return summary, img_path, gender
+        if return_data: return meta
 
     def update_persona_dicts(self, processed_name, return_values=False,
                              is_custom=False):
-        """Helper to update our various name2{something} dicts."""
+        """Helper to update our various name2{something} dicts.
+
+        Returns
+        -------
+        htools.Results: Contains summary str and misc metadata such as gender,
+        img_path, etc.
+        """
         dir_ = self.persona_dir[is_custom]/processed_name
-        summary = load(dir_/'summary.txt')
-        # TODO: add nationality
-        self.name2gender[processed_name] = load(dir_/'gender.json',
-                                                verbose=self.verbose)
-        self.name2img_path[processed_name] = [p for p in dir_.iterdir()
-                                              if p.stem == 'profile'][0]
+        meta = load(dir_/'meta.json', verbose=self.verbose)
+        summary = meta.pop('summary')
+        self.name2meta[processed_name] = meta
         self.name2base[processed_name] = self._base_prompt.format(
             name=self.process_name(processed_name, inverse=True),
             summary=summary
         )
         if return_values:
-            return Results(summary=summary,
-                           img_path=self.name2img_path[processed_name],
-                           gender=self.name2gender[processed_name])
+            return Results(summary=summary, **meta)
 
     def persona_exists_locally(self, name):
         """Check if a persona's info files are already available locally.
@@ -1879,9 +1881,8 @@ class ConversationManager:
         processed_name = self.process_name(name)
         for dir_ in self.persona_dir:
             dir_ = dir_/processed_name
-            if dir_.is_dir() and all(
-                    name in [path.name for path in dir_.iterdir()]
-                    for name in ('gender.json', 'summary.txt')):
+            if dir_.is_dir() and 'meta.json' in [path.name
+                                                 for path in dir_.iterdir()]:
                 return True
         return False
 
@@ -1984,7 +1985,7 @@ class ConversationManager:
         Returns
         -------
         tuple[str]: Tuple of (prompt, response), just like all gpt3 queries.
-        if not self.current_persona:
+        if not self.current['persona']:
             raise RuntimeError('You must call the `start_conversation` '
                                'method before making a query.')
         """
@@ -2053,14 +2054,15 @@ class ConversationManager:
         -------
         str
         """
-        if not self.current_persona:
+        current_persona = self.current['persona']
+        if not current_persona:
             raise RuntimeError('No persona loaded. Have you started a '
                                'conversation?')
         if not do_full and not user_text:
             raise RuntimeError('user_text must be provided when '
                                'do_full=False.')
 
-        pretty_name = self.process_name(self.current_persona, inverse=True)
+        pretty_name = self.process_name(current_persona, inverse=True)
         if do_full:
             user_turns = list(self.user_turns)
             if user_text: user_turns.append(user_text)
@@ -2086,10 +2088,10 @@ class ConversationManager:
         interleaved = filter(None, flatten(zip_longest(*ordered)))
         prompt = '\n\n'.join(interleaved)
         if include_summary:
-            prompt = f'{self.name2base[self.current_persona]}\n\n' + prompt
+            prompt = f'{self.name2base[current_persona]}\n\n' + prompt
         if not include_trailing_name:
             return prompt
-        return f'{prompt}\n\n{self.process_name(self.current_persona, True)}:'
+        return f'{prompt}\n\n{self.process_name(current_persona, True)}:'
 
     def format_prompt(self, user_text, include_trailing_name=True,
                       include_summary=True):

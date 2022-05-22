@@ -1627,16 +1627,32 @@ X -debug why two personas are loaded when only 1 was specified
 
 5/21/22 sat
 -----------
--integration voice/nationality extraction
+~ -integration voice/nationality extraction
 	X -port func to lib (maybe rm scores? Or just ignore them in wiki_data func or whatever calls it. Not bad to have for inforational purposes.)
-	-where should this go? Loading q/a model could be slow.
-	-update various openai classes accordingly (wiki_data() is used in a few places)
-	-document how to adjust this if polly adds more voice options
+	X -where should this go? Loading q/a model could be slow.
+		UPDATE: made it loaded lazily but updating openai_utils (or modules it imports) is still super slow. That could be an autoreload issue though - my lazy loading seemed to remove the model load message so I think it's working.
+	X -update various openai classes accordingly (wiki_data() is used in a few places)
+	X -update alexa voice selection function
+		X -test in console
+			UPDATE: works, though the male australian voice sounds a lot more robotic than in the sample.
+	_ -document how to adjust this if polly adds more voice options
+		UPDATE: my implementation method actually makes this happen automatically. Adding new attrs to wiki_data() is another story, but I think there are ways around that. (I.e. if we want to add more attrs in the future, maybe just compute them externally to ConvManager).
 -nb17
 	-emotion classifier for polly emotion tags
 		-review more emotion samples at various predicted scores (nb17). Try to get a sense of what decision threshold to use.
 		-is this even worth it? Might only be <5% of responses. But maybe that will make things feel more realistic.
 	-update voice func to include all options (voice, pitch, emotion tags). Might need some sort of stack of open tags, sort of like leetcode brackets lol.
+
+5/22/22 sun
+-----------
+-troubleshoot why openai_utils is SO slow to reload now
+-nb17
+	-emotion classifier for polly emotion tags
+		-review more emotion samples at various predicted scores (nb17). Try to get a sense of what decision threshold to use.
+		-is this even worth it? Might only be <5% of responses. But maybe that will make things feel more realistic.
+	-update voice func to include all options (voice, pitch, emotion tags). Might need some sort of stack of open tags, sort of like leetcode brackets lol.
+-makefile/cli command to generate new prompt skeleton
+-makefile/cli command to generate new custom persona skeleton
 
 
 Backlog

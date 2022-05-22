@@ -355,8 +355,9 @@ def text_edit_callback(sender, data):
         if not CONV_MANAGER.gpt3_turns and not edited.startswith('\n\n'):
             edited = '\n\n' + edited
         last_turn = edited.rpartition('\n\nMe: ')[-1].strip()
-        pretty_name = CONV_MANAGER.process_name(CONV_MANAGER.current_persona,
-                                                inverse=True)
+        pretty_name = CONV_MANAGER.process_name(
+            CONV_MANAGER.current['persona'], inverse=True
+        )
         if f'\n\n{pretty_name}: ' not in last_turn:
             CONV_MANAGER.query_later(last_turn)
         else:
@@ -418,7 +419,7 @@ def end_conversation_callback(sender, data):
     """Triggered when user clicks the end conversation button in conv mode.
     Also tries to delete a stored conversation from CHUNKER if one exists.
     """
-    name = CONV_MANAGER.current_persona
+    name = CONV_MANAGER.current['persona']
     CONV_MANAGER.end_conversation()
     try:
         CHUNKER.delete('conv_transcribed')
@@ -462,15 +463,15 @@ def persona_select_callback(sender, data):
     # auto-load. We don't need this for default add_persona action because
     # if the persona's already loaded, we'll just load it from files rather
     # than overwriting anything.
-    if (CONV_MANAGER.process_name(name) == CONV_MANAGER.current_persona) and \
-            (sender != 'generate_persona_callback'):
+    if (CONV_MANAGER.process_name(name) == CONV_MANAGER.current['persona']) \
+            and (sender != 'generate_persona_callback'):
         return
 
     CONV_MANAGER.start_conversation(name, download_if_necessary=False)
     update_persona_info()
     set_value('conv_text', '')
     # Must happen after we start conversation.
-    SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current_gender]
+    SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current['gender']]
 
     if sender != 'end_conversation_callback':
         # Start listening for user response automatically.
@@ -641,7 +642,7 @@ def saveas_callback(sender, data):
     date = dt.today().strftime('%Y-%m-%d')
     if is_item_visible('Conversation'):
         dir_ = str(CONV_MANAGER.conversation_dir.absolute())
-        file = f'{CONV_MANAGER.current_persona}_{date}.txt'
+        file = f'{CONV_MANAGER.current["persona"]}_{date}.txt'
     else:
         task_name = NAME2TASK[get_value(data['task_list_id'])]
         dir_ = str(Path(f'data/completions/{task_name}').absolute())
@@ -716,7 +717,7 @@ def save_callback(sender, data):
     if is_item_visible('Conversation') and get_value(data['end_conv_id']):
         if full_conv: CHUNKER.delete('conv_transcribed')
         set_value(data['source_text_id'], '')
-        CONV_MANAGER.start_conversation(CONV_MANAGER.current_persona)
+        CONV_MANAGER.start_conversation(CONV_MANAGER.current['persona'])
     cancel_save_conversation_callback('save_callback', data)
 
 
@@ -868,8 +869,9 @@ def concurrent_speaking_typing(streamable, data, conv_mode=False, pause=.18):
     streamed_response = True
     if conv_mode and isinstance(streamable, str):
         full_text = CONV_MANAGER.full_conversation(include_summary=False)
-        pretty_name = CONV_MANAGER.process_name(CONV_MANAGER.current_persona,
-                                                inverse=True)
+        pretty_name = CONV_MANAGER.process_name(
+            CONV_MANAGER.current['persona'], inverse=True
+        )
         full_text = ''.join(full_text.rpartition(f'\n\n{pretty_name}: ')[:-1])
         streamed_response = False
 
@@ -978,15 +980,15 @@ def update_persona_info(img_name='conversation_img',
     dummy_name: str
         Name of dummy spacer element. It's size is set here.
     """
-    dims = img_dims(CONV_MANAGER.current_img_path,
+    dims = img_dims(CONV_MANAGER.current['img_path'],
                     width=(APP.widths[.5] - 2*APP.pad) // 2)
     set_item_width(dummy_name, APP.widths[.5] // 4 - 4*APP.pad)
     add_same_line(parent=parent, before=img_name)
     # Must delete image after previous updates.
     delete_item(img_name)
-    add_image(img_name, str(CONV_MANAGER.current_img_path), parent=parent,
+    add_image(img_name, str(CONV_MANAGER.current['img_path']), parent=parent,
               before=text_name, **dims)
-    chunked = CHUNKER.add(text_key, CONV_MANAGER.current_summary,
+    chunked = CHUNKER.add(text_key, CONV_MANAGER.current['summary'],
                           max_chars=dims['width'] // 4)
     set_value(text_name, chunked)
 

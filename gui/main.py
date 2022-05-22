@@ -304,7 +304,7 @@ class App:
             # we render right-hand window, and dearpygui complains.
             name = CONV_MANAGER.personas()[0]
             CONV_MANAGER.start_conversation(name, True)
-            SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current_gender]
+            SPEAKER.voice = GENDER2VOICE[CONV_MANAGER.current['gender']]
 
             # Same as in task window but with different names/callback_data.
             add_button('conv_record_btn', label='Record',
@@ -335,7 +335,7 @@ class App:
                 )
                 add_input_text(
                     'save_file_text', label='File Name',
-                    default_value=f'{CONV_MANAGER.current_persona}.txt'
+                    default_value=f'{CONV_MANAGER.current["gender"]}.txt'
                 )
                 add_checkbox('end_conv_box',
                              label='End Conversation', default_value=True)
@@ -710,7 +710,8 @@ class App:
             # text seems to break my dummy-powered centering method. Not a big
             # deal, but don't try to add that here unless you plan on a more
             # involved debugging session.
-            add_image('conversation_img', str(CONV_MANAGER.current_img_path))
+            add_image('conversation_img',
+                      str(CONV_MANAGER.current['img_path']))
             add_text('summary_text', default_value='')
             update_persona_info()
 

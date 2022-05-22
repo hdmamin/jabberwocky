@@ -161,10 +161,26 @@ class custom_question(question):
             self._response['outputSpeech']['ssml'] = text
 
 
-def voice(text, gender, country='American'):
+def select_polly_voice(current_meta, threshold=.8,
+                       other='Australian'):
+    country2voice = POLLY_NAMES[current_meta['gender']]
+    assert other in country2voice, f'Default polly country {other} is not ' \
+                                   f'available. Pick one of {country2voice}.'
+
+    # Wikipedia usually calls people these people English. Need to map to Polly
+    # name.
+    country = current_meta['nationality'].replace('English', 'British')
+    score_pairs = [(match, score / 100) for match, score
+                   in process.extract(country, list(country2voice))]
+    match, score = score_pairs[0]
+    if score < threshold:
+        match = other
+    return country2voice[match]
+
+
+def voice(text, current_meta, **kwargs):
     """Add voice tags to use a custom Amazon Polly voice."""
-    country2name = POLLY_NAMES[gender]
-    name = country2name.get(country) or country2name['American']
+    name = select_polly_voice(current_meta, **kwargs)
     return f'<speak><voice name="{name}">{text}</voice></speak>', False
 
 # TODO testing

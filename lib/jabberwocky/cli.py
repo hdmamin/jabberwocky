@@ -62,8 +62,10 @@ def talk(name, model='gptj', download_persona=False,
         else:
             print(query_kwargs)
             _, resp = conv.query(query, **query_kwargs)
-            print(f'\n{conv.process_name(conv.current_persona, inverse=True)}'
-                  f': {resp}')
+            print(
+                f'\n{conv.process_name(conv.current["persona"], inverse=True)}'
+                f': {resp}'
+            )
 
 
 def task():
