@@ -1659,11 +1659,19 @@ X -troubleshoot why openai_utils is SO slow to reload now
 
 5/23/22 mon
 -----------
--nb17
-	-review more samples from commonsense dataset to select thresholds/heuristics for excitement (closest option in classifier is "joy") (NOTE: the level=High rows look pretty good, but the level=Low are a bit weak. Maybe should up that threshold.)
-	-follow a similar process to define thresholds/heuristics for "disappointed" (closest option in classifier is "sadness")
+X -nb17
+	X -review more samples from commonsense dataset to select thresholds/heuristics for excitement (closest option in classifier is "joy") (NOTE: the level=High rows look pretty good, but the level=Low are a bit weak. Maybe should up that threshold.)
+		UPDATE: in my eyes this really seems to hinge on the exclamation point. Withouto that, require score >= .9. Now we have ~9% excited turns which seems more reasonable than the 14% I was getting at the start of this work session.
+	X -follow a similar process to define thresholds/heuristics for "disappointed" (closest option in classifier is "sadness")
+		UPDATE: about 6% excited, 6% disappointed, 88% neutral. Sounds reasonable enough?
 -update voice func to include all options (voice, pitch, emotion tags). Might need some sort of stack of open tags, sort of like leetcode brackets lol.
-		-examine other negative cats (fear, anger, disgust) to see if some subset of these might belong in "disappointed" voice too
+
+5/24/22 tues
+------------
+-port emotion func to lib
+	-consider: should emotion pipeline go inside that or be separate? Maybe just one emotion_tagger func that maps from text -> tag.
+-update voice func to include all options (voice, pitch, emotion tags). Might need some sort of stack of open tags, sort of like leetcode brackets lol.
+
 
 
 Backlog
