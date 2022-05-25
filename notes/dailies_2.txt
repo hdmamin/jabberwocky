@@ -1668,16 +1668,21 @@ X -nb17
 
 5/24/22 tues
 ------------
--port emotion func to lib
-	-consider: should emotion pipeline go inside that or be separate? Maybe just one emotion_tagger func that maps from text -> tag.
--update voice func to include all options (voice, pitch, emotion tags). Might need some sort of stack of open tags, sort of like leetcode brackets lol.
+X -port emotion func to lib
+	X -consider: should emotion pipeline go inside that or be separate? Maybe just one emotion_tagger func that maps from text -> tag.
+X -update voice func to include all options (voice, pitch, emotion tags). Might need some sort of stack of open tags, sort of like leetcode brackets lol.
+	UPDATE: works, though we seem to be forced to choose between emotion tags and custom polly voices. I favor the latter atm since emotion tags affect only a small % of responses and are not all that noticeable, compared to speaker gender/accent.
+
+5/25/22 wed
+-----------
+-troubleshoot why saying just last name in choose_person is not working
+-makefile/cli command to generate new prompt skeleton
+-makefile/cli command to generate new custom persona skeleton
 
 
 
 Backlog
 -------
--makefile/cli command to generate new prompt skeleton
--makefile/cli command to generate new custom persona skeleton
 -[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)
 	-have gpt3 insert tags directly (i.e. Edit rather than complete)
 	-have gpt3 select from options (almost like classification. Maybe just use logit_bias.) then fill in template programmatically.

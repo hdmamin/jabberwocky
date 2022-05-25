@@ -12,6 +12,7 @@ from flask_ask import question, context, statement
 # openai appears unused but is actually used by GPTBackend instance.
 import openai
 import requests
+from transformers import pipeline
 
 from config import EMAIL, LOG_FILE
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
@@ -22,7 +23,7 @@ from utils import slot, Settings, model_type, CustomAsk, infer_intent, voice, \
 
 
 # Define these before functions since endpoints use ask method as decorators.
-# Unclutter terminal output because it's hard to debug otherwise.
+# This level unclutters terminal output a bit (it's hard to debug otherwise).
 logging.getLogger('flask_ask').setLevel(logging.WARNING)
 app = Flask(__name__)
 # Necessary to make session accessible outside endpoint functions.
@@ -149,7 +150,7 @@ def reset_app_state(end_conv=True, clear_queue=True,
         User attributes to retrieve if permission has been granted.
     """
     if end_conv:
-        conv.end_conversation()
+        CONV.end_conversation()
     if clear_queue:
         ask.func_clear()
     if backend_:
@@ -158,11 +159,11 @@ def reset_app_state(end_conv=True, clear_queue=True,
     for k, v in get_user_info(attrs).items():
         setattr(state, k, v)
         if k == 'name' and v:
-            conv.me = v
+            CONV.me = v
     # If we ever want explicitly tracked settings to include stop phrases,
     # this must remain after changing conv.me (see line above) since that
     # changes the stop phrases.
-    state.init_settings(conv, drop_fragment=True)
+    state.init_settings(CONV, drop_fragment=True)
     # TODO: keeping things cheaper for testing, though it actually doesn't
     # matter atm now that I'm using banana backend.
     state.set('global', engine=0)
@@ -223,7 +224,7 @@ def choose_person(person=None, **kwargs):
     person = person or kwargs.get('response') or slot(request, 'Person')
     # Handle case where conversation is already ongoing. This should have been
     # a reply - it just happened to consist of only a name.
-    if conv.current['persona']:
+    if CONV.current['persona']:
         return _reply(prompt=person)
     # This handles our 2 alexa utterance collisions, "oh no" and "hush"
     # which alexa mistakenly maps to the choosePerson intent. If we're already
@@ -235,8 +236,8 @@ def choose_person(person=None, **kwargs):
                        'start one if you like - who do you want to speak to?'
         )
 
-    if person not in conv:
-        matches = [p for p in map(str.lower, conv.personas())
+    if person not in CONV:
+        matches = [p for p in map(str.lower, CONV.personas())
                    if person == p.split()[-1]]
         # Allows us to just say "Einstein" rather than "Albert Einstein". If
         # we have multiple matches, don't try to guess (e.g. "Armstrong" could
@@ -251,7 +252,7 @@ def choose_person(person=None, **kwargs):
                 'Would you like to create a new contact?'
             )
 
-    conv.start_conversation(person)
+    CONV.start_conversation(person)
     ask.func_clear()
     return question(f'I\'ve connected you with {person}.')
 
@@ -259,7 +260,7 @@ def choose_person(person=None, **kwargs):
 def _generate_person(choice, **kwargs):
     if choice:
         try:
-            conv.add_persona(kwargs['person'].title())
+            CONV.add_persona(kwargs['person'].title())
             return choose_person(person=kwargs['person'])
         except Exception as e:
             ask.logger.error(f'Failed to generate {kwargs["person"]}. '
@@ -420,8 +421,8 @@ def _maybe_choose_person(
         'You must provide at least one of msg or choose_msg.'
 
     msg = msg.rstrip(' ') + ' '
-    if conv.current['persona']:
-        name = conv.process_name(conv.current['persona'], inverse=True)
+    if CONV.current['persona']:
+        name = CONV.process_name(CONV.current['persona'], inverse=True)
         msg += return_msg_fmt.format(name)
     else:
         msg += _choose_person_text(choose_msg)
@@ -446,16 +447,16 @@ def _reply(prompt=None):
     if state.auto_punct:
         ask.logger.info('BEFORE PUNCTUATION: ' + prompt)
         with GPT('banana'):
-            prompt, _ = prompter.query(task='punctuate_alexa',
+            prompt, _ = PROMPTER.query(task='punctuate_alexa',
                                        text=prompt, strip_output=True,
                                        max_tokens=2 * len(prompt.split()))
             prompt = prompt[0]
     ask.logger.info('BEFORE QUERY: ' + prompt)
-    text, _ = conv.query(prompt, **state)
-    # text = voice(text[0], conv.current['gender'], 'American') # TODO extract country from wikipedia?
+    text, _ = CONV.query(prompt, **state)
     # return question(text)
 
-    text, is_ssml = voice(text[0], conv.current)
+    text, is_ssml = voice(text[0], CONV.current, select_voice=True,
+                          emo_pipe=EMO_PIPE)
     return custom_question(text, is_ssml)
 
 
@@ -465,7 +466,7 @@ def delegate():
     """
     func, kwargs = ask.func_pop()
     response = slot(request, 'response', lower=False)
-    matches = infer_intent(response, utt2meta)
+    matches = infer_intent(response, UTT2META)
     ask.logger.info('\nInferred intent match scores:')
     ask.logger.info(matches)
     # Currently inferred intents take precedence over enqueued functions -
@@ -474,7 +475,9 @@ def delegate():
     if matches['intent']:
         ask.logger.info(f'CALLING INFERRED INTENT: {matches["intent"]}')
         inferred_func = ask.intent2func(matches['intent'])
-        return inferred_func(**matches['slots'])
+        return inferred_func(
+            **{k.lower(): v for k, v in matches['slots'].items()}
+        )
     if not func:
         # No chained intents are in the queue so we assume this is just another
         # turn in the conversation.
@@ -505,7 +508,7 @@ def read_contacts():
     "Lou, read me my contacts."
     "Lou, who are my contacts?"
     """
-    msg = f'Here are all of your contacts: {", ".join(conv.personas())}. '
+    msg = f'Here are all of your contacts: {", ".join(CONV.personas())}. '
     # If they're in the middle of a conversation, don't ask anything - just let
     # them get back to it.
     return _maybe_choose_person(msg)
@@ -569,7 +572,7 @@ def _end_chat(choice=None, **kwargs):
         raise ValueError(f'Choice must be a bool, not {type(choice)}.')
 
     if choice:
-        if send_transcript(conv, state.email):
+        if send_transcript(CONV, state.email):
             msg = 'I\'ve emailed you a transcript of your conversation. '
         else:
             msg = 'Something went wrong and I wasn\'t able to send you ' \
@@ -577,7 +580,7 @@ def _end_chat(choice=None, **kwargs):
     else:
         msg = 'Okay.'
 
-    conv.end_conversation()
+    CONV.end_conversation()
     ask.func_clear()
     return question(
         msg + _choose_person_text(' Who would you like to speak to next?')
@@ -594,9 +597,16 @@ def end_session():
 
 if __name__ == '__main__':
     # TODO: eventually prob set qa_pipe to True.
-    conv = ConversationManager(load_qa_pipe=False)
-    prompter = PromptManager(['punctuate_alexa'], verbose=False)
-    utt2meta = load('data/alexa/utterance2meta.pkl')
+    CONV = ConversationManager(load_qa_pipe=False)
+    PROMPTER = PromptManager(['punctuate_alexa'], verbose=False)
+    UTT2META = load('data/alexa/utterance2meta.pkl')
+    # TODO: consider enabling/removing this. Seems like we have to choose
+    # between emotion tags and switching voice by nationality/gender and I
+    # tend to learn towards the latter.
+    EMO_PIPE = None
+    # EMO_PIPE = pipeline('text-classification',
+    #                     model='j-hartmann/emotion-english-distilroberta-base',
+    #                     return_all_scores=False)
 
     decorate_functions(debug_decorator)
     # Set false because otherwise weird things happen to app state in the

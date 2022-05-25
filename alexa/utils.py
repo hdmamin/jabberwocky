@@ -12,6 +12,7 @@ import spacy
 import sys
 from werkzeug.local import LocalProxy
 
+from htools.core import xor_none
 from htools.meta import Callback, callbacks, params, MultiLogger, func_name,\
     deprecated, select, save, count_calls
 from htools.structures import FuzzyKeyDict
@@ -155,7 +156,7 @@ class custom_question(question):
 
     def __init__(self, speech, is_ssml=False):
         super().__init__(speech)
-        if is_ssml:
+        if is_ssml and self._response['outputSpeech']['type'] != 'SSML':
             text = self._response['outputSpeech'].pop('text')
             self._response['outputSpeech']['type'] = 'SSML'
             self._response['outputSpeech']['ssml'] = text
@@ -163,6 +164,25 @@ class custom_question(question):
 
 def select_polly_voice(current_meta, threshold=.8,
                        other='Australian'):
+    """Select name of polly voice to use based on a person's gender and
+    nationality.
+
+    Parameters
+    ----------
+    current_meta: dict
+        ConversationManager.current_meta attribute which stores information
+        about the person currently being spoken to including "gender" and
+        "nationality".
+    threshold: float
+        Value in (0.0, 1.0) that defines the minimum score from our fuzzy
+        matcher when finding a matching voice country. If the highest
+        similarity is below this threshold, we default to `other`.
+    other: str
+        One of the countries in POLLY_NAMES[gender].keys(). If a close match
+        isn't found, we default to this. (Basically, Polly has limited
+        countries so as of 5/24/22, all non-US/British people get "Austrlian"
+        which sort of serves as a catch-all "funky/other" category.
+    """
     country2voice = POLLY_NAMES[current_meta['gender']]
     assert other in country2voice, f'Default polly country {other} is not ' \
                                    f'available. Pick one of {country2voice}.'
@@ -178,19 +198,57 @@ def select_polly_voice(current_meta, threshold=.8,
     return country2voice[match]
 
 
-def voice(text, current_meta, **kwargs):
-    """Add voice tags to use a custom Amazon Polly voice."""
-    name = select_polly_voice(current_meta, **kwargs)
-    return f'<speak><voice name="{name}">{text}</voice></speak>', False
+def emotion(text, pred=None, emo_pipe=None, logger=None):
+    xor_none(pred, emo_pipe)
+    pred = pred or emo_pipe(text)
+    if isinstance(pred, (tuple, list)):
+        pred = pred[0]
+    if logger:
+        logger.info(f'\nEMOTION PREDICTION: {pred}')
+    res = {'emotion': None,
+           'intensity': None}
+    labels = ['sadness', 'disgust', 'fear', 'joy']
+    if pred['score'] < .65 or pred['label'] not in labels:
+        return res
+    if pred['label'] == 'joy':
+        if '!' in text:
+            res['emotion'] = 'excited'
+            res['intensity'] = 'high'
+        elif pred['score'] >= .9:
+            res['emotion'] = 'excited'
+            res['intensity'] = 'low'
+    else:
+        res['emotion'] = 'disappointed'
+        if pred['label'] == 'sadness':
+            res['intensity'] = 'high' if pred['score'] >= .75 else 'low'
+        else:
+            res['intensity'] = 'high' if pred['score'] >= .9 else 'low'
+    return res
 
-# TODO testing
-# emotions = ['disappointed', 'excited']
-# intensities = ['low', 'high']
-# combos = [(e, i) for e in emotions for i in intensities]
-# def voice(text, gender, country='American'):
-#     emotion, intensity = combos.pop(0)
-#     combos.append((emotion, intensity))
-#     return f'<speak><amazon:emotion name="{emotion}" intensity="{intensity}">I am feeling {intensity} {emotion}. {text}</amazon:emotion></speak>', True
+
+def voice(text, current_meta, select_voice=True, emo_pipe=None, **kwargs):
+    """Add voice tags to use a custom Amazon Polly voice."""
+    # return f'<speak><voice name="{name}">{text}</voice></speak>', True
+    open_tags = ['<speak>']
+    close_tags = ['</speak>']
+    # We can either use a custom voice or custom emotions. For now, I set
+    # custom voice as the default - the emotional range is rather limited and
+    # only affects a small percentage of responses.
+    if select_voice:
+        name = select_polly_voice(current_meta, **kwargs)
+        open_tags.append(f'<voice name="{name}">')
+        close_tags.append('</voice>')
+    else:
+        logger = getglobal('ask.logger')
+        tags = emotion(text, emo_pipe=emo_pipe, logger=logger)
+        if tags['emotion']:
+            open_tags.append(
+                f'<amazon:emotion name="{tags["emotion"]}" '
+                f'intensity="{tags["intensity"]}">'
+            )
+            close_tags.append('</amazon:emotion>')
+        logger.info(f'TAGS: {tags}')
+    return f"{''.join(open_tags)}{text}{''.join(close_tags[::-1])}", True
 
 
 def detokenize(tokens, punct=set('.,;:')):
