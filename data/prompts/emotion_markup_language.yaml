@@ -1,0 +1,25 @@
+# WIP: might want to change format to <emotion type='sadness'> or something. Also consider what length should be used (1 sentence? 1 paragraph? Vary lengths dramatically?). Also consider if logit bias can/should be used to constrain to a subset of tags.
+engine: 3
+temperature: 0.0
+max_tokens: 75
+frequency_penalty: 0.0
+presence_penalty: 0.0
+stop: 
+- "Input passage:"
+reminder: "Max_tokens should be adjusted depending on the input size. The few shot examples are 3 sentences long."
+prompt: |-
+  Edit the input passage so that it uses the appropriate Emotion Markup Language tags.
+
+  Input passage:
+  I absolutely adore my new puppy! She's the sweetest thing ever. Thanks so much for letting me keep her.
+  Passage with Emotion Markup Language:
+  <excited>I absolutely adore my new puppy!</excited><happy> She's the sweetest thing ever.</happy><grateful> Thanks so much for letting me keep her.</grateful>
+
+  Input passage:
+  My stupid boss blamed me for his mistake today. I swear I've had it with this job. I really miss my old company.
+  Passage with Emotion Markup Language:
+  <angry>My stupid boss blamed me for his mistake today.</angry><annoyed> I swear I've had it with this job.</annoyed><sad> I really miss my old company.</sad>
+
+  Input passage:
+  {}
+  Passage with Emotion Markup Language:

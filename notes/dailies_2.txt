@@ -1675,9 +1675,18 @@ X -update voice func to include all options (voice, pitch, emotion tags). Might 
 
 5/25/22 wed
 -----------
--troubleshoot why saying just last name in choose_person is not working
--makefile/cli command to generate new prompt skeleton
--makefile/cli command to generate new custom persona skeleton
+X -troubleshoot why saying just last name in choose_person is not working
+	UPDATE: I was lowercasing personas() but not the prompt slot name.
+X -makefile/cli command to generate new prompt skeleton
+	UPDATE: also tweaked query_gpt3 defaults as a result: top_p 1->.99.
+X -makefile/cli command to generate new custom persona skeleton
+	UPDATE: also changed from storing meta.json to meta.yaml to make it easier to create custom personas manually. Then generated all 31 personas over again (even with no qa pipe, this still takes ~3 min - slower than I remembered).
+~ -prototype gpt Emotion Markup Language prompt
+	UPDATE: not really necessary atm since polly doesn't provide many emotions and we wouldn't have time for another gpt query anyway, but this is pretty cool. GPT3 sort of made up its own markup language based on 1-2 examples! Technically it turns out emotion markup language is a real thing, but the syntax is different than what I specified and gpt matched my syntax, not the real language's (i.e. it's inferring syntax rather than regurgitating it). That being said, if I actually wanted to use this for something, the real EML syntax (or something closer to it) is probably better - I think that would allow us to parse it as xml or something like it, whereas my current syntax would be trickier to parse. Might be desirable to use logit_bias to promote a fixed set of tags but it depends on the use case (currently: None) and I don't think it natively supports multi-token biases so we'd either be out of luck or have to devise a hacky workaround. I am curious to see if we could use gpt to invent other more useful languages though.
+
+5/26/22 thurs
+-------------
+-Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
 
 
@@ -1686,7 +1695,6 @@ Backlog
 -[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)
 	-have gpt3 insert tags directly (i.e. Edit rather than complete)
 	-have gpt3 select from options (almost like classification. Maybe just use logit_bias.) then fill in template programmatically.
--revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 -incorporate new bio cleanup prompt into convmanager
 -[ON HOLD: so far this seems to work, maybe just let myself stumble upon bugs if they arise during further development] test new stopword streaming functionality for paid backends
     -openai

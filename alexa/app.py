@@ -238,7 +238,7 @@ def choose_person(person=None, **kwargs):
 
     if person not in CONV:
         matches = [p for p in map(str.lower, CONV.personas())
-                   if person == p.split()[-1]]
+                   if person.lower() == p.split()[-1]]
         # Allows us to just say "Einstein" rather than "Albert Einstein". If
         # we have multiple matches, don't try to guess (e.g. "Armstrong" could
         # refer to either Neil Armstrong or Louis Armstrong). Considered fuzzy

@@ -70,7 +70,7 @@ from jabberwocky.external_data import wiki_data
 from jabberwocky.streaming import stream_response, truncate_at_first_stop
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     hooked_generator, load_api_key, with_signature, JsonlinesLogger,\
-    thread_starmap, ReturningThread, containerize, touch
+    thread_starmap, ReturningThread, containerize, touch, save_yaml
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -249,7 +249,7 @@ def postprocess_gpt_response(response, stream=False):
 
 
 @mark(batch_support=True)
-def query_gpt3(prompt, engine=0, temperature=0.7, top_p=1.0,
+def query_gpt3(prompt, engine=0, temperature=0.7, top_p=.99,
                frequency_penalty=0.0, presence_penalty=0.0, max_tokens=50,
                logprobs=None, n=1, stream=False, logit_bias=None, **kwargs):
     """Convenience function to query gpt3. Mostly serves 2 purposes:
@@ -282,7 +282,8 @@ def query_gpt3(prompt, engine=0, temperature=0.7, top_p=1.0,
         up the top_p percent combined. I.e. higher values allow for more
         creativity (like high temperature) and low values are closer to argmax
         sampling (like low temperature). API recommends setting a sub-maximal
-        value for at most one of this and temperature, not both.
+        value for at most one of this and temperature, not both. NLCA book
+        suggests using both though.
     frequency_penalty: float
         Value in [-2.0, 2.0] where larger (more positive) values more heavily
         penalize words that have already occurred frequently in the text.
@@ -1879,11 +1880,11 @@ class ConversationManager:
                 shutil.rmtree(dir_)
                 raise e
 
-            # Do this after moving the image file (if necessary) so meta.json
+            # Do this after moving the image file (if necessary) so meta.yaml
             # contains the correct image path.
             meta.update(img_path=str(img_path))
             meta.pop('img_url', None)
-            save(meta, dir_/'meta.json')
+            save_yaml(meta, dir_/'meta.yaml')
 
             # It's an empty string if we fail to download an image in
             # non-custom mode, or None if we choose not to pass in a path in
@@ -1901,7 +1902,7 @@ class ConversationManager:
         img_path, etc.
         """
         dir_ = self.persona_dir[is_custom]/processed_name
-        meta = load(dir_/'meta.json', verbose=self.verbose)
+        meta = load_yaml(dir_/'meta.yaml')
         summary = meta.pop('summary')
         self.name2meta[processed_name] = meta
         self.name2base[processed_name] = self._base_prompt.format(
@@ -1927,7 +1928,7 @@ class ConversationManager:
         processed_name = self.process_name(name)
         for dir_ in self.persona_dir:
             dir_ = dir_/processed_name
-            if dir_.is_dir() and 'meta.json' in [path.name
+            if dir_.is_dir() and 'meta.yaml' in [path.name
                                                  for path in dir_.iterdir()]:
                 return True
         return False

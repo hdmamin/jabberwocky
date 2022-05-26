@@ -297,6 +297,22 @@ def load_api_key(name):
 load_goose_api_key = partial(load_api_key, name='gooseai')
 
 
+def save_yaml(data, path):
+    """Save a dictionary as a yaml file.
+
+    Parameters
+    ----------
+    data: dict
+    path: str or Path
+        Any intermediate dirs that do not already exist will be created.
+    """
+    path = Path(path)
+    if not path.parent.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, 'w') as f:
+        yaml.dump(data, f)
+
+
 def load_yaml(path, section=None):
     """Load a yaml file. Useful for loading prompts.
 
