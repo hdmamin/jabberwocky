@@ -1686,6 +1686,10 @@ X -makefile/cli command to generate new custom persona skeleton
 
 5/26/22 thurs
 -------------
+-easy option: add "doc" field to prompt
+	-update template
+	-update existing
+	-update load_prompt if necessary
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
 
