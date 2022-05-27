@@ -1,4 +1,3 @@
-# WIP: might want to change format to <emotion type='sadness'> or something. Also consider what length should be used (1 sentence? 1 paragraph? Vary lengths dramatically?). Also consider if logit bias can/should be used to constrain to a subset of tags.
 engine: 3
 temperature: 0.0
 max_tokens: 75
@@ -7,6 +6,8 @@ presence_penalty: 0.0
 stop: 
 - "Input passage:"
 reminder: "Max_tokens should be adjusted depending on the input size. The few shot examples are 3 sentences long."
+doc: |-
+  Experimental one shot prompt to reformat text (intended to be conversational) to contain tags from a made up "Emotion Markup Language". Technically EML does exist though its syntax is different than what I specify here. This is a work in progress and should probably eventually change to use something more like <emotion type='sadness'> instead of <sadness> - seems like it might be desirable to make the output parsable as XML. Also consider what length inputs should be (1 sentence? 1 paragraph? Vary lengths dramatically?). Also consider if logit bias can/should be used to constrain to a subset of tags.
 prompt: |-
   Edit the input passage so that it uses the appropriate Emotion Markup Language tags.
 

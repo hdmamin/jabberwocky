@@ -18,6 +18,7 @@ pypi: lib
 
 readmes:
 	htools update_readmes "['gui', 'notebooks', 'lib/jabberwocky']"
+	python ./lib/jabberwocky/cli.py update_prompt_readme
 
 install:
 	brew install portaudio

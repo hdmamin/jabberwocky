@@ -6,6 +6,8 @@ stop:
 - "\n\nMessy:"
 - "\n\nClean:"
 reminder: "While using davinci here feels ridiculous, it does seem to perform noticeably better than the other engines."
+doc: |-
+    Experimental prompt to clean up the results of the wikipedia bios I've been retrieving with the "wikipedia" python lib. I could imagine using a more varied set of inputs to try to create a generalized "webscraping cleaner" prompt but that will take some experimentation.
 prompt: |-
     I built a webscraper that extracts excerpts from Wikipedia bios. Sometimes the excerpts are messy. Clean them up by fixing typos, removing pronunciation guidelines and citations, and cleaning up any other mistakes you find.
 

@@ -4,7 +4,7 @@ Jupyter notebooks for data exploration and experimentation.
 
 
 ---
-Start of auto-generated file data.<br/>Last updated: 2021-09-12 13:55:25
+Start of auto-generated file data.<br/>Last updated: 2022-05-26 20:57:08
 
 <table border="1" class="dataframe">
   <thead>
@@ -33,6 +33,46 @@ Start of auto-generated file data.<br/>Last updated: 2021-09-12 13:55:25
       <td>3</td>
       <td>2021-05-08 14:16:31</td>
       <td>53.58 kb</td>
+    </tr>
+    <tr>
+      <td>nb014-redo-static-stream-func.ipynb</td>
+      <td>Try rewriting generator that streams from static backends. Want to do stopword truncation upfront. Might also be able to make this MUCH simpler.</td>
+      <td>13</td>
+      <td>2</td>
+      <td>2022-05-09 20:59:57</td>
+      <td>15.84 kb</td>
+    </tr>
+    <tr>
+      <td>nb014-test-batch-queries.ipynb</td>
+      <td>Test out new batch query functionality.</td>
+      <td>25</td>
+      <td>4</td>
+      <td>2022-04-18 20:48:26</td>
+      <td>67.54 kb</td>
+    </tr>
+    <tr>
+      <td>nb015-fix-openai-api-issue.ipynb</td>
+      <td>Recently (possibly since upgrading to openai 0.18.1?), querying openai causes invalid URL errors. Here are some notes from yesterday's troubleshooting session.<br/><br/>- curl works, python doesn't.<br/>- Not just codex, now nox openai engines work w/ python. Maybe due to updating pip package? Temporarily upped billing limit to try other models.<br/>- Restarted kernel and gpt query works again w/ ada. BUT after I import openai explicitly, that fails too. That must be a clue.<br/>- Tried uninstalling, reinstalling, opened new tmux pane. Still same error.<br/>- Tried deleting 'openai' object and then importing jabberwocky. This does work!?<br/>- If I re-import openai after that, GPT.query still works. But openai.completion while codex does not.<br/>- If I import openai FROM jabberwocky openai_utils, codex query still fails. But GPT.query works. And openai.Completion works w/ engine ada!<br/>- Conclusion: maybe it is codex-specific then?</td>
+      <td>146</td>
+      <td>16</td>
+      <td>2022-05-09 20:53:26</td>
+      <td>1.58 mb</td>
+    </tr>
+    <tr>
+      <td>nb016-prompt-object.ipynb</td>
+      <td>Experimenting with making a Prompt object. Goals:<br/>- simplify the call to resolve template + arg(s)<br/>- allow computed values? (e.g. accept arg x and then fill another field with x+3 or x.upper()}<br/>- maybe define postprocessing/completion validation steps?</td>
+      <td>44</td>
+      <td>2</td>
+      <td>2022-05-15 14:54:14</td>
+      <td>38.20 kb</td>
+    </tr>
+    <tr>
+      <td>nb017-nationality-extraction-and--emotion-detection.ipynb</td>
+      <td>SMS dataset from here:<br/>https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset<br/>It looks ver messy.</td>
+      <td>96</td>
+      <td>7</td>
+      <td>2022-05-23 20:36:42</td>
+      <td>527.62 kb</td>
     </tr>
     <tr>
       <td>nb02-youtube-api-playground.ipynb</td>
@@ -105,6 +145,30 @@ Start of auto-generated file data.<br/>Last updated: 2021-09-12 13:55:25
       <td>4</td>
       <td>2021-08-31 20:28:54</td>
       <td>38.01 kb</td>
+    </tr>
+    <tr>
+      <td>nb11-slot-extraction.ipynb</td>
+      <td>Trying to extract slots when alexa fails to recognize the desired intent.</td>
+      <td>29</td>
+      <td>6</td>
+      <td>2022-03-26 14:17:49</td>
+      <td>142.44 kb</td>
+    </tr>
+    <tr>
+      <td>nb12-test-backend-selector.ipynb</td>
+      <td>Make sure updated BackendSelector class is working properly. DO NOT PUSH THIS TO GITHUB (added to gitignore so api keys are not exposed).<br/><br/>UPDATE: renamed to GPTBackend.</td>
+      <td>79</td>
+      <td>7</td>
+      <td>2022-04-08 21:26:53</td>
+      <td>121.99 kb</td>
+    </tr>
+    <tr>
+      <td>nb13-multi-prompt-queries.ipynb</td>
+      <td>Experiment with ways to support passing a list of prompts to query method. Some backends don't support this natively, others do, but none automatically would return the format I want.</td>
+      <td>136</td>
+      <td>7</td>
+      <td>2022-04-14 20:43:18</td>
+      <td>194.95 kb</td>
     </tr>
   </tbody>
 </table>

@@ -4,7 +4,7 @@ This folder is for scripts that can be run from the command line (usually python
 
 
 ---
-Start of auto-generated file data.<br/>Last updated: 2021-09-12 13:55:25
+Start of auto-generated file data.<br/>Last updated: 2022-05-26 20:57:07
 
 <table border="1" class="dataframe">
   <thead>
@@ -20,16 +20,16 @@ Start of auto-generated file data.<br/>Last updated: 2021-09-12 13:55:25
     <tr>
       <td>callbacks.py</td>
       <td>Callbacks for our dearpygui app. Note that this module relies on a number of<br/>global variables which are defined after import in main.py:<br/>-APP<br/>-SPEAKER<br/>-CHUNKER<br/>-CONV_MANAGER<br/>-MANAGER<br/>-GENDER2VOICE<br/>-MODEL_NAMES<br/>-NAME2TASK<br/><br/>Pycharm highlights these as errors since they appear to be undefined when<br/>looking at this module in isolation.</td>
-      <td>993</td>
-      <td>2021-09-12 13:54:19</td>
-      <td>43.54 kb</td>
+      <td>995</td>
+      <td>2022-05-21 17:43:01</td>
+      <td>43.53 kb</td>
     </tr>
     <tr>
       <td>main.py</td>
       <td>Launches a GUI providing an audio interface to GPT3.<br/><br/>Example usage:<br/>--------------<br/>python gui/main.py</td>
-      <td>764</td>
-      <td>2021-09-12 13:54:19</td>
-      <td>40.07 kb</td>
+      <td>765</td>
+      <td>2022-05-21 17:43:01</td>
+      <td>40.10 kb</td>
     </tr>
     <tr>
       <td>utils.py</td>

@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 from prompt_toolkit import prompt, PromptSession
 
-from jabberwocky.openai_utils import ConversationManager, PromptManager,\
-    query_gpt3, query_gpt_neo, query_gpt_j
+from jabberwocky.openai_utils import ConversationManager, PromptManager
+from jabberwocky.utils import _update_prompt_readme
 from htools.cli import fire
 from htools.core import eprint, identity
 
@@ -85,6 +85,11 @@ def ls(mode=None, pretty=True):
         manager = PromptManager(verbose=False)
         print('\nAvailable Tasks:')
         eprint(list(manager.prompts))
+        
+
+# Just wrapping the original function to expose it to Fire.
+def update_prompt_readme(dir_='data/prompts', sep='***'):
+    _update_prompt_readme(dir_, sep)
 
 
 if __name__ == '__main__':

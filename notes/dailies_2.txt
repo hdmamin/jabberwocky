@@ -1686,12 +1686,25 @@ X -makefile/cli command to generate new custom persona skeleton
 
 5/26/22 thurs
 -------------
--easy option: add "doc" field to prompt
-	-update template
-	-update existing
-	-update load_prompt if necessary
+X -easy option: add "doc" field to prompt
+	X -update template
+	X -update existing
+	X -update load_prompt if necessary
+	UPDATE: atm load_prompt just pops it off and does nothing with it. If I revisit my idea of a Prompt class, it could be useful to keep around but not pass to gpt.query().
+-provide makefile command to update prompt dir readmes using new "doc" field
+	X -figure out plan (bash? jabberwocky? htools?) for how to implement
+		UPDATE: write py func in jabberwocky and call it from makefile inside `make readmes`.
+	X -implement
+		UPDATE: basically done, though slight tweak needed: '<|endoftext|>' is used in one prompt 'doc' and gets cut off, I think because it's displayed in a markdown table in the readme. Need to figure out some way to escape it.
+-try tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
+5/27/22 fri
+-----------
+-try to escape text like '<|endoftext|>' so it can show up in a markdown table.
+-consider how to deal with prompt versioning (i.e. should we explicitly version prompts inside the yaml file? Or just rely on github commits and dates from logs? Probably a good idea to include a version number and include it in meta field of logs.)
+-try tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
+-Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
 
 Backlog

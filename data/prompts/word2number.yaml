@@ -7,6 +7,8 @@ stop:
 max_tokens: 10
 reminder: "This was not designed to work with negatives or terms like 'half', 'quarter', etc."
 strip_output: true
+doc: |-
+  Experimental few shot prompt to convert written numbers to numerals. The original motive was to help parse Alexa slots but IIRC the issue disappeared when I restricted the valid values for the slot - previously it accepted both numeric words and non-numeric words, so I think that made alexa resolve everything to non-numeric. Now that all valid "model" values are numeric, it provides numerals for us.
 prompt: |-
     Convert a written word to a number.
     

@@ -3,6 +3,8 @@ temperature: 0.1
 max_tokens: 10
 stop: "Input:"
 reminder: 'This prompt takes no input.'
+doc: |-
+    Normalizes dates from various formats into a consistent natural language format.  Mostly used for debugging purposes when I want to try something on a short, relatively predictable prompt; a truly effective date normalizing prompt would require some more tuning, and would probably be more useful if it output something more computer-friendly than human-friendly.
 prompt: |-
     Input: 3/1/20
     Output: March 1, 2020

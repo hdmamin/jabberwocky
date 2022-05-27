@@ -6,6 +6,8 @@ stop:
 - "Passage:"
 - "Writing Style:"
 reminder: "Lower engines could get quite repetitive."
+doc: |-
+    Few shot prompt to analyze a short paragraph and produce a bulleted list of words describing the writing style.
 prompt: |-
     Describe the author's writing style:
     

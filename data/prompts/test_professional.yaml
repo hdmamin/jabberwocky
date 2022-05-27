@@ -11,6 +11,8 @@ stop:
 logit_bias:
   3763: 100
   645: 100
+doc: |-
+    Experimental zero shot prompt to check if a piece of text uses professional (i.e. work-appropriate) language. This uses the logit_bias arg to effectively serve as a classifier.
 prompt: |-
     Does the following email maintain a professional tone? (Yes/No)
 

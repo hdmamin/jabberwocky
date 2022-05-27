@@ -14,7 +14,7 @@ import yaml
 import _thread
 
 from htools import select, bound_args, copy_func, xor_none, add_docstring, \
-    listlike, MultiLogger, tolist
+    listlike, MultiLogger, tolist, load, save
 from jabberwocky.config import C
 
 
@@ -331,6 +331,27 @@ def load_yaml(path, section=None):
     with open(path, 'r') as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
     return data.get(section, data)
+
+
+def _update_prompt_readme(dir_='data/prompts', sep='***'):
+    """Update readme file in a directory of prompt yaml files to contain a
+    table displaying their name and description (provided by the "doc" field
+    in the yaml file.
+    """
+    dir_ = Path(dir_)
+    name2doc = {path.stem: load_yaml(path).get('doc', '').replace('\n', ' ')
+                for path in dir_.iterdir() if path.suffix == '.yaml'}
+    tbody = '\n'.join(f'{k} | {v}' for k, v in sorted(name2doc.items(),
+                                                      key=lambda x: x[0]))
+    table = f'Prompt Name | Doc\n---|---\n{tbody}'
+    try:
+        readme = load(dir_/'README.md')
+    except FileNotFoundError:
+        readme = sep
+    keep, sep, _ = readme.partition(sep)
+    readme = f'{keep}{sep}\n{table}'
+    save(readme, dir_/'README.md')
+    return readme
 
 
 def bold(text):

@@ -5,6 +5,8 @@ stop:
 - '11. '
 max_tokens: 100
 reminder: 'Should be a single line starting with the words "How to" and ending in a colon. You may need a stronger engine for good results. We limit completions to 10 steps for now for the sake of keeping them short and simple.'
+doc: |-
+    Few shot prompt to break down a simple task into a numbered list of instructions.
 prompt: |-
     How to change a lightbulb:
     1. Turn off the light switch. 

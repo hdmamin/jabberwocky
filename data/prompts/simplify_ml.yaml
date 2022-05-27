@@ -2,6 +2,8 @@ engine: 3
 temperature: .3
 stop: 'Passage:'
 reminder: "This uses the expensive davinci model and doesn't work so well without it. Temperature is set to 0.3 but this hasn't been extensively tuned."
+doc: |-
+    Few shot prompt to explain an excerpt of a machine learning paper in a simple way. Inputs are typically a few sentences and outputs are usually a bit shorter than their inputs. This was an old prompt and could likely be improved - for instance, we might try making the descriptive portion more specific, since we currently provide no hints that the inputs are from machine learning papers. We could also try prompting by proxy. Someone like Jeremy Howard, for instance, would probably be better at explaining ML concepts in simple terms than the generic "I" referenced in the prompt.
 prompt: |-
     My fifth grader asked me what this passage means. I rephrased it for him, in plain language a fifth grader can understand.
     

@@ -2,5 +2,7 @@ engine: 0
 max_tokens: 3
 temperature: 0.1
 reminder: 'This prompt takes no input.'
+doc: |-
+    This is just a short prompt for debugging purposes.
 prompt: |-
     1+1=

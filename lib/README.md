@@ -117,7 +117,7 @@ jabberwocky/
 ```
 
 ---
-Start of auto-generated file data.<br/>Last updated: 2021-09-12 13:55:26
+Start of auto-generated file data.<br/>Last updated: 2022-05-26 20:57:08
 
 <table border="1" class="dataframe">
   <thead>
@@ -134,36 +134,43 @@ Start of auto-generated file data.<br/>Last updated: 2021-09-12 13:55:26
       <td>__init__.py</td>
       <td>_</td>
       <td>1</td>
-      <td>2021-09-12 13:54:19</td>
+      <td>2022-03-06 16:49:43</td>
       <td>22.00 b</td>
+    </tr>
+    <tr>
+      <td>cli.py</td>
+      <td>_</td>
+      <td>96</td>
+      <td>2022-05-21 17:43:01</td>
+      <td>2.99 kb</td>
     </tr>
     <tr>
       <td>config.py</td>
       <td>Define constants used throughout the project.</td>
-      <td>21</td>
-      <td>2021-07-22 20:29:41</td>
-      <td>564.00 b</td>
+      <td>74</td>
+      <td>2022-05-12 22:08:49</td>
+      <td>2.64 kb</td>
     </tr>
     <tr>
       <td>core.py</td>
       <td>Core functionality that ties together multiple APIs.</td>
-      <td>609</td>
-      <td>2021-09-06 13:39:53</td>
-      <td>24.21 kb</td>
+      <td>612</td>
+      <td>2022-04-22 21:46:52</td>
+      <td>24.36 kb</td>
     </tr>
     <tr>
       <td>external_data.py</td>
       <td>Functionality to fetch and work with YouTube transcripts.</td>
-      <td>281</td>
-      <td>2021-08-06 20:25:01</td>
-      <td>9.97 kb</td>
+      <td>386</td>
+      <td>2022-05-22 16:02:10</td>
+      <td>14.00 kb</td>
     </tr>
     <tr>
       <td>openai_utils.py</td>
-      <td>Utility functions for interacting with the gpt3 api.</td>
-      <td>1320</td>
-      <td>2021-09-01 20:12:51</td>
-      <td>55.00 kb</td>
+      <td>Utility functions for interacting with the gpt3 api.<br/><br/>A note on query functions:<br/>There are a number of different services (both paid and free) that provide<br/>access to GPT-like models. GPTBackend.query() provides a convenient interface<br/>to them by calling different query functions under the hood. These query<br/>functions are all defined in this module and have names starting with<br/>'query_gpt'. There are a number of steps to defining a new query function:<br/><br/>1. Use the `mark` decorator to set "batch_support" to either True or False.<br/>True means you can pass in a list of prompts, False means the prompt must be a<br/>single string. GPTBackend will support batching either way, but it needs to<br/>know whether each query function supports this natively in order to determine<br/>how to do this.<br/>2. The first parameter should be 'prompt' with no default. The other parameters<br/>should have defaults, but keep in mind many of these will be ignored when<br/>called by GPTBackend.query - the latter has its own defaults which are passed<br/>in as kwargs. Speaking of which...<br/>3. It must accept kwargs.<br/>4. If it supports multiple completions, include a parameter "n" with a default<br/>value of 1 in the signature. GPTBackend.query will support it either way, but<br/>again it needs to know how to achieve this.<br/>5. If multiple engines are available through this backend, update<br/>jabberwocky.config.C.backend_engines, using the other examples as guidance. In<br/>addition, in this scenario we recommend retrieving the engine name explicitly<br/>as query_gpt_huggingface does:<br/>```engine = GPTBackend.engine(engine, backend='huggingface')```<br/>rather than simply calling ```GPTBackend.engine(engine)```.<br/>6. We recommend popping off kwargs that you actually do want to use and then<br/>providing a warning so the user can see the remaining unused kwargs if there<br/>are any.<br/>7. The fuction should either return a (str, dict-like) tuple or<br/>(list[str], list[dict-like]). Use the latter if batch_support is True and<br/>multiple completions per prompt are supported (i.e. n is in its parameters).<br/>Technically I suppose there could be a backend that supported 1 but not the<br/>other, but I haven't seen it yet so I'll figure that case out if/when needed.<br/>8. When done, update some or all of the following GPTBackend class attributes.<br/>- name2base<br/>- name2func<br/>- skip_trunc<br/>Use the comments and examples in the class as guidance.</td>
+      <td>2660</td>
+      <td>2022-05-25 21:29:55</td>
+      <td>111.72 kb</td>
     </tr>
     <tr>
       <td>speech.py</td>
@@ -173,11 +180,18 @@ Start of auto-generated file data.<br/>Last updated: 2021-09-12 13:55:26
       <td>4.16 kb</td>
     </tr>
     <tr>
+      <td>streaming.py</td>
+      <td>Functionality to support streaming gpt responses, both from backends that<br/>natively support it like openai and those that don't. This handles things like<br/>updating prompt_index in each streamed response dict so we can more easily tell<br/>which prompt a token belongs to, truncating before stop words for backends that<br/>don't (only openai supports this natively), and updating finish_reason when<br/>we find stop words.<br/><br/>Note: if adding a streaming function for a new backend, make sure to register<br/>it so it ends up in BACKEND2STREAMER (see _stream_openai_generator for an<br/>example). Each function must accept a first param which is the result of<br/>calling<br/>GPT.query(prompt, stream=True)<br/>while using the desired backend. It must also accept **kwargs. Be careful when<br/>changing param names - they must match the stream_response() call in<br/>jabberwocky.openai_utils.GPTBackend._query().</td>
+      <td>575</td>
+      <td>2022-05-09 20:53:51</td>
+      <td>23.75 kb</td>
+    </tr>
+    <tr>
       <td>utils.py</td>
       <td>General purpose utilities.</td>
-      <td>337</td>
-      <td>2021-08-04 20:02:18</td>
-      <td>10.93 kb</td>
+      <td>674</td>
+      <td>2022-05-25 21:29:55</td>
+      <td>22.47 kb</td>
     </tr>
   </tbody>
 </table>

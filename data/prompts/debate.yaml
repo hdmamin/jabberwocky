@@ -7,11 +7,13 @@ stop:
 - "Provide reasons to support the claim."
 - "Reasons to support:"
 reminder: "Non-zero frequency penalty was initially included by accident, but in at least 1 test removing it noticeably worsened results."
+doc: |-
+    1 shot prompt to provide bulleted arguments both for and against a subjective stance.
 prompt: |-
     Provide reasons to support the claim. Then provide reasons to oppose the claim.
     
     Claim:
-    Colleges  should pay college athletes.
+    Colleges should pay college athletes.
     Reasons to support:
     -Colleges profit unfairly from the work and likenesses of college athletes. The NCAA reported over $1.06 billion in revenue in 2017, but college athletes, arguably the stars of the show, are forbidden by the NCAA from being paid for their work and from seeking other related compensation such as endorsement deals.
     -College athletes are risking their bodies and their future careers and earning potential to play for colleges while often receiving a sub-par education. In 2017, 67% of former Division I athletes had sustained a major injury and 50% had chronic injuries, 2.5% higher than non-athletes. 

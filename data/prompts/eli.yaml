@@ -5,6 +5,8 @@ stop:
 - "prompt:"
 - "tl;dr"
 reminder: "This uses the expensive davinci model and doesn't work so well without it."
+doc: |-
+    Zero shot prompt to rephrase user input to use simpler language. Like "explain like I'm 5" but technically we specify a slightly older child.
 prompt: |-
     {} 
     

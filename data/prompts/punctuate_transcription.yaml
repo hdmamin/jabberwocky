@@ -6,6 +6,8 @@ stop:
 - 'Add any missing punctuation and fix any small'
 reminder: 'You should probably adjust max_tokens based on the length of the input or just set max length high and let stop phrases do the rest. Bumping up to engine 2 or 3 might help a little, but engine 1 is serviceable (probably best to avoid 0 though).'
 strip_output: true
+doc: |-
+    Add punctuation and fix transcription errors for short snippets of text recorded in the jabberwocky GUI (which uses a Google transcription API). This may not be a good fit for longer transcriptions.
 prompt: |-
     Add any missing punctuation and fix any small grammatical errors in these raw transcriptions.
     

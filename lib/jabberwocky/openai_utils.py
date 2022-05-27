@@ -2395,6 +2395,7 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True,
     kwargs['prompt'] = prompt
     msg = kwargs.pop('reminder', None)
     if msg and verbose: print(f'{name}: {msg}{spacer()}')
+    kwargs.pop('doc', None)
     return kwargs
 
 

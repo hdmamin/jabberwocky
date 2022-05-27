@@ -6,6 +6,8 @@ stop:
 - 'These messy transcriptions contain'
 reminder: 'WARNING: This seemed to work okay when testing in the gooseai console but further testing suggests it needs more work.'
 strip_output: true
+doc: |-
+    Experimental prompt to help with slot extraction for jabberwocky-alexa. I ended up settling on a different method based on fuzzy matching so this is currently unused.
 prompt: |-
     These messy transcriptions contain user requests to switch to a different backend. Select which of the following backends sounds like the closest match. Your answer must be one of the following backends:
     - goose ai
