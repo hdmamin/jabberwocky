@@ -8,6 +8,7 @@ import logging
 import os
 from pathlib import Path
 from PIL import Image
+import re
 import sys
 from threading import Thread
 import yaml
@@ -333,13 +334,19 @@ def load_yaml(path, section=None):
     return data.get(section, data)
 
 
+def escape_markdown(text):
+    raw = r'([!#()*+-.[\]_`{|}])'
+    return re.sub(raw, r'\\\1', text)
+
+
 def _update_prompt_readme(dir_='data/prompts', sep='***'):
     """Update readme file in a directory of prompt yaml files to contain a
     table displaying their name and description (provided by the "doc" field
     in the yaml file.
     """
     dir_ = Path(dir_)
-    name2doc = {path.stem: load_yaml(path).get('doc', '').replace('\n', ' ')
+    name2doc = {path.stem: escape_markdown(load_yaml(path).get('doc', '')
+                                           .replace('\n', ' '))
                 for path in dir_.iterdir() if path.suffix == '.yaml'}
     tbody = '\n'.join(f'{k} | {v}' for k, v in sorted(name2doc.items(),
                                                       key=lambda x: x[0]))

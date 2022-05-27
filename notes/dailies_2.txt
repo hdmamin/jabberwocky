@@ -1701,7 +1701,21 @@ X -easy option: add "doc" field to prompt
 
 5/27/22 fri
 -----------
--try to escape text like '<|endoftext|>' so it can show up in a markdown table.
+X -try to escape text like '<|endoftext|>' so it can show up in a markdown table.
+X -decide where to store last night's prompt prototype script; maybe copy to or ref in other dev nb so I can see both if I return to it at some point
+X -try out other templating engines
+	X -jinja2
+	X -mako
+	UPDATE: see nb16 for notes on this, as well as pasted code from new prompt class noodling.
+-consider how to deal with prompt versioning (i.e. should we explicitly version prompts inside the yaml file? Or just rely on github commits and dates from logs? Probably a good idea to include a version number and include it in meta field of logs.)
+-try tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
+-Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
+
+5/28/22 sat
+-----------
+-custom DSL stuff
+	-watch textx walkthrough
+		-if promising, maybe fiddle around with it a bit to see how hard it would be to implement some of the ideas I had in v2 of nb16
 -consider how to deal with prompt versioning (i.e. should we explicitly version prompts inside the yaml file? Or just rely on github commits and dates from logs? Probably a good idea to include a version number and include it in meta field of logs.)
 -try tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
