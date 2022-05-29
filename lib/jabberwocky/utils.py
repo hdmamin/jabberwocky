@@ -679,3 +679,15 @@ def register(name, mapping):
             return func(*args, **kwargs)
         return wrapper
     return decorator
+
+
+def namecase(name):
+    """Similar to titlecase but don't force lowercase letters after the first
+    one in each word:
+
+    name = 'Yann LeCun'
+    name.title()   # 'Yann Lecun'
+    namecase(name) # 'Yann LeCun'
+    """
+    chunks = name.split()
+    return ' '.join(chunk[0].upper() + chunk[1:] for chunk in chunks)

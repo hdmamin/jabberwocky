@@ -1707,20 +1707,33 @@ X -try out other templating engines
 	X -jinja2
 	X -mako
 	UPDATE: see nb16 for notes on this, as well as pasted code from new prompt class noodling.
+	~ -watch textx walkthrough
+	UPDATE: not convinced the level of completity:utilty is worth it here.
 -consider how to deal with prompt versioning (i.e. should we explicitly version prompts inside the yaml file? Or just rely on github commits and dates from logs? Probably a good idea to include a version number and include it in meta field of logs.)
 -try tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
 5/28/22 sat
 -----------
--custom DSL stuff
-	-watch textx walkthrough
-		-if promising, maybe fiddle around with it a bit to see how hard it would be to implement some of the ideas I had in v2 of nb16
+X -see if I can publish a WIP private skill for me only (so I can test it on echo rather than the test UI)
+	UPDATE: already available on my echo, no need to publish actually.
+X -generally try interacting with it on echo to find new bugs to fix
+X -add fuzzy matching for mis-transcribed names
+X -use correct name from wiki page in cases where I misspelled name (e.g. "apollo ohno")
+X -regenerate ohno persona
+~ -troubleshoot outlook email sending
+	UPDATE: was unable to reproduce issue after initial failure. Keep an eye out for future issues.
 -consider how to deal with prompt versioning (i.e. should we explicitly version prompts inside the yaml file? Or just rely on github commits and dates from logs? Probably a good idea to include a version number and include it in meta field of logs.)
 -try tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
-
+5/29/22 sun
+-----------
+-add error handling for if email send fails
+-look into outlook email server name in htools. Should I be using "smtp.office365.com" instead?
+-consider how to deal with prompt versioning (i.e. should we explicitly version prompts inside the yaml file? Or just rely on github commits and dates from logs? Probably a good idea to include a version number and include it in meta field of logs.)
+-try tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
+-Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 Backlog
 -------
 -[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)

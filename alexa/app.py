@@ -105,8 +105,6 @@ def send_transcript(conv, user_email='', cleanup=False):
     conversation has taken place yet or if the user has not provided us with
     their email).
     """
-    if not conv.user_turns:
-        return False
     user_email = user_email or get_user_info('email')['email']
     if not user_email:
         return False
@@ -237,20 +235,30 @@ def choose_person(person=None, **kwargs):
         )
 
     if person not in CONV:
-        matches = [p for p in map(str.lower, CONV.personas())
-                   if person.lower() == p.split()[-1]]
-        # Allows us to just say "Einstein" rather than "Albert Einstein". If
-        # we have multiple matches, don't try to guess (e.g. "Armstrong" could
-        # refer to either Neil Armstrong or Louis Armstrong). Considered fuzzy
-        # matching but I don't think that's desirable here.
-        if len(matches) == 1:
-            person = matches[0]
-        else:
+        match, match_p = CONV.nearest_persona(person)
+        if match_p < .8:
             ask.func_push(_generate_person, person=person)
             return question(
                 f'I don\'t see anyone named {person} in your contacts. '
                 'Would you like to create a new contact?'
             )
+        person = match
+
+        # TODO: rm?
+        # matches = [p for p in map(str.lower, CONV.personas())
+        #            if person.lower() == p.split()[-1]]
+        # # Allows us to just say "Einstein" rather than "Albert Einstein". If
+        # # we have multiple matches, don't try to guess (e.g. "Armstrong" could
+        # # refer to either Neil Armstrong or Louis Armstrong). Considered fuzzy
+        # # matching but I don't think that's desirable here.
+        # if len(matches) == 1:
+        #     person = matches[0]
+        # else:
+        #     ask.func_push(_generate_person, person=person)
+        #     return question(
+        #         f'I don\'t see anyone named {person} in your contacts. '
+        #         'Would you like to create a new contact?'
+        #     )
 
     CONV.start_conversation(person)
     ask.func_clear()
@@ -546,8 +554,11 @@ def end_chat():
     "Lou, end chat."
     "Lou, hang up."
     """
-    # Only offer this option if user has chosen to share their email.
-    if state.email:
+    # Only offer this option if user has chosen to share their email AND
+    # the conversation is non-empty. No need to ask if user starts a
+    # conversation and immediately quits (as I often need to do for dev
+    # purposes).
+    if state.email and CONV.user_turns:
         ask.func_push(_end_chat)
         return question('Would you like me to send you a transcript of your '
                         'conversation?')

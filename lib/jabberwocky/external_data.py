@@ -8,12 +8,14 @@ import pandas as pd
 from pathlib import Path
 import re
 import requests
+import unidecode
 import warnings
 import wikipedia as wiki
 from wikipedia import PageError, DisambiguationError
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
 from htools import DotDict, tolist, Results
+from jabberwocky.utils import namecase
 
 
 WIKI_HEADERS = {'User-Agent': 'http://www.github.com/hdmamin/jabberwocky'}
@@ -255,13 +257,18 @@ def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,
     Parameters
     ----------
     name
-    tags
+    tags: str
+        Optional: provide string(s) related to the name to help with
+        disambiguation. E.g. Sometimes entries are named something like
+        "John Smith (athlete)" so it would help to provide "athlete" as a tag.
+        This only helps if retry=True.
     retry
     min_similarity
     debug
     og_name: None or str
         Never pass this in explicitly - it's only there for when the function
-        recursively calls itself after concating tags with the original name.
+        recursively calls itself after concatenating tags with the original
+        name.
     auto_suggest
 
     Returns
@@ -269,7 +276,7 @@ def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,
 
     """
     try:
-        page = wiki.page(name, auto_suggest=auto_suggest)
+        page = wiki.page(namecase(name), auto_suggest=auto_suggest)
         score = fuzz.token_set_ratio((og_name or name).lower(),
                                      page.title.lower())
         if score < min_similarity:
@@ -279,7 +286,8 @@ def wiki_page(name, *tags, retry=True, min_similarity=50, debug=False,
             ) from None
         return page
     except PageError:
-        if not retry or not tags:
+        # if not retry or not tags:
+        if not retry:
             raise RuntimeError(f'Couldn\'t find wikipedia page for {name}.') \
                 from None
         warnings.warn('Page not found. Trying to auto-select correct match.')
@@ -329,6 +337,20 @@ def download_image(url, out_path, verbose=False, **request_kwargs):
     return True
 
 
+def cleanup_wiki_name(name):
+    """
+    'J. K. Rowling' -> 'JK Rowling'
+    'A. B. C. Lastname' -> 'ABC Lastname'
+    'Ted P. Chang' -> 'Ted P Chang'
+    'John Smith (American Wrestler)' - > 'John Smith'
+    """
+    n = name.count('. ')
+    if n > 1:
+        name = re.sub('. ', '.', name, count=n - 1)
+    name = name.replace('.', '').split('(')[0].strip()
+    return unidecode.unidecode(name)
+
+
 def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
               fname=None, truncate_summary_lines=2, qa_pipe=None, verbose=True,
               **page_kwargs):
@@ -341,7 +363,10 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
     tags
     img_dir
     exts
-    fname
+    fname: str or None
+        If provided, this should be a file name (no directory name and no
+        suffix) for the image to download. Defaults to the person's name
+        otherwise.
     truncate_summary_lines
     verbose
     page_kwargs
@@ -362,6 +387,9 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
         summary = ' '.join(sent_tokenize(summary)[:truncate_summary_lines])
     nationality, _ = infer_nationality(summary, name, page=page,
                                        qa_pipe=qa_pipe)
+    # Use page title to avoid misspellings, e.g. I typed "Apollo Ohno" but
+    # meant "Apolo Ohno".
+    name = cleanup_wiki_name(page.title)
 
     # Download image if possible. Find photo with name closest to the one we
     # searched for (empirically, this seems to be a decent heuristic to give
@@ -371,15 +399,16 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
     if img_dir and page.images:
         name2url = {u.rpartition('/')[-1].split('.')[0].lower(): u
                     for u in page.images if u.rpartition('.')[-1] in exts}
-        name, _ = process.extractOne(name.lower(), name2url.keys())
-        url = name2url[name]
+        img_name, _ = process.extractOne(name.lower(), name2url.keys())
+        url = name2url[img_name]
         suff = url.rpartition(".")[-1]
         path = Path(img_dir)/f'{fname or name}.{suff}'.lower()
         os.makedirs(img_dir, exist_ok=True)
         if download_image(url, path, verbose=verbose, headers=WIKI_HEADERS):
             img_url = url
             img_path = str(path)
-    return Results(summary=_wiki_text_cleanup(summary),
+    return Results(name=name,
+                   summary=_wiki_text_cleanup(summary),
                    img_url=img_url,
                    img_path=img_path,
                    gender=gender,

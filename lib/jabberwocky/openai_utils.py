@@ -46,6 +46,7 @@ from collections.abc import Iterable, Mapping
 from collections import Counter
 from contextlib import contextmanager
 from datetime import datetime
+from fuzzywuzzy import process
 from itertools import zip_longest, chain
 import json
 from nltk.tokenize import sent_tokenize
@@ -59,6 +60,7 @@ import shutil
 import sys
 from threading import Lock
 import time
+import unidecode
 import warnings
 import yaml
 
@@ -70,7 +72,7 @@ from jabberwocky.external_data import wiki_data
 from jabberwocky.streaming import stream_response, truncate_at_first_stop
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     hooked_generator, load_api_key, with_signature, JsonlinesLogger,\
-    thread_starmap, ReturningThread, containerize, touch, save_yaml
+    thread_starmap, ReturningThread, containerize, touch, save_yaml, namecase
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -1834,6 +1836,7 @@ class ConversationManager:
 
         processed_name = self.process_name(name)
         dir_ = self.persona_dir[is_custom]/processed_name
+        tmp_dir = '/tmp'
         # Case where we seem to already have the data for this persona.
         if dir_.is_dir():
             if summary or img_path or gender or nationality:
@@ -1858,22 +1861,35 @@ class ConversationManager:
                         'nationality': nationality}
             else:
                 # Autogenerate persona metadata.
-                meta = wiki_data(name, img_dir=dir_, fname='profile',
+                meta = wiki_data(name, img_dir=tmp_dir, fname='profile',
                                  tags=wiki_tags, qa_pipe=self.qa_pipe)
                 meta = meta._asdict()
+                # Update processed_name and dir_ in case we made a typo, e.g.
+                # "Apollo Ohno" instead of "Apolo Ohno". Note that at this
+                # stage, the img_path includes the tmp_dir, but this will be
+                # updated before saving the metadata file.
+                processed_name = self.process_name(meta.pop('name'))
+                dir_ = self.persona_dir[is_custom]/processed_name
+                os.makedirs(dir_, exist_ok=True)
 
-            # In custom mode, we always need to move an image (either the
+            # We always need to move an image (in custom mode, either the
             # backup image or a user-specified img_path from another dir -
             # remember this is the case where no persona dir exists yet). In
-            # non-custom mode, we only need to move an image if we failed to
-            # download one and revert to the backup. Be careful with logic:
-            # Path('abc') != 'abc', and if we convert img_path to a Path
-            # immediately, we'd interpret Path('') as truthy.
+            # non-custom mode, we either move the downloaded image from the
+            # /tmp dir or we copy the backup image to the new persona dir.
+            # Be careful with logic: Path('abc') != 'abc', and if we convert
+            # img_path to a Path immediately, we'd interpret Path('') as
+            # truthy.
             src_path = meta['img_path'] or self.backup_image
             img_path = dir_/f'profile{Path(src_path).suffix}'
             try:
+                # Don't delete user's custom image in its original path or the
+                # backup image, but do move any downloaded image.
                 if str(src_path) != str(img_path):
-                    shutil.copy2(src_path, img_path)
+                    if is_custom or str(src_path) == str(self.backup_image):
+                        shutil.copy2(src_path, img_path)
+                    else:
+                        shutil.move(src_path, img_path)
             except FileNotFoundError as e:
                 # Clean up newly-added dir otherwise this will affect
                 # subsequent attempts to run this method.
@@ -1954,6 +1970,37 @@ class ConversationManager:
             # To pretty format.
             return name.replace('_', ' ').title()
         return name.lower().replace(' ', '_').replace('.', '')
+
+    def nearest_persona(self, name):
+        """Find the nearest persona in the list of available personas.
+
+        Parmeters
+        ---------
+        name: str
+            Can be pretty formatted (e.g. John Smith) or not (e.g. john_smith).
+            This also determines whether the output name will be
+            pretty-formatted or not.
+
+        Returns
+        -------
+        tuple[str, float]: First value is name in self.personas(). If the input
+        name has an underscore, this will be the snake_cased version; if not,
+        it will be the pretty-formatted version. The second value is a float
+        in [0.0, 1.0] measuring similarity to the input, where higher is
+        better. Empirically, a threshold around 0.8 may be reasonable for
+        identifying a match.
+        """
+        processed = '_' in name
+        if processed:
+            name = name.lower()
+        else:
+            name = name.title()
+        name = unidecode.unidecode(name)
+        res = process.extractOne(
+            name,
+            [person for person in self.personas(pretty=not processed)]
+        )
+        return res[0], res[1] / 100.0
 
     def personas(self, pretty=True, sort=True):
         """Quick way to see a list of all available personas.
