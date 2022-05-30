@@ -1691,6 +1691,15 @@ class ConversationManager:
         self.gpt3_turns = []
         self.cached_query = ''
 
+    def is_active(self):
+        """Check if there's an active conversation taking place.
+
+        Returns
+        -------
+        bool: True if a conversation is underway, False otherwise.
+        """
+        return bool(self.current['persona'])
+
     def _load_qa_pipe(self, do_load, model_name=None):
         """Load QA pipeline to help extract nationality from wikipedia summary
         for auto-generated personas. Alternative is to use html parsing - this

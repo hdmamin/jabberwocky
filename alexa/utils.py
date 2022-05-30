@@ -785,9 +785,23 @@ def slot(request, name, lower=True, default=''):
         Value to return if slot could not successfully be extracted.
     """
     if isinstance(request, LocalProxy): request = request.get_json()
-    failed_parse_symbol = '?'
-    slots_ = request['request']['intent']['slots']
     logger = getglobal('ask.logger')
+    failed_parse_symbol = '?'
+
+    # If a function with slots is pushed into the queue and the user responds
+    # in such a way that it should not actually be called, then this raises an
+    # error. I do the minimum here to allow the rest of my error handling code
+    # to take effect in the next try/except block. Without this, the function
+    # would fail to return our default value in this (quite rare) situation.
+    # The only time I encountered it was when purposefully responding with
+    # something unintelligible to the question "Who would you like to speak
+    # to?". Alexa mistakenly parsed it as "no" and proceeded to call
+    # choose_person as planned, which calls slot('person') and caused an error.
+    try:
+        slots_ = request['request']['intent']['slots']
+    except KeyError:
+        slots_ = {}
+
     try:
         # I think AMAZON.Number slots don't have 'resolutions' key. Also,
         # starting to think maybe 'value' is more reliable anyway? Observed one

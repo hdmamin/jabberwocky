@@ -173,9 +173,8 @@ def launch():
     """
     reset_app_state()
     question_txt = _choose_person_text()
-    return question(f'Hi {state.name or "there"}! Welcome to Quick Chat. '
-                    f'{question_txt}')\
-        .reprompt('I didn\'t get that. Who would you like to speak to next?')
+    return question(f'Hi {state.name or "there"}! {question_txt}')\
+        .reprompt('I didn\'t get that. Who would you like to speak to?')
 
 
 def _choose_person_text(msg='Who would you like to speak to?'):
@@ -222,8 +221,10 @@ def choose_person(person=None, **kwargs):
     person = person or kwargs.get('response') or slot(request, 'Person')
     # Handle case where conversation is already ongoing. This should have been
     # a reply - it just happened to consist of only a name.
-    if CONV.current['persona']:
+    if CONV.is_active():
         return _reply(prompt=person)
+    elif person in NOBODY_UTTS:
+        return statement('Goodbye.')
     # This handles our 2 alexa utterance collisions, "oh no" and "hush"
     # which alexa mistakenly maps to the choosePerson intent. If we're already
     # in a conversation, the above if clause handles it.
@@ -243,23 +244,6 @@ def choose_person(person=None, **kwargs):
                 'Would you like to create a new contact?'
             )
         person = match
-
-        # TODO: rm?
-        # matches = [p for p in map(str.lower, CONV.personas())
-        #            if person.lower() == p.split()[-1]]
-        # # Allows us to just say "Einstein" rather than "Albert Einstein". If
-        # # we have multiple matches, don't try to guess (e.g. "Armstrong" could
-        # # refer to either Neil Armstrong or Louis Armstrong). Considered fuzzy
-        # # matching but I don't think that's desirable here.
-        # if len(matches) == 1:
-        #     person = matches[0]
-        # else:
-        #     ask.func_push(_generate_person, person=person)
-        #     return question(
-        #         f'I don\'t see anyone named {person} in your contacts. '
-        #         'Would you like to create a new contact?'
-        #     )
-
     CONV.start_conversation(person)
     ask.func_clear()
     return question(f'I\'ve connected you with {person}.')
@@ -298,12 +282,9 @@ def change_model(scope=None, model=None):
     """
     scope = scope or slot(request, 'Scope', default='global')
     model = model or slot(request, 'Model')
-    # TODO: update comment once behavior is confirmed. All models are
-    # numbers now.
-    # Conversion is not always automatic here, I think because we're not using
-    # a built-in AMAZON.Number slot (because some values aren't numbers).
-    # Or maybe it's that saying "two", typing "two", or typing "2" give
-    # different transcriptions - unsure.
+    # This step might not be necessary anymore - slot used to allow both names
+    # and numbers, which I think caused it to always be parsed as a string. It
+    # should always be a number now.
     str2int = {
         'zero': 0,
         'one': 1,
@@ -429,7 +410,7 @@ def _maybe_choose_person(
         'You must provide at least one of msg or choose_msg.'
 
     msg = msg.rstrip(' ') + ' '
-    if CONV.current['persona']:
+    if CONV.is_active():
         name = CONV.process_name(CONV.current['persona'], inverse=True)
         msg += return_msg_fmt.format(name)
     else:
@@ -461,8 +442,7 @@ def _reply(prompt=None):
             prompt = prompt[0]
     ask.logger.info('BEFORE QUERY: ' + prompt)
     text, _ = CONV.query(prompt, **state)
-    # return question(text)
-
+    # Add custom accent/emotion audio.
     text, is_ssml = voice(text[0], CONV.current, select_voice=True,
                           emo_pipe=EMO_PIPE)
     return custom_question(text, is_ssml)
@@ -486,6 +466,11 @@ def delegate():
         return inferred_func(
             **{k.lower(): v for k, v in matches['slots'].items()}
         )
+    # If we ask a user "Who do you want to speak to next?" and they
+    # say noone/nobody, we should just quit. Feels more natural than responding
+    # "quit".
+    if response.lower() in NOBODY_UTTS and not CONV.is_active():
+        return statement('Goodbye.')
     if not func:
         # No chained intents are in the queue so we assume this is just another
         # turn in the conversation.
@@ -611,6 +596,8 @@ if __name__ == '__main__':
     CONV = ConversationManager(load_qa_pipe=False)
     PROMPTER = PromptManager(['punctuate_alexa'], verbose=False)
     UTT2META = load('data/alexa/utterance2meta.pkl')
+    # Weird values/spellings here are mis-transcriptions I observed Alexa make.
+    NOBODY_UTTS = {'knobody', 'nobody', 'noone', 'no one', 'no1', 'no 1'}
     # TODO: consider enabling/removing this. Seems like we have to choose
     # between emotion tags and switching voice by nationality/gender and I
     # tend to learn towards the latter.

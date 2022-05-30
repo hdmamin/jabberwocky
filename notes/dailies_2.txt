@@ -1724,18 +1724,48 @@ X -regenerate ohno persona
 ~ -troubleshoot outlook email sending
 	UPDATE: was unable to reproduce issue after initial failure. Keep an eye out for future issues.
 -consider how to deal with prompt versioning (i.e. should we explicitly version prompts inside the yaml file? Or just rely on github commits and dates from logs? Probably a good idea to include a version number and include it in meta field of logs.)
--try tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
+~ -try tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
+    UPDATE: not immediately clear if this makes a difference.
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
 5/29/22 sun
 -----------
--add error handling for if email send fails
--look into outlook email server name in htools. Should I be using "smtp.office365.com" instead?
--consider how to deal with prompt versioning (i.e. should we explicitly version prompts inside the yaml file? Or just rely on github commits and dates from logs? Probably a good idea to include a version number and include it in meta field of logs.)
--try tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
+X -get skill back up and running after mac os updates
+    X -troubleshoot xcrun error when running 'make ngrok'
+    X -see if we need to update IP address in alexa console
+        UPDATE: yes. Seems we need to rebuild too for new endpoint to be used.
+~ -add error handling for if email send fails
+    UPDATE: seems to be already there. I recall seeing an error message in the console but I that may have just been logged by one of the intermediate functions. Nothing to do here atm.
+X -add method to give a cleaner way to check if ConversationHandler is mid-conv
+~ -look into outlook email server name in htools. Should I be using "smtp.office365.com" instead?
+    UPDATE: seems like maybe they use slightly diff protocols (?) or something to send emails. Tried again with current setup and it executed w/out error so /shrug.
+X -add "nobody"/"noone" to skill model in UI as another valid way to quit.
+    X -figure out how to implement
+        UPDATE: originally started to add new intent but I want to capture the whole utterance which is basically just delegate(). Decided to try integrating it into that first.
+    X -implement
+    X -test
+~ -consider how to deal with prompt versioning (i.e. should we explicitly version prompts inside the yaml file? Or just rely on github commits and dates from logs? Probably a good idea to include a version number and include it in meta field of logs.)
+    UPDATE: gave dvc a brief try but didn't seem particularly useful for my purposes. I think for now maybe I'll just add a version field to everything, log it, and in the future if I really need to dig into past versions I can dig up the relevant git commands.
+-further experiments with tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
+
+5/30/22 mon
+-----------
+-add Version as prompt field
+    -update existing prompts
+    -update prompt template
+    -update load_prompt() and/or gpt.query() logging to handle this
+        -consider: should we have a "meta" field in yaml file and make things like reminder/doc/version subfields of that? Maybe easier to handle in load_prompt/logging.
+-further experiments with tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
+-Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
+
+
 Backlog
 -------
+-add more docs/help on how to invoke each intent
+    -add spoken examples to docstrings
+    -add "help" intent that reads out some sample commands (e.g. "To change your settings, you can say...")
+-look into raspberry pi as long term option for hosting
 -[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)
 	-have gpt3 insert tags directly (i.e. Edit rather than complete)
 	-have gpt3 select from options (almost like classification. Maybe just use logit_bias.) then fill in template programmatically.
