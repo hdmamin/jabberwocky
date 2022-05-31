@@ -399,14 +399,16 @@ def wiki_data(name, tags=(), img_dir='data/tmp', exts={'jpg', 'jpeg', 'png'},
     if img_dir and page.images:
         name2url = {u.rpartition('/')[-1].split('.')[0].lower(): u
                     for u in page.images if u.rpartition('.')[-1] in exts}
-        img_name, _ = process.extractOne(name.lower(), name2url.keys())
-        url = name2url[img_name]
-        suff = url.rpartition(".")[-1]
-        path = Path(img_dir)/f'{fname or name}.{suff}'.lower()
-        os.makedirs(img_dir, exist_ok=True)
-        if download_image(url, path, verbose=verbose, headers=WIKI_HEADERS):
-            img_url = url
-            img_path = str(path)
+        # Some pages have no images.
+        if name2url:
+            img_name, _ = process.extractOne(name.lower(), name2url.keys())
+            url = name2url[img_name]
+            suff = url.rpartition(".")[-1]
+            path = Path(img_dir)/f'{fname or name}.{suff}'.lower()
+            os.makedirs(img_dir, exist_ok=True)
+            if download_image(url, path, verbose, headers=WIKI_HEADERS):
+                img_url = url
+                img_path = str(path)
     return Results(name=name,
                    summary=_wiki_text_cleanup(summary),
                    img_url=img_url,

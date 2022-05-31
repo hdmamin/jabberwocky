@@ -395,3 +395,8 @@ https://www.youtube.com/watch?v=C9fWMYyRWls&ab_channel=DabbleLab
 Outlook email send error:
 
 smtplib.SMTPAuthenticationError: (535, b'5.7.139 Authentication unsuccessful, account locked. Contact your administrator. [BY3PR05CA0003.namprd05.prod.outlook.com]')
+
+5/30/22 mon
+-----------
+Error when saying "Goodbye" during a conversation:
+NotImplementedError: Intent "AMAZON.StopIntent" not found and no default intent specified.

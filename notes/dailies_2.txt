@@ -1766,6 +1766,8 @@ X -debug why logging doesn't seem to be working
     -transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
 -further experiments with tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
+X -fix new generate_persona bug
+    UPDATE: previously assumed each wiki page had >0 images. Added extra logic to account for the other case.
 
 5/31/22 tues
 ------------
@@ -1785,11 +1787,13 @@ X -debug why logging doesn't seem to be working
     -can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
     -issue of completions piling up after 1 missed response (i.e. I took too long to think/speak, it cut me off which was sort of disorienting and I missed my next turn too, and at some point kind of lost control of it - it was just returning completions faster than I could keep up. Good exercise for thinking on feet tbh.)
     -transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
--further experiments with tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
+    -Seems like reprompt might not be working right. E.g. if they ask me to choose who to speak to on startup and I don't answer at first but then do on reprompt, it failed.
+    -"Goodbye" during conversation raises notimplementederror (see misc.txt)
 
 
 Backlog
 -------
+-further experiments with tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 -add more docs/help on how to invoke each intent
     -add spoken examples to docstrings
