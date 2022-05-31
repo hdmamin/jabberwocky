@@ -5,6 +5,7 @@ frequency_penalty: 0.5
 stop: 
 - "\n\nMe:"
 - "This is a conversation with"
+version: 0
 doc: |-
     The conversational prompt that powers jabberwocky. Name is provided by the user and summary is usually auto-retrieved from the person's wikipedia bio. The GUI was originally developed with a version using temperature=.5 and frequency_penalty=0.1, but I've adjusted those settings a bit based on my perceptions of completion weaknesses and recommendations from the NLCA book.
 prompt: |-

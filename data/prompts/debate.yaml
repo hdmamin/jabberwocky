@@ -6,6 +6,7 @@ stop:
 - "Claim:"
 - "Provide reasons to support the claim."
 - "Reasons to support:"
+version: 0
 reminder: "Non-zero frequency penalty was initially included by accident, but in at least 1 test removing it noticeably worsened results."
 doc: |-
     1 shot prompt to provide bulleted arguments both for and against a subjective stance.

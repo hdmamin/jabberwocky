@@ -4,6 +4,7 @@ max_tokens: 250
 stop: 
 - "Matchup:"
 - "Analysis:"
+version: 0
 reminder: "Haven't really experimented with hyperparameters."
 doc: |-
     Few shot prompt to analyze MMA matchups and predict winners. Note that the examples in the prompt were revised after the fights to more closely match the actual outcome, in the hopes that gpt will try to mimic particularly prescient analysts.

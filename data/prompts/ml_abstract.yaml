@@ -4,6 +4,7 @@ max_tokens: 250
 stop: 
 - "Abstract:"
 - "Idea:"
+version: 0
 reminder: "I haven't tuned hyperparameters much - even engine=1 sometimes provides good resuls but it seems a bit inconsistent."
 doc: |-
     Few shot prompt to convert a 1-line machine learning paper idea into an abstract.

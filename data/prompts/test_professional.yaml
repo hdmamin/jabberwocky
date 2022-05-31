@@ -1,4 +1,3 @@
-reminder: "This doesn't actually work very well but the settings are a good example of what is needed for my envisioned natural language tests."
 engine: 1
 temperature: 0.0
 max_tokens: 1
@@ -11,6 +10,8 @@ stop:
 logit_bias:
   3763: 100
   645: 100
+version: 0
+reminder: "This doesn't actually work very well but the settings are a good example of what is needed for my envisioned natural language tests."
 doc: |-
     Experimental zero shot prompt to check if a piece of text uses professional (i.e. work-appropriate) language. This uses the logit_bias arg to effectively serve as a classifier.
 prompt: |-

@@ -1751,11 +1751,14 @@ X -add "nobody"/"noone" to skill model in UI as another valid way to quit.
 
 5/30/22 mon
 -----------
--add Version as prompt field
-    -update existing prompts
-    -update prompt template
-    -update load_prompt() and/or gpt.query() logging to handle this
-        -consider: should we have a "meta" field in yaml file and make things like reminder/doc/version subfields of that? Maybe easier to handle in load_prompt/logging.
+X -add Version as prompt field
+    X -update existing prompts
+    X -update prompt template
+    X -update load_prompt() and/or gpt.query() logging to handle this
+        ~ -consider: should we have a "meta" field in yaml file and make things like reminder/doc/version subfields of that? Maybe easier to handle in load_prompt/logging.
+    UPDATE: keep things very simple for now since I might redesign prompt obj later. Just add a single int version field tracking the text portion of the prompt.
+X -debug why logging doesn't seem to be working
+    UPDATE: convmanager and promptmanager call GPT.query(log=self.log_path) rather than with log=True so they were using custom log paths. Changed them to use the GPT default path for now but still need to consider if that's desirable.
 -consider how to deal with minor problems identified during last night's conv
     -500 error during granger conv (couldn't find in tmux history sun though)
     -can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
@@ -1764,9 +1767,23 @@ X -add "nobody"/"noone" to skill model in UI as another valid way to quit.
 -further experiments with tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 
+5/31/22 tues
+------------
+-logging updates
+    -consider whether I want to always use GPT default daily log file or let Convmanager and/or Promptmanager maintain diff files
+    -implement changes if necessary (search "log=True" to see usage in conv and prompt manager classes. 
+    -possible GPTBackend bug: we set default log file path as a class attr which probably means if we leave it running for days, we only create a file with the date we launched the program
+-consider how to deal with minor problems identified during last night's conv
+    -500 error during granger conv (couldn't find in tmux history sun though)
+    -can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
+    -issue of completions piling up after 1 missed response (i.e. I took too long to think/speak, it cut me off which was sort of disorienting and I missed my next turn too, and at some point kind of lost control of it - it was just returning completions faster than I could keep up. Good exercise for thinking on feet tbh.)
+    -transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
+-further experiments with tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
+
 
 Backlog
 -------
+-Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 -add more docs/help on how to invoke each intent
     -add spoken examples to docstrings
     -add "help" intent that reads out some sample commands (e.g. "To change your settings, you can say...")

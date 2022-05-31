@@ -285,7 +285,10 @@ def query_gpt3(prompt, engine=0, temperature=0.7, top_p=.99,
         creativity (like high temperature) and low values are closer to argmax
         sampling (like low temperature). API recommends setting a sub-maximal
         value for at most one of this and temperature, not both. NLCA book
-        suggests using both though.
+        suggests using both though. I suggest mostly relying on temperature
+        since there seem to be better heuristics about how to modulate this
+        to impact outputs in desirable ways, while using top_p just enough to
+        eliminate the most unlikely of completions.
     frequency_penalty: float
         Value in [-2.0, 2.0] where larger (more positive) values more heavily
         penalize words that have already occurred frequently in the text.
@@ -326,12 +329,12 @@ def query_gpt3(prompt, engine=0, temperature=0.7, top_p=.99,
     it lets us get results on the fly) where each step contains a single
     token's worth of results (still a text, dict-like tuple).
     """
+    # TODO: is this still true? I'm pretty sure stream mode is supported in all
+    # cases now, though some rely on threads rather than native API
+    # functionality. Still, pretty sure this shouldn't rely on threads for
+    # openai backend.
     if stream and n > 1:
         raise RuntimeError('Stream=True and n>1 not supported.')
-    if temperature < 1 and top_p < 1:
-        warnings.warn('You set both temperature and top_p to values < 1. '
-                      'API recommends setting only one of these to '
-                      'sub-maximal value.')
 
     # Do not hardcode backend in GPTBackend.engine() call because we use this
     # function for both openai and gooseai. Rely on method to get the current
@@ -1117,7 +1120,9 @@ class GPTBackend:
         n = kwargs.get('n', 1)
         np_ = len(prompt) if listlike(prompt) else 1
         kwargs['prompt'] = prompt
-        self._log_query_kwargs(log=log, query_func=query_func, **kwargs)
+        self._log_query_kwargs(log=log, query_func=query_func,
+                               version=kwargs.pop('version', None),
+                               **kwargs)
         func_params = params(query_func)
         trunc_full = self.current() not in self.skip_trunc
         stream = kwargs.get('stream', False)
@@ -1218,7 +1223,7 @@ class GPTBackend:
         return sum(texts, []), sum(fulls, [])
 
     @classmethod
-    def _log_query_kwargs(cls, log, query_func=None, **kwargs):
+    def _log_query_kwargs(cls, log, query_func=None, version=None, **kwargs):
         """Log kwargs for troubleshooting purposes."""
         if log:
             # Meta key is used to store any info we want to log but that should
@@ -1226,7 +1231,8 @@ class GPTBackend:
             kwargs['meta'] = {
                 'backend_name': cls.current(),
                 'query_func': func_name(query_func) if query_func else None,
-                'datetime': datetime.now().ctime()
+                'datetime': datetime.now().ctime(),
+                'version': version
             }
             with cls.lock:
                 if not isinstance(log, (str, Path)):
@@ -1476,7 +1482,7 @@ class PromptManager:
             print('fully resolved kwargs:\n',
                   dict(bound_args(query_gpt3, [], kwargs)))
             return
-        return GPT.query(prompt, log=self.log_path, **kwargs)
+        return GPT.query(prompt, log=True, **kwargs)
 
     def kwargs(self, task, fully_resolved=True, return_prompt=False,
                extra_kwargs=None, **kwargs):
@@ -2114,7 +2120,7 @@ class ConversationManager:
 
         # Update turns after query in case something goes wrong and it
         # doesn't actually execute.
-        res = GPT.query(prompt, log=self.log_path, **kwargs)
+        res = GPT.query(prompt, log=True, **kwargs)
         self.user_turns.append(text.strip())
         self.cached_query = ''
 
@@ -2449,9 +2455,18 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True,
     if 'stop' in kwargs:
         kwargs['stop'] = [x.replace('\\n', '\n') for x in kwargs['stop']]
     kwargs['prompt'] = prompt
+    # 5/30/22 update: adding a "version" field that currently is a single int
+    # ONLY tracking changes to the text template, not the hyperparameters.
+    # Currently leaving this in the kwargs returned by load_prompt. GPT._query
+    # pops it and logs it in the "meta" dict for each query. Considering
+    # eventually putting doc/reminder/version/etc. under 1 "meta" field in the
+    # yaml file, but holding off for now since I don't have a super clear idea
+    # of how I want the versioning to work or how to use it. All query funcs
+    # accept kwargs anyway so even if it did slip past the GPT._query pop
+    # (which it shouldn't), there shouldn't really be a problem.
+    kwargs.pop('doc', None)
     msg = kwargs.pop('reminder', None)
     if msg and verbose: print(f'{name}: {msg}{spacer()}')
-    kwargs.pop('doc', None)
     return kwargs
 
 

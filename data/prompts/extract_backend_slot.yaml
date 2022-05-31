@@ -4,6 +4,7 @@ stop:
 - 'Raw transcription:'
 - 'Backend:'
 - 'These messy transcriptions contain'
+version: 0
 reminder: 'WARNING: This seemed to work okay when testing in the gooseai console but further testing suggests it needs more work.'
 strip_output: true
 doc: |-

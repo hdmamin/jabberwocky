@@ -5,6 +5,7 @@ frequency_penalty: 0.1
 stop: 
 - "\n\nMessy:"
 - "\n\nClean:"
+version: 0
 reminder: "While using davinci here feels ridiculous, it does seem to perform noticeably better than the other engines."
 doc: |-
     Experimental prompt to clean up the results of the wikipedia bios I've been retrieving with the "wikipedia" python lib. I could imagine using a more varied set of inputs to try to create a generalized "webscraping cleaner" prompt but that will take some experimentation.
