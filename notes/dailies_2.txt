@@ -1769,6 +1769,13 @@ X -debug why logging doesn't seem to be working
 
 5/31/22 tues
 ------------
+-explore possibility of displaying persona image in card (similar to what we did in GUI)
+    -what are requirements for small_image_url and large_image_url? Do they require exact sizes? If so, using the wiki img_url may not work.
+    -try passing in a hardcoded url - does card display work at all?
+        -can we easily make it persist throughout? Or do we need to do this on each response? (Extension idea: when generating a persona, use google image search + classifier to save pictures for a range of emotions. Then depending on the emotion pipeline's assessment of their response, display the proper image to accompany each reply.)
+    -if promising, update ConvManager accordingly:
+        -keep img_url field when saving new persona
+        -add dummy img_url field when one doesn't exist? I.e. for custom persona.
 -logging updates
     -consider whether I want to always use GPT default daily log file or let Convmanager and/or Promptmanager maintain diff files
     -implement changes if necessary (search "log=True" to see usage in conv and prompt manager classes. 

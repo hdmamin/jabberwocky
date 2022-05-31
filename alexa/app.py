@@ -247,6 +247,10 @@ def choose_person(person=None, **kwargs):
     CONV.start_conversation(person)
     ask.func_clear()
     return question(f'I\'ve connected you with {person}.')
+    # TODO: would need to keep img_url in Conversationmanager to make this
+    #  possible.
+    # return question(f'I\'ve connected you with {person}.')\
+    #     .standard_card(title=person, large_image_url=CONV.current['img_url'])
 
 
 def _generate_person(choice, **kwargs):
