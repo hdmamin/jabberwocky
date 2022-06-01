@@ -1112,6 +1112,11 @@ class GPTBackend:
 
     def _query(self, prompt, query_func, strip_output=True, log=True,
                subwords=True, drop_fragment=False, **kwargs):
+        """The base query method. We separate this from self.query because
+        that may call self._query_batch which in turn calls this method. Before
+        refactoring, this made for a rather confusing case where query could
+        call _query_batch and _query_batch could also call query.
+        """
         # Including indices in responses makes it easier to tell which
         # completions correspond to which prompts when we use multiple prompts
         # and/or multiple completions per prompt.
@@ -1914,7 +1919,7 @@ class ConversationManager:
             # Do this after moving the image file (if necessary) so meta.yaml
             # contains the correct image path.
             meta.update(img_path=str(img_path))
-            meta.pop('img_url', None)
+            # meta.pop('img_url', None) # TODO rm
             save_yaml(meta, dir_/'meta.yaml')
 
             # It's an empty string if we fail to download an image in

@@ -400,3 +400,12 @@ smtplib.SMTPAuthenticationError: (535, b'5.7.139 Authentication unsuccessful, ac
 -----------
 Error when saying "Goodbye" during a conversation:
 NotImplementedError: Intent "AMAZON.StopIntent" not found and no default intent specified.
+
+5/31/22 tues
+------------
+logger path updates
+
+-move logger (and lock?) creation to instance var
+-write method to refresh path
+-check if we need to update path on each call
+

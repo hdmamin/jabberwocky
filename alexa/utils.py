@@ -162,8 +162,14 @@ class custom_question(question):
             self._response['outputSpeech']['ssml'] = text
 
 
+# Setting male default to British for now because the male Australian voice
+# turned out to be much more synthetic sounding than I initially realized.
+# Maybe change it back in the future if Amazon improves it. Female Australian
+# voice needs more qualitative evaluation from me.
+# Also, `other` is technically mutable but it doesn't matter since we don't
+# alter it in any way inside the function.
 def select_polly_voice(current_meta, threshold=.8,
-                       other='Australian'):
+                       other={'F': 'Australian', 'M': 'British'}):
     """Select name of polly voice to use based on a person's gender and
     nationality.
 
@@ -184,8 +190,6 @@ def select_polly_voice(current_meta, threshold=.8,
         which sort of serves as a catch-all "funky/other" category.
     """
     country2voice = POLLY_NAMES[current_meta['gender']]
-    assert other in country2voice, f'Default polly country {other} is not ' \
-                                   f'available. Pick one of {country2voice}.'
 
     # Wikipedia usually calls people these people English. Need to map to Polly
     # name.
@@ -194,7 +198,16 @@ def select_polly_voice(current_meta, threshold=.8,
                    in process.extract(country, list(country2voice))]
     match, score = score_pairs[0]
     if score < threshold:
-        match = other
+        if isinstance(other, Mapping):
+            match = other[current_meta['gender']]
+        elif isinstance(other, str):
+            match = other
+        else:
+            raise TypeError('`other` should have type str or dict. You '
+                            f'passed in {other}.')
+    if match not in country2voice:
+        raise KeyError(f'Default polly country {other} is not '
+                       f'available. Pick one of {country2voice}.')
     return country2voice[match]
 
 
