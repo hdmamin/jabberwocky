@@ -58,7 +58,7 @@ from pathlib import Path
 import requests
 import shutil
 import sys
-from threading import Lock
+from threading import Lock, Thread
 import time
 import unidecode
 import warnings
@@ -72,7 +72,8 @@ from jabberwocky.external_data import wiki_data
 from jabberwocky.streaming import stream_response, truncate_at_first_stop
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     hooked_generator, load_api_key, with_signature, JsonlinesLogger,\
-    thread_starmap, ReturningThread, containerize, touch, save_yaml, namecase
+    thread_starmap, ReturningThread, containerize, touch, save_yaml, \
+    seconds_til_midnight
 
 
 HF_API_KEY = load_api_key('huggingface')
@@ -807,9 +808,6 @@ class GPTBackend:
     gooseai_res_2 = gpt.query(**kwargs)
     """
 
-    logger = JsonlinesLogger(
-        C.root/f'data/logs/{datetime.today().strftime("%Y.%m.%d")}.jsonlines'
-    )
     lock = Lock()
 
     # Only include backends here that actually should change the
@@ -846,10 +844,16 @@ class GPTBackend:
         except FileNotFoundError:
             name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
 
-    def __init__(self):
+    def __init__(self, date_fmt="%Y.%m.%d"):
         self.new_name = ''
         self.old_name = ''
         self.old_key = ''
+        self.date_fmt = date_fmt
+        self.logger = JsonlinesLogger(
+            C.root/
+            f'data/logs/{datetime.today().strftime(date_fmt)}.jsonlines'
+        )
+        self.thread = Thread(target=self.update_log_path).start()
 
     def __call__(self, name):
         """__enter__ can't take arguments so we need to specify this here.
@@ -1227,30 +1231,29 @@ class GPTBackend:
         texts, fulls = map(list, zip(*res))
         return sum(texts, []), sum(fulls, [])
 
-    @classmethod
-    def _log_query_kwargs(cls, log, query_func=None, version=None, **kwargs):
+    def _log_query_kwargs(self, log, query_func=None, version=None, **kwargs):
         """Log kwargs for troubleshooting purposes."""
         if log:
             # Meta key is used to store any info we want to log but that should
             # not be passed to the actual query_gpt3 call.
             kwargs['meta'] = {
-                'backend_name': cls.current(),
+                'backend_name': self.current(),
                 'query_func': func_name(query_func) if query_func else None,
                 'datetime': datetime.now().ctime(),
                 'version': version
             }
-            with cls.lock:
+            with self.lock:
                 if not isinstance(log, (str, Path)):
-                    log = cls.logger.path
+                    log = self.logger.path
 
                 # If log file was deleted, we must recreate it AND use
                 # change_path to reopen the file object.
                 if not os.path.exists(log):
                     touch(log)
-                    cls.logger.path = None
-                if log != cls.logger.path:
-                    cls.logger.change_path(log)
-            cls.logger.info(kwargs)
+                    self.logger.path = None
+                if log != self.logger.path:
+                    self.logger.change_path(log)
+            self.logger.info(kwargs)
 
     @classmethod
     def refresh_api_keys(cls):
@@ -1262,6 +1265,23 @@ class GPTBackend:
                 cls.name2key[name] = load_api_key(name)
             except FileNotFoundError:
                 cls.name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
+
+    def update_log_path(self):
+        while True:
+            dt = datetime.today()
+            # Wait til midnight to make the first swap.
+            if dt.hour != 0:
+                time.sleep(seconds_til_midnight(dt))
+                continue
+            new_name = dt.strftime(self.dt_fmt)
+            with self.lock():
+                path = Path(self.logger.path)
+                *parts, _ = path.parts
+                self.logger.change_path(
+                    os.path.join(*parts, f'{new_name}.{path.stem}')
+                )
+            # After making the change, sleep til next midnight.
+            time.sleep(seconds_til_midnight(dt))
 
     def __repr__(self):
         return f'{func_name(self)} <current_name: {self.current()}>'

@@ -1785,7 +1785,8 @@ X -explore possibility of displaying persona image in card (similar to what we d
 -logging updates
     -consider whether I want to always use GPT default daily log file or let Convmanager and/or Promptmanager maintain diff files
     -implement changes if necessary (search "log=True" to see usage in conv and prompt manager classes. 
-    -possible GPTBackend bug: we set default log file path as a class attr which probably means if we leave it running for days, we only create a file with the date we launched the program
+    ~ -possible GPTBackend bug: we set default log file path as a class attr which probably means if we leave it running for days, we only create a file with the date we launched the program
+        UPDATE: trying to auto-update log file name at midnight automatically. Still need to check if this works (tomorrow). Didn't use built in class bc it looks like it deletes the old file and it's unclear how threadsafe it is.
 -consider how to deal with minor problems identified during last night's conv
     -500 error during granger conv (couldn't find in tmux history sun though)
     -can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
@@ -1794,6 +1795,19 @@ X -explore possibility of displaying persona image in card (similar to what we d
     -Seems like reprompt might not be working right. E.g. if they ask me to choose who to speak to on startup and I don't answer at first but then do on reprompt, it failed.
     -"Goodbye" during conversation raises notimplementederror (see misc.txt)
 
+6/1/22 wed
+----------
+-logging updates
+    -check if new logging file updater works (i.e. if I make a query, does it now write to 6/1/22 file instead of 5/31/22?)
+    -consider whether I want to always use GPT default daily log file or let Convmanager and/or Promptmanager maintain diff files
+    -implement changes if necessary (search "log=True" to see usage in conv and prompt manager classes. 
+-consider how to deal with minor problems identified during last night's conv
+    -500 error during granger conv (couldn't find in tmux history sun though)
+    -can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
+    -issue of completions piling up after 1 missed response (i.e. I took too long to think/speak, it cut me off which was sort of disorienting and I missed my next turn too, and at some point kind of lost control of it - it was just returning completions faster than I could keep up. Good exercise for thinking on feet tbh.)
+    -transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
+    -Seems like reprompt might not be working right. E.g. if they ask me to choose who to speak to on startup and I don't answer at first but then do on reprompt, it failed.
+    -"Goodbye" during conversation raises notimplementederror (see misc.txt)
 
 Backlog
 -------

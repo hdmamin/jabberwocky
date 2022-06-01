@@ -1,6 +1,7 @@
 """General purpose utilities."""
 
 from colorama import Fore
+from datetime import datetime, time
 from functools import update_wrapper, partial, wraps
 from inspect import _empty, Parameter, signature
 import json
@@ -691,3 +692,13 @@ def namecase(name):
     """
     chunks = name.split()
     return ' '.join(chunk[0].upper() + chunk[1:] for chunk in chunks)
+
+
+def seconds_til_midnight(dt=None):
+    """Compute seconds til midnight so we know how long to sleep for when
+    changing date-based log file names. See
+    jabberwocky.openai_utils.GPTBackend.update_log_path().
+    """
+    dt = dt or datetime.today()
+    midnight = datetime.combine(dt, time())
+    return (midnight - dt).seconds

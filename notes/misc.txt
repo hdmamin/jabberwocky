@@ -405,7 +405,9 @@ NotImplementedError: Intent "AMAZON.StopIntent" not found and no default intent 
 ------------
 logger path updates
 
--move logger (and lock?) creation to instance var
--write method to refresh path
--check if we need to update path on each call
+X -move logger (and lock?) creation to instance var
+~ -write method to refresh path
+    UPDATE: written but untested.
+~ -check if we need to update path on each call
+    UPDATE: instead, tried using thread to update file name at midnight. Have to wait til tomorrow to confirm if this works.
 
