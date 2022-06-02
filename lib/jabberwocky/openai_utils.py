@@ -1273,7 +1273,7 @@ class GPTBackend:
             if dt.hour != 0:
                 time.sleep(seconds_til_midnight(dt))
                 continue
-            new_name = dt.strftime(self.dt_fmt)
+            new_name = dt.strftime(self.date_fmt)
             with self.lock():
                 path = Path(self.logger.path)
                 *parts, _ = path.parts
@@ -1396,7 +1396,7 @@ class PromptManager:
     performing tasks on a video Transcript object.
     """
 
-    def __init__(self, tasks=(), verbose=True, log_dir=C.root/'data/logs',
+    def __init__(self, tasks=(), verbose=True,
                  prompt_dir=C.root/'data/prompts', skip_tasks=()):
         """
         Parameters
@@ -1417,12 +1417,7 @@ class PromptManager:
         # will later be filled in).
         self.prompt_dir = Path(prompt_dir)
         self.prompts = self._load_templates(tasks, skip_tasks)
-        self.log_dir = log_dir
-        if log_dir:
-            os.makedirs(log_dir, exist_ok=True)
-            self.log_path = Path(log_dir)/'query_kwargs.json'
-        else:
-            self.log_path = None
+        self.log_path = GPT.logger.path
 
     def _load_templates(self, tasks, skip_tasks=()):
         """Load template and default hyperparameters for each prompt.
@@ -1507,7 +1502,7 @@ class PromptManager:
             print('fully resolved kwargs:\n',
                   dict(bound_args(query_gpt3, [], kwargs)))
             return
-        return GPT.query(prompt, log=True, **kwargs)
+        return GPT.query(prompt, **kwargs)
 
     def kwargs(self, task, fully_resolved=True, return_prompt=False,
                extra_kwargs=None, **kwargs):
@@ -1677,9 +1672,8 @@ class ConversationManager:
         self.persona_dir = [self.data_dir/'conversation_personas',
                             self.data_dir/'conversation_personas_custom']
         self.conversation_dir = self.data_dir/'conversations'
-        self.log_dir = self.data_dir/'logs'
-        self.log_path = Path(self.log_dir)/'conversation_query_kwargs.json'
-        for dir_ in (*self.persona_dir, self.conversation_dir, self.log_dir):
+        self.log_path = GPT.logger.path
+        for dir_ in (*self.persona_dir, self.conversation_dir):
             os.makedirs(dir_, exist_ok=True)
 
         # Load prompt, default query kwargs, and existing personas. Set self.me
@@ -2145,7 +2139,7 @@ class ConversationManager:
 
         # Update turns after query in case something goes wrong and it
         # doesn't actually execute.
-        res = GPT.query(prompt, log=True, **kwargs)
+        res = GPT.query(prompt, **kwargs)
         self.user_turns.append(text.strip())
         self.cached_query = ''
 

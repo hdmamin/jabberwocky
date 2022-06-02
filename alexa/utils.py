@@ -239,7 +239,7 @@ def emotion(text, pred=None, emo_pipe=None, logger=None):
     return res
 
 
-def voice(text, current_meta, select_voice=True, emo_pipe=None, **kwargs):
+def voice(text, current_meta, polly_name=None, select_voice=True, emo_pipe=None, **kwargs):
     """Add voice tags to use a custom Amazon Polly voice."""
     # return f'<speak><voice name="{name}">{text}</voice></speak>', True
     open_tags = ['<speak>']
@@ -248,7 +248,7 @@ def voice(text, current_meta, select_voice=True, emo_pipe=None, **kwargs):
     # custom voice as the default - the emotional range is rather limited and
     # only affects a small percentage of responses.
     if select_voice:
-        name = select_polly_voice(current_meta, **kwargs)
+        name = polly_name or select_polly_voice(current_meta, **kwargs)
         open_tags.append(f'<voice name="{name}">')
         close_tags.append('</voice>')
     else:
@@ -658,7 +658,7 @@ class Settings(Mapping):
 
     def __init__(
             self, global_=None, person_=None, conversation_=None,
-            reserved_keys=('prev_intent', 'email', 'auto_punct')
+            reserved_keys=('prev_intent', 'email', 'auto_punct', 'polly_voice')
     ):
         # Alter underlying dict directly to avoid recursion errors. Custom
         # __setattr__ method relies on custom __getattr__ so we run into

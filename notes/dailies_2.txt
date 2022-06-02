@@ -1797,17 +1797,34 @@ X -explore possibility of displaying persona image in card (similar to what we d
 
 6/1/22 wed
 ----------
--logging updates
-    -check if new logging file updater works (i.e. if I make a query, does it now write to 6/1/22 file instead of 5/31/22?)
-    -consider whether I want to always use GPT default daily log file or let Convmanager and/or Promptmanager maintain diff files
-    -implement changes if necessary (search "log=True" to see usage in conv and prompt manager classes. 
+~ -logging updates
+    ~ -check if new logging file updater works (i.e. if I make a query, does it now write to 6/1/22 file instead of 5/31/22?)
+        UPDATE: saw in logs that update failed. Turned out I referenced wrong var name. Fixed now but need to wait til tomorrow to see if it all works.
+    X -consider whether I want to always use GPT default daily log file or let Convmanager and/or Promptmanager maintain diff files
+    X -implement changes if necessary (search "log=True" to see usage in conv and prompt manager classes. 
+        UPDATE: just make everything use the same GPT log file. Simplicity...
 -consider how to deal with minor problems identified during last night's conv
     -500 error during granger conv (couldn't find in tmux history sun though)
     -can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
-    -issue of completions piling up after 1 missed response (i.e. I took too long to think/speak, it cut me off which was sort of disorienting and I missed my next turn too, and at some point kind of lost control of it - it was just returning completions faster than I could keep up. Good exercise for thinking on feet tbh.)
+    X -issue of completions piling up after 1 missed response (i.e. I took too long to think/speak, it cut me off which was sort of disorienting and I missed my next turn too, and at some point kind of lost control of it - it was just returning completions faster than I could keep up. Good exercise for thinking on feet tbh.)
+        UPDATE: added 1 reprompt which doubles the allowed thinking time. Seems to work fine and feels less rushed now.
     -transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
     -Seems like reprompt might not be working right. E.g. if they ask me to choose who to speak to on startup and I don't answer at first but then do on reprompt, it failed.
     -"Goodbye" during conversation raises notimplementederror (see misc.txt)
+X -support "no thank you" and "yes please"
+    UPDATE: tested this and it already seems to work.
+
+6/2/22 thurs
+------------
+-check if logger successfully created file for 6/2
+    -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
+-consider how to deal with minor problems identified during recent user testing
+    -500 error during granger conv (couldn't find in tmux history sun though)
+    -can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
+    -transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
+    -Seems like reprompt might not be working right. E.g. if they ask me to choose who to speak to on startup and I don't answer at first but then do on reprompt, it failed.
+    -"Goodbye" during conversation raises notimplementederror (see misc.txt)
+
 
 Backlog
 -------

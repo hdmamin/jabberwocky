@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 from flask import Flask, request
 from flask_ask import question, context, statement
+import numpy as np
 # openai appears unused but is actually used by GPTBackend instance.
 import openai
 import requests
@@ -19,7 +20,7 @@ from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load
 from jabberwocky.openai_utils import ConversationManager, PromptManager, GPT
 from utils import slot, Settings, model_type, CustomAsk, infer_intent, voice, \
-    custom_question
+    custom_question, select_polly_voice
 
 
 # Define these before functions since endpoints use ask method as decorators.
@@ -45,7 +46,6 @@ def get_user_info(attrs=('name', 'email')):
     system = context.System
     token = system.get("apiAccessToken")
     endpoint = system.get('apiEndpoint')
-    ask.logger.info(f'token={token} \nendpoint={endpoint}')  # TODO rm
     if not (token and endpoint):
         return ''
     res = dict.fromkeys(attrs, '')
@@ -245,10 +245,8 @@ def choose_person(person=None, **kwargs):
             )
         person = match
     CONV.start_conversation(person)
+    state.polly_voice = select_polly_voice(CONV.current)
     ask.func_clear()
-    # return question(f'I\'ve connected you with {person}.')
-    # TODO: would need to keep img_url in Conversationmanager to make this
-    #  possible.
     return question(f'I\'ve connected you with {person}.')\
         .standard_card(title=person,
                        large_image_url=CONV.current.get('img_url', None))
@@ -432,8 +430,9 @@ def _reply(prompt=None):
         return question('Did you say something? I didn\'t catch that.')
     # Set max tokens conservatively. Openai docs estimate n_tokens:n_words
     # ratio is roughly 1.33 on average.
-    # TODO: maybe add setting to make punctuation optional? Prob slows things
-    # down significantly, but potentially could improve completions a lot.
+    # TODO: maybe change punct backend to not be hardcoded to banana? It's
+    # more reliable than the other free backends but still seems a little
+    # flakier than openai. END TODO
     # Banana.dev is the only reliable free API. I think it should be good
     # enough for punctuation. I'm choosing to keep this separate from the
     # user-selected backend.
@@ -448,9 +447,19 @@ def _reply(prompt=None):
     ask.logger.info('BEFORE QUERY: ' + prompt)
     text, _ = CONV.query(prompt, **state)
     # Add custom accent/emotion audio.
-    text, is_ssml = voice(text[0], CONV.current, select_voice=True,
-                          emo_pipe=EMO_PIPE)
-    return custom_question(text, is_ssml)
+    text, is_ssml = voice(text[0], CONV.current, polly_name=state.polly_voice,
+                          select_voice=True, emo_pipe=EMO_PIPE)
+    # Reprompt buys me some more time if I'm taking a long time to respond.
+    # The reprompt is not included in the conversation transcript so it's
+    # recommended that you respond to the initial reply rather than the generic
+    # "I can see you're thinking hard."-esque reprompt.
+    # Don't run emotion classifier on reprompt message.
+    reprompt_msg, _ = voice(
+        np.random.choice(REPROMPTS), CONV.current,
+        polly_name=state.polly_voice, select_voice=True, emo_pipe=None
+    )
+    return custom_question(text, is_ssml)\
+        .reprompt(reprompt_msg)
 
 
 @ask.intent('delegate')
@@ -603,6 +612,13 @@ if __name__ == '__main__':
     UTT2META = load('data/alexa/utterance2meta.pkl')
     # Weird values/spellings here are mis-transcriptions I observed Alexa make.
     NOBODY_UTTS = {'knobody', 'nobody', 'noone', 'no one', 'no1', 'no 1'}
+    REPROMPTS = [
+        'I know, it\'s a lot to take in.',
+        'I can see you\'re thinking hard.',
+        'I know you like to mull things over.',
+        'I can see the gears turning.',
+        'I\'m not going anywhere. Take your time.'
+    ]
     # TODO: consider enabling/removing this. Seems like we have to choose
     # between emotion tags and switching voice by nationality/gender and I
     # tend to learn towards the latter.
