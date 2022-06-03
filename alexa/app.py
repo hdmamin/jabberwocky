@@ -266,11 +266,16 @@ def _generate_person(choice, **kwargs):
         # Case: user declines to auto-generate. Maybe they misspoke or changed
         # their mind.
         msg = f'Okay.'
-    # TODO: maybe rm reprompt? Since we don't know if user is mid-conv or not.
-    return _maybe_choose_person(
+    response = _maybe_choose_person(
         msg, choose_msg='Who would you like to speak to instead?'
-    )#\
-        # .reprompt('I didn\'t get that. Who would you like to speak to next?')
+    )
+    # Otherwise we get the "back to your conversation..." message so this
+    # reprompt wouldn't make sense.
+    if not CONV.is_active():
+        response = response.reprompt(
+            'I didn\'t get that. Who would you like to speak to?'
+        )
+    return response
 
 
 @ask.intent('changeModel')
@@ -506,6 +511,16 @@ def no():
     if not func:
         return _reply(prompt='No.')
     return func(choice=False, **kwargs)
+
+
+@ask.intent('AMAZON.StopIntent')
+def stop():
+    if CONV.is_active():
+        # Tried delegating to _reply() here but alexa still ended the session
+        # within a few seconds. Seems you're not supposed to override this.
+        ask.logger.warning('StopIntent was called mid-conversation. This may '
+                           'have been unintentional on the user\'s part.')
+    return statement('goodbye')
 
 
 @ask.intent('readContacts')

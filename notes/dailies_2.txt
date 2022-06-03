@@ -1816,23 +1816,45 @@ X -support "no thank you" and "yes please"
 
 6/2/22 thurs
 ------------
--check if logger successfully created file for 6/2
-    -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
+~ -check if logger successfully created file for 6/2
+    _ -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
+    UPDATE: needed to rm parentheses in Lock context manager. Try again tomorrow.
 -consider how to deal with minor problems identified during recent user testing
-    -500 error during granger conv (couldn't find in tmux history sun though)
+    _ -500 error during granger conv (couldn't find in tmux history sun though)
+        UPDATE: logs are gone, trash is empty, not in tmux history anymore either. /shrug
     -can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
     -transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
-    -Seems like reprompt might not be working right. E.g. if they ask me to choose who to speak to on startup and I don't answer at first but then do on reprompt, it failed.
-    -"Goodbye" during conversation raises notimplementederror (see misc.txt)
+    ~ -Seems like reprompt might not be working right. E.g. if they ask me to choose who to speak to on startup and I don't answer at first but then do on reprompt, it failed.
+        X -test all reprompts to see if they all fail or if it's specific to the case
+            X -reprompt in launch
+                X -person already in contacts
+                X -new person
+            X -reprompt in end_chat
+            X -re-enable generate_person reprompt and test
+        UPDATE: seems fine /shrug.
+    X -"Goodbye" during conversation raises notimplementederror (see misc.txt)
+        UPDATE: frustratingly, seems we're not allowed to override this, so you can't say "Goodbye" or "Goodybe {name}" at any point unless you want the session to end immediately. You can say "Bye" or "Bye {Name}" though.
+
+6/3/22 fri
+----------
+-check if logger successfully created file for 6/2
+    -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
+-can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
+    -reproduce error
+    -try to fix
+-easier option: add more docs/help on how to invoke each intent
+    -add spoken examples to docstrings
+    -add "help" intent that reads out some sample commands (e.g. "To change your settings, you can say...")
 
 
 Backlog
 -------
+-consider ways to address this issue: transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
+-better UX for changing multiple settings at once (might be difficult with my slot parsing strategy). As a fallback, could just try to shorten the "back to your conv" message.
+    -consider how to approach
+    -implement
 -further experiments with tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
--add more docs/help on how to invoke each intent
-    -add spoken examples to docstrings
-    -add "help" intent that reads out some sample commands (e.g. "To change your settings, you can say...")
 -look into raspberry pi as long term option for hosting
 -[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)
 	-have gpt3 insert tags directly (i.e. Edit rather than complete)
@@ -1845,10 +1867,6 @@ Backlog
         -np > 1
         -nc > 1
         -nc > 1 AND np > 1
--more thoroughly troubleshoot "no response" errors in reply (think this is due to huggingface being very slow and gptj being broken, but something to watch out for)
-    -re-enable HF punct and try to time (programmatically or watching clock, whichever's easier)
-    -if that works, re-enable HF reply as well and time
-    -fix if necessary
 -try to reproduce error w/ gpt banana: querying w/ np=2 and n=3 only produced 2 text responses. Second try worked as expected (6 responses - unsure why the difference. Maybe autoreload in ipython reset something since I edited docs first call?)
 -idea: prompt mixin? I.e. add snippet of text to start/end of a prompt, e.g. "You are a friendly, polite AI assistant.".
 ~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
@@ -1859,7 +1877,7 @@ Backlog
         UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.
     -update change of person to change person-level settings
     -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
--idea: natural language unit tests? E.g. if we want a response to be cheerful, we can write the instructions to increase the probability of that happening, but the prompt may have multiple parts and tone may get lost in the shuffle. We could increase our odds of a cheerful response by generating k responses, passing each through an additional prompt ("natural language unit test") asking "is this response cheerful?". We should be able to use the logit_bias arg with some positive weight to heavily incentivize the test to output "pass/fail" or "yes/no".
+-idea: natural language unit tests? E.g. if we want a response to be cheerful, we can write the instructions to increase the probability of that happening, but the prompt may have multiple parts and tone may get lost in the shuffle. We could increase our odds of a cheerful response by generating k responses, passing each through an additional prompt ("natural language unit test") asking "is this response cheerful?". We should be able to use the logit_bias arg with some positive weight to heavily incentivize the test to output "pass/fail" or "yes/no". I guess this is basically just a classifier but it's one we can specify in natural language it it (potentially) requires no training examples.
 
 Easy Backlog
 ------------

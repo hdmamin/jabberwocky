@@ -1274,7 +1274,7 @@ class GPTBackend:
                 time.sleep(seconds_til_midnight(dt))
                 continue
             new_name = dt.strftime(self.date_fmt)
-            with self.lock():
+            with self.lock:
                 path = Path(self.logger.path)
                 *parts, _ = path.parts
                 self.logger.change_path(
