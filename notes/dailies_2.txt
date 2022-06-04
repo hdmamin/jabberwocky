@@ -1837,22 +1837,37 @@ X -support "no thank you" and "yes please"
 
 6/3/22 fri
 ----------
--check if logger successfully created file for 6/2
-    -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
--can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
-    -reproduce error
-    -try to fix
+~ -check if logger successfully created file for 6/2
+    X -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
+    UPDATE: a new log file did appear at midnight, but the name was wrong. A correctly named file appeared a little after 9am today for some reason. Fixed bug that caused the filename to be wrong so I think we should be good now but we'll need to check again tomorrow. Worry about the mystery new log file later if it becomes an issue.
+X -can't change settings when asked "Who would you like to speak to?". Only when a conv is ongoing, it seems. Could have sworn this worked before.
+    X -try to reproduce error
+    _ -try to fix
+    UPDATE: could not reproduce error. I'm guessing I either used the wrong utterance last time or transcription failed so it just proceeded to the enqueued function (generate_persona). That happened one this time but that's not a problem with the dialog model or anything I can easily address.
 -easier option: add more docs/help on how to invoke each intent
     -add spoken examples to docstrings
-    -add "help" intent that reads out some sample commands (e.g. "To change your settings, you can say...")
+    _ -add "help" intent that reads out some sample commands (e.g. "To change your settings, you can say...")
+        _ -create new intent in UI
+        _ -download intent model and regenerate fuzzy dict
+        _ -add endpoint in skill
+        UPDATE: fiddled around on this for a while but I'm not sure there's a super compelling use case for this. Maybe if I find myself trying and failing to trigger certain intents a lot I'll go back and implement something like this.
+
+6/4/22 sat
+----------
+-check if logger successfully created file for 6/2
+    -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
+-better UX for changing multiple settings at once (might be difficult with my slot parsing strategy). As a fallback, could just try to shorten the "back to your conv" message.
+    -consider how to approach
+    -implement
+-consider ways to address this issue: transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
+    -try enabling punct and see if we get timeouts again
+    -try enabling punct with openai backend and see if we still get timeouts
+-easier option: add more docs/help on how to invoke each intent
+    -add spoken examples to docstrings
 
 
 Backlog
 -------
--consider ways to address this issue: transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
--better UX for changing multiple settings at once (might be difficult with my slot parsing strategy). As a fallback, could just try to shorten the "back to your conv" message.
-    -consider how to approach
-    -implement
 -further experiments with tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 -look into raspberry pi as long term option for hosting

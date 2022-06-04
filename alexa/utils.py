@@ -4,7 +4,6 @@ from flask_ask import session, Ask, question
 from functools import wraps, partial
 from fuzzywuzzy import fuzz, process
 from itertools import product
-import json
 import logging
 import pandas as pd
 from pathlib import Path
@@ -14,7 +13,7 @@ from werkzeug.local import LocalProxy
 
 from htools.core import xor_none
 from htools.meta import Callback, callbacks, params, MultiLogger, func_name,\
-    deprecated, select, save, count_calls
+    deprecated, select, save
 from htools.structures import FuzzyKeyDict
 from jabberwocky.openai_utils import query_gpt3
 

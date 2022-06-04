@@ -1278,7 +1278,7 @@ class GPTBackend:
                 path = Path(self.logger.path)
                 *parts, _ = path.parts
                 self.logger.change_path(
-                    os.path.join(*parts, f'{new_name}.{path.stem}')
+                    os.path.join(*parts, f'{new_name}.{path.suffix}')
                 )
             # After making the change, sleep til next midnight.
             time.sleep(seconds_til_midnight(dt))
