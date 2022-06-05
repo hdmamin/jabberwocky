@@ -4,6 +4,8 @@ of if that's even possible. App relies on local filesystem a lot at the moment
 so it might be more convenient to run locally with ngrok anyway.
 """
 
+import argparse
+import ast
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -125,11 +127,8 @@ def send_transcript(conv, user_email='', cleanup=False):
     return True
 
 
-# TODO: might want to change default backend arg, but for now use free model
-# for testing.
-# TODO: Maybe enabl auto punct with openai but banana backend is too slow.
-def reset_app_state(end_conv=True, clear_queue=True,
-                    backend_='banana', auto_punct=False,
+# TODO: Maybe enable auto punct with openai but banana backend is too slow.
+def reset_app_state(end_conv=True, clear_queue=True, auto_punct=False,
                     attrs=('name', 'email')):
     """Reset some app-level attributes in `state`, `ask`, and `conv` objects.
 
@@ -151,8 +150,7 @@ def reset_app_state(end_conv=True, clear_queue=True,
         CONV.end_conversation()
     if clear_queue:
         ask.func_clear()
-    if backend_:
-        GPT.switch(backend_)
+    GPT.switch('banana' if ARGS.dev else 'openai')
     state.auto_punct = auto_punct
     for k, v in get_user_info(attrs).items():
         setattr(state, k, v)
@@ -162,9 +160,9 @@ def reset_app_state(end_conv=True, clear_queue=True,
     # this must remain after changing conv.me (see line above) since that
     # changes the stop phrases.
     state.init_settings(CONV, drop_fragment=True)
-    # TODO: keeping things cheaper for testing, though it actually doesn't
-    # matter atm now that I'm using banana backend.
-    state.set('global', engine=0)
+    # Note that in dev mode, we use banana backend which only has one engine
+    # (essentially equivalent to engine=1).
+    state.set('global', engine=3)
 
 
 @ask.launch
@@ -627,8 +625,17 @@ def end_session():
 
 
 if __name__ == '__main__':
-    # TODO: eventually prob set qa_pipe to True.
-    CONV = ConversationManager(load_qa_pipe=False)
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    # WARNING: in dev mode, each new conversation resets backend to banana.
+    # Use literal_eval for type rather than bool - the latter oddly still seems
+    # to parse inputs as strings.
+    parser.add_argument(
+        '--dev', default=False, type=ast.literal_eval,
+        help='If True, start the app in dev mode (uses free backend and weak '
+             'engine by default).'
+    )
+    ARGS = parser.parse_args()
+    CONV = ConversationManager(load_qa_pipe=not ARGS.dev)
     PROMPTER = PromptManager(['punctuate_alexa'], verbose=False)
     UTT2META = load('data/alexa/utterance2meta.pkl')
     # Weird values/spellings here are mis-transcriptions I observed Alexa make.

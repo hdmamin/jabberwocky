@@ -853,7 +853,7 @@ class GPTBackend:
             C.root/
             f'data/logs/{datetime.today().strftime(date_fmt)}.jsonlines'
         )
-        self.thread = Thread(target=self.update_log_path).start()
+        self.thread = Thread(target=self.update_log_path, daemon=True).start()
 
     def __call__(self, name):
         """__enter__ can't take arguments so we need to specify this here.

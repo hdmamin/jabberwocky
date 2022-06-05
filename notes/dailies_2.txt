@@ -1883,9 +1883,16 @@ X -fix email subject and body to use pretty name instead of snake case name
 
 6/5/22 sun
 ----------
--check if logger successfully created file for 6/2
-    -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
--look into threading error/issues where trying to quit skill hangs (unsure if this is an issue with my app or computer in general - I recall seeing a similar phenomenon today when quitting ipython)
+X -check if logger successfully created file for 6/2
+    _ -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
+    UPDATE: new file with correct name got created an used. Still a little weird - another file also got created with the name '2022.06.05.2022.06.03' which looks like it uses the old buggy naming process with path.stem instead of path.suffix. Let's see if this happens again tonight.
+~ -look into good way to record alexa skill instead of (presumably poor quality) iphone quality recording
+    X -record short audio demo
+    UPDATE: couldn't find any good answers in alexa forums. Just used iphone voice memo.
+X -look into threading error/issues where trying to quit skill hangs (unsure if this is an issue with my app or computer in general; I recall seeing a similar phenomenon today when quitting ipython))
+    UPDATE: set daemon=True for thread. Not sure if this is the ideal way but it does seem to work for my purposes.
+X -add CLI flag to start in default mode
+    X -test
 -integrate generalized conv prompt into conv manager to support multiple modes (conversation, transcript, podcast, brainstorm)
 -think more about how to deal with the eponymous character issue when generating personas. (e.g. try wiki_search(f'{name} character') for everyone, or run model first to infer if character is fictional)
 -consider ways to address this issue: transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
@@ -1895,6 +1902,26 @@ X -fix email subject and body to use pretty name instead of snake case name
 -easier option: add more docs/help on how to invoke each intent
     -add spoken examples to docstrings
 
+6/6/22 mon
+----------
+-check if log file generation worked correctly
+    -did new file appear w/ 6/6/22 date, did it appear at midnight, do new queries get written to it?
+    -did incorrectly named new file (with date as suffix) also appear? If so, did anything get written to it?
+-when choosing who to talk to and name match is a moderate value (i.e. too low to auto-resolve to an existing persona but high enough that there's reason to think they might be who we're referring to), ask user for confirmation before asking about generating new person. (Motivation: some names are often mis-transcribed so it's hard to select them. Using just first name helps but that won't scale as well as n_personas increases and it's hard to remember which personas require that.)
+-add more reprompts (maybe to _maybe_choose_person itself? If so, may need to remove some of the existing ones.)
+-try reactivating auto-punct w/ openai
+    -do we get timeouts like w/ banana?
+    -is quality of completions noticeably different?
+    -is wait time noticeably worse (qualitatively)?
+-try revising punctuate_alexa prompt/hypers in playground using examples from recent longer convs, e.g. altman. IIRC I originally used much more minor transcription errors than seem to be common with alexa.
+-integrate generalized conv prompt into conv manager to support multiple modes (conversation, transcript, podcast, brainstorm)
+-think more about how to deal with the eponymous character issue when generating personas. (e.g. try wiki_search(f'{name} character') for everyone, or run model first to infer if character is fictional)
+-consider ways to address this issue: transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
+    -try enabling punct and see if we get timeouts again
+    -try enabling punct with openai backend and see if we still get timeouts
+-consider ways to backup conv or auto send email in case where conv quits unexpectedly (recall sat how one conv just didn't return a response in time or something and just ended suddenly with no option to save a transcript)
+-easier option: add more docs/help on how to invoke each intent
+    -add spoken examples to docstrings
 
 Backlog
 -------
