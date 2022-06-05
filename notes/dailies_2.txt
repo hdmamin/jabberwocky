@@ -1879,16 +1879,19 @@ X -better UX for changing multiple settings at once (might be difficult with my 
     -try enabling punct with openai backend and see if we still get timeouts
 -easier option: add more docs/help on how to invoke each intent
     -add spoken examples to docstrings
+X -fix email subject and body to use pretty name instead of snake case name
 
 6/5/22 sun
 ----------
 -check if logger successfully created file for 6/2
     -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
+-look into threading error/issues where trying to quit skill hangs (unsure if this is an issue with my app or computer in general - I recall seeing a similar phenomenon today when quitting ipython)
 -integrate generalized conv prompt into conv manager to support multiple modes (conversation, transcript, podcast, brainstorm)
 -think more about how to deal with the eponymous character issue when generating personas. (e.g. try wiki_search(f'{name} character') for everyone, or run model first to infer if character is fictional)
 -consider ways to address this issue: transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
     -try enabling punct and see if we get timeouts again
     -try enabling punct with openai backend and see if we still get timeouts
+-consider ways to backup conv or auto send email in case where conv quits unexpectedly (recall sat how one conv just didn't return a response in time or something and just ended suddenly with no option to save a transcript)
 -easier option: add more docs/help on how to invoke each intent
     -add spoken examples to docstrings
 

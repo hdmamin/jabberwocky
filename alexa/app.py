@@ -114,9 +114,9 @@ def send_transcript(conv, user_email='', cleanup=False):
         f'alexa/conversations/{conv.current["persona"]}__{datetime_}.txt'
     )
     save(conv.full_conversation(), tmp_path)
-    message = 'A transcript of your conversation with ' \
-              f'{conv.current["persona"]}  is attached.'
-    quickmail(f'Your conversation with {conv.current["persona"]} ({date}).',
+    name = conv.process_name(conv.current["persona"], inverse=True)
+    message = f'A transcript of your conversation with {name}  is attached.'
+    quickmail(f'Your conversation with {name} ({date}).',
               message=message,
               to_email=user_email,
               from_email=EMAIL,
@@ -237,6 +237,7 @@ def choose_person(person=None, **kwargs):
 
     if person not in CONV:
         match, match_p = CONV.nearest_persona(person)
+        ask.logger.info(f'Nearest matching persona: {match} (p={match_p:.3f})')
         if match_p < .8:
             ask.func_push(_generate_person, person=person)
             return question(
@@ -247,9 +248,13 @@ def choose_person(person=None, **kwargs):
     CONV.start_conversation(person)
     state.polly_voice = select_polly_voice(CONV.current)
     ask.func_clear()
+    # large_img_url logic is a bit weird because standard_card checks if url
+    # is not None, not if it's falsy. Missing urls often (always?) resolve to
+    # empty strings in conv.name2meta so we need the None to be outside the
+    # get() call.
     return question(f'I\'ve connected you with {person}.')\
         .standard_card(title=person,
-                       large_image_url=CONV.current.get('img_url', None))
+                       large_image_url=CONV.current.get('img_url') or None)
 
 
 def _generate_person(choice, **kwargs):
