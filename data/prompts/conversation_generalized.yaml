@@ -1,0 +1,12 @@
+engine: 3
+temperature: .7
+max_tokens: 100
+frequency_penalty: 0.5
+stop: 
+- "\n\nMe:"
+- "This is a conversation with"
+version: 0
+doc: |-
+  A more generalized template for some kind of verbal interaction between two people. This could be a conversation, an argument, a negotiation, a podcast, a therapy session, a private lesson, a brainstorming session, a debate, etc. Person could refer to a name or job title. Summary can be used to provide any details to help flesh out the situation. Arg "a" should either be "a" or "an" depending on the value of your "interaction" arg - eventually this should be auto-configured, but I need to revamp the library a bit to handle this (probably some jinja-based solution).
+prompt: |-
+  The following is a transcript of {a} {interaction} with {person}. {summary}

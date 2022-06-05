@@ -1278,7 +1278,7 @@ class GPTBackend:
                 path = Path(self.logger.path)
                 *parts, _ = path.parts
                 self.logger.change_path(
-                    os.path.join(*parts, f'{new_name}.{path.suffix}')
+                    os.path.join(*parts, f'{new_name}{path.suffix}')
                 )
             # After making the change, sleep til next midnight.
             time.sleep(seconds_til_midnight(dt))
@@ -1933,7 +1933,6 @@ class ConversationManager:
             # Do this after moving the image file (if necessary) so meta.yaml
             # contains the correct image path.
             meta.update(img_path=str(img_path))
-            # meta.pop('img_url', None) # TODO rm
             save_yaml(meta, dir_/'meta.yaml')
 
             # It's an empty string if we fail to download an image in

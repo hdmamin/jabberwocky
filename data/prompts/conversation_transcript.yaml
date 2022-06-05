@@ -1,0 +1,12 @@
+engine: 3
+temperature: .7
+max_tokens: 100
+frequency_penalty: 0.5
+stop: 
+- "\n\nMe:"
+- "This is a conversation with"
+version: 0
+doc: |-
+    Slightly tweaked wording of the `conversation` prompt to use the phrasing "transcript". Unclear if this works better/worse/the same.
+prompt: |-
+    The following is a transcript of a conversation with {name}. {summary}

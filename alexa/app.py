@@ -396,7 +396,7 @@ def disable_punctuation():
 
 def _maybe_choose_person(
         msg='', choose_msg='Now, who would you like to speak to?',
-        return_msg_fmt='Now, back to your conversation with {}.'
+        return_msg_fmt='Now, back to your call with {}.'
 ):
     """Check if a conversation is already in progress and if not, prompt the
     user to choose someone to talk to. Just a little convenience function to
@@ -419,7 +419,8 @@ def _maybe_choose_person(
 
     msg = msg.rstrip(' ') + ' '
     if CONV.is_active():
-        name = CONV.process_name(CONV.current['persona'], inverse=True)
+        name = CONV.process_name(CONV.current['persona'],
+                                 inverse=True).split()[0]
         msg += return_msg_fmt.format(name)
     else:
         msg += _choose_person_text(choose_msg)

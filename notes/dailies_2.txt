@@ -1854,11 +1854,38 @@ X -can't change settings when asked "Who would you like to speak to?". Only when
 
 6/4/22 sat
 ----------
--check if logger successfully created file for 6/2
-    -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
--better UX for changing multiple settings at once (might be difficult with my slot parsing strategy). As a fallback, could just try to shorten the "back to your conv" message.
+~ -check if logger successfully created file for 6/2
+    _ -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
+    UPDATE: new file was created at midnight (maybe <1 minute after) and queries from last night's conv were logged to it. Still had slight typo where new path contains extra period. Hopefully fixed now.
+X -generate esther perel persona
+    X -generate
+    X -test that alexa is able to resolve it correctly
+X -test if we can add multiple reprompts (or even infinite?)
+    UPDATE: no, it ignores reprompts after the first one. (For the record, flask_ask does let us do question().reprompt().reprompt() etc. though.)
+X -check price of last night's lex conv (sure it's not a problem, just want to confirm that my perception of pricing is roughly accurate. Also see how long it lasted.)
+    UPDATE: slightly more than I thought but not too bad. $0.44 / 31 completions so ~1.4 cents per completion. Lasted ~12 minutes so 3.67 cents/min, or ~$2.20/hour. Granted, auto punctuation would add a little cost, but it would also slow down responses so cost/hour might not change all that much (and we probably can get away with a cheaper model).
+~ -manually change some nationalities/voices? Or change default voice. e.g. lex shouldn't have a british accent
+    UPDATE: for now just changed Hanson and Mosby. Harry Potter prompt should eventually get replaced anyway (currently is from wiki page for book series, not character) and undecided on what to do about default.
+X -add a few new personas (Callard, Srinivasan, Altman, Sutskever)
+X -better UX for changing multiple settings at once (might be difficult with my slot parsing strategy). As a fallback, could just try to shorten the "back to your conv" message.
+    UPDATE: shortened message slightly to use "call" instead of "conversation" and replaced full name with first name only. It's already not very long so removing ~4-6 syllables seems like a solid reduction. I think this is good enough for now - truly supporting multiple setting changes at once seems like it would require a dramatic revamp.
     -consider how to approach
     -implement
+~ -add multiple modes (conversation, transcript, podcast, brainstorm)
+    ~ -some other mostly-unrelated prompt ideas: "An unpublished novel by {author} was recently discovered. Here is the first chapter:" (can tweak wording, but basically I'm thinking this might be a better way to get gpt to mimic authors than instructing it to do so directly). Also an error stack trace -> stack overflow solution (similar to google but hopefully finds the answer with a bit less sifting) and a python tutorial ("this is a {library} tutorial. This is how you {task}.").
+    UPDATE: made new transcript prompt and a new "generalized" conversation prompt that lets you specify different types of interactions, e.g. debate/argument/negotiation/etc. The latter really would benefit from some jinja-esque templating though.
+-consider ways to address this issue: transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
+    -try enabling punct and see if we get timeouts again
+    -try enabling punct with openai backend and see if we still get timeouts
+-easier option: add more docs/help on how to invoke each intent
+    -add spoken examples to docstrings
+
+6/5/22 sun
+----------
+-check if logger successfully created file for 6/2
+    -try new query to make sure it gets written there (probably would be empty initially even if the creation did work overnight)
+-integrate generalized conv prompt into conv manager to support multiple modes (conversation, transcript, podcast, brainstorm)
+-think more about how to deal with the eponymous character issue when generating personas. (e.g. try wiki_search(f'{name} character') for everyone, or run model first to infer if character is fictional)
 -consider ways to address this issue: transcription quality was weaker than I'd hoped. Might be addressed by enabling auto-punct, though timeouts might be a risk. Responses were still surprisingly decent given how noisy the inputs were.
     -try enabling punct and see if we get timeouts again
     -try enabling punct with openai backend and see if we still get timeouts
@@ -1868,7 +1895,13 @@ X -can't change settings when asked "Who would you like to speak to?". Only when
 
 Backlog
 -------
--further experiments with tweaking conversational prompt wording (e.g. "a transcript of a conversation" instead of "a conversation")
+-prompts/use cases to prototype:
+    -"unreleased work from {author}"
+    -python stack trace -> stackoverflow solution
+    -task with python library -> code snippet (get up to speed quicly with new library)
+    -journal-based decision simulator (start an entry for a future date with desirable state ("Today was an amazing day because")or a specific positive outcome ("I met my SO 1 year ago at") or with a possible decision ("It's been six months since I took that job at {company} and I feel").
+    -conv commentary (given a couple conv turns, gpt can comment "User seems a bit insensitive" or "user takes himself too seriously".
+        -variant: given conv turns 1...n, generate a few options for n+1 and compare it to my real response at n+1.
 -Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
 -look into raspberry pi as long term option for hosting
 -[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)

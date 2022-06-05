@@ -161,16 +161,17 @@ class custom_question(question):
             self._response['outputSpeech']['ssml'] = text
 
 
-# Setting male default to British for now because the male Australian voice
-# turned out to be much more synthetic sounding than I initially realized.
-# Maybe change it back in the future if Amazon improves it. Female Australian
-# voice needs more qualitative evaluation from me.
-# Also, `other` is technically mutable but it doesn't matter since we don't
-# alter it in any way inside the function.
 def select_polly_voice(current_meta, threshold=.8,
                        other={'F': 'Australian', 'M': 'British'}):
     """Select name of polly voice to use based on a person's gender and
     nationality.
+
+    Setting male default to British for now because the male Australian voice
+    turned out to be much more synthetic sounding than I initially realized.
+    Maybe change it back in the future if Amazon improves it. Female Australian
+    voice needs more qualitative evaluation from me.
+    Also, `other` is technically mutable but it doesn't matter since we don't
+    alter it in any way inside the function.
 
     Parameters
     ----------
