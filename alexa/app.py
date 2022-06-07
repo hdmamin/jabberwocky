@@ -221,7 +221,7 @@ def choose_person(person=None, **kwargs):
     # a reply - it just happened to consist of only a name.
     if CONV.is_active():
         return _reply(prompt=person)
-    elif person in NOBODY_UTTS:
+    if person in NOBODY_UTTS:
         return statement('Goodbye.')
     # This handles our 2 alexa utterance collisions, "oh no" and "hush"
     # which alexa mistakenly maps to the choosePerson intent. If we're already
@@ -232,16 +232,30 @@ def choose_person(person=None, **kwargs):
             choose_msg='You don\'t have a conversation in progress. I can '
                        'start one if you like - who do you want to speak to?'
         )
+    # Case where name was originally unrecognized and had a match score >= .6
+    # but less than .8, and user answered "No" when asked if the nearest
+    # persona is who they meant.
+    if not kwargs.get('choice', True):
+        ask.func_push(_generate_person, person=kwargs['original'])
+        return question('Ok. Would you like to create a new contact?')
 
     if person not in CONV:
         match, match_p = CONV.nearest_persona(person)
         ask.logger.info(f'Nearest matching persona: {match} (p={match_p:.3f})')
-        if match_p < .8:
+        if match_p < .6:
             ask.func_push(_generate_person, person=person)
             return question(
                 f'I don\'t see anyone named {person} in your contacts. '
                 'Would you like to create a new contact?'
             )
+        elif match_p < .8:
+            ask.func_push(choose_person, person=match, original=person)
+            return question(
+                f'I may have misheard but I don\'t see anyone named {person} '
+                f'in your contacts, but I did see {match}. Is that who you '
+                'meant?'
+            )
+
         person = match
     CONV.start_conversation(person)
     state.polly_voice = select_polly_voice(CONV.current)
