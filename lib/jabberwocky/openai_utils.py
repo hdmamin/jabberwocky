@@ -66,7 +66,7 @@ import yaml
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
     listlike, Results, flatten, add_docstring, func_name, params, mark, \
-    random_str, deprecated, xor_none
+    random_str, deprecated, xor_none, MultiLogger
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.streaming import stream_response, truncate_at_first_stop
@@ -849,6 +849,7 @@ class GPTBackend:
         self.old_name = ''
         self.old_key = ''
         self.date_fmt = date_fmt
+        self.dev_logger = MultiLogger('data/logs/tmp.log')
         self.logger = JsonlinesLogger(
             C.root/
             f'data/logs/{datetime.today().strftime(date_fmt)}.jsonlines'
