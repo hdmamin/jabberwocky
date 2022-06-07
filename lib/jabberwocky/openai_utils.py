@@ -1267,21 +1267,41 @@ class GPTBackend:
             except FileNotFoundError:
                 cls.name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
 
+    # TODO rm
+    # def update_log_path(self):
+    #     while True:
+    #         dt = datetime.today()
+    #         # Wait til midnight to make the first swap.
+    #         if dt.hour != 0:
+    #             time.sleep(seconds_til_midnight(dt))
+    #             continue
+    #         new_name = dt.strftime(self.date_fmt)
+    #         with self.lock:
+    #             path = Path(self.logger.path)
+    #             *parts, _ = path.parts
+    #             self.logger.change_path(
+    #                 os.path.join(*parts, f'{new_name}{path.suffix}')
+    #             )
+    #         # After making the change, sleep til next midnight.
+    #         time.sleep(seconds_til_midnight(dt))
+
     def update_log_path(self):
         while True:
             dt = datetime.today()
-            # Wait til midnight to make the first swap.
-            if dt.hour != 0:
-                time.sleep(seconds_til_midnight(dt))
-                continue
-            new_name = dt.strftime(self.date_fmt)
-            with self.lock:
-                path = Path(self.logger.path)
-                *parts, _ = path.parts
-                self.logger.change_path(
-                    os.path.join(*parts, f'{new_name}{path.suffix}')
-                )
-            # After making the change, sleep til next midnight.
+            # First update may not be exactly at midnight but subsequent ones
+            # should be. The exact switch time isn't particularly important.
+            if dt.hour == 0:
+                new_name = dt.strftime(self.date_fmt)
+                self.dev_logger.info(f'NEW NAME: {new_name}') # TODO rm
+                with self.lock:
+                    path = Path(self.logger.path)
+                    *parts, _ = path.parts
+                    self.dev_logger.info(f'OLD NAME: {self.logger.path}')  # TODO rm
+                    self.logger.change_path(
+                        os.path.join(*parts, f'{new_name}{path.suffix}')
+                    )
+                    self.dev_logger.info(f'UPDATED NAME: {self.logger.path}')  # TODO rm
+            # Sleep til next midnight regardless of whether we made a change.
             time.sleep(seconds_til_midnight(dt))
 
     def __repr__(self):
