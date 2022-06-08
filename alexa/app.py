@@ -191,6 +191,8 @@ def change_backend(backend=None):
     -----------------
     "Lou, use gooseai backend."
     "Lou, change backend to openai."
+    "Lou, please switch backend to banana."
+    "Lou, switch to huggingface backend."
     """
     backend_name = backend or slot(request, 'backend', default='gooseai')\
         .replace(' ', '')
@@ -215,6 +217,10 @@ def choose_person(person=None, **kwargs):
     -----
     Person: str
         Name of a person to chat with.
+
+    Sample Utterances
+    -----------------
+    "Harry Potter" (after being asked "Who would you like to speak to?")
     """
     person = person or kwargs.get('response') or slot(request, 'Person')
     # Handle case where conversation is already ongoing. This should have been
@@ -303,7 +309,8 @@ def change_model(scope=None, model=None):
     Sample Utterances
     -----------------
     "Lou, use model 0."
-    "Lou, change global model to 2."
+    "Lou, change model to 1."
+    "Lou, switch to model 2."
     """
     scope = scope or slot(request, 'Scope', default='global')
     model = model or slot(request, 'Model')
@@ -339,6 +346,12 @@ def change_max_length(scope=None, length=None):
     """Change the max number of tokens in a generated response. The max is
     2048. There are roughly 1.33 tokens per word. I've set the default to
     50 tokens, which equates to roughly 2-3 sentences.
+
+    Sample Utterances
+    -----------------
+    "Lou, change max length to 75."
+    "Lou, set max length to 50."
+    "Lou, set max tokens to 33."
     """
     error_msg = 'Please choose a number greater than zero and less than ' \
                 'or equal to 2048. It sounded like you said "{}".'
@@ -368,7 +381,14 @@ def change_max_length(scope=None, length=None):
 @ask.intent('changeTemperature')
 def change_temperature(scope=None, temp=None):
     """Allow user to change model temperature. Lower values (near 0) are often
-    better for formal or educational contexts, e.g. a science tutor.
+    better for formal or educational contexts, e.g. a science tutor. Choose
+    a value in (0, 100] and we will scale it appropriately behind the scenes.
+
+    Sample Utterances
+    -----------------
+    "Lou, change temperature to 1."
+    "Lou, set temp to 90."
+    "Lou, set temperature to 20."
     """
     # Alexa's speech to text makes parsing decimals kind of difficult, so we
     # ask the user to set temperature out of 100 and rescale it behind the
@@ -401,12 +421,28 @@ def change_temperature(scope=None, temp=None):
 
 @ask.intent('enableAutoPunctuation')
 def enable_punctuation():
+    """
+    Sample Utterances
+    -----------------
+    "Lou, please use auto punctuation."
+    "Lou, enable automatic punctuation."
+    "Lou, please turn on automatic punctuation."
+    "Lou, turn on auto punctuation."
+    """
     state.auto_punct = True
     return _maybe_choose_person('I\'ve enabled automatic punctuation.')
 
 
 @ask.intent('disableAutoPunctuation')
 def disable_punctuation():
+    """
+    Sample Utterances
+    -----------------
+    "Lou, disable auto punctuation."
+    "Lou, please disable automatic punctuation."
+    "Lou please stop using auto punctuation."
+    "Lou, turn off automatic punctuation."
+    """
     state.auto_punct = False
     return _maybe_choose_person('I\'ve disabled automatic punctuation.')
 
@@ -453,20 +489,18 @@ def _reply(prompt=None):
         return question('Did you say something? I didn\'t catch that.')
     # Set max tokens conservatively. Openai docs estimate n_tokens:n_words
     # ratio is roughly 1.33 on average.
-    # TODO: maybe change punct backend to not be hardcoded to banana? It's
-    # more reliable than the other free backends but still seems a little
-    # flakier than openai. END TODO
-    # Banana.dev is the only reliable free API. I think it should be good
-    # enough for punctuation. I'm choosing to keep this separate from the
-    # user-selected backend.
+    # Considered hardcoding in banana backend here (the current prompt already
+    # uses the same size model by default) but in a tiny benchmark it was ~5s
+    # per response which is slow enough to take a bit of the magic out of it.
+    # My qualitative observation is that banana often *feels* faster than that
+    # but I don't know if that's actually true.
     ask.logger.info('PROMPT: ' + prompt)
     if state.auto_punct:
         ask.logger.info('BEFORE PUNCTUATION: ' + prompt)
-        with GPT('banana'):
-            prompt, _ = PROMPTER.query(task='punctuate_alexa',
-                                       text=prompt, strip_output=True,
-                                       max_tokens=2 * len(prompt.split()))
-            prompt = prompt[0]
+        prompt, _ = PROMPTER.query(task='punctuate_alexa',
+                                   text=prompt, strip_output=True,
+                                   max_tokens=2 * len(prompt.split()))
+        prompt = prompt[0]
     ask.logger.info('BEFORE QUERY: ' + prompt)
     text, _ = CONV.query(prompt, **state)
     # Add custom accent/emotion audio.
@@ -517,6 +551,12 @@ def delegate():
 
 @ask.intent('AMAZON.YesIntent')
 def yes():
+    """
+    Sample Utterances
+    -----------------
+    "Yes."
+    "Yes please."
+    """
     func, kwargs = ask.func_pop()
     if not func:
         return _reply(prompt='Yes.')
@@ -525,6 +565,12 @@ def yes():
 
 @ask.intent('AMAZON.NoIntent')
 def no():
+    """
+    Sample Utterances
+    -----------------
+    "No."
+    "No thank you."
+    """
     func, kwargs = ask.func_pop()
     if not func:
         return _reply(prompt='No.')
@@ -533,6 +579,14 @@ def no():
 
 @ask.intent('AMAZON.StopIntent')
 def stop():
+    """This can only be used to exit the skill - if you say this during a
+    conversation, Lou cannot ask if you want an emailed transcript or to
+    immediately start a new conversation.
+
+    Sample Utterances
+    -----------------
+    "Goodbye."
+    """
     if CONV.is_active():
         # Tried delegating to _reply() here but alexa still ended the session
         # within a few seconds. Seems you're not supposed to override this.
@@ -544,9 +598,11 @@ def stop():
 @ask.intent('readContacts')
 def read_contacts():
     """
-    Sample utterance:
-    "Lou, read me my contacts."
+    Sample Utterances
+    -----------------
     "Lou, who are my contacts?"
+    "Lou, please read me my contacts."
+    "Lou, can you read me my contacts?"
     """
     msg = f'Here are all of your contacts: {", ".join(CONV.personas())}. '
     # If they're in the middle of a conversation, don't ask anything - just let
@@ -558,8 +614,10 @@ def read_contacts():
 def read_settings():
     """Read the user their query settings.
 
-    Sample utterance:
+    Sample Utterance
+    ----------------
     "Lou, what are my settings?"
+    "Lou, read me my settings."
     """
     strings = []
     for k, v in dict(state).items():
@@ -582,9 +640,10 @@ def read_settings():
 def end_chat():
     """End conversation with the current person.
 
-    Sample utterance:
-    "Lou, end chat."
+    Sample Utterances
+    -----------------
     "Lou, hang up."
+    "Lou, end chat."
     """
     # Only offer this option if user has chosen to share their email AND
     # the conversation is non-empty. No need to ask if user starts a

@@ -1924,18 +1924,37 @@ X -when choosing who to talk to and name match is a moderate value (i.e. too low
 
 6/7/22 tues
 -----------
--check if log file generation worked correctly
-    -did new file appear w/ 6/6/22 date, did it appear at midnight, do new queries get written to it?
-    -did incorrectly named new file (with date as suffix) also appear? If so, did anything get written to it?
--try reactivating auto-punct w/ openai
-    -do we get timeouts like w/ banana?
-    -is quality of completions noticeably different?
-    -is wait time noticeably worse (qualitatively)?
--integrate generalized conv prompt into conv manager to support multiple modes (conversation, transcript, podcast, brainstorm)
+X -check if log file generation worked correctly
+    X -did new file appear w/ 6/7/22 date, did it appear at midnight, do new queries get written to it?
+    X -did incorrectly named new file (with date as suffix) also appear? If so, did anything get written to it?
+    UPDATE: new correctly-named file is there, new incorrectly-named file is not. Hooray!
+X -try reactivating auto-punct w/ openai
+    X -do we get timeouts like w/ banana?
+        UPDATE: initially yes. Then tried again a few minutes later and it was fine.
+    X -is quality of completions noticeably different?
+        UPDATE: hard to say. Maybe not.
+    X -is wait time noticeably worse (qualitatively)?
+        UPDATE: maybe slightly? Seems to vary a bit - sometimes banana is quite fast but sometimes not.
+X -benchmark banana backend. How fast and reliable is it?
+    UPDATE: 10x slower than equivalent openai model.
+_ -integrate generalized conv prompt into conv manager to support multiple modes (conversation, transcript, podcast, brainstorm)
+    UPDATE: let's put this in the backlog for v3. Really should be trying to wrap up v2 soon.
 -think more about how to deal with the eponymous character issue when generating personas. (e.g. try wiki_search(f'{name} character') for everyone, or run model first to infer if character is fictional)
 -consider ways to backup conv or auto send email in case where conv quits unexpectedly (recall sat how one conv just didn't return a response in time or something and just ended suddenly with no option to save a transcript)
--easier option: add more docs/help on how to invoke each intent
-    -add spoken examples to docstrings
+X -easier option: add utterance examples to docstrings
+
+6/8/22 wed
+----------
+-think more about how to deal with the eponymous character issue when generating personas. (e.g. try wiki_search(f'{name} character') for everyone, or run model first to infer if character is fictional)
+-consider ways to backup conv or auto send email in case where conv quits unexpectedly (recall sat how one conv just didn't return a response in time or something and just ended suddenly with no option to save a transcript)
+-easy options: 
+    -look for things to document
+    -ack for todos
+-consider getting rid of the whole prompt-level/conv-level/person-level distinction re settings
+    -if yes, could remove some complexity from alexa.utils.Settings cls (though could also keep in case we re-enable this in future; not doing any harm in the meantime)
+    -if yes, could rm some sample utterances from json model in UI
+-re-build model and generate new fuzzy dict (wait til after above bullet in case I decide to rm some sample utts)
+
 
 
 Backlog
@@ -1974,11 +1993,11 @@ Backlog
 
 Easy Backlog
 ------------
--look for things to document
 
 Long term backlog (i.e. things I decided are outside the current scope)
 -----------------------------------------------------------------------
 -update gui to support newer jabberwocky version
     -adjust gui accordingly (cur offer different radio buttons for each neo size; could instead have 1 radio and have it actually use the engine_i slider)
     -add gooseai backend option
+-update convmanager to support more generic conversation prompt (conversation_generalized.yaml). Prob wait for revised Prompt class with better support for default args, logic in assigning args from other args, etc.
 
