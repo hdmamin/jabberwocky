@@ -1945,8 +1945,14 @@ X -easier option: add utterance examples to docstrings
 
 6/8/22 wed
 ----------
--think more about how to deal with the eponymous character issue when generating personas. (e.g. try wiki_search(f'{name} character') for everyone, or run model first to infer if character is fictional)
--consider ways to backup conv or auto send email in case where conv quits unexpectedly (recall sat how one conv just didn't return a response in time or something and just ended suddenly with no option to save a transcript)
+X -think more about how to deal with the eponymous character issue when generating personas. (e.g. try wiki_search(f'{name} character') for everyone, or run model first to infer if character is fictional)
+    UPDATE: tried searching for both name and "{name} character" for all existing personas. The only case where the issue I pointed out occurs is harry potter, and I couldn't find a single other case where a. the issue occurs and b. it's a persona I'd want to generate (artemis fowl is the only other case where it occurs at all and that doesn't particularly interest me). Did briefly try out zero shot classification and it didn't seem great. Issue is sufficiently rare that I don't want to add another model call for every persona download so I think we'll just leave it as is.
+X -consider ways to backup conv or auto send email in case where conv quits unexpectedly (recall sat how one conv just didn't return a response in time or something and just ended suddenly with no option to save a transcript)
+    UPDATE: was able to send an email in end_session function if conv is active.
+~ -allow convmanager to load an old conv
+    -from_str
+    -from_file
+    UPDATE: WIP. 99% of the way there but need to work through a few spacing bugs.
 -easy options: 
     -look for things to document
     -ack for todos
@@ -1955,7 +1961,19 @@ X -easier option: add utterance examples to docstrings
     -if yes, could rm some sample utterances from json model in UI
 -re-build model and generate new fuzzy dict (wait til after above bullet in case I decide to rm some sample utts)
 
-
+6/9/22 thurs
+------------
+-allow convmanager to load an old conv
+    -reconstruct conv so that conv.full_conversation() == full_text in nb19 (currently some issues with different numbers of newlines)
+    -from_str method
+    -from_file method
+-easy options: 
+    -look for things to document
+    -ack for todos
+-consider getting rid of the whole prompt-level/conv-level/person-level distinction re settings
+    -if yes, could remove some complexity from alexa.utils.Settings cls (though could also keep in case we re-enable this in future; not doing any harm in the meantime)
+    -if yes, could rm some sample utterances from json model in UI
+-re-build model and generate new fuzzy dict (wait til after above bullet in case I decide to rm some sample utts)
 
 Backlog
 -------

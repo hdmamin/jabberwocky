@@ -25,6 +25,7 @@ alexa/*.log
 alexa/conversations/*
 # Logger is accidentally saving logs here for some reason. Will try to fix but in the meantime block them from being committed.
 notebooks/data/
+notebooks/nb019*
 # Testing dvc tool for potential prompt tracking.
 !data/tmp/dvc_test.txt
 !*.dvc

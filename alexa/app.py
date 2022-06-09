@@ -694,6 +694,12 @@ def end_session():
     """Called when user exits the skill. Note: I tried adding a goodbye message
     but it looks like that's not supported.
     """
+    # Occasionally I've seen conversations get cut off unexpectedly (perhaps
+    # echo fails to pick up any audio or something). Sending transcript just to
+    # be safe. Maybe in the future we can add the option to resume a
+    # conversation.
+    if CONV.is_active() and CONV.user_turns:
+        send_transcript(CONV, state.email)
     return '{}', 200
 
 
