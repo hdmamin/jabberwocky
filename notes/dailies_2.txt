@@ -1963,10 +1963,15 @@ X -consider ways to backup conv or auto send email in case where conv quits unex
 
 6/9/22 thurs
 ------------
--allow convmanager to load an old conv
-    -reconstruct conv so that conv.full_conversation() == full_text in nb19 (currently some issues with different numbers of newlines)
-    -from_str method
-    -from_file method
+X -allow convmanager to load an old conv
+    X -reconstruct conv so that conv.full_conversation() == full_text in nb19 (currently some issues with newlines)
+    X -from_str method
+    ~ -from_file method
+        UPDATE: support loading from file, just don't need a separate method. It's just 1 load() call and then we can pass the input into from_str().
+X -create >= 1 new custom persona
+    UPDATE: CM
+    ~ -check that can load/use custom persona via echo
+        UPDATE: tried but encountered new error (skill unresponsive for unknown reasons. Also extremely slow to start app but I feel like that should be unrelated.) Restarted ngrok to get new url (got "phishing reported" on old one) and updated in alexa console, but on rebuild I got "Error 500. An unexpected error occurred.". Try rebuilding tomorrow and see if anything changes (maybe a transient issue on their end?).
 -easy options: 
     -look for things to document
     -ack for todos
@@ -1974,6 +1979,21 @@ X -consider ways to backup conv or auto send email in case where conv quits unex
     -if yes, could remove some complexity from alexa.utils.Settings cls (though could also keep in case we re-enable this in future; not doing any harm in the meantime)
     -if yes, could rm some sample utterances from json model in UI
 -re-build model and generate new fuzzy dict (wait til after above bullet in case I decide to rm some sample utts)
+
+6/10/22 fri
+-----------
+-debug local deployment issues (i.e. skill no longer works on echo)
+    -try "build model" again in aws console (recall got 500 error thurs)
+    -confirm can start skill
+    -confirm can use custom persona
+-easy options: 
+    -look for things to document
+    -ack for todos
+-consider getting rid of the whole prompt-level/conv-level/person-level distinction re settings
+    -if yes, could remove some complexity from alexa.utils.Settings cls (though could also keep in case we re-enable this in future; not doing any harm in the meantime)
+    -if yes, could rm some sample utterances from json model in UI
+-re-build model and generate new fuzzy dict (wait til after above bullet in case I decide to rm some sample utts)
+
 
 Backlog
 -------
