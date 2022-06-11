@@ -1627,7 +1627,6 @@ class ConversationManager:
                  backup_image='data/misc/unknown_person.png',
                  turn_window=3, me='me', load_qa_pipe=False,
                  qa_model_name=None, verbose=True):
-
         """
         Parameters
         ----------

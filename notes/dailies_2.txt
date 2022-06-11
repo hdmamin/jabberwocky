@@ -1982,21 +1982,41 @@ X -create >= 1 new custom persona
 
 6/10/22 fri
 -----------
--debug local deployment issues (i.e. skill no longer works on echo)
-    -try "build model" again in aws console (recall got 500 error thurs)
-    -confirm can start skill
-    -confirm can use custom persona
+X -debug local deployment issues (i.e. skill no longer works on echo)
+    X -try "build model" again in aws console (recall got 500 error thurs)
+    X -confirm can start skill
+    X -confirm can use custom persona
+X -auto send email on "goodbye"
+    UPDATE: recall we can't delegate() and it turns out we can't end_chat() either, but we can auto send the email. Just can't let user have a say.
+~ -support continuing last conversation
+    X -consider how this would work (new intent? just check automatically in choose_person?)
+    UPDATE: the real value here seems like it would be in implementing a whole doc search/QA type system, or perhaps summarizing old convs and incorporating that into the new template. Right now we only look at the last couple turns anyway so continuing a conv doesn't actually mean anything after the first few turns. Also, I sometimes end a conversation bc the coherence starts to fall apart or transcription errors are piling up, so we don't really want to seed the next conv automatically with the last completion from the previous conv. Also, want to keep friction low so don't want to be asked every time if I want to continue or not, and adding a separate "continue conv" intent would signicantly complicate things since I use _maybe_choose_person so frequently. Very tempting feature but implementing this will will take a much larger effort and I'm already trying to wrap this up due to excessive scope creep.
+    _ -create new intent in console if necessary
+    _ -create new flask endpoint if necessary
+    _ -test
 -easy options: 
     -look for things to document
-    -ack for todos
+    ~ -ack for todos
+    UPDATE: removed note about auto punct being off by default (think we're fine disabling that by default since it hasn't provided very convincing evidence of usefulness) and update EMO_PIPE creation to depend on a new argparse option --voice.
 -consider getting rid of the whole prompt-level/conv-level/person-level distinction re settings
     -if yes, could remove some complexity from alexa.utils.Settings cls (though could also keep in case we re-enable this in future; not doing any harm in the meantime)
     -if yes, could rm some sample utterances from json model in UI
 -re-build model and generate new fuzzy dict (wait til after above bullet in case I decide to rm some sample utts)
 
+6/11/22 sat
+-----------
+-consider getting rid of the whole prompt-level/conv-level/person-level distinction re settings
+    -if yes, could remove some complexity from alexa.utils.Settings cls (though could also keep in case we re-enable this in future; not doing any harm in the meantime)
+    -if yes, could rm some sample utterances from json model in UI
+-re-build model and generate new fuzzy dict (wait til after above bullet in case I decide to rm some sample utts)
+-easy options: 
+    -look for things to document
+-look for resources to help w/ hosting on raspberry pi
+
 
 Backlog
 -------
+-update jabberwocky version and upload to pypi
 -prompts/use cases to prototype:
     -"unreleased work from {author}"
     -python stack trace -> stackoverflow solution
@@ -2020,7 +2040,6 @@ Backlog
 -try to reproduce error w/ gpt banana: querying w/ np=2 and n=3 only produced 2 text responses. Second try worked as expected (6 responses - unsure why the difference. Maybe autoreload in ipython reset something since I edited docs first call?)
 -idea: prompt mixin? I.e. add snippet of text to start/end of a prompt, e.g. "You are a friendly, polite AI assistant.".
 ~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
--update jabberwocky version and upload to pypi
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
 -update end of conv to erase conv-level settings
     ~ -consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
@@ -2038,4 +2057,4 @@ Long term backlog (i.e. things I decided are outside the current scope)
     -adjust gui accordingly (cur offer different radio buttons for each neo size; could instead have 1 radio and have it actually use the engine_i slider)
     -add gooseai backend option
 -update convmanager to support more generic conversation prompt (conversation_generalized.yaml). Prob wait for revised Prompt class with better support for default args, logic in assigning args from other args, etc.
-
+-summarizing old conversations/continuing conversations/anything requiring document search (this is quite a project in and of itself)

@@ -127,7 +127,6 @@ def send_transcript(conv, user_email='', cleanup=False):
     return True
 
 
-# TODO: Maybe enable auto punct with openai but banana backend is too slow.
 def reset_app_state(end_conv=True, clear_queue=True, auto_punct=False,
                     attrs=('name', 'email')):
     """Reset some app-level attributes in `state`, `ask`, and `conv` objects.
@@ -587,12 +586,23 @@ def stop():
     -----------------
     "Goodbye."
     """
+    sent = False
+    msg = 'Goodbye.'
     if CONV.is_active():
         # Tried delegating to _reply() here but alexa still ended the session
-        # within a few seconds. Seems you're not supposed to override this.
+        # within a few seconds. Seems you're not allows to override this to
+        # keep the skill active. I also tried returning end_chat() but that
+        # failed similarly. Best we can do is try to email the user
+        # automatically - we're not allowed to ask another question so I'd
+        # rather send some unnecessary emails than automatically lose the
+        # conversation.
         ask.logger.warning('StopIntent was called mid-conversation. This may '
                            'have been unintentional on the user\'s part.')
-    return statement('goodbye')
+        if state.email:
+            sent = send_transcript(CONV, state.email)
+    if sent:
+        msg += ' I\'ve sent you a transcript of your conversation.'
+    return statement(msg)
 
 
 @ask.intent('readContacts')
@@ -713,6 +723,14 @@ if __name__ == '__main__':
         help='If True, start the app in dev mode (uses free backend and weak '
              'engine by default).'
     )
+    parser.add_argument(
+        '--voice', default=True, type=ast.literal_eval,
+        help='If True, use custom voices from Polly. If False, use the '
+             'default Alexa voice. This is generally a worse experience '
+             '(can\'t auto change gender, for instance) but it does allow '
+             'us to use Polly\'s limited emotions (just "excited" or '
+             '"sadness" at the moment).'
+    )
     ARGS = parser.parse_args()
     CONV = ConversationManager(load_qa_pipe=not ARGS.dev)
     PROMPTER = PromptManager(['punctuate_alexa'], verbose=False)
@@ -726,13 +744,11 @@ if __name__ == '__main__':
         'I can see the gears turning.',
         'I\'m not going anywhere. Take your time.'
     ]
-    # TODO: consider enabling/removing this. Seems like we have to choose
-    # between emotion tags and switching voice by nationality/gender and I
-    # tend to learn towards the latter.
-    EMO_PIPE = None
-    # EMO_PIPE = pipeline('text-classification',
-    #                     model='j-hartmann/emotion-english-distilroberta-base',
-    #                     return_all_scores=False)
+    EMO_PIPE = None if ARGS.voice else pipeline(
+        'text-classification',
+        model='j-hartmann/emotion-english-distilroberta-base',
+        return_all_scores=False
+    )
 
     decorate_functions(debug_decorator)
     # Set false because otherwise weird things happen to app state in the
