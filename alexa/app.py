@@ -731,8 +731,14 @@ if __name__ == '__main__':
              'us to use Polly\'s limited emotions (just "excited" or '
              '"sadness" at the moment).'
     )
+    parser.add_argument(
+        '--custom', default=True, type=ast.literal_eval,
+        help='If True, include custom personas. If False, only include '
+             'auto-generated personas.'
+    )
     ARGS = parser.parse_args()
-    CONV = ConversationManager(load_qa_pipe=not ARGS.dev)
+    CONV = ConversationManager(custom_names=[] if ARGS.custom else False,
+                               load_qa_pipe=not ARGS.dev)
     PROMPTER = PromptManager(['punctuate_alexa'], verbose=False)
     UTT2META = load('data/alexa/utterance2meta.pkl')
     # Weird values/spellings here are mis-transcriptions I observed Alexa make.

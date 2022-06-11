@@ -660,6 +660,20 @@ class Settings(Mapping):
             self, global_=None, person_=None, conversation_=None,
             reserved_keys=('prev_intent', 'email', 'auto_punct', 'polly_voice')
     ):
+        """
+
+        Parameters
+        ----------
+        global_: None or dict
+            Global level settings.
+        person_: None or dict
+            Person level settings.
+        conversation_: None or dict
+            Conversation level settings.
+        reserved_keys: Iterable[str]
+            Attribute names that will use dot notation for get/set calls.
+            See class-level docstring.
+        """
         # Alter underlying dict directly to avoid recursion errors. Custom
         # __setattr__ method relies on custom __getattr__ so we run into
         # problems otherwise.
@@ -715,6 +729,17 @@ class Settings(Mapping):
                    settings.reserved_keys.copy())
 
     def _resolve_state(self):
+        # 6/11/22: I think what we'd actually want to do is maintain a stack of
+        # state names ('conversation', 'person', 'global') and each time a
+        # relevant event happens (a conversation ends or ends or a setting
+        # is changed) we pop the relevant state and move it to the top of the
+        # stack. Then we use this stack to resolve self.state (i.e. the top of
+        # the stack takes priority). In other words, resolution order is more
+        # about change *recency* than some inherent hierarchy of one state
+        # taking precedence over another. Also, states['person'] can't just be
+        # a flat dict - we'd need the ability to store different settings for
+        # each person.
+
         # Order matters here: we want global settings to take priority over
         # person-level settings, and both of those to take priority over
         # conversation level settings.

@@ -1623,19 +1623,22 @@ class ConversationManager:
 
     img_exts = {'.jpg', '.jpeg', '.png'}
 
-    def __init__(self, names=(), custom_names=(), data_dir=C.root/'data',
+    def __init__(self, names=True, custom_names=True, data_dir=C.root/'data',
                  backup_image='data/misc/unknown_person.png',
                  turn_window=3, me='me', load_qa_pipe=False,
                  qa_model_name=None, verbose=True):
         """
         Parameters
         ----------
-        names: Iterble[str]
+        names: Iterable[str] or bool
             Optionally specify 1 or more personas to load. These should be
             pretty-formatted, e.g. "Barack Obama" rather than "barack_obama".
-            If None are provided, all available personas will be loaded.
             Do not include periods (e.g. "TJ Dillashaw" rather than
-            "T.J. Dillashaw").
+            "T.J. Dillashaw"). You can also pass in True to load all available
+            personas or False to avoid loading any personas.
+        custom_names: Iterable[str] or bool
+            Same as `names` but for customer personas (those that are
+            user-defined rather than auto-generated).
         data_dir: str or Path
             Data dir where all necessary subdirs will be created and accessed.
         backup_image: str or Path
@@ -1768,9 +1771,12 @@ class ConversationManager:
 
     def _load_personas(self, names, is_custom=False):
         """Load any stored summaries and image paths of existing personas."""
-        names = names or [path.stem for path in
-                          self.persona_dir[is_custom].iterdir()
-                          if path.is_dir()]
+        if names is False:
+            return
+        if names is True:
+            names = [path.stem for path in
+                     self.persona_dir[is_custom].iterdir()
+                     if path.is_dir()]
         for name in names:
             try:
                 self.update_persona_dicts(self.process_name(name),
