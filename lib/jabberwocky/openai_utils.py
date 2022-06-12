@@ -1698,6 +1698,7 @@ class ConversationManager:
         # Populated by _load_personas().
         self.name2base = {}
         self.name2meta = {}
+        self.name2kwargs = {}
 
         # Custom personas are loaded last so they override default personas.
         self._load_personas(names, is_custom=False)
@@ -2033,8 +2034,36 @@ class ConversationManager:
             name=self.process_name(processed_name, inverse=True),
             summary=summary
         )
+        if processed_name not in self.name2kwargs:
+            self.name2kwargs[processed_name] = {}
         if return_values:
             return Results(summary=summary, **meta)
+
+    def set_default_kwargs(self, name='', force=False, **kwargs):
+        try:
+            name = self.process_name(name) or self.current['persona']
+            # This will be an empty str if there is no current speaker.
+            assert name
+        except:
+            raise ValueError(
+                'You did not specify a name and there is no active speaker '
+                'so it\'s not clear who you\'re trying to set default '
+                'kwargs for. Either start a conversation or pass in a name '
+                'explicitly.'
+            )
+        unrecognized = set(kwargs) - set(self._kwargs)
+        if unrecognized:
+            msg = f'The following kwargs are not usually specified in our ' \
+                  f'conversational settings: {unrecognized}. '
+            if force:
+                msg += 'Adding them anyway because force=True.'
+            else:
+                kwargs = {k: v for k, v in kwargs.items() if
+                          k not in unrecognized}
+                msg += 'Pass in force=True if you really want to add these. ' \
+                       f'Right now we will only set {list(kwargs)}.'
+            warnings.warn(msg)
+        self.name2kwargs[name].update(kwargs)
 
     def persona_exists_locally(self, name):
         """Check if a persona's info files are already available locally.
@@ -2141,7 +2170,10 @@ class ConversationManager:
             warnings.warn('You set return_prompt=True but we cannot return a '
                           'prompt because you didn\'t provide a `name`.')
 
-        kwargs = {**self._kwargs, **kwargs}
+        # If no name is specified AND no conversation is active, this resolves
+        # to an empty string.
+        name = self.process_name(name or self.current['persona'])
+        kwargs = {**self._kwargs, **self.name2kwargs.get(name, {}), **kwargs}
         for k, v in (extra_kwargs or {}).items():
             v_cls = type(v)
             # Make a new object instead of just using get() or setdefault
@@ -2162,7 +2194,7 @@ class ConversationManager:
         # Note: this just returns the base prompt. In query(), we use the
         # format_prompt() method to attach the conversational turns.
         if name and return_prompt:
-            kwargs['prompt'] = self.name2base[self.process_name(name)]
+            kwargs['prompt'] = self.name2base[name]
         return kwargs
 
     def query_later(self, text):

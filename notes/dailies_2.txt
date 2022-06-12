@@ -2007,14 +2007,32 @@ X -auto send email on "goodbye"
 -----------
 X -allow passing in True/False to ConvManager to load all/no auto or custom personas
     X -update alexa CLI accordingly
--consider getting rid of the whole prompt-level/conv-level/person-level distinction re settings
-    -if yes, could remove some complexity from alexa.utils.Settings cls (though could also keep in case we re-enable this in future; not doing any harm in the meantime)
-    -if yes, could rm some sample utterances from json model in UI
+X -consider getting rid of the whole prompt-level/conv-level/person-level distinction re settings
+    _ -if yes, could remove some complexity from alexa.utils.Settings cls (though could also keep in case we re-enable this in future; not doing any harm in the meantime)
+    _ -if yes, could rm some sample utterances from json model in UI
+    UPDATE: after mapping out desired behavior, I had basically decided to get rid of this, but by writing a comment explaining why I ended up convincing myself that this was actually quite doable. /shrug
+-implement settings resolution
+    X -map out desired behavior (sequence of action/outcome pairs)
+        UPDATE: see physical notebook. After many months of letting my brain work on this in the background, I think I finally have a clear idea on what I want this to do and how to do it. Basic algo is detailed there too.
+    X -work out basic algorithm (when event x happens, what actions x,y,z do we need to make)
+    X -add support for default kwargs per person
+        UPDATE: added this in ConversationManager to start with. Settings class will wrap some logic around that but I think most of the data (name2kwargs) should be stored by conv manager.
+    -add state queue to Settings class
+    -add on_event hooks to update/resolve state accordingly
 -re-build model and generate new fuzzy dict (wait til after above bullet in case I decide to rm some sample utts)
 -easy options: 
     -look for things to document
 -look for resources to help w/ hosting on raspberry pi
 
+6/12/22 sun
+-----------
+-continue work on settings resolution (see physical notebook for detailed input/output pairs + basic algo. See resolve_state method in Settings cls for more details.)
+    -add state queue to Settings class
+    -add on_event hooks to update/resolve state accordingly
+-re-build model and generate new fuzzy dict (wait til after above bullet in case I decide to rm some sample utts)
+-easy options: 
+    -look for things to document
+-look for resources to help w/ hosting on raspberry pi
 
 Backlog
 -------

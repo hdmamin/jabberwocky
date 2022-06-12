@@ -729,7 +729,7 @@ class Settings(Mapping):
                    settings.reserved_keys.copy())
 
     def _resolve_state(self):
-        # 6/11/22: I think what we'd actually want to do is maintain a stack of
+        # TODO: I think what we'd actually want to do is maintain a stack of
         # state names ('conversation', 'person', 'global') and each time a
         # relevant event happens (a conversation ends or ends or a setting
         # is changed) we pop the relevant state and move it to the top of the
