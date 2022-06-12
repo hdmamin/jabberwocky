@@ -147,6 +147,7 @@ def reset_app_state(end_conv=True, clear_queue=True, auto_punct=False,
     """
     if end_conv:
         CONV.end_conversation()
+    CONV.clear_default_kwargs(all_=True)
     if clear_queue:
         ask.func_clear()
     GPT.switch('banana' if ARGS.dev else 'openai')

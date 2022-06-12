@@ -1,4 +1,4 @@
-from collections import Mapping, deque
+from collections import Mapping, deque, OrderedDict, ChainMap
 from enum import Enum
 from flask_ask import session, Ask, question
 from functools import wraps, partial
@@ -682,13 +682,15 @@ class Settings(Mapping):
         self._person = dict(person_ or {})
         self._conversation = dict(conversation_ or {})
 
-        # Cleaner interface than using getattr all the time.
-        self._states = {
-            'global': self._global,
+        # This is populated in _resolve_state().
+        self.state = ChainMap()
+        # The start (as in state_queue.move_to_end(scope, last=False)) is the
+        # highest priority position.
+        self.state_queue = OrderedDict({
+            'conversation': self._conversation,
             'person': self._person,
-            'conversation': self._conversation
-        }
-        self.state = {}
+            'global': self._global,
+        })
         self._resolve_state()
 
     def __setattr__(self, key, value):
@@ -721,6 +723,18 @@ class Settings(Mapping):
         kwargs.update(new_kwargs)
         self.set('global', **kwargs)
 
+    def on_conv_start(self):
+        # Clear conversation kwargs here too just to be safe (we also do this
+        # in on_conv_end). Person-level kwargs now take priority.
+        self.clear('conversation')
+        self.state_queue.move_to_end('person', last=False)
+
+    def on_conv_end(self):
+        # Global settings take priority now. Clearing conversation kwargs
+        # removes the need to move it in the queue explicitly.
+        self.clear('conversation')
+        self.state_queue.move_to_end('global', last=False)
+
     @classmethod
     def clone(cls, settings):
         return cls(settings._global.copy(),
@@ -739,15 +753,7 @@ class Settings(Mapping):
         # taking precedence over another. Also, states['person'] can't just be
         # a flat dict - we'd need the ability to store different settings for
         # each person.
-
-        # Order matters here: we want global settings to take priority over
-        # person-level settings, and both of those to take priority over
-        # conversation level settings.
-        self.state = {
-            **self._states['conversation'],
-            **self._states['person'],
-            **self._states['global']
-        }
+        self.state = ChainMap(self.state_queue)
 
     def __getitem__(self, key):
         return self.state[key]
@@ -770,7 +776,7 @@ class Settings(Mapping):
                            'Instead, use the `delete` method.')
 
     def _set(self, scope, key, val, lazy=False):
-        self._states[scope][key] = val
+        self.state_queue[scope][key] = val
         if not lazy:
             self._resolve_state()
 
@@ -779,16 +785,24 @@ class Settings(Mapping):
         # than resolving once for every kwarg.
         for k, v in kwargs.items():
             self._set(scope, k, v, lazy=True)
+        # Most recent changes always take priority.
+        self.state_queue.move_to_end(scope, last=False)
         self._resolve_state()
 
     def pop(self, scope, key, default=None):
-        res = self._states[scope].pop(key, default)
+        # 6/12/22: forget what this was originally intended for but it doesn't
+        # look like it's currently in use. Keep for now just in case.
+        res = self.state_queue[scope].pop(key, default)
+        self.state_queue.move_to_end(scope, last=False)
         self._resolve_state()
         return res
 
-    def clear(self):
-        for state in self._state.values():
-            state.clear()
+    def clear(self, states=None):
+        # Clear all states by default.
+        states = states or self.state_queue.keys()
+        for name, state in self.state_queue.items():
+            if name in states:
+                state.clear()
         self._resolve_state()
 
     def __repr__(self):

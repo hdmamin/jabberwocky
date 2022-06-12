@@ -2065,6 +2065,27 @@ class ConversationManager:
             warnings.warn(msg)
         self.name2kwargs[name].update(kwargs)
 
+    def clear_default_kwargs(self, *names, all_=False):
+        if all_:
+            if names:
+                warnings.warn('Clearing default kwargs for all names because '
+                              'all_=True.')
+            names = self.personas(pretty=False)
+        elif names:
+            names = [self.process_name(name) for name in names]
+        else:
+            if not self.is_active():
+                raise RuntimeError(
+                    'You passed in zero names and specified all_=False and '
+                    'there is no active conversation, so we don\'t know which '
+                    'settings you want to clear. Try passing in one or more '
+                    'names, setting all_=True, or starting a conversation '
+                    'first.'
+                )
+            names = [self.current['persona']
+        for name in names:
+            self.name2kwargs[name].clear()
+
     def persona_exists_locally(self, name):
         """Check if a persona's info files are already available locally.
 
