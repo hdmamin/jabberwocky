@@ -140,7 +140,7 @@ def query_gpt_j(prompt, temperature=0.7, max_tokens=50, top_p=1.0, **kwargs):
 
 @mark(batch_support=True)
 def query_gpt_huggingface(
-        prompt, engine=0, temperature=1.0, repetition_penalty=None,
+        prompt, model=0, temperature=1.0, repetition_penalty=None,
         max_tokens=50, top_k=None, top_p=None, n=1, **kwargs
 ):
     """Query EleuetherAI gpt models using the Huggingface API. This was called
@@ -150,7 +150,7 @@ def query_gpt_huggingface(
     Parameters
     ----------
     prompt: str
-    engine: int or str
+    model: int or str
         Determines which Huggingface model API to query. See
         config.C.backend_engines['huggingface'].
         Those names refer to the number of
@@ -188,7 +188,7 @@ def query_gpt_huggingface(
     """
     # Hardcode backend in case we use this function outside of the
     # GPTBackend.query wrapper.
-    engine = GPT.engine(engine, backend='huggingface')
+    engine = GPT.engine(model, backend='huggingface')
     if engine is None:
         raise ValueError('Could not resolve engine for huggingface backend.')
 
@@ -252,7 +252,7 @@ def postprocess_gpt_response(response, stream=False):
 
 
 @mark(batch_support=True)
-def query_gpt3(prompt, engine=0, temperature=0.7, top_p=.99,
+def query_gpt3(prompt, model=0, temperature=0.7, top_p=.99,
                frequency_penalty=0.0, presence_penalty=0.0, max_tokens=50,
                logprobs=None, n=1, stream=False, logit_bias=None, **kwargs):
     """Convenience function to query gpt3. Mostly serves 2 purposes:
@@ -273,8 +273,8 @@ def query_gpt3(prompt, engine=0, temperature=0.7, top_p=.99,
     Parameters
     ----------
     prompt: str
-    engine: int or str
-        Corresponds to engines defined in config, where 0 is the cheapest, 3
+    model: int or str
+        Corresponds to models defined in config, where 0 is the cheapest, 3
         is the most expensive, etc.
     temperature: float
         Between 0 and 1. 0-0.4 is good for straightforward informational
@@ -341,7 +341,7 @@ def query_gpt3(prompt, engine=0, temperature=0.7, top_p=.99,
     # function for both openai and gooseai. Rely on method to get the current
     # backend.
     res = openai.Completion.create(
-        engine=GPT.engine(engine),
+        engine=GPT.engine(model),
         prompt=prompt,
         temperature=temperature,
         top_p=top_p,
@@ -395,8 +395,8 @@ def query_gpt_mock(prompt, n=1, stream=False, **kwargs):
         warnings.warn(f'query_gpt_mock only supports n=1 or n=2, not n={n}. '
                       'Because you passed in a value > 1, we default to n=2.')
         n = 2
-    if kwargs.get('engine', 0):
-        warnings.warn(f'query_gpt_mock actually used engine=0.')
+    if kwargs.get('model', 0):
+        warnings.warn(f'query_gpt_mock actually used model=0.')
     if kwargs.get('max_tokens', 3) != 3:
         warnings.warn(f'query_gpt_mock actually used max_tokens=3.')
     if kwargs.get('logprobs', 3) != 3:
@@ -564,12 +564,12 @@ class EngineMap:
     }
 
     @classmethod
-    def get(cls, engine, backend=None, infer=True, default=None,
+    def get(cls, model, backend=None, infer=True, default=None,
             openai_passthrough=True, basify=False):
         """
         Parameters
         ----------
-        engine: int or str
+        model: int or str
             See class docstring for details.
         backend: str or None
             Name of backend to use, e.g. "openai", "gooseai", etc. If none is
@@ -620,16 +620,16 @@ class EngineMap:
         'gpt-j-6B'
         """
         # Store this for potential error message later.
-        user_engine = engine
-        if isinstance(engine, int):
-            if engine not in range(4):
+        user_engine = model
+        if isinstance(model, int):
+            if model not in range(4):
                 raise ValueError(
-                    f'Received invalid engine value: {engine}. If engine is '
+                    f'Received invalid model value: {model}. If model is '
                     'specified as an integer, it must lie in [0, 3].'
                 )
-            engine_i = engine
+            engine_i = model
         else:
-            base = cls.openai_base_engine(engine)
+            base = cls.openai_base_engine(model)
             engine_i = cls.bases.index(base)
 
         backend = backend or GPT.current()
@@ -646,57 +646,57 @@ class EngineMap:
                 # We do still have some basic validation above that checks
                 # that one of the openai bases is present in the name.
                 warnings.warn(
-                    f'Allowing engine "{engine}" to pass through because '
+                    f'Allowing model "{model}" to pass through because '
                     f'openai_passthrough=True. We trust you to make sure this '
-                    f'is a valid engine.'
+                    f'is a valid model.'
                 )
             return user_engine
 
-        engine = backend_engines[engine_i]
-        if not engine:
-            msg = f'No engine={user_engine} equivalent for backend {backend}.'
+        model = backend_engines[engine_i]
+        if not model:
+            msg = f'No model={user_engine} equivalent for backend {backend}.'
             if infer:
                 warnings.warn(msg + 'Trying to auto-infer best option.')
-                while engine_i > 0 and not engine:
+                while engine_i > 0 and not model:
                     engine_i -= 1
-                    engine = backend_engines[engine_i]
+                    model = backend_engines[engine_i]
             else:
                 warnings.warn(
-                    f'No matching engine found. With backend {backend}, your '
+                    f'No matching model found. With backend {backend}, your '
                     f'options are {list(filter(None, backend_engines))}.'
                 )
                 return default
 
-        if 'code' in engine and backend != 'openai':
+        if 'code' in model and backend != 'openai':
             warnings.warn(f'{backend} backend does not provide code-specific '
                           'models at the moment. We\'re returning the closest'
                           ' generic model.')
         if basify and backend == 'openai':
-            return cls.openai_base_engine(engine)
-        return engine
+            return cls.openai_base_engine(model)
+        return model
 
     @classmethod
-    def openai_base_engine(cls, engine: str):
+    def openai_base_engine(cls, model: str):
         """Extract openai base engine name (e.g. 'ada') from a potentially
         longer string (e.g. 'text-ada-001'). If you pass in the short name, it
         should just return itself.
 
         Parameters
         ----------
-        engine: str
+        model: str
             E.g. 'code-babbage-001', 'text-ada-001', 'davinci'
 
         Returns
         -------
         str
         """
-        matches = [chunk for chunk in engine.split('-')
+        matches = [chunk for chunk in model.split('-')
                    if chunk in cls.bases]
         if not matches:
-            raise ValueError(f'Engine "{engine}" does not contain any of the '
+            raise ValueError(f'Model "{model}" does not contain any of the '
                              f'recognized openai bases {cls.bases}.')
         if len(matches) > 1:
-            raise ValueError(f'Engine "{engine}" contains multiple matches '
+            raise ValueError(f'Model "{model}" contains multiple matches '
                              f'among the recognized openai bases '
                              f'{cls.bases}.')
 
@@ -1019,7 +1019,7 @@ class GPTBackend:
                 cost_res = EngineMap.estimate_cost(
                     completion_length=c_len,
                     prompt=prompt,
-                    engines=kwargs.get('engine', defaults['engine']),
+                    engines=kwargs.get('model', defaults['model']),
                     tokenizer=MockTokenizer
                 )
                 print(cost_res.pop('full'))
