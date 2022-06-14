@@ -264,6 +264,7 @@ def choose_person(person=None, **kwargs):
 
         person = match
     CONV.start_conversation(person)
+    state.on_conv_start(CONV)
     state.polly_voice = select_polly_voice(CONV.current)
     ask.func_clear()
     # large_img_url logic is a bit weird because standard_card checks if url
@@ -694,6 +695,7 @@ def _end_chat(choice=None, **kwargs):
         msg = 'Okay.'
 
     CONV.end_conversation()
+    state.on_conv_end()
     ask.func_clear()
     return question(
         msg + _choose_person_text(' Who would you like to speak to next?')

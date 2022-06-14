@@ -723,17 +723,29 @@ class Settings(Mapping):
         kwargs.update(new_kwargs)
         self.set('global', **kwargs)
 
-    def on_conv_start(self):
+    def on_conv_start(self, conv):
+        """Call AFTER calling conv_manager.start_conversation(name).
+
+        Parameters
+        ----------
+        conv: jabberwocky.openai_utils.ConversationManager
+        """
         # Clear conversation kwargs here too just to be safe (we also do this
         # in on_conv_end). Person-level kwargs now take priority.
         self.clear('conversation')
+        self._person = conv.name2kwargs[conv.current['persona']]
         self.state_queue.move_to_end('person', last=False)
+        self._resolve_state()
 
     def on_conv_end(self):
         # Global settings take priority now. Clearing conversation kwargs
         # removes the need to move it in the queue explicitly.
         self.clear('conversation')
+        # Remove reference to the dict we obtained from conv.name2kwargs.
+        # State queue gets updated by _resolve_state() call.
+        self._person = {}
         self.state_queue.move_to_end('global', last=False)
+        self._resolve_state()
 
     @classmethod
     def clone(cls, settings):
@@ -753,6 +765,9 @@ class Settings(Mapping):
         # taking precedence over another. Also, states['person'] can't just be
         # a flat dict - we'd need the ability to store different settings for
         # each person.
+        # Refresh values in state queue in case _person dict has changed.
+        self.state_queue = {key: getattr(self, f'_{key}')
+                            for key in self.state_queue}
         self.state = ChainMap(*self.state_queue.values())
 
     def __getitem__(self, key):
