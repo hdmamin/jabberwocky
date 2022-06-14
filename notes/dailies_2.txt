@@ -2039,6 +2039,11 @@ X -consider getting rid of the whole prompt-level/conv-level/person-level distin
 
 6/13/22 mon
 -----------
+-make changes to reflect openai's change from name "engine" to "model"
+    -compile list of changes (as bulleted list below) that would need to be made (prob a good idea to do this but they did say it'll be backward compatible so if it would cause particularly hairy changes we could put this off)
+    X -prompt files
+    X -alexa py files
+    -jabberwocky lib py files
 -continue work on settings resolution 
     -figure out how Settings cls will use conv.name2kwargs to populate persona dict (i.e. will changes only occur on the convmanager class and settings will just point to the same dict? Will likely need to update set() method and maybe on_conv_end/start method(s))
     -test changes: try following flow from physical notebook and read settings at each step
@@ -2049,6 +2054,7 @@ X -consider getting rid of the whole prompt-level/conv-level/person-level distin
 
 Backlog
 -------
+-support multi person conv (prob should shift this to long term backlog)
 -update jabberwocky version and upload to pypi
 -prompts/use cases to prototype:
     -"unreleased work from {author}"

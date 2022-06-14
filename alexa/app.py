@@ -160,9 +160,9 @@ def reset_app_state(end_conv=True, clear_queue=True, auto_punct=False,
     # this must remain after changing conv.me (see line above) since that
     # changes the stop phrases.
     state.init_settings(CONV, drop_fragment=True)
-    # Note that in dev mode, we use banana backend which only has one engine
-    # (essentially equivalent to engine=1).
-    state.set('global', engine=3)
+    # Note that in dev mode, we use banana backend which only has one model
+    # (essentially equivalent to model=1).
+    state.set('global', model=3)
 
 
 @ask.launch
@@ -332,7 +332,7 @@ def change_model(scope=None, model=None):
     print('MODEL post-conversion:', model, 'type:', type(model))
     msg = f'I\'ve switched your {scope} model to model {model}.'
     if isinstance(model, int):
-        state.set(scope, engine=model)
+        state.set(scope, model=model)
     else:
         msg = f'It sounded like you asked for model ' \
               f'{model or "no choice specified"}, but the only ' \
@@ -636,9 +636,9 @@ def read_settings():
         if listlike(v):
             v = f'a list containing the following items: {v}'
         strings.append(f'{k.replace("_", " ")} is {v}')
-        # Do this in for loop rather than after to model name is read right
-        # after engine.
-        if k == 'engine':
+        # Do this in for loop rather than after so model name is read right
+        # after model number.
+        if k == 'model':
             strings.append(f'model name is {GPT.engine(v)}')
     msg = f'Here are your settings: {"; ".join(strings)}. ' \
           f'Your api backend is {GPT.current()}. ' \
@@ -721,8 +721,8 @@ if __name__ == '__main__':
     # to parse inputs as strings.
     parser.add_argument(
         '--dev', default=False, type=ast.literal_eval,
-        help='If True, start the app in dev mode (uses free backend and weak '
-             'engine by default).'
+        help='If True, start the app in dev mode (uses free backend by '
+             'default).'
     )
     parser.add_argument(
         '--voice', default=True, type=ast.literal_eval,

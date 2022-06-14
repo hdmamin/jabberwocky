@@ -1,4 +1,4 @@
-engine: 3
+model: 3
 temperature: 0.0
 max_tokens: 75
 frequency_penalty: 0.0

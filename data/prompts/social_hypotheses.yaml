@@ -1,4 +1,4 @@
-engine: 2
+model: 2
 temperature: .7
 max_tokens: 110
 frequency_penalty: 0.5
@@ -6,7 +6,7 @@ stop:
 - "\n\nScenario:"
 - "\n6."
 version: 0
-reminder: "Even engine 1 can work pretty well."
+reminder: "Even model 1 can work pretty well."
 doc: |-
   One shot prompt to generate several plausible interpretations of a social situation.  The input should be a sentence describing something that "Person A" did. (We could probably just use the person's name but I don't think I actually tried that.)
 prompt: |-

@@ -541,7 +541,6 @@ class EngineMap:
 
     # Unlike gooseai, openai charges for both prompt and generation tokens.
     # We convert their prices to cents per token.
-    # And/or support passing in engine_i int?
     openai_prices = {
         'ada': {'per': .0008 / 1_000},
         'babbage': {'per': .0012 / 1_000},
@@ -571,7 +570,7 @@ class EngineMap:
         Parameters
         ----------
         engine: int or str
-            See class docstring for .
+            See class docstring for details.
         backend: str or None
             Name of backend to use, e.g. "openai", "gooseai", etc. If none is
             provided, the current backend will be used.
@@ -2082,7 +2081,7 @@ class ConversationManager:
                     'names, setting all_=True, or starting a conversation '
                     'first.'
                 )
-            names = [self.current['persona']
+            names = [self.current['persona']]
         for name in names:
             self.name2kwargs[name].clear()
 

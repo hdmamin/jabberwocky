@@ -1,4 +1,4 @@
-engine: 3
+model: 3
 temperature: .3
 stop: 'Passage:'
 version: 0

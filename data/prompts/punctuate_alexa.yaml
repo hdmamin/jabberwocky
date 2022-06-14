@@ -1,11 +1,11 @@
-engine: 1
+model: 1
 temperature: 0.2
 stop: 
 - 'Raw transcription:'
 - 'Punctuated transcription:'
 - 'Add any missing punctuation and fix any small'
 version: 0
-reminder: 'You should probably adjust max_tokens based on the length of the input or just set max length high and let stop phrases do the rest. Bumping up to engine 2 or 3 might help a little, but engine 1 is serviceable (probably best to avoid 0 though). We use a separate prompt for alexa because its transcriptions seem to handle casing a bit differently than the python speech_recognition package I use in the GUI.'
+reminder: 'You should probably adjust max_tokens based on the length of the input or just set max length high and let stop phrases do the rest. Bumping up to model 2 or 3 might help a little, but model 1 is serviceable (probably best to avoid 0 though). We use a separate prompt for alexa because its transcriptions seem to handle casing a bit differently than the python speech_recognition package I use in the GUI.'
 strip_output: true
 doc: |-
     Add punctuation to transcribed text. This is intended for use with Alexa, which lowercases user speech and does not include punctuation. Because of my intended use case, this is rather conversation-oriented.

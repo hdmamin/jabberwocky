@@ -1,4 +1,4 @@
-engine: 1
+model: 1
 temperature: 0.0
 stop: 
 - 'Raw transcription:'

@@ -710,7 +710,7 @@ class Settings(Mapping):
         raise AttributeError
 
     def init_settings(self, conv=None,
-                      args=('engine', 'temperature', 'max_tokens',
+                      args=('model', 'temperature', 'max_tokens',
                             'frequency_penalty'), **kwargs):
         """Don't call this in __init__ automatically because flask session
         object is not yet not available. Instead, we call it in the
@@ -753,7 +753,7 @@ class Settings(Mapping):
         # taking precedence over another. Also, states['person'] can't just be
         # a flat dict - we'd need the ability to store different settings for
         # each person.
-        self.state = ChainMap(self.state_queue)
+        self.state = ChainMap(*self.state_queue.values())
 
     def __getitem__(self, key):
         return self.state[key]
@@ -1033,9 +1033,9 @@ def getdefaults(func, *args):
     >>> getdefaults(query_gpt3, 'temperature')
     {'temperature': 0.7}
 
-    >>> getdefaults(query_gpt3, 'temperature', 'engine')
+    >>> getdefaults(query_gpt3, 'temperature', 'model')
     {'temperature': 0.7,
-     'engine': 0}
+     'model': 0}
     """
     params_ = params(func)
     return {k: v.default for k, v in params_.items() if k in args}

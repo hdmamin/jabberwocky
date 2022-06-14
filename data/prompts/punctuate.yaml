@@ -1,11 +1,11 @@
-engine: 1
+model: 1
 temperature: 0.1
 stop: 
 - 'Passage:'
 - '\n\nPassage'
 - 'Passage with punctuation:'
 version: 0
-reminder: 'You should probably adjust max_tokens based on the length of the input. Bumping up to engine 2 or 3 might help a little, but engine 1 is serviceable (probably best to avoid 0 though). You should probably try training a huggingface model to add punctuation instead of using gpt3 credits though.'
+reminder: 'You should probably adjust max_tokens based on the length of the input. Bumping up to model 2 or 3 might help a little, but model 1 is serviceable (probably best to avoid 0 though). You should probably try training a huggingface model to add punctuation instead of using gpt3 credits though.'
 strip_output: true
 doc: |-
     Punctuate a portion of an auto-generated YouTube transcript. This may be poorly suited for other contexts, and we provide separate punctuation prompts for Alexa and the jabberwocky gui.

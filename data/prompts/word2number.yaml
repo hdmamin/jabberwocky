@@ -1,4 +1,4 @@
-engine: 2
+model: 2
 temperature: 0.1
 stop: 
 - 'Word:'
