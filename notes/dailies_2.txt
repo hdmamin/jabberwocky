@@ -2055,10 +2055,27 @@ X -continue work on settings resolution
 
 6/14/22 tues
 ------------
--continue settings resolution
-    -test changes: try following flow from physical notebook and read settings at each step
+X -continue settings resolution
+    X -test changes in ipython: try following flow from physical notebook and read settings at each step
+    X -test subset of changes with echo (doesn't need to be all of them since I tested in ipython and alexa is slower to read them)
+X -check if global state refreshes on app restart
+    UPDATE: tbh not totally clear on why this works - seems like these attrs are not stored on session.state but on the settings object itself. (Also forget my reasoning for that decision 🫤.). But I tested it repeatedly and it works.
+X -handle case where user tries to change person/conv level settings when no conv is active
+X -update messages to say "{scope}-level" instead of "{scope}" when changing settings
+X -change logging of state/settings to resolve chainmap to dict (easier to see state changing that way)
+~ -test if settings change works on utt like "change person LEVEL model to 3" instead of "change person model to 3" (checked and it's not officially in utterances but fuzzy matching may get us close enough to recognize it)
+    UPDATE: Yes for model-level, no to others. The problem is actually slightly larger than I expected - NO inferred intents work for changing max length or temperature. See misc.txt for error msg.
 -re-build model and generate new fuzzy dict (wait til after above bullet in case I decide to rm some sample utts)
 -easy options: 
+    -look for things to document
+-look for resources to help w/ hosting on raspberry pi
+
+6/15/22 wed
+-----------
+-investigate issues with fuzzy intent matching for change_max_length and change_temperature. See misc.txt for error msg.
+-re-build model and generate new fuzzy dict
+-easy options: 
+	-add example utterances that include scope (e.g. global) to setting change endpoints
     -look for things to document
 -look for resources to help w/ hosting on raspberry pi
 

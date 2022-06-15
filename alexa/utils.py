@@ -419,7 +419,7 @@ class IntentCallback(Callback):
             start_msg = f'\nON END'
         self.ask.logger.info(f'{start_msg} ({func_name_})')
         self.ask.logger.info(f'Prev intent: {self.state.prev_intent}')
-        self.ask.logger.info(f'State: {self.state}')
+        self.ask.logger.info(f'State: {dict(self.state)}')
         self.ask.logger.info(f'Queue: {self.ask._queue}\n\n')
 
 
@@ -766,8 +766,8 @@ class Settings(Mapping):
         # a flat dict - we'd need the ability to store different settings for
         # each person.
         # Refresh values in state queue in case _person dict has changed.
-        self.state_queue = {key: getattr(self, f'_{key}')
-                            for key in self.state_queue}
+        self.state_queue = OrderedDict({key: getattr(self, f'_{key}')
+                                        for key in self.state_queue})
         self.state = ChainMap(*self.state_queue.values())
 
     def __getitem__(self, key):

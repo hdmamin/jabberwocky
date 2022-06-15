@@ -331,9 +331,13 @@ def change_model(scope=None, model=None):
     print('MODEL pre-conversion:', model, 'type:', type(model))
     model = str2int.get(model, model)
     print('MODEL post-conversion:', model, 'type:', type(model))
-    msg = f'I\'ve switched your {scope} model to model {model}.'
     if isinstance(model, int):
-        state.set(scope, model=model)
+        if scope in ('person', 'conversation') and not CONV.is_active():
+            msg = 'You\'re not in an active conversation so I couldn\'t ' \
+                  f'change your {scope}-level model.'
+        else:
+            state.set(scope, model=model)
+            msg = f'I\'ve switched your {scope}-level model to model {model}.'
     else:
         msg = f'It sounded like you asked for model ' \
               f'{model or "no choice specified"}, but the only ' \
@@ -373,10 +377,13 @@ def change_max_length(scope=None, length=None):
     except (TypeError, AssertionError) as e:
         return question(str(e).format(length))
 
-    state.set(scope, max_tokens=length)
-    return _maybe_choose_person(
-        f'I\'ve changed your max response length to {length}.'
-    )
+    if scope in ('person', 'conversation') and not CONV.is_active():
+        msg = 'You\'re not in an active conversation so I couldn\'t ' \
+              f'change your {scope}-level max length.'
+    else:
+        state.set(scope, max_tokens=length)
+        msg = f'I\'ve changed your {scope}-level max length to {length}.'
+    return _maybe_choose_person(msg)
 
 
 @ask.intent('changeTemperature')
@@ -414,10 +421,14 @@ def change_temperature(scope=None, temp=None):
     except (TypeError, AssertionError) as e:
         return question(str(e).format(temp))
 
-    state.set(scope, temperature=temp / 100)
-    return _maybe_choose_person(
-        f'I\'ve adjusted your {scope}-level temperature to {temp} percent.'
-    )
+    if scope in ('person', 'conversation') and not CONV.is_active():
+        msg = 'You\'re not in an active conversation so I couldn\'t ' \
+              f'change your {scope}-level temperature.'
+    else:
+        state.set(scope, temperature=temp / 100)
+        msg = f'I\'ve adjusted your {scope}-level temperature to {temp} ' \
+              f'percent.'
+    return _maybe_choose_person(msg)
 
 
 @ask.intent('enableAutoPunctuation')
@@ -590,7 +601,7 @@ def stop():
     """
     sent = False
     msg = 'Goodbye.'
-    if CONV.is_active():
+    if CONV.is_active() and CONV.user_turns:
         # Tried delegating to _reply() here but alexa still ended the session
         # within a few seconds. Seems you're not allows to override this to
         # keep the skill active. I also tried returning end_chat() but that

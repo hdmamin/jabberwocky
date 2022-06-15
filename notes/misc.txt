@@ -411,3 +411,50 @@ X -move logger (and lock?) creation to instance var
 ~ -check if we need to update path on each call
     UPDATE: instead, tried using thread to update file name at midnight. Have to wait til tomorrow to confirm if this works.
 
+6/14/22 tues
+------------
+error when trying to infer change_max_length or change_temperature (something about wrong param names maybe? Unsure if this is the same issue or different but bc slots are hardcoded in utts, this prob isn't as straightforward as changing model which has a fixed set of options):
+
+            ON BEGIN (delegate)
+            Prev intent: None
+            State: {'drop_fragment': True, 'model': 3, 'temperature': 0.7, 'max_tokens': 100, 'frequency_penalty': 0.5}
+            Queue: deque([(<function choose_person at 0x7fa7c3dbc9d8>, {})])
+
+                SLOTS
+                name=response
+                slots_={'response': {'name': 'response', 'value': 'lose max link to 10', 'confirmationStatus': 'NONE', 'source': 'USER', 'slotValue': {'type': 'Simple', 'value': 'lose max link to 10'}}}
+                SLOT RESOLVED: lose max link to 10
+
+                Inferred intent match scores:
+                {'intent': 'changeMaxLength', 'slots': {'Number': '0', 'Scope': 'global'}, 'confidence': 0.73, 'reason': 'weighted', 'res': [('Lou set max length to 0', {'intent': 'changeMaxLength', 'slots': {'Number': '0', 'Scope': 'global'}}, 76), ('Lou set max length to 1', {'intent': 'changeMaxLength', 'slots': {'Number': '1', 'Scope': 'global'}}, 76), ('Lou set max tokens to 0', {'intent': 'changeMaxLength', 'slots': {'Number': '0', 'Scope': 'global'}}, 71), ('Lou set max tokens to 1', {'intent': 'changeMaxLength', 'slots': {'Number': '1', 'Scope': 'global'}}, 71), ('Lou set max length to 2', {'intent': 'changeMaxLength', 'slots': {'Number': '2', 'Scope': 'global'}}, 71)]}
+                CALLING INFERRED INTENT: changeMaxLength
+[2022-06-14 19:51:38,608] ERROR in app: Exception on / [POST]
+Traceback (most recent call last):
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/app.py", line 2446, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/app.py", line 1951, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/app.py", line 1820, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/_compat.py", line 39, in reraise
+    raise value
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/app.py", line 1949, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/app.py", line 1935, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask_ask/core.py", line 806, in _flask_view_func
+    result = self._map_intent_to_view_func(self.request.intent)()
+  File "/Users/hmamin/pythonhm/htools/htools/meta.py", line 1474, in wrapper
+    out = func(*args, **kwargs)
+  File "alexa/app.py", line 550, in delegate
+    **{k.lower(): v for k, v in matches['slots'].items()}
+  File "/Users/hmamin/pythonhm/htools/htools/meta.py", line 1721, in wrapper
+    sig = bound_args(wrapper, args, kwargs, collapse_kwargs=True)
+  File "/Users/hmamin/pythonhm/htools/htools/meta.py", line 1011, in bound_args
+    bound = signature(func).bind_partial(*args, **kwargs)
+  File "/Users/hmamin/anaconda3/lib/python3.7/inspect.py", line 3022, in bind_partial
+    return args[0]._bind(args[1:], kwargs, partial=True)
+  File "/Users/hmamin/anaconda3/lib/python3.7/inspect.py", line 3006, in _bind
+    arg=next(iter(kwargs))))
+TypeError: got an unexpected keyword argument 'number'
+
