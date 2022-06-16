@@ -910,7 +910,8 @@ def model_type(state):
 def build_utterance_map(model_json, fuzzy=True,
                         exclude_types=('AMAZON.Person', 'AMAZON.SearchQuery'),
                         save_=False, model_path='data/alexa/dialog_model.json',
-                        meta_path='data/alexa/utterance2meta.pkl'):
+                        meta_path='data/alexa/utterance2meta.pkl',
+                        min_num=0, max_num=100):
     """Given a dictionary copied from Alexa's JSON Editor, return a
     dict or FuzzyKeyDict mapping each possible sample utterance to its
     corresponding intent. This allows our delegate() function to do some
@@ -933,6 +934,25 @@ def build_utterance_map(model_json, fuzzy=True,
         in some contexts but in this skill, we only use it for the choosePerson
         utterance which consists solely of a name. There really shouldn't be a
         reason to fuzzy match that.
+    min_num: int
+        For slots that have type AMAZON.NUMBER, we have to specify possible
+        values in this function since they're not provided as sample values
+        in the intent model. Min_num is the lowest possible value. All values
+        between min_num and max_num (inclusive) will be included as possible
+        values for numeric slots. Note that the dimensionality blows up
+        *extremely* quickly. Luckily, fuzzy dict is fast enough that
+        even searching thousands of utterances takes a negligible amount of
+        time. If we really need to speed things up in the future (if we add
+        many new intents, for example), we could switch to LSHDict and/or
+        randomly sample a subset of numbers in range(min_num, max_num + 1). The
+        latter is a bit risky though, since the nearest string match might at
+        times depend more on phrasing than on number (i.e. if we say
+        "Lou, change global temperature to 35" and we don't have that as a
+        sample utterance, it's possible we end up ranking something like
+        "Lou, change global temperature to 3" as a better match than
+        "Lou, use global temperature 35".
+    max_num: int
+        See min_num explanation.
 
     Returns
     -------
@@ -944,7 +964,7 @@ def build_utterance_map(model_json, fuzzy=True,
     type2vals = {type_['name']: [row['name']['value']
                                  for row in type_['values']]
                  for type_ in model['types']}
-    type2vals['AMAZON.NUMBER'] = list(map(str, range(10)))
+    type2vals['AMAZON.NUMBER'] = list(map(str, range(min_num, max_num + 1)))
     utt2meta = {}
     for intent in model['intents']:
         slot2vals = {}

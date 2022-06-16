@@ -2072,12 +2072,26 @@ X -change logging of state/settings to resolve chainmap to dict (easier to see s
 
 6/15/22 wed
 -----------
--investigate issues with fuzzy intent matching for change_max_length and change_temperature. See misc.txt for error msg.
--re-build model and generate new fuzzy dict
+X -investigate issues with fuzzy intent matching for change_max_length and change_temperature. See misc.txt for error msg.
+	UPDATE: 1st issue is that change_temp and change_max_length intents expect param w/ name other than "number" so I changed those. 2nd issue is that we only includes numbers 1-10 (hardcoded) as sample values in our fuzzydict.
+	X -update build_utterance_map func to allow variable min_num and max_num
+X -re-build model and generate new fuzzy dict
 -easy options: 
 	-add example utterances that include scope (e.g. global) to setting change endpoints
     -look for things to document
 -look for resources to help w/ hosting on raspberry pi
+
+6/16/22 thurs
+-------------
+-test new utterance resolution with echo
+	-works on correct transcriptions
+	-works on inferred transcriptions
+	-works on inferred transcriptions with phrasing "{scope}-level"
+-easy options: 
+	-add example utterances that include scope (e.g. global) to setting change endpoints
+    -look for things to document
+-look for resources to help w/ hosting on raspberry pi
+
 
 
 Backlog

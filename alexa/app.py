@@ -347,7 +347,7 @@ def change_model(scope=None, model=None):
 
 
 @ask.intent('changeMaxLength')
-def change_max_length(scope=None, length=None):
+def change_max_length(scope=None, number=None):
     """Change the max number of tokens in a generated response. The max is
     2048. There are roughly 1.33 tokens per word. I've set the default to
     50 tokens, which equates to roughly 2-3 sentences.
@@ -364,30 +364,30 @@ def change_max_length(scope=None, length=None):
                       + error_msg.partition('.')[0]
 
     scope = scope or slot(request, 'Scope', default='global')
-    length = length or slot(request, 'Number')
+    number = number or slot(request, 'Number')
 
     try:
         # First check if Alexa parsing failed (slots converts "?" to "").
         # This occurs for both decimals and non-numeric words.
         # Then check that user provided a valid value. Error messages are
         # different depending on the problem.
-        assert length, parse_error_msg
-        length = int(length)
-        assert 0 < length < 2048, error_msg
+        assert number, parse_error_msg
+        number = int(number)
+        assert 0 < number < 2048, error_msg
     except (TypeError, AssertionError) as e:
-        return question(str(e).format(length))
+        return question(str(e).format(number))
 
     if scope in ('person', 'conversation') and not CONV.is_active():
         msg = 'You\'re not in an active conversation so I couldn\'t ' \
               f'change your {scope}-level max length.'
     else:
-        state.set(scope, max_tokens=length)
-        msg = f'I\'ve changed your {scope}-level max length to {length}.'
+        state.set(scope, max_tokens=number)
+        msg = f'I\'ve changed your {scope}-level max length to {number}.'
     return _maybe_choose_person(msg)
 
 
 @ask.intent('changeTemperature')
-def change_temperature(scope=None, temp=None):
+def change_temperature(scope=None, number=None):
     """Allow user to change model temperature. Lower values (near 0) are often
     better for formal or educational contexts, e.g. a science tutor. Choose
     a value in (0, 100] and we will scale it appropriately behind the scenes.
@@ -408,25 +408,25 @@ def change_temperature(scope=None, temp=None):
                       + error_msg
 
     scope = scope or slot(request, 'Scope', default='global')
-    temp = temp or slot(request, 'Number')
+    number = number or slot(request, 'Number')
 
     try:
         # First check if Alexa parsing failed (slots converts "?" to "").
         # This occurs for both decimals and non-numeric words.
         # Then check that user provided a valid value. Error messages are
         # different depending on the problem.
-        assert temp, parse_error_msg
-        temp = int(temp)
+        assert number, parse_error_msg
+        number = int(number)
         assert 0 < temp <= 100, error_msg
     except (TypeError, AssertionError) as e:
-        return question(str(e).format(temp))
+        return question(str(e).format(number))
 
     if scope in ('person', 'conversation') and not CONV.is_active():
         msg = 'You\'re not in an active conversation so I couldn\'t ' \
               f'change your {scope}-level temperature.'
     else:
-        state.set(scope, temperature=temp / 100)
-        msg = f'I\'ve adjusted your {scope}-level temperature to {temp} ' \
+        state.set(scope, temperature=number / 100)
+        msg = f'I\'ve adjusted your {scope}-level temperature to {number} ' \
               f'percent.'
     return _maybe_choose_person(msg)
 
