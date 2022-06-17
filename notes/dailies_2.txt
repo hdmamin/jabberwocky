@@ -2084,14 +2084,39 @@ X -re-build model and generate new fuzzy dict
 6/16/22 thurs
 -------------
 -test new utterance resolution with echo
-	-works on correct transcriptions
-	-works on inferred transcriptions
-	-works on inferred transcriptions with phrasing "{scope}-level"
+	X -works on correct transcriptions
+	X -works on inferred transcriptions
+	X -works on inferred transcriptions with phrasing "{scope}-level"
+	UPDATE: generally seems to work but I realized max length should allow values much larger than 100. This could increase fuzzy dict size to a point that's starting to become, if not yet problematic, certaintly hinting at future issues.
+~ -experiment w/ various approaches to supporting max_lengths > 100
+	X -benchmark how slow fuzzydict really is for various sizes
+		UPDATE: at 10-15k items in dict (currently ~250 max length), we approach 0.1 seconds. At 50k items (currently 1k max length), we're at ~.33 seconds. A bit worrisome since I anticipate a high likelihood of adding more intents/sample utts in the future.
+	X -benchmark how slow and how accurate lshdict is for various sizes
+		UPDATE: on tiny test of 10 items, fuzzy dict gets 100% and lshdict gets 80%. Enough to suggest that this would be a problem. Also, misses are not necessarily numerically close.
+	X -brainstorm workarounds (document below)
+		-randomly sample numbers in range(min, max) rather than all numbers
+		-use all numbers but create random pairs w/ various utts. I.e. if we have 10 sample utts for an intent and 1000 possible numbers, we could choose 100 values for each utt rather than all 1000. So we'd end up w/ 1k examples rather than 10k.
+		-first use lsh dict to guess which intent is correct, THEN use fuzzy dict to select from that intents utterances/slots
+	UPDATE: first two bullets are a little worrisome bc we really want an exact top 1 match, and randomly sampling risks leaving that out of the options. Idea 3 sounds promising - may require a moderate change to implementation, but not an earthshaking one. For a nearly .25 second reduction per turn, I think that's worth it.
+X -choose lower max length limit (prev only enforced 2048 but 2048 should actually be the max for prompt + completion, not just completion)
+	UPDATE: set to 900 for now. This should allow 2 long gpt responses, wiki bio, and 2 short user responses with room to spare.
 -easy options: 
 	-add example utterances that include scope (e.g. global) to setting change endpoints
     -look for things to document
 -look for resources to help w/ hosting on raspberry pi
 
+6/17/22 fri
+-----------
+-try new idea for supporting intent inference for max_lengths > 100 (without dramatic slowdown in parsing). Idea is to first use lsh dict to guess which intent is correct, THEN use fuzzy dict to select from that intents utterances/slots.
+	-sketch out (physical notebook) what exactly I'm picturing this doing. Try to hone in on what data structures I'd have, ideally.
+	-Examine model and fuzzy dict json structure. Will current structure support my idea or do we need to reshape these a bit to do what I want?
+		-revise model parsing func(s) if necessary
+	-update implementation to infer INTENT ONLY first
+	-udpate implementation to, if an inferred intent has a high enough match, check similarities for ONLY THE UTTERANCES FROM THAT INTENT
+-easy options: 
+	-add example utterances that include scope (e.g. global) to setting change endpoints
+    -look for things to document
+-look for resources to help w/ hosting on raspberry pi
 
 
 Backlog

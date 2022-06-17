@@ -358,8 +358,13 @@ def change_max_length(scope=None, number=None):
     "Lou, set max length to 50."
     "Lou, set max tokens to 33."
     """
+    # Prompt + max_tokens should be <= 2,048. Some models support twice
+    # that length and I suspect it will increase in the future, but for now
+    # let's enforce a length that SHOULD allow for two long GPT responses,
+    # two short user responses, and a ~2 sentence bio.
+    max_allowed = 900
     error_msg = 'Please choose a number greater than zero and less than ' \
-                'or equal to 2048. It sounded like you said "{}".'
+                'or equal to {}. It sounded like you said "{}".'
     parse_error_msg = 'I didn\'t recognize that length value. ' \
                       + error_msg.partition('.')[0]
 
@@ -373,9 +378,9 @@ def change_max_length(scope=None, number=None):
         # different depending on the problem.
         assert number, parse_error_msg
         number = int(number)
-        assert 0 < number < 2048, error_msg
+        assert 0 < number <= max_allowed, error_msg
     except (TypeError, AssertionError) as e:
-        return question(str(e).format(number))
+        return question(str(e).format(max_allowed, number))
 
     if scope in ('person', 'conversation') and not CONV.is_active():
         msg = 'You\'re not in an active conversation so I couldn\'t ' \
@@ -417,7 +422,7 @@ def change_temperature(scope=None, number=None):
         # different depending on the problem.
         assert number, parse_error_msg
         number = int(number)
-        assert 0 < temp <= 100, error_msg
+        assert 0 < number <= 100, error_msg
     except (TypeError, AssertionError) as e:
         return question(str(e).format(number))
 

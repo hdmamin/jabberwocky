@@ -1650,7 +1650,7 @@ class ConversationManager:
             hit those numbers). Note that user_turns will be >= gpt3_turns
             regardless of your choice of window because the last turn must be
             from the user in order to prompt gpt3 for a response. We enforce
-            a limit because gpt3 can't handle indefinitely long sequences so
+            a limit because gpt3 can't handle infinitely long sequences so
             we must do something to allow long conversations. Some have
             reported success with summarizing past portions of the conversation
             but I wanted to start with something relatively simple.
