@@ -2107,17 +2107,36 @@ X -choose lower max length limit (prev only enforced 2048 but 2048 should actual
 
 6/17/22 fri
 -----------
--try new idea for supporting intent inference for max_lengths > 100 (without dramatic slowdown in parsing). Idea is to first use lsh dict to guess which intent is correct, THEN use fuzzy dict to select from that intents utterances/slots.
-	-sketch out (physical notebook) what exactly I'm picturing this doing. Try to hone in on what data structures I'd have, ideally.
-	-Examine model and fuzzy dict json structure. Will current structure support my idea or do we need to reshape these a bit to do what I want?
-		-revise model parsing func(s) if necessary
-	-update implementation to infer INTENT ONLY first
-	-udpate implementation to, if an inferred intent has a high enough match, check similarities for ONLY THE UTTERANCES FROM THAT INTENT
+X -try new idea for supporting intent inference for max_lengths > 100 (without dramatic slowdown in parsing). Idea is to first use lsh dict to guess which intent is correct, THEN use fuzzy dict to select from that intents utterances/slots.
+	X -sketch out (physical notebook) what exactly I'm picturing this doing. Try to hone in on what data structures I'd have, ideally.
+	X -Examine model and fuzzy dict json structure. Will current structure support my idea or do we need to reshape these a bit to do what I want?
+		X -revise model parsing func(s) if necessary
+		UPDATE: need an additional grouped dict pointing intent to list of utts.
+	X -update implementation to infer INTENT ONLY first
+	X -udpate implementation to, if an inferred intent has a high enough match, check similarities for ONLY THE UTTERANCES FROM THAT INTENT
+	UPDATE: finished first pass at this but only provides a ~3x speedup which is alright but still slower than I'd hoped. See notes in nb20.
+	X -try to speed up LSHDict creation
+		UPDATE: multiprocessing provided 2x speedup (not sure why not 4, given cpu count?). Threads unsurprisingly didn't help at all. Code is in nb20, not yet ported. Might need to tweak 1-2 other methods to be consistent with new interface.
 -easy options: 
 	-add example utterances that include scope (e.g. global) to setting change endpoints
     -look for things to document
 -look for resources to help w/ hosting on raspberry pi
 
+6/18/22 sat
+-----------
+-nb20 
+	-LSHDict (while not as fast as I'd hoped, it's still faster than the current version)
+		-make any final tweaks/cleanup in nb to account for yesterday's changes
+		-port to htools and make pypi
+		-port to metas and make pypi
+	-consider how to proceed w/ potential new intent inference system. Brainstorm further optimizations.
+		-if good idea arises, try implementing
+		-if not, consider whether it's worth porting this new version
+			-maybe need to benchmark first? LSHDict seems like it would require a lower threshold since it's just a first pass filtering step.
+-easy options: 
+	-add example utterances that include scope (e.g. global) to setting change endpoints
+    -look for things to document
+-look for resources to help w/ hosting on raspberry pi
 
 Backlog
 -------
