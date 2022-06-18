@@ -2125,21 +2125,45 @@ X -try new idea for supporting intent inference for max_lengths > 100 (without d
 6/18/22 sat
 -----------
 -nb20 
-	-LSHDict (while not as fast as I'd hoped, it's still faster than the current version)
-		-make any final tweaks/cleanup in nb to account for yesterday's changes
-		-port to htools and make pypi
-		-port to metas and make pypi
-	-consider how to proceed w/ potential new intent inference system. Brainstorm further optimizations.
-		-if good idea arises, try implementing
-		-if not, consider whether it's worth porting this new version
-			-maybe need to benchmark first? LSHDict seems like it would require a lower threshold since it's just a first pass filtering step.
+	X -LSHDict (while not as fast as I'd hoped, it's still faster than the current version)
+		X -make any final tweaks/cleanup in nb to account for yesterday's changes
+		X -port to htools and make pypi
+		X -port to metas and make pypi
+	-consider how to proceed w/ potential new intent inference system. Brainstorm further optimizations below.
+		-ideas
+			X -pass a much larger n_keys to infer_intent. Then use fuzzywuzzy to rerank those instead of all the ones for an intent. Pro is we reduce the fuzzywuzzy op to constant time. Con is we (I think) lose the guarantee of finding the best fuzzywuzzy match. However, if we set lsh n_keys high enough, this might be close enough (recall brute force fuzzydict approach still isn't guaranteed to be correct).
+				UPDATE: realized I actually provide this functionality natively in LSHDict in the form of n_candidates (i.e. pass in large n_candidates, small n_keys). This is an order of magnitude faster than pure fuzzy dict approach. Should probably benchmark on a larger sample and/or do some qualitative user experience testing to confirm that it's a good strategy. Also should explore idea below before committing to this - while it's certainly more capable of scaling than the brute force fuzzydict approach, we still could run into problems if I dramatically increase any of (n_intents, n_utts_per_intent, n_valid_vals_per_slot).
+			X -return to slot extraction idea. Extracting numbers doesn't seem like it should be that hard. Look at old alexa/utils funcs - why did I abandon this? Maybe it wasn't working so well for other intents, but I could make it only do slot extraction for numbers maybe.
+				UPDATE: this is even faster than bullet above (at least w/ current lsh hypers) and it's nice that there are slightly fewer hypers to tune. Still would need to tune the "weighted_thresh" hyper though - IIRC it might actually be used to infer utterance moreso than intent atm, but this new approach would really only be using it to infer intent (also using lshdict instead of fuzzydict).
+		X -if good idea arises, try implementing
+		X -if not, consider whether it's worth porting this new version
+			_ -maybe need to benchmark first? LSHDict seems like it would require a lower threshold since it's just a first pass filtering step.
+			UPDATE: both new approaches today are much better than last night's approach. Don't port that one. New approaches require a bit more eval before porting.
 -easy options: 
 	-add example utterances that include scope (e.g. global) to setting change endpoints
     -look for things to document
 -look for resources to help w/ hosting on raspberry pi
 
+6/19/22 sun
+-----------
+-nb20 infer intent refinement + benchmarking
+	-try altering approach 4 to use a smaller fuzzy dict (i.e. numbers 1-10 or randomly sample in range 1-900 rather than using all of them. I think this should still work pretty well. Prob won't have noticeable speedup since lsh dict is already so fast but it would reduce memory + data storage size I guess. OR maybe we can replace lsh dict w/ fuzzy dict if this reduces utt dict size sufficiently.
+	-benchmark
+		-maybe extract real responses (both settings related and otherwise; want both positives and negatives) from logs. (First thought was transcripts and we could use these for negatives, but not positives - settings changes are of course excluded from the conv.)
+		-test new system (prob a modified version of approach 4) on these and assess results. Prob should keep dataset size low enough that I can self-label all of them.
+	-if benchmark goes well:
+		-update infer_intent to use new logic (modified version of approach 4 probably)
+		-port infer_itent to alexa/utils, see if there's anything else we need to port
+		-check if we need to make any changes to app.py
+	-qualitative assessment: chat w/ a few people, try to change some settings, keep an eye on live logs to see if resolutions are looking good. Can change various hypers (weighted_threshold, n_keys, etc.) if necessary.
+-easy options: 
+	-add example utterances that include scope (e.g. global) to setting change endpoints
+    -look for things to document
+
+
 Backlog
 -------
+-look for resources to help w/ hosting on raspberry pi
 -support multi person conv (prob should shift this to long term backlog)
 -update jabberwocky version and upload to pypi
 -prompts/use cases to prototype:
