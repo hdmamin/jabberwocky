@@ -2146,16 +2146,32 @@ X -try new idea for supporting intent inference for max_lengths > 100 (without d
 
 6/19/22 sun
 -----------
--nb20 infer intent refinement + benchmarking
-	-try altering approach 4 to use a smaller fuzzy dict (i.e. numbers 1-10 or randomly sample in range 1-900 rather than using all of them. I think this should still work pretty well. Prob won't have noticeable speedup since lsh dict is already so fast but it would reduce memory + data storage size I guess. OR maybe we can replace lsh dict w/ fuzzy dict if this reduces utt dict size sufficiently.
-	-benchmark
-		-maybe extract real responses (both settings related and otherwise; want both positives and negatives) from logs. (First thought was transcripts and we could use these for negatives, but not positives - settings changes are of course excluded from the conv.)
-		-test new system (prob a modified version of approach 4) on these and assess results. Prob should keep dataset size low enough that I can self-label all of them.
-	-if benchmark goes well:
-		-update infer_intent to use new logic (modified version of approach 4 probably)
-		-port infer_itent to alexa/utils, see if there's anything else we need to port
-		-check if we need to make any changes to app.py
-	-qualitative assessment: chat w/ a few people, try to change some settings, keep an eye on live logs to see if resolutions are looking good. Can change various hypers (weighted_threshold, n_keys, etc.) if necessary.
+X -nb20 infer intent refinement + benchmarking
+	X -try altering approach 4 to use a smaller fuzzy dict (i.e. numbers 1-10 or randomly sample in range 1-900 rather than using all of them. I think this should still work pretty well. Prob won't have noticeable speedup since lsh dict is already so fast but it would reduce memory + data storage size I guess. OR maybe we can replace lsh dict w/ fuzzy dict if this reduces utt dict size sufficiently.
+	X -benchmark
+		_ -maybe extract real responses (both settings related and otherwise; want both positives and negatives) from logs. (First thought was transcripts and we could use these for negatives, but not positives - settings changes are of course excluded from the conv.)
+	UPDATE: just hand wrote some positive and negative samples. Didn't include any big transcription errors since I'm not sure how well I can realistically make those up. New system did pretty well on this - 0 false negatives and 1 false positive, and no errors with the number extraction portion. Could raise weighted_threshold slightly (the 1 FP was *barely* high enough to qualify) but for now we'll leave as is and monitor the live logs for signs that we should change this in the future.
+		~ -test new system (prob a modified version of approach 4) on these and assess results. Prob should keep dataset size low enough that I can self-label all of them.
+	X -if benchmark goes well:
+		X -update infer_intent to use new logic (modified version of approach 4 probably)
+		X -port infer_itent to alexa/utils, see if there's anything else we need to port
+		X -check if we need to make any changes to app.py
+			UPDATE: doesn't look like this will be necessary.
+	X -un-deprecate get_number and update docs accordingly
+-qualitative assessment of new intent inference: chat w/ a few people, try to change some settings, keep an eye on live logs to see if resolutions are looking good. Can change various hypers (weighted_threshold, n_keys, etc.) if necessary.
+X -fix naming error in htools/metas (accidentally ported new LSHDict class with temporary dev name)
+X -see if we need to generate new fuzzy dict after recent intent changes
+	X -load and check length
+	X -regenerate new if necessary
+	UPDATE: we had a fd w/ max_num=100. Changed it to 5.
+-easy options: 
+	-add example utterances that include scope (e.g. global) to setting change endpoints
+    -look for things to document
+
+6/20/22 mon
+-----------
+-brainstorm how to support multi person conv (What are options for implemenation? Is this sufficiently simple to implement now or should we move it to the long term backlog for future releases?)
+-qualitative assessment of new intent inference: chat w/ a few people, try to change some settings, keep an eye on live logs to see if resolutions are looking good. Can change various hypers (weighted_threshold, n_keys, etc.) if necessary.
 -easy options: 
 	-add example utterances that include scope (e.g. global) to setting change endpoints
     -look for things to document
@@ -2164,7 +2180,6 @@ X -try new idea for supporting intent inference for max_lengths > 100 (without d
 Backlog
 -------
 -look for resources to help w/ hosting on raspberry pi
--support multi person conv (prob should shift this to long term backlog)
 -update jabberwocky version and upload to pypi
 -prompts/use cases to prototype:
     -"unreleased work from {author}"

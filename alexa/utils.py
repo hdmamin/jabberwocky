@@ -14,7 +14,7 @@ from werkzeug.local import LocalProxy
 from htools.core import xor_none
 from htools.meta import Callback, callbacks, params, MultiLogger, func_name,\
     deprecated, select, save
-from htools.structures import FuzzyKeyDict
+from htools.structures import FuzzyKeyDict, LSHDict
 from jabberwocky.openai_utils import query_gpt3
 
 
@@ -287,7 +287,40 @@ inconsistent interfaces where some return a dict with 'value' and
 Ultimately switched to a different approach where our fuzzy dict maps sample 
 utterances to their slot values and we just take the closest utterance's slots
 rather than trying to extract them each time.
+
+6/19/22 update: we actually do use get_number() now, though the other slot
+extraction functions remain unused (for now at least). Some fields like
+max_length have a huge number of possible numeric values and the number of 
+sample utterances was starting to explode, making our fuzzydict noticeably 
+slow. LSHDict was faster but less accurate. See nb20 for other approaches - 
+they might become necessary again if we add many new sample utterances, new
+intents, or more valid values per slot.
 """
+
+
+def get_number(text):
+    """Extract a numeric value from an utterance. This is used by infer_intent
+    when the inferred intent is "changeTemperature" or "changeMaxLength" to
+    extract the numeric slot value.
+
+    Returns
+    -------
+    dict: Key "value" points to an integer if found, or None if not. In the
+    latter case, an additional "disambiguation" key is added, containing a
+    (possibly empty) list candidates found. We expect there to be only 1 number
+    found - finding multiple therefore triggers this second case
+    (i.e. value=None).
+
+    Examples
+    --------
+    lou set temperature to 95 -> {'value': 95}
+    """
+    nums = [t.text for t in NLP(text) if t.like_num]
+    if len(nums) == 1:
+        return {'value': int(nums[0])}
+    return {'value': None,
+            'disambiguation': nums}
+
 
 @deprecated
 def get_name(text, skip={'Lou', 'lou'}):
@@ -297,15 +330,6 @@ def get_name(text, skip={'Lou', 'lou'}):
         return {'value': names[0]}
     return {'value': None,
             'disambiguation': names}
-
-
-@deprecated
-def get_number(text):
-    nums = [t.text for t in NLP(text) if t.like_num]
-    if len(nums) == 1:
-        return {'value': nums[0]}
-    return {'value': None,
-            'disambiguation': nums}
 
 
 @deprecated
@@ -911,7 +935,7 @@ def build_utterance_map(model_json, fuzzy=True,
                         exclude_types=('AMAZON.Person', 'AMAZON.SearchQuery'),
                         save_=False, model_path='data/alexa/dialog_model.json',
                         meta_path='data/alexa/utterance2meta.pkl',
-                        min_num=0, max_num=100):
+                        min_num=0, max_num=5):
     """Given a dictionary copied from Alexa's JSON Editor, return a
     dict or FuzzyKeyDict mapping each possible sample utterance to its
     corresponding intent. This allows our delegate() function to do some
@@ -988,9 +1012,16 @@ def build_utterance_map(model_json, fuzzy=True,
     return meta
 
 
-def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
-                 weighted_thresh=.7):
-    """Try to infer the user's intent from an utterance. Alexa should detect
+def infer_intent(
+    utt,
+    fuzzy_dict,
+    n_keys=5,
+    n_candidates=None,
+    top_1_thresh=0.9,
+    weighted_thresh=0.7,
+):
+    """
+    Try to infer the user's intent from an utterance. Alexa should detect
     this automatically but it sometimes messes up. This also helps if the user
     gets the utterance slightly wrong, e.g. "Lou, set backend to goose ai"
     rather than "Lou, switch backend to goose ai".
@@ -1018,37 +1049,50 @@ def infer_intent(utt, fuzzy_dict, n_keys=5, top_1_thresh=.9,
     containing all n_keys matching utterances, their corresponding intents,
     and similarity scores.
     """
-    res = fuzzy_dict.similar(utt, n_keys=n_keys,
-                             mode='keys_values_similarities')
+    kwargs = dict(n_keys=n_keys, mode='keys_values_similarities')
+    if isinstance(fuzzy_dict, LSHDict):
+        kwargs['n_candidates'] = n_candidates
+    res = fuzzy_dict.similar(utt, **kwargs)
     top_1_pct = res[0][-1] / 100
+    res_final = {'res': res}
     if top_1_pct >= top_1_thresh:
-        return {'intent': res[0][1]['intent'],
-                'slots': res[0][1]['slots'],
-                'confidence': top_1_pct,
-                'reason': 'top_1',
-                'res': res}
-    df = pd.DataFrame(res, columns=['txt', 'intent', 'score'])\
-        .assign(slots=lambda df_: df_.intent.apply(lambda x: x['slots']),
-                intent=lambda df_: df_.intent.apply(lambda x: x['intent']))
-    weighted = df.groupby('intent').score.sum()\
-        .to_frame()\
-        .assign(pct=lambda x: x / (n_keys * 100))
-    if weighted.pct.iloc[0] > weighted_thresh:
-        intent = weighted.iloc[0].name
-        slots = df.loc[df.intent == intent, 'slots'].iloc[0]
-        return {'intent': intent,
-                'slots': slots,
-                'confidence': weighted.iloc[0].pct,
-                'reason': 'weighted',
-                'res': res}
-    # In this case, confidence is a bit different but it's loosely intended to
-    # mean "confidence that the utterance matched no pre-defined intent".
-    # Value simply needs to be higher than 1 - weighted_thresh.
-    return {'intent': '',
-            'slots': {},
-            'confidence': 1 - weighted.iloc[0].pct,
-            'reason': '',
-            'res': res}
+        res_final.update(intent=res[0][1]['intent'],
+                         slots=res[0][1]['slots'],
+                         confidence=top_1_pct,
+                         reason='top_1')
+    else:
+        df = pd.DataFrame(res, columns=['txt', 'intent', 'score'])
+        df['slots'] = df.intent.apply(lambda x: x['slots'])
+        df['intent'] = df.intent.apply(lambda x: x['intent'])
+        weighted = df.groupby('intent').score.sum()\
+            .to_frame()\
+            .assign(pct=lambda x: x / (n_keys * 100))
+
+    # Only consider weighted method if top 1 check was not satisfied.
+    if 'intent' not in res_final:
+        if weighted.pct.iloc[0] > weighted_thresh:
+            intent = weighted.iloc[0].name
+            slots = df.loc[df.intent == intent, 'slots'].iloc[0]
+            res_final.update(intent=intent,
+                             slots=slots,
+                             confidence=weighted.iloc[0].pct,
+                             reason='weighted')
+        else:
+            # In this case, confidence is a bit different but it's loosely
+            # intended to mean "confidence that the utterance matched no
+            # pre-defined intent". Value simply needs to be higher than
+            # 1 - weighted_thresh.
+            res_final.update(intent='',
+                             slots={},
+                             confidence=1 - weighted.iloc[0].pct,
+                             reason='')
+    if res_final['intent'] and 'Number' in res_final['slots']:
+        res_final['slots']['Number'] = get_number(utt)['value']
+        # Sometimes no number could be extracted. Unclear what confidence
+        # score should be here so I just leave it unchanged.
+        if res_final['slots']['Number'] is None:
+            res_final['intent'] = ''
+    return res_final
 
 
 def getdefaults(func, *args):
