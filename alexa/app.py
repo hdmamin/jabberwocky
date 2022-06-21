@@ -312,6 +312,9 @@ def change_model(scope=None, model=None):
     "Lou, use model 0."
     "Lou, change model to 1."
     "Lou, switch to model 2."
+    "Lou, switch to global model 2."
+    "Lou, use conversation model 0."
+    "Lou, change person model to 3."
     """
     scope = scope or slot(request, 'Scope', default='global')
     model = model or slot(request, 'Model')
@@ -357,6 +360,9 @@ def change_max_length(scope=None, number=None):
     "Lou, change max length to 75."
     "Lou, set max length to 50."
     "Lou, set max tokens to 33."
+    "Lou, set global max length to 90."
+    "Lou, set conversation max length to 90."
+    "Lou, set person max length to 100."
     """
     # Prompt + max_tokens should be <= 2,048. Some models support twice
     # that length and I suspect it will increase in the future, but for now
@@ -402,6 +408,9 @@ def change_temperature(scope=None, number=None):
     "Lou, change temperature to 1."
     "Lou, set temp to 90."
     "Lou, set temperature to 20."
+    "Lou, set global temperature to 45."
+    "Lou, change persona temperature to 2."
+    "Lou, change conversation temperature to 85."
     """
     # Alexa's speech to text makes parsing decimals kind of difficult, so we
     # ask the user to set temperature out of 100 and rescale it behind the

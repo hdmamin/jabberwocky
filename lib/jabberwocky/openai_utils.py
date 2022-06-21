@@ -1624,8 +1624,8 @@ class ConversationManager:
 
     def __init__(self, names=True, custom_names=True, data_dir=C.root/'data',
                  backup_image='data/misc/unknown_person.png',
-                 turn_window=3, me='me', load_qa_pipe=False,
-                 qa_model_name=None, verbose=True):
+                 turn_window=3, me='me', prompt='conversation_transcript',
+                 load_qa_pipe=False, qa_model_name=None, verbose=True):
         """
         Parameters
         ----------
@@ -1661,6 +1661,14 @@ class ConversationManager:
         assert 1 <= turn_window <= 20, 'turn_window should be in [1, 20].'
         self.verbose = verbose
 
+        if custom_names and me == 'me':
+            warnings.warn(
+                'You\'ve chosen to load >=1 custom personas but you are using '
+                'me="me". Some custom personas expect you to set `me` to your '
+                'name. Stop phrases may not work as intended if you do not '
+                'override conv.me.'
+            )
+
         # We'll be adding in the user's newest turn separately from accessing
         # their historical turns so we need to subtract 1 from both of these.
         self.user_turn_window = int(np.ceil(turn_window / 2)) - 1
@@ -1683,7 +1691,8 @@ class ConversationManager:
 
         # Load prompt, default query kwargs, and existing personas. Set self.me
         # after loading _kwargs since the setter must update them.
-        self._kwargs = load_prompt('conversation', verbose=self.verbose)
+        self._prompt = prompt
+        self._kwargs = load_prompt(prompt, verbose=self.verbose)
         self._base_prompt = self._kwargs.pop('prompt')
         self.me = me
 

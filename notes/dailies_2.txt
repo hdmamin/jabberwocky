@@ -2170,11 +2170,27 @@ X -see if we need to generate new fuzzy dict after recent intent changes
 
 6/20/22 mon
 -----------
--brainstorm how to support multi person conv (What are options for implemenation? Is this sufficiently simple to implement now or should we move it to the long term backlog for future releases?)
+X -generate more custom personas
+	UPDATE: Tested out new persona and it's pretty impressive. Better than human level performance on this task tbh, at least in my experience.
+~ -brainstorm how to support multi person conv (What are options for implemenation? Is this sufficiently simple to implement now or should we move it to the long term backlog for future releases?)
+	UPDATE: decided too big of a project for this release. Implementation could involve some major changes.
+~ -briefly brainstorm how to mimic longer memory
+	UPDATE: wrote a sample prompt format in physical nb. Thinking we want 1 "long term summary" of previous topics discussed and 1 "immediate context" for the turns that immediately preceded the included turns. Or maybe the "long term summary" is just a list of concatenated "immediate context"s since it would be slow/expensive to generate a new long summary every turn or few.
+X -figure out where to warn user about dangers of using conv.me = "me" for some prompts
+	UPDATE: put in conv.__init__. Personas are not prompts so they don't have an existing warning field for us to edit.
 -qualitative assessment of new intent inference: chat w/ a few people, try to change some settings, keep an eye on live logs to see if resolutions are looking good. Can change various hypers (weighted_threshold, n_keys, etc.) if necessary.
 -easy options: 
-	-add example utterances that include scope (e.g. global) to setting change endpoints
+	X -add example utterances that include scope (e.g. global) to setting change endpoints
     -look for things to document
+
+6/21/22 tues
+------------
+-prototype partial conv summary prompt
+	-check NLCA book for potential existing prompt (good source bc he's already tested his prompts)
+	-or try writing my own
+	-test on excerpts from longer convs (altman (maybe edited? Unsure if that would be beneficial if we won't be editing them in jabberwocky.), dr. mills)
+-qualitative assessment of new intent inference: chat w/ a few people, try to change some settings, keep an eye on live logs to see if resolutions are looking good. Can change various hypers (weighted_threshold, n_keys, etc.) if necessary.
+-look for resources to help w/ hosting on raspberry pi
 
 
 Backlog
@@ -2214,6 +2230,7 @@ Backlog
 
 Easy Backlog
 ------------
+-look for things to document
 
 Long term backlog (i.e. things I decided are outside the current scope)
 -----------------------------------------------------------------------
@@ -2222,3 +2239,4 @@ Long term backlog (i.e. things I decided are outside the current scope)
     -add gooseai backend option
 -update convmanager to support more generic conversation prompt (conversation_generalized.yaml). Prob wait for revised Prompt class with better support for default args, logic in assigning args from other args, etc.
 -summarizing old conversations/continuing conversations/anything requiring document search (this is quite a project in and of itself)
+-multiple-person conversations (would need to revise method of storing conv.user_turns and conv.gpt_turns. Would no longer be able to assume we just interleave those two lists to get full conv.)
