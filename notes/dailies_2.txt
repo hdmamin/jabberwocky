@@ -2185,12 +2185,30 @@ X -figure out where to warn user about dangers of using conv.me = "me" for some 
 
 6/21/22 tues
 ------------
--prototype partial conv summary prompt
-	-check NLCA book for potential existing prompt (good source bc he's already tested his prompts)
-	-or try writing my own
-	-test on excerpts from longer convs (altman (maybe edited? Unsure if that would be beneficial if we won't be editing them in jabberwocky.), dr. mills)
+~ -prototype partial conv summary prompt
+	X -check NLCA book for potential existing prompt (good source bc he's already tested his prompts)
+		UPDATE: I think I can do better than the sample one he included.
+	X -or try writing my own
+		UPDATE: getting decent results with zero shot prompt. Field resolution is a bit involved so there's still some work to do in implementing this in the lib.
+	X -port prompt from playground to yaml file
+	X -test on excerpts from longer convs (altman (maybe edited? Unsure if that would be beneficial if we won't be editing them in jabberwocky.), dr. mills)
+		UPDATE: tried on a couple excerpts from altman and sanderson. Pretty solid, though I generally avoided the more incoherent chunks.
+-implement summarization in conv
+	~ -write method (or adapt old one) to generate a conversation excerpt consisting of n turns (prob later need to figure out how to track which ones though - maybe have conv store a "last_summarized_idx")
+		UPDATE: some cleanup to do but the basic logic is in ipython.
+	-write method to perform the summarization (get correctly sized excerpt, update last summarized idx, add the summary to some kind of data structure of summaries]
+X -update conv.process_name() to add period to "Dr"
 -qualitative assessment of new intent inference: chat w/ a few people, try to change some settings, keep an eye on live logs to see if resolutions are looking good. Can change various hypers (weighted_threshold, n_keys, etc.) if necessary.
 -look for resources to help w/ hosting on raspberry pi
+
+6/22/22 wed
+-----------
+-implement summarization in conv
+	-consider: is summarization that important? Or should we be more focused on extracting salient facts/anecdotes (recall replika). Or maybe both (and if so, should they be two separate prompts? I think probably 1 would be better.) Could always push this to long term backlog since I suspect this could get quite complex - eventually, we'll probably want to include the "past conversation summary" in the base prompt, which is a fairly major change.
+	-review ipy func to construct an excerpt str of k turns. See if we can refactor into a conv method to do this, which we can also call inside _format_prompt().
+	-write method to perform the summarization (get correctly sized excerpt, update last summarized idx, add the summary to some kind of data structure of summaries]
+-qualitative assessment of new intent inference: chat w/ a few people, try to change some settings, keep an eye on live logs to see if resolutions are looking good. Can change various hypers (weighted_threshold, n_keys, etc.) if necessary.
+
 
 
 Backlog

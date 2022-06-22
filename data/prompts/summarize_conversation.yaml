@@ -1,0 +1,22 @@
+engine: 2
+temperature: .3
+top_p: .99
+max_tokens: 50
+frequency_penalty: 0.5
+presence_penalty: 0.5
+stop: 
+- ". "
+- "SUMMARY"
+- "EXCERPT"
+version: 0
+reminder: "A trailing period should be added in postprocessing. Davinci might work a little better but curie should be serviceable."
+doc: |-
+  [WIP]: zero shot prompt (since it often ends up being quite long already) to summarize part of an ongoing conversation (generated via the `conversation` or `conversation_transcript` prompt). Bio is `conv.name2base[conv.current['persona']]`, excerpt is a nicely formatted version of the last n turns (10 each seems like a decent choice - that seems to produce an overall prompt length of ~1_000 tokens), name is conv.current['persona'] (maybe just use first name?), and me is `conv.me` (maybe should replace "Me" with "I" if no name has been set there.).
+prompt: |-
+  {bio} Write a 1 sentence summary of  what is discussed in this excerpt.
+
+  EXCERPT:
+  {excerpt}
+
+  SUMMARY (1 sentence max):
+  {name} and {me} discuss

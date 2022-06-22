@@ -2134,7 +2134,7 @@ class ConversationManager:
         """
         if inverse:
             # To pretty format.
-            return name.replace('_', ' ').title()
+            return name.replace('_', ' ').title().replace('Dr ', 'Dr. ')
         return name.lower().replace(' ', '_').replace('.', '')
 
     def nearest_persona(self, name):
