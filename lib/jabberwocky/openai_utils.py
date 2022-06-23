@@ -2311,7 +2311,10 @@ class ConversationManager:
             prompt (if the conversation is longer than a few turns, this will
             not include the beginning of the conversation, though it will still
             include the wikipedia summary).
-        include_trailing_name
+        include_trailing_name:
+            If True, include current persona's name (followed by a colon) on a
+            new line at the end of the prompt. This should be True when you
+            plan to use the output as a prompt.
 
         Returns
         -------

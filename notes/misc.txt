@@ -458,3 +458,38 @@ Traceback (most recent call last):
     arg=next(iter(kwargs))))
 TypeError: got an unexpected keyword argument 'number'
 
+6/22/22 wed
+-----------
+Jotting down a potential future conversation prompt (mode is a word like "conversation" or "debate" or "appointment"). Maybe reduce bio to 1 sentence. Optional description is something like "silly" or "informative" or "intense". I can see this will rely heavily on the more complex Prompt functionality I've been toying with - lots of need for resolution logic, default values, inserting outputs from other prompts, etc.
+---
+
+The following is an excerpt from a transcript of {a} {optional_description} {mode} with {name}. {bio} Earlier in the {mode}, {name} and {me} discussed the following topics:
+{concatenated_summaries}
+
+{recent_turns}
+
+---
+WIP: prototyping convmanager method to format last n turns into a single str. Potentially useful if/when we implement iterative summarization. Holding off on this for now because that is out of scope for v2. I suspect the future implementation may replace user_turns and gpt_turns with a single turn list that includes the name associated with each turn as part of the string. This would make resolving the last n turns easier and might make it easier to generalize to n-person conversations - however, the latter will take larger changes since we currently auto-append the desired name to the end of each prompt. That might get left up to gpt in a future n-person conv (i.e. if I'm talking to Mark and Cara and ask Cara a question, Cara should probably respond). Aside from that change, we might also need to keep track of the 'last_summarized_index' (unless maybe we always do the last n? Or maybe it would be something like self.turns[-self.total_turn_window - self.summary_turn_window:-self.total_turn_window] (i.e. summarize the turns that preceded the turns included in the current prompt. Actually maybe we do still need to track some summary index though because we don't want to generate overlapping summaries. Alternative is to decorate query w/ count_calls and only summarize on every n'th query, but conceptually maybe that's the same.
+
+def _format_turns(self, total_turn_window):
+    pretty_name = self.process_name(self.current['persona'], inverse=True)
+    idx = getattr(self, 'last_summarized_index', -1) + 1
+    user_turns = self.user_turns
+    gpt3_turns = self.gpt3_turns
+    if len(user_turns) - len(gpt3_turns) not in (0, 1):
+        raise RuntimeError(
+            f'Mismatched turn counts: user has {len(user_turns)} and gpt3'
+            f' has {len(gpt3_turns)} turns.'
+        )
+        
+    user_turns = [f'{self.me}: {turn}' for turn in user_turns]
+    # Strip gpt3 turns to be safe since streaming mode only strips them
+    # once the full query completes, and GUI uses full_conversation
+    # property while query is still in progress.
+    gpt3_turns = [f'{pretty_name}: {turn.strip()}' for turn in gpt3_turns]
+    ordered = [user_turns, gpt3_turns]
+    if len(gpt3_turns) == len(user_turns):
+        ordered = reversed(ordered)
+    interleaved = list(filter(None, flatten(zip_longest(*ordered))))[-total_turn_window:]
+    prompt = '\n\n'.join(interleaved)
+    return prompt

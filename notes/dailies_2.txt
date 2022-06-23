@@ -2203,18 +2203,31 @@ X -update conv.process_name() to add period to "Dr"
 
 6/22/22 wed
 -----------
--implement summarization in conv
-	-consider: is summarization that important? Or should we be more focused on extracting salient facts/anecdotes (recall replika). Or maybe both (and if so, should they be two separate prompts? I think probably 1 would be better.) Could always push this to long term backlog since I suspect this could get quite complex - eventually, we'll probably want to include the "past conversation summary" in the base prompt, which is a fairly major change.
-	-review ipy func to construct an excerpt str of k turns. See if we can refactor into a conv method to do this, which we can also call inside _format_prompt().
-	-write method to perform the summarization (get correctly sized excerpt, update last summarized idx, add the summary to some kind of data structure of summaries]
--qualitative assessment of new intent inference: chat w/ a few people, try to change some settings, keep an eye on live logs to see if resolutions are looking good. Can change various hypers (weighted_threshold, n_keys, etc.) if necessary.
+~ -implement summarization in conv
+	~ -consider: is summarization that important? Or should we be more focused on extracting salient facts/anecdotes (recall replika). Or maybe both (and if so, should they be two separate prompts? I think probably 1 would be better.) Could always push this to long term backlog since I suspect this could get quite complex - eventually, we'll probably want to include the "past conversation summary" in the base prompt, which is a fairly major change.
+		UPDATE: sketched out a skeleton of a fleshed out conversation prompt in misc.txt. I think it *might* be helpful to do the "relevant fact extraction" but I think those should be stored in docs for our QA system rather than auto-added to the running prompt (i.e. if you mention your dog's name, you'd want the persona to remember it for future convs, but it wouldn't be relevant info for the majority of the rest of the conv. We only want to include that type of info when needed (i.e. when the last user response is related to it)).
+	~ -review ipy func to construct an excerpt str of k turns. See if we can refactor into a conv method to do this, which we can also call inside _format_prompt().
+		UPDATE: moved to misc.txt for storage. Not implementing any of this now but I may use some of that when I return to this.
+	_ -write method to perform the summarization (get correctly sized excerpt, update last summarized idx, add the summary to some kind of data structure of summaries]
+X -qualitative assessment of new intent inference: chat w/ a few people, try to change some settings, keep an eye on live logs to see if resolutions are looking good. Can change various hypers (weighted_threshold, n_keys, etc.) if necessary.
+	UPDATE: tried it out a bit and didn't encounter any problems. Not all that many infer_intent calls tbh - can keep an eye on this during future convs/dev.
+X -update read_settings to read temperature as a percent
+X -try summarization prompt on recent excerpt from real conv
+	UPDATE: Curie gives solid results but I do feel like davinci continues to provide ever so slightly better summaries (less vague/generic? Not sure exactly what it is but it does seem a bit better.) Also fixed engine/model kwarg name in summarization prompt and template prompt.
 
+6/23/22 thurs
+-------------
+-add reprompt to _maybe_choose_person (I think this is currently missing and should be doable, but need to check)
+-look for resources to help w/ hosting on raspberry pi
+-look for resources to help w/ self/private publishing (if I actually need to do anything? Current mode seems to be working, whatever that is)
 
 
 Backlog
 -------
--look for resources to help w/ hosting on raspberry pi
 -update jabberwocky version and upload to pypi
+-record sample audio/video clip w/ alexa skill (lex?)
+-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+-[weekend - need another person to help] see what happens if I try to use this on 2 devices at once. Is this even possible? Guessing this totally breaks everything bc I didn't design for multi users, but let's confirm that.
 -prompts/use cases to prototype:
     -"unreleased work from {author}"
     -python stack trace -> stackoverflow solution
@@ -2256,5 +2269,5 @@ Long term backlog (i.e. things I decided are outside the current scope)
     -adjust gui accordingly (cur offer different radio buttons for each neo size; could instead have 1 radio and have it actually use the engine_i slider)
     -add gooseai backend option
 -update convmanager to support more generic conversation prompt (conversation_generalized.yaml). Prob wait for revised Prompt class with better support for default args, logic in assigning args from other args, etc.
--summarizing old conversations/continuing conversations/anything requiring document search (this is quite a project in and of itself)
+-summarizing old conversations/anything requiring document search (this is quite a project in and of itself. See misc.txt on 6/22/22 for some thoughts on a potential updated prompt and thoughts on implementation. IMO a promising route would be adding a sliding window of summaries to the prompt and saving "relevant facts to remember" to some longer term storage solution rather than adding them to the prompt).
 -multiple-person conversations (would need to revise method of storing conv.user_turns and conv.gpt_turns. Would no longer be able to assume we just interleave those two lists to get full conv.)

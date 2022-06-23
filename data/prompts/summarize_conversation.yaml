@@ -1,4 +1,4 @@
-engine: 2
+model: 2
 temperature: .3
 top_p: .99
 max_tokens: 50

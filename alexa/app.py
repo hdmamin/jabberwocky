@@ -661,9 +661,12 @@ def read_settings():
         if k == 'mock_func': continue
         if listlike(v):
             v = f'a list containing the following items: {v}'
+        elif k == 'temperature':
+            v = f'{v * 100} percent'
         strings.append(f'{k.replace("_", " ")} is {v}')
         # Do this in for loop rather than after so model name is read right
-        # after model number.
+        # after model number. It is intentional that this is not if/else - we
+        # read both model (int) and model_name (str).
         if k == 'model':
             strings.append(f'model name is {GPT.engine(v)}')
     msg = f'Here are your settings: {"; ".join(strings)}. ' \
