@@ -2227,6 +2227,11 @@ X -add reprompt to _maybe_choose_person (I think this is currently missing and s
 
 6/24/22 fri
 -----------
+-consider adding clear_all_settings intent. If yes:
+	-update dialogue model in UI
+	-download new model and move to data/alexa dir
+	-generate new fuzzy dict
+	-write endpoint
 -look for resources to help w/ hosting on raspberry pi
 -look for resources to help w/ self/private publishing (if I actually need to do anything? Current mode seems to be working, whatever that is)
 -other options:
@@ -2260,11 +2265,6 @@ Backlog
 -idea: prompt mixin? I.e. add snippet of text to start/end of a prompt, e.g. "You are a friendly, polite AI assistant.".
 ~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
 -update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
--update end of conv to erase conv-level settings
-    ~ -consider whether settings resolution order is right/desirable (i.e. should global level take priority or should conv level?)
-        UPDATE: thought a bit and this is quite a complex task. Still not at a solution yet but my sense is that priority should be more about sequence (most recent = highest priority) and scope should just be thought of as "when do we undo this setting change action"? Need to hold off on other changes until I figure out desired system.
-    -update change of person to change person-level settings
-    -maybe update settings.clear() to allow clearing a single (or finite number) of state levels.
 -idea: natural language unit tests? E.g. if we want a response to be cheerful, we can write the instructions to increase the probability of that happening, but the prompt may have multiple parts and tone may get lost in the shuffle. We could increase our odds of a cheerful response by generating k responses, passing each through an additional prompt ("natural language unit test") asking "is this response cheerful?". We should be able to use the logit_bias arg with some positive weight to heavily incentivize the test to output "pass/fail" or "yes/no". I guess this is basically just a classifier but it's one we can specify in natural language it it (potentially) requires no training examples.
 
 Easy Backlog
