@@ -2217,16 +2217,26 @@ X -try summarization prompt on recent excerpt from real conv
 
 6/23/22 thurs
 -------------
--add reprompt to _maybe_choose_person (I think this is currently missing and should be doable, but need to check)
+X -add reprompt to _maybe_choose_person (I think this is currently missing and should be doable, but need to check)
+	X -add reprompt to case where no active conv
+	X -add reprompt to case where IS active conv (bit more complicated - 2 different voices)
+	X -update custom_question to allow ssml reprompts
+	X -update voice() to return single str rather than (str, bool) tuple. is_ssml is always True now.
 -look for resources to help w/ hosting on raspberry pi
 -look for resources to help w/ self/private publishing (if I actually need to do anything? Current mode seems to be working, whatever that is)
+
+6/24/22 fri
+-----------
+-look for resources to help w/ hosting on raspberry pi
+-look for resources to help w/ self/private publishing (if I actually need to do anything? Current mode seems to be working, whatever that is)
+-other options:
+	-record sample audio/video clip w/ alexa skill (lex?)
+	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
 
 
 Backlog
 -------
 -update jabberwocky version and upload to pypi
--record sample audio/video clip w/ alexa skill (lex?)
--update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
 -[weekend - need another person to help] see what happens if I try to use this on 2 devices at once. Is this even possible? Guessing this totally breaks everything bc I didn't design for multi users, but let's confirm that.
 -prompts/use cases to prototype:
     -"unreleased work from {author}"
@@ -2235,8 +2245,6 @@ Backlog
     -journal-based decision simulator (start an entry for a future date with desirable state ("Today was an amazing day because")or a specific positive outcome ("I met my SO 1 year ago at") or with a possible decision ("It's been six months since I took that job at {company} and I feel").
     -conv commentary (given a couple conv turns, gpt can comment "User seems a bit insensitive" or "user takes himself too seriously".
         -variant: given conv turns 1...n, generate a few options for n+1 and compare it to my real response at n+1.
--Harder option: revisit question of settings scopes (global, conversation, persona, etc.). Is there a non-insanely-complicated solution that would still be somewhat useful? 
--look into raspberry pi as long term option for hosting
 -[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)
 	-have gpt3 insert tags directly (i.e. Edit rather than complete)
 	-have gpt3 select from options (almost like classification. Maybe just use logit_bias.) then fill in template programmatically.

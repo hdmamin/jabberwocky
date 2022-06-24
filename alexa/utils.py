@@ -155,10 +155,39 @@ class custom_question(question):
 
     def __init__(self, speech, is_ssml=False):
         super().__init__(speech)
-        if is_ssml and self._response['outputSpeech']['type'] != 'SSML':
-            text = self._response['outputSpeech'].pop('text')
-            self._response['outputSpeech']['type'] = 'SSML'
-            self._response['outputSpeech']['ssml'] = text
+        self._set_ssml(is_ssml)
+
+    def reprompt(self, reprompt, is_ssml=False):
+        super().reprompt(reprompt)
+        self._set_ssml(is_ssml, 'reprompt')
+        return self
+
+    def _set_ssml(self, is_ssml=False, attr=''):
+        """Update response dict to use ssml if appropriate. Flask-ask
+        doesn't natively recognize amazon's voice markup language so we do this
+        here instead.
+
+        Parameters
+        ----------
+        is_ssml: bool
+            If False, no changes are needed. If True, we adjust the response
+            dict.
+        attr: str
+            If truthy, we find this key in the response dict and edit that
+            rather than the base level of the dict. Only known use case atm
+            is passing in 'reprompt' in the reprompt method.
+        """
+        if not is_ssml:
+            return
+        if attr:
+            data = self._response[attr]
+        else:
+            data = self._response
+        data = data['outputSpeech']
+        if data['type'] != 'SSML':
+            text = data.pop('text')
+            data['type'] = 'SSML'
+            data['ssml'] = text
 
 
 def select_polly_voice(current_meta, threshold=.8,
@@ -239,9 +268,16 @@ def emotion(text, pred=None, emo_pipe=None, logger=None):
     return res
 
 
-def voice(text, current_meta, polly_name=None, select_voice=True, emo_pipe=None, **kwargs):
-    """Add voice tags to use a custom Amazon Polly voice."""
-    # return f'<speak><voice name="{name}">{text}</voice></speak>', True
+def voice(text, current_meta, polly_name=None, select_voice=True,
+          emo_pipe=None, **kwargs):
+    """Add voice tags to use a custom Amazon Polly voice.
+
+    Returns
+    -------
+    str: the input text formatted with amazon's
+    voice markup language to use either a custom voice or one of a limited set
+    of emotions (if appropriate).
+    """
     open_tags = ['<speak>']
     close_tags = ['</speak>']
     # We can either use a custom voice or custom emotions. For now, I set
@@ -261,7 +297,7 @@ def voice(text, current_meta, polly_name=None, select_voice=True, emo_pipe=None,
             )
             close_tags.append('</amazon:emotion>')
         logger.info(f'TAGS: {tags}')
-    return f"{''.join(open_tags)}{text}{''.join(close_tags[::-1])}", True
+    return f"{''.join(open_tags)}{text}{''.join(close_tags[::-1])}"
 
 
 def detokenize(tokens, punct=set('.,;:')):

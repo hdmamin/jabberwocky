@@ -501,9 +501,21 @@ def _maybe_choose_person(
         name = CONV.process_name(CONV.current['persona'],
                                  inverse=True).split()[0]
         msg += return_msg_fmt.format(name)
+        # First response is by Lou, reprompt is by current persona.
+        # Need to use custom question to allow SSML in reprompt.
+        reprompt_msg = voice(
+            np.random.choice(REPROMPTS), CONV.current,
+            polly_name=state.polly_voice, select_voice=True, emo_pipe=None
+        )
+        return custom_question(msg).reprompt(reprompt_msg, is_ssml=True)
     else:
+        # Slightly risky logic but I want to trim choose_msg to be a bit more
+        # minimal the second time. With the default value, we go from
+        # 'Now, who would you like to speak to?' to
+        # 'who would you like to speak to?'.
+        reprompt_msg = f'I asked, "{choose_msg.split(", ")[0]}".'
         msg += _choose_person_text(choose_msg)
-    return question(msg)
+        return question(msg).reprompt(reprompt_msg)
 
 
 def _reply(prompt=None):
@@ -530,19 +542,18 @@ def _reply(prompt=None):
     ask.logger.info('BEFORE QUERY: ' + prompt)
     text, _ = CONV.query(prompt, **state)
     # Add custom accent/emotion audio.
-    text, is_ssml = voice(text[0], CONV.current, polly_name=state.polly_voice,
-                          select_voice=True, emo_pipe=EMO_PIPE)
+    text = voice(text[0], CONV.current, polly_name=state.polly_voice,
+                 select_voice=True, emo_pipe=EMO_PIPE)
     # Reprompt buys me some more time if I'm taking a long time to respond.
     # The reprompt is not included in the conversation transcript so it's
     # recommended that you respond to the initial reply rather than the generic
     # "I can see you're thinking hard."-esque reprompt.
     # Don't run emotion classifier on reprompt message.
-    reprompt_msg, _ = voice(
+    reprompt_msg = voice(
         np.random.choice(REPROMPTS), CONV.current,
         polly_name=state.polly_voice, select_voice=True, emo_pipe=None
     )
-    return custom_question(text, is_ssml)\
-        .reprompt(reprompt_msg)
+    return custom_question(text, True).reprompt(reprompt_msg)
 
 
 @ask.intent('delegate')
