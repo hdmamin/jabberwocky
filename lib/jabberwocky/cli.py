@@ -1,8 +1,13 @@
-"""This was a brief experiment with an old version of Jabberwocky and no longer
-reflects the current API. I'm keeping it around for future reference since I'm
-still interested in combining prompt_toolkit with jabberwocky and it may be
-useful to see my old thoughts on implementation (or at the very least, serve as
-a sort of API reference about the prompt_toolkit features I care about).
+"""At the moment, the only useful part of this is the `update_prompt_readme`
+command which updates the readme in data/prompts to make it easier to review
+what prompts are currently available.
+
+The chat functionality was a brief experiment with an old version of
+Jabberwocky and no longer reflects the current API. I'm keeping it around for
+future reference since I'm still interested in combining prompt_toolkit with
+jabberwocky and it may be useful to see my old thoughts on implementation
+(or at the very least, serve as a sort of API reference about the
+prompt_toolkit features I care about).
 """
 import os
 from pathlib import Path
