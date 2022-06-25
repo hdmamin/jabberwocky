@@ -71,20 +71,6 @@ def health():
     return {'status': 200}
 
 
-# TODO: do I need to ask this somewhere? I enabled permission for MY account
-# in alexa app and alexa site already but this is probably needed if I want to
-# let someone else use it. Right now, the card is displayed after returning
-# this (good) but if I respond Yes or No I just get an "audio response" (beep)
-# from alexa. Unsure what this means.
-@ask.intent('emailMe')
-def tmp_email_me():
-    return statement(
-        'Do you mind if I access your name and email address? This will let '
-        'me send you transcripts of your conversations. '
-        'Say "I consent" or "no".'
-    ).consent_card('alexa::profile:email:read')
-
-
 def send_transcript(conv, user_email='', cleanup=False):
     """Email user a transcript of their conversation.
 
