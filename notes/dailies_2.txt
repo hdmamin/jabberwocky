@@ -2227,11 +2227,15 @@ X -add reprompt to _maybe_choose_person (I think this is currently missing and s
 
 6/24/22 fri
 -----------
--consider adding clear_all_settings intent. If yes:
-	-update dialogue model in UI
-	-download new model and move to data/alexa dir
-	-generate new fuzzy dict
-	-write endpoint
+~ -consider adding clear_all_settings intent. If yes:
+	_ -update dialogue model in UI
+	_ -download new model and move to data/alexa dir
+	_ -generate new fuzzy dict
+	_ -write endpoint
+	UPDATE: decided not really necessary right now. If I find myself wanting this feature I can add it to the v3 roadmap.
+	X -clean up docs a bit for various Settings methods
+		X -_resolve_state
+		X -clear
 -look for resources to help w/ hosting on raspberry pi
 -look for resources to help w/ self/private publishing (if I actually need to do anything? Current mode seems to be working, whatever that is)
 -other options:

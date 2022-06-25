@@ -815,17 +815,10 @@ class Settings(Mapping):
                    settings.reserved_keys.copy())
 
     def _resolve_state(self):
-        # TODO: I think what we'd actually want to do is maintain a stack of
-        # state names ('conversation', 'person', 'global') and each time a
-        # relevant event happens (a conversation ends or ends or a setting
-        # is changed) we pop the relevant state and move it to the top of the
-        # stack. Then we use this stack to resolve self.state (i.e. the top of
-        # the stack takes priority). In other words, resolution order is more
+        # The top of the stack takes priority. Resolution order is more
         # about change *recency* than some inherent hierarchy of one state
-        # taking precedence over another. Also, states['person'] can't just be
-        # a flat dict - we'd need the ability to store different settings for
-        # each person.
-        # Refresh values in state queue in case _person dict has changed.
+        # taking precedence over another. We must refresh values in state queue
+        # in case _person dict has changed.
         self.state_queue = OrderedDict({key: getattr(self, f'_{key}')
                                         for key in self.state_queue})
         self.state = ChainMap(*self.state_queue.values())
@@ -872,9 +865,17 @@ class Settings(Mapping):
         self._resolve_state()
         return res
 
-    def clear(self, states=None):
-        # Clear all states by default.
-        states = states or self.state_queue.keys()
+    def clear(self, *states):
+        """Reset settings.
+
+        Parameters
+        ----------
+        states: str
+            Optionally pass in one or more states
+            ('global', 'conversation', and/or 'person') to clear. Otherwise
+            we clear all states.
+        """
+        states = set(states or self.state_queue.keys())
         for name, state in self.state_queue.items():
             if name in states:
                 state.clear()
