@@ -2258,11 +2258,11 @@ X -rm some old unused files/vars from alexa dir
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+	-update jabberwocky version and upload to pypi
 
 
 Backlog
 -------
--update jabberwocky version and upload to pypi
 -[weekend - need another person to help] see what happens if I try to use this on 2 devices at once. Is this even possible? Guessing this totally breaks everything bc I didn't design for multi users, but let's confirm that.
 -prompts/use cases to prototype:
     -"unreleased work from {author}"
