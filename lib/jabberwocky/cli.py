@@ -1,3 +1,9 @@
+"""This was a brief experiment with an old version of Jabberwocky and no longer
+reflects the current API. I'm keeping it around for future reference since I'm
+still interested in combining prompt_toolkit with jabberwocky and it may be
+useful to see my old thoughts on implementation (or at the very least, serve as
+a sort of API reference about the prompt_toolkit features I care about).
+"""
 import os
 from pathlib import Path
 from prompt_toolkit import prompt, PromptSession
@@ -30,7 +36,8 @@ def prompt_until_valid(valid_responses, msg,
             print(error_msg.format(cmd))
 
 
-# TODO
+# This was the beginning of some exploratory work with an old version of the
+# library and is incompatible with jabberwocky >=2.0.0.
 def talk(name, model='gptj', download_persona=False,
          engine_i=0, temperature=0.7, frequency_penalty=0.0, max_tokens=50,
          **query_kwargs):

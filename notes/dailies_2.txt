@@ -2251,6 +2251,19 @@ X -rm some old unused files/vars from alexa dir
 
 6/25/22 sat
 -----------
+X -backlog grooming (separate things into Long Term Jabberwocky, Long Term Misc, Won't Do, etc.)
+-ack for TODOS
+-general pi setup
+	-try to connect to external monitor with help from D
+	-try to get ssh working
+-work through webserver tutorial. Try to get jabberwocky up and running there.
+-other options:
+	-record sample audio/video clip w/ alexa skill (lex?)
+	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+	-update jabberwocky version and upload to pypi
+
+6/26/22 sun
+-----------
 -general pi setup
 	-try to connect to external monitor with help from D
 	-try to get ssh working
@@ -2261,42 +2274,54 @@ X -rm some old unused files/vars from alexa dir
 	-update jabberwocky version and upload to pypi
 
 
-Backlog
--------
+Backlog (short term)
+--------------------
 -[weekend - need another person to help] see what happens if I try to use this on 2 devices at once. Is this even possible? Guessing this totally breaks everything bc I didn't design for multi users, but let's confirm that.
--prompts/use cases to prototype:
-    -"unreleased work from {author}"
-    -python stack trace -> stackoverflow solution
-    -task with python library -> code snippet (get up to speed quicly with new library)
-    -journal-based decision simulator (start an entry for a future date with desirable state ("Today was an amazing day because")or a specific positive outcome ("I met my SO 1 year ago at") or with a possible decision ("It's been six months since I took that job at {company} and I feel").
-    -conv commentary (given a couple conv turns, gpt can comment "User seems a bit insensitive" or "user takes himself too seriously".
-        -variant: given conv turns 1...n, generate a few options for n+1 and compare it to my real response at n+1.
--[BLOCKED: try manual markup first to get a sense of how this works] prototype emotion markup (Note: most gpt options will likely be too slow for alexa, but still could be cool to prototype for future use in ???)
-	-have gpt3 insert tags directly (i.e. Edit rather than complete)
-	-have gpt3 select from options (almost like classification. Maybe just use logit_bias.) then fill in template programmatically.
+
+Easy Backlog (short term)
+-------------------------
+-look for things to document
+
+Won't Do (at least short term; undecided long term)
+---------------------------------------------------
 -incorporate new bio cleanup prompt into convmanager
--[ON HOLD: so far this seems to work, maybe just let myself stumble upon bugs if they arise during further development] test new stopword streaming functionality for paid backends
+	REASON: slows things down a little, maybe not that big a difference in my memory. Would probably work better with the "Edit" models rather than completions but I haven't played around with those as much, and IIRC they only support zero shot (?).
+-try to reproduce error w/ gpt banana: querying w/ np=2 and n=3 only produced 2 text responses. Second try worked as expected (6 responses - unsure why the difference. Maybe autoreload in ipython reset something since I edited docs first call?)
+-more thorough testing for new stopword streaming functionality for paid backends
     -openai
     -gooseai
     -test backends on other cases
         -np > 1
         -nc > 1
         -nc > 1 AND np > 1
--try to reproduce error w/ gpt banana: querying w/ np=2 and n=3 only produced 2 text responses. Second try worked as expected (6 responses - unsure why the difference. Maybe autoreload in ipython reset something since I edited docs first call?)
--idea: prompt mixin? I.e. add snippet of text to start/end of a prompt, e.g. "You are a friendly, polite AI assistant.".
-~ -revisit question of how to specify engines in prompt config files (note: some tasks require multiple engines 😱. This may require some changes. I guess we could have a diff format for completion prompts vs. search prompts, for instance.)
--update query_gpt3 to support codex, embeddings, etc. (not necessary here, probably, but good to do in general)
--idea: natural language unit tests? E.g. if we want a response to be cheerful, we can write the instructions to increase the probability of that happening, but the prompt may have multiple parts and tone may get lost in the shuffle. We could increase our odds of a cheerful response by generating k responses, passing each through an additional prompt ("natural language unit test") asking "is this response cheerful?". We should be able to use the logit_bias arg with some positive weight to heavily incentivize the test to output "pass/fail" or "yes/no". I guess this is basically just a classifier but it's one we can specify in natural language it it (potentially) requires no training examples.
-
-Easy Backlog
-------------
--look for things to document
-
-Long term backlog (i.e. things I decided are outside the current scope)
------------------------------------------------------------------------
+	REASON: Seems to be working fine so far, and I kind of forget which changes this was referring to tbh.
 -update gui to support newer jabberwocky version
     -adjust gui accordingly (cur offer different radio buttons for each neo size; could instead have 1 radio and have it actually use the engine_i slider)
     -add gooseai backend option
+	REASON: GUI was mostly just a learning experience and alexa is generally a far better interface for this kind of thing.
+
+Long Term Backlog (Jabberwocky V3 )
+-----------------------------------
 -update convmanager to support more generic conversation prompt (conversation_generalized.yaml). Prob wait for revised Prompt class with better support for default args, logic in assigning args from other args, etc.
--summarizing old conversations/anything requiring document search (this is quite a project in and of itself. See misc.txt on 6/22/22 for some thoughts on a potential updated prompt and thoughts on implementation. IMO a promising route would be adding a sliding window of summaries to the prompt and saving "relevant facts to remember" to some longer term storage solution rather than adding them to the prompt).
+-summarizing old conversations (this is quite a project in and of itself. See misc.txt on 6/22/22 for some thoughts on a potential updated prompt and thoughts on implementation. IMO a promising route would be adding a sliding window of summaries to the prompt.)
+	-extract and save "relevant facts to remember" to some longer term storage solution (document search? 😀). Impractical/undesirable to add these all to the prompt. E.g. "my dad is a truck driver" would be a "relevant fact"; "{User} and {person} discuss {user}'s parents' careers" is a summary.
 -multiple-person conversations (would need to revise method of storing conv.user_turns and conv.gpt_turns. Would no longer be able to assume we just interleave those two lists to get full conv.)
+-consider if we can extend GPTBackend to handle other types of tasks (e.g. instead of GPT.query(), also allow us to go GPT.embed() or GPT.qa() or GPT.code()).
+	-prob would need different config format for other tasks - some require multiple models, for instance
+-idea: prompt mixin? I.e. add snippet of text to start/end of a prompt, e.g. "You are a friendly, polite AI assistant.".
+
+Long term backlog (misc)
+------------------------
+-prompts/use cases to prototype:
+    -"unreleased work from {author}"
+    -python stack trace -> stackoverflow solution
+	-Global DSL - unsure of exact idea here but my experience w/ emotion markup suggests gpt is quite well suited to defining small DSLs. Have to think about this a bit but I think it might help to have some sort of general DSL prompt or function that makes it super easy to create/use one. (I.e. despite how easy it was to define the EML in the playground, I still don't feel like I instantly know how to create and use it programmatically. Might just be a matter of breaking down the steps and trying it out, or maybe some additional helpers are needed).
+    -task with python library -> code snippet (get up to speed quickly with new library)
+	-something to help with debugging code. Undecided on best way to approach this atm - could just make stack traces less technical/abstruse and hypothesize an explanation/solution in natural language (sort of like a more ambitious version of pypi package pretty-errors; could make custom debugger to drop in for pdb that lets you just ask questions instead of using rigid commands; could do something like jurigged (sp?), basically take advantage of hot reloading to make gpt try to debug/patch *running code in real time* 😱)
+    -journal-based decision simulator (start an entry for a future date with desirable state ("Today was an amazing day because")or a specific positive outcome ("I met my SO 1 year ago at") or with a possible decision ("It's been six months since I took that job at {company} and I feel").
+    -conv commentary (given a couple conv turns, gpt can comment "User seems a bit insensitive" or "user takes himself too seriously".
+        -variant: given conv turns 1...n, generate a few options for n+1 and compare it to my real response at n+1.
+	-emotion markup (Already started this but it requires some revision - see notes in prompt yaml. Note: most gpt options will likely be too slow for alexa, but the idea is cool enough that I think it's worth trying even if I don't know the exact use case yet.)
+		-have gpt3 insert tags directly (i.e. Edit rather than complete)
+		-have gpt3 select from options (almost like classification. Maybe just use logit_bias.) then fill in template programmatically.
+-unit tests for natural language? Still a bit unsure what I have in mind here, this might just be a binary classifier. (Here are some rambling thoughts on the topic: if we want a response to be cheerful, we can write the instructions to increase the probability of that happening, but the prompt may have multiple parts and tone may get lost in the shuffle. We could increase our odds of a cheerful response by generating k responses, passing each through an additional prompt ("natural language unit test") asking "is this response cheerful?". We should be able to use the logit_bias arg with some positive weight to heavily incentivize the test to output "pass/fail" or "yes/no" (6/25 update: or just use gpt classification endpoint). Even if this is basically just a classifier, it's one we can specify in natural language (serves as documentation and technical specification of desired system behavior) and it potentially requires no training examples.)

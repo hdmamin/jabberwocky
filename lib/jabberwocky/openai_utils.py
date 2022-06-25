@@ -330,12 +330,11 @@ def query_gpt3(prompt, model=0, temperature=0.7, top_p=.99,
     it lets us get results on the fly) where each step contains a single
     token's worth of results (still a text, dict-like tuple).
     """
-    # TODO: is this still true? I'm pretty sure stream mode is supported in all
-    # cases now, though some rely on threads rather than native API
-    # functionality. Still, pretty sure this shouldn't rely on threads for
-    # openai backend.
-    if stream and n > 1:
-        raise RuntimeError('Stream=True and n>1 not supported.')
+    # Note: previously didn't allow streaming mode with n > 1 but I think this
+    # should work now. To re-enable this constraint, uncomment the two lines
+    # below.
+    # if stream and n > 1:
+    #     raise RuntimeError('Stream=True and n>1 not supported.')
 
     # Do not hardcode backend in GPTBackend.engine() call because we use this
     # function for both openai and gooseai. Rely on method to get the current
