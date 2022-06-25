@@ -2252,7 +2252,11 @@ X -rm some old unused files/vars from alexa dir
 6/25/22 sat
 -----------
 X -backlog grooming (separate things into Long Term Jabberwocky, Long Term Misc, Won't Do, etc.)
--ack for TODOS
+X -ack for TODOS
+	UPDATE: zero todos left in alexa, gui, scripts, or lib dirs 😮)
+X -add module docstring to each alexa script
+X -update makefile to include alexa dir in readme generation
+X -make all readmes
 -general pi setup
 	-try to connect to external monitor with help from D
 	-try to get ssh working

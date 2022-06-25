@@ -4,7 +4,7 @@ Jupyter notebooks for data exploration and experimentation.
 
 
 ---
-Start of auto-generated file data.<br/>Last updated: 2022-05-27 14:22:19
+Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:47
 
 <table border="1" class="dataframe">
   <thead>
@@ -61,18 +61,34 @@ Start of auto-generated file data.<br/>Last updated: 2022-05-27 14:22:19
     <tr>
       <td>nb016-prompt-object.ipynb</td>
       <td>Experimenting with making a Prompt object. Goals:<br/>- simplify the call to resolve template + arg(s)<br/>- allow computed values? (e.g. accept arg x and then fill another field with x+3 or x.upper()}<br/>- maybe define postprocessing/completion validation steps?</td>
-      <td>44</td>
-      <td>2</td>
-      <td>2022-05-15 14:54:14</td>
-      <td>38.20 kb</td>
+      <td>65</td>
+      <td>7</td>
+      <td>2022-05-27 15:41:34</td>
+      <td>66.36 kb</td>
     </tr>
     <tr>
       <td>nb017-nationality-extraction-and--emotion-detection.ipynb</td>
       <td>SMS dataset from here:<br/>https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset<br/>It looks ver messy.</td>
       <td>96</td>
       <td>7</td>
-      <td>2022-05-23 20:36:42</td>
-      <td>527.62 kb</td>
+      <td>2022-05-28 17:44:03</td>
+      <td>527.64 kb</td>
+    </tr>
+    <tr>
+      <td>nb018-persona-name-fuzzy-matching.ipynb</td>
+      <td>Try fuzzy matching mis-transcribed names. <br/><br/>Maybe also try to handle this better for a new contact - e.g. search google/wikipedia to find who I *meant* rather than who Alexa *heard* me say.</td>
+      <td>36</td>
+      <td>4</td>
+      <td>2022-06-08 20:31:55</td>
+      <td>104.28 kb</td>
+    </tr>
+    <tr>
+      <td>nb019-load-past-conversation.ipynb</td>
+      <td>Experiment with parsing an old conv file. Eventually could allow resuming an old conv, although that may be out of scope for this round.</td>
+      <td>20</td>
+      <td>2</td>
+      <td>2022-06-09 20:33:22</td>
+      <td>65.84 kb</td>
     </tr>
     <tr>
       <td>nb02-youtube-api-playground.ipynb</td>
@@ -81,6 +97,14 @@ Start of auto-generated file data.<br/>Last updated: 2022-05-27 14:22:19
       <td>6</td>
       <td>2021-05-08 14:16:31</td>
       <td>348.91 kb</td>
+    </tr>
+    <tr>
+      <td>nb020-speedup-lshdict-creation.ipynb</td>
+      <td>See if we can speed up lshdict instantiation.</td>
+      <td>36</td>
+      <td>6</td>
+      <td>2022-06-19 16:59:18</td>
+      <td>53.99 kb</td>
     </tr>
     <tr>
       <td>nb03-transcript-manager.ipynb</td>

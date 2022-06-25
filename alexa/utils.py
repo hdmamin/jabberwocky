@@ -1,3 +1,17 @@
+"""Helpers used in our alexa app. Particularly important
+- CustomAsk class: subclass of one of the core flask-ask classes. Lots of
+functionality around callbacks/logging/etc. take place here.
+- Settings class: used to maintain gpt settings throughout a session. There are
+global-level, conversation-level, and person-level settings (recency is
+prioritized when resolving the final gpt query kwargs). You can read more about
+this system in its docstrings.
+- build_utterance_map function: any time we update the dialogue model in the
+alexa UI, we must download the model JSON, save it to
+jabberwocky/data/alexa/dialogue_model.json, and pass it to this function. This
+will save a new dict-like object that allows us to infer intents and slots when
+user utterances are not recognized as invoking an existing intent.
+"""
+
 from collections import Mapping, deque, OrderedDict, ChainMap
 from enum import Enum
 from flask_ask import session, Ask, question

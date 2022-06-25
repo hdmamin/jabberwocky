@@ -1,7 +1,27 @@
-"""
-WIP: trying Flask-Ask since I'm not sure how to run the lambda_function locally
-of if that's even possible. App relies on local filesystem a lot at the moment
-so it might be more convenient to run locally with ngrok anyway.
+"""Flask web server where each alexa intent has its own endpoint. Responses
+that don't match a recognized intent (most of them) are routed to the
+`delegate` endpoint which attempts to infer the intended intent. Often this is
+just a standard conversational reply, in which case the user text is used to
+continue a conversation with a GPT-powered persona. Functions can be enqueued
+to handle cases like yes/no questions (in hindsight, a finite state machine
+would likely have been a more elegant solution here, but I was not that
+familiar with them when I started building this).
+
+Examples
+--------
+# Default mode. This uses the openai backend, loads both custom and
+# auto-generated personas, and uses AI-generated voices via Amazon Polly.
+python alexa/app.py
+
+# Run the app in dev mode (use free gpt backend by default) and only load
+# auto-generated personas (people with wikipedia pages).
+python alexa/app.py --dev True --custom False
+
+# Disable Amazon Polly voices in favor of default alexa voice for everyone.
+# Downside is persona voices are no longer differentiated by
+# gender/nationality; upside is we get some primitive emotional inflections
+# when appropriate.
+python alexa/app.py --voice False
 """
 
 import argparse

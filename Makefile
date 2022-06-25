@@ -17,7 +17,7 @@ pypi: lib
 		cd lib && twine upload --repository pypi dist/*
 
 readmes:
-	htools update_readmes "['gui', 'notebooks', 'lib/jabberwocky']"
+	htools update_readmes "['gui', 'notebooks', 'lib/jabberwocky', 'alexa']"
 	python ./lib/jabberwocky/cli.py update_prompt_readme
 
 install:
