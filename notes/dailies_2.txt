@@ -2236,8 +2236,25 @@ X -add reprompt to _maybe_choose_person (I think this is currently missing and s
 	X -clean up docs a bit for various Settings methods
 		X -_resolve_state
 		X -clear
--look for resources to help w/ hosting on raspberry pi
--look for resources to help w/ self/private publishing (if I actually need to do anything? Current mode seems to be working, whatever that is)
+~ -look for resources to help w/ hosting on raspberry pi
+	UPDATE: didn't find much specifically about using it to host alexa skills (moreso to create alexa skills that control a pi), but I think I can just use a generic pi as webserver tutorial.
+~ -look for resources to help w/ self/private publishing (if I actually need to do anything? Current mode seems to be working, whatever that is)
+	UPDATE: submitted for private release but I think it failed some automated check (seems like they automatically call all your endpoints I think, and that won't necessarily work here if they're in the wrong order). Sounds like I could probably just stick with keeping the skill in its current state (i.e. permanently in dev mode) and that would be fine, tbh. The skill might require a significant redesign to work with multiple users (I have no idea tbh) so public usage is out of scope atm, and private usage is really no different than dev mode for my purposes.
+~ -try to get pi up and running
+	X -confirm we can turn pi on
+	_ -confirm we can ssh into pi
+		UPDATE: getting "operation timed out". Think maybe I should start w/ making sure I can access it via remote desktop w/ an external monitor first, then return to ssh issue.
+X -rm some old unused files/vars from alexa dir
+-other options:
+	-record sample audio/video clip w/ alexa skill (lex?)
+	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+
+6/25/22 sat
+-----------
+-general pi setup
+	-try to connect to external monitor with help from D
+	-try to get ssh working
+-work through webserver tutorial. Try to get jabberwocky up and running there.
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
