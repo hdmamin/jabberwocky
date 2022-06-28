@@ -2301,6 +2301,8 @@ X -try building py env on pi
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
 	-update jabberwocky version and upload to pypi
+X -check on alexa approval process
+	UPDATE: actually approved 🤨. I thought it looked like we clearly failed some automated endpoint test so I'm surprised.
 
 6/28/22 tues
 ------------
