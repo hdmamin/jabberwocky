@@ -537,6 +537,7 @@ class EngineMap:
         'davinci'
     ]
     backend_engines = C.backend_engines
+    paid_backends = {'openai', 'gooseai'}
 
     # Unlike gooseai, openai charges for both prompt and generation tokens.
     # We convert their prices to cents per token.
@@ -812,6 +813,9 @@ class GPTBackend:
     # openai.api_base value, a.k.a. those that use the openai.Completion.create
     # method. I also treat this as a record of which backends are paid, though
     # it's plausible that may change eventually.
+    # 6/26/22 update: EngineMap.paid_backends now tracks this explicitly. Might
+    # want to consider how we can handle this to avoid the risk of these two
+    # attributes getting out of sync.
     name2base = {
         'openai': 'https://api.openai.com/v1',
         'gooseai': 'https://api.goose.ai/v1',

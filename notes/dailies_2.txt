@@ -2289,7 +2289,9 @@ X -try building py env on pi
 
 6/27/22 mon
 -----------
--look into possible stow issue on pi (vimrc, bashrc, ipython config all not working as expected. Maybe symlinking didn't work right? Filesystem doesn't see any .ipython/profile_default/ipython_config.py file).
+~ -scope out rate limiter idea (prevent scenario where someone finds url and runs up my openai bill)
+	UPDATE: made quite a bit of progress in nb21. Considered a few ways to do this (query freq vs token count vs cost; change GPT vs. decorate flask endpoint vs check manually inside endpoint func) and wrote some notes (see bottom of nb21). 
+-look into possible stow issue on pi (vimrc, bashrc, ipython config all not working as expected. Maybe symlinking didn't work right? Filesystem doesn't see any .ipython/profile_default/ipython_config.py file). Despite the minimal changes visible in dailies, this was actually a very productive (and enjoyable) session.
 -try imports in ipython
 	-various jabberwocky imports
 	-transformers imports (test memory usage works)
@@ -2299,6 +2301,30 @@ X -try building py env on pi
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
 	-update jabberwocky version and upload to pypi
+
+6/28/22 tues
+------------
+-finish price monitoring capabilities (nb21)
+	-investigate possible issues w/ EngineMap.estimate_cost
+		-is cost really returned in cents? The estimates I'm seeing look like they're in dollars.
+		-Is the math correct here? If it really is using cents, seems like 1-2 orders of magnitude lower than I've been getting charged.
+	-once cost calcs are confirmed, test cls again on:
+		-normal query rates/lengths
+		-elevated query lengths
+		-elevated query rates
+	-select good values for time_window and max_cost
+	-port cls to lib
+	-update _reply func in app.py to make use of this.
+-try imports in ipython
+	-various jabberwocky imports
+	-transformers imports (test memory usage works)
+-try running alexa app
+-work through webserver tutorial. Try to get jabberwocky up and running there.
+-other options:
+	-record sample audio/video clip w/ alexa skill (lex?)
+	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+	-update jabberwocky version and upload to pypi
+
 
 
 Backlog (short term)
