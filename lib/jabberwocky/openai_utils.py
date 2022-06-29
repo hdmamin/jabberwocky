@@ -540,7 +540,7 @@ class EngineMap:
     paid_backends = {'openai', 'gooseai'}
 
     # Unlike gooseai, openai charges for both prompt and generation tokens.
-    # We convert their prices to cents per token.
+    # We convert their prices to dollars per token.
     openai_prices = {
         'ada': {'per': .0008 / 1_000},
         'babbage': {'per': .0012 / 1_000},
@@ -548,8 +548,8 @@ class EngineMap:
         'davinci': {'per': .0600 / 1_000},
     }
 
-    # Gooseai base prices (in cents) cover the input and the first 25
-    # tokens of the output. `Per` prices are cents per token.
+    # Gooseai base prices (in dollars) cover the input and the first 25
+    # tokens of the output. `Per` prices are dollars per token.
     gooseai_prices = {
         'gpt-neo-20b': {'base': 0.002650, 'per': 0.000063},
         'fairseq-13b': {'base': 0.001250, 'per': 0.000036},
@@ -740,10 +740,10 @@ class EngineMap:
         Returns
         -------
         dict: Keys "backend" and "engine" are strings corresponding to the
-        cheapest option of the specified engines. "cost_cents" is a float
-        specifying the cost of the query (in cents) using the recommended
+        cheapest option of the specified engines. "cost" is a float
+        specifying the cost of the query (in dollars) using the recommended
         backend and engine. If return_full=True, and additional key "full" is
-        included, which maps to a df containing the cost in cents for all
+        included, which maps to a df containing the cost in dollars for all
         specified backend/engine options.
         """
         # Pass in engines=None to get ALL possible engine prices.
@@ -775,11 +775,11 @@ class EngineMap:
             for name, prices in openai_prices.items()
         ]
 
-        # Prices are returned in cents.
+        # Prices are returned in dollars.
         df = pd.DataFrame(
             gooseai_resolved + openai_resolved,
-            columns=['backend', 'engine', 'cost_cents']
-        ).sort_values('cost_cents', ascending=True).reset_index(drop=True)
+            columns=['backend', 'engine', 'cost']
+        ).sort_values('cost', ascending=True).reset_index(drop=True)
         res = df.iloc[0].to_dict()
         if return_full: res['full'] = df
         return res

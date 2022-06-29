@@ -2306,31 +2306,50 @@ X -check on alexa approval process
 
 6/28/22 tues
 ------------
--finish price monitoring capabilities (nb21)
-	-investigate possible issues w/ EngineMap.estimate_cost
-		-is cost really returned in cents? The estimates I'm seeing look like they're in dollars.
-		-Is the math correct here? If it really is using cents, seems like 1-2 orders of magnitude lower than I've been getting charged.
-	-once cost calcs are confirmed, test cls again on:
-		-normal query rates/lengths
-		-elevated query lengths
-		-elevated query rates
+~ -finish price monitoring capabilities (nb21)
+	X -investigate possible issues w/ EngineMap.estimate_cost
+		X -is cost really returned in cents? The estimates I'm seeing look like they're in dollars.
+			UPDATE: 😮 these were in dollars. I guess really that just means some of my comments/docstrings were wrong/outdated. Updated comments and changed 'cost_cents' key to just be named 'cost' in EngineMap.estimate_cost.
+		_ -Is the math correct here? If it really is using cents, seems like 1-2 orders of magnitude lower than I've been getting charged.
+			UPDATE: skip for now - seems like the above bullet point probably was the issue.
+	X -once cost calcs are confirmed, test cls again on:
+		X -normal query rates/lengths
+		X -elevated query lengths
+		X -elevated query rates
+	X -add warn option to monitor cls
+		UPDATE: ended up tweaking the interface a bit. Not as pretty as before but not too bad. Hard to get something clean with both an error option and a warn option. Walrus operator would have been nice here but I've been using py 3.7 and am hesitant to change it mid-project.
 	-select good values for time_window and max_cost
 	-port cls to lib
 	-update _reply func in app.py to make use of this.
--try imports in ipython
+-pi: try imports in ipython
 	-various jabberwocky imports
 	-transformers imports (test memory usage works)
--try running alexa app
+-try running alexa app on pi
 -work through webserver tutorial. Try to get jabberwocky up and running there.
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
 	-update jabberwocky version and upload to pypi
 
+6/29/22 wed
+-----------
+-wrap up pricemonitor
+	-select good values for time_window and max_cost (nb already has some tentative data to help with this)
+	-port cls to lib
+	-update _reply func in app.py to make use of this.
+-pi: try imports in ipython
+	-various jabberwocky imports
+	-transformers imports (test memory usage works)
+-try running alexa app on pi
+-work through webserver tutorial. Try to get jabberwocky up and running there.
 
 
 Backlog (short term)
 --------------------
+-other options:
+	-record sample audio/video clip w/ alexa skill (lex?)
+	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+	-update jabberwocky version and upload to pypi
 -[weekend - need another person to help] see what happens if I try to use this on 2 devices at once. Is this even possible? Guessing this totally breaks everything bc I didn't design for multi users, but let's confirm that.
 
 Easy Backlog (short term)
