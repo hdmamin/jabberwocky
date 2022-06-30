@@ -5,5 +5,8 @@ generated for each day (the switch occurs at midnight) and each line in the
 file corresponds to kwargs for a single gpt query.
 """
 
+from htools import load
+
 EMAIL = 'jabberwocky-alexa@outlook.com'
+DEV_EMAIL = load('data/private/dev_email.txt').strip()
 LOG_FILE = 'alexa/app.log'

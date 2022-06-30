@@ -43,7 +43,7 @@ Use the comments and examples in the class as guidance.
 
 import banana_dev as banana
 from collections.abc import Iterable, Mapping
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from contextlib import contextmanager
 from datetime import datetime
 from fuzzywuzzy import process
@@ -66,7 +66,7 @@ import yaml
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
     listlike, Results, flatten, add_docstring, func_name, params, mark, \
-    random_str, deprecated, xor_none, MultiLogger
+    random_str, deprecated, xor_none, MultiLogger, eprint
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.streaming import stream_response, truncate_at_first_stop
@@ -1293,11 +1293,160 @@ class GPTBackend:
         return f'{func_name(self)} <current_name: {self.current()}>'
 
 
-GPT = GPTBackend()
-
-
 class MockFunctionException(Exception):
     """Allow all mock query functions to return a common exception."""
+
+
+class QueryAllowedResult:
+    """Object returned by PriceMonitor.allowed().
+    Truthy if the query should be allowed to proceed, falsy if api usage
+    exceeded the allowed amount (specified when creating PriceMonitor).
+    See __bool__ docstring for sample usage.
+    """
+
+    def __init__(self, error: bool, warn: bool, monitor):
+        self.error = error
+        self.warn = warn
+        self.running_cost = monitor.running_cost
+        self.time_window = monitor.time_window
+        self.message = self._construct_message(monitor)
+
+    def _construct_message(self, monitor):
+        if self.error:
+            adverb = 'extremely'
+            limit = monitor.max_cost
+        elif self.warn:
+            adverb = 'suspiciously'
+            limit = monitor.warn_cost
+        else:
+            return ''
+        queue_str = '\n'.join(
+            f"{dt.strftime('%Y/%m/%d %H:%M:%S')}, ${cost:.2f}"
+            for dt, cost in monitor.q
+        )
+        return f'Your recent api usage looks {adverb} high. In the last ' \
+               f'{self.time_window} seconds, you spent an estimated ' \
+               f'${self.running_cost:.2f} (> ${limit:.2f}). Here is your ' \
+               f'query queue:\n{queue_str}'
+
+    def __bool__(self):
+        """Returns True if no error was raised (i.e. we are allowed to
+        proceed), False otherwise. If there is no error message but there is a
+        warning, this will be falsy because we are allowed to proceed. This
+        let us do something like:
+
+        ```
+        allowed = monitor.allowed(query)
+        if not allowed:
+            raise RuntimeError(allowed.message)
+        elif allowed.warn:
+            warnings.warn(allowed.message)
+        GPT.query(query)
+        ```
+        """
+        return not self.error
+
+
+class PriceMonitor:
+
+    def __init__(self, time_window=125, max_cost=0.75, warn_cost=0.5,
+                 tokenizer=MockTokenizer):
+        """
+        time_window: int
+            Specifies how long to look back when computing total price.
+            Units are seconds. (One probably useless detail: for the default I
+            added a few extra seconds instead of an exact multiple of minutes
+            on the off chance this might flag a lazy bad actor who uses some
+            fixed, human sensical wait time between queries.
+        max_cost: float
+            The amount (specified in dollars) where, if we spend at least this
+            much in `time_window`, we should assume something fishy is going
+            on).
+        warn_cost: float
+            Similar to max_cost but a lower number. If total cost exceeds this
+            within `time_window`, the user should be warned but the query
+            should be allowed to proceed.
+
+        Examples
+        --------
+        # Allow at most $2 in the last 5 minutes.
+
+        price_monitor = PriceMonitor(time_window=300, max_price=2.0)
+        allowed = monitor.allowed(query, **query_kwargs)
+        if not allowed:
+            raise RuntimeError(allowed.message)
+        elif allowed.warn:
+            warnings.warn(allowed.message)
+        GPT.query(query)
+        """
+        # This will store (datetime, price_in_dollars) tuples.
+        self.q = deque()
+        self.time_window = time_window
+        self.max_cost = max_cost
+        self.warn_cost = warn_cost or max_cost
+        self.tokenizer = tokenizer
+        self.running_cost = 0
+        if self.warn_cost > self.max_cost:
+            raise ValueError('warn_cost must be <= max_cost.')
+
+    def allowed(self, prompt, model, max_tokens, dt=None, backend=None,
+                verbose=False):
+        """Check if api usage exceeds the allowed amount.
+
+        Parameters
+        ----------
+        prompt: str
+            Fully resolved prompt that will be sent to api.
+        model: int
+            Value in [0, 1, 2, 3] corresponding to model like
+            'ada', 'babbage', 'curie', 'davinci'.
+        max_tokens: int
+            Max length of the completion.
+        dt: None or datetime.datetime
+            Usually don't need to specify this - it defaults to the current
+            time. Passing in a datetime object is mostly useful for testing.
+        backend: None or str
+            Usually don't need to specify this - it defaults to the current
+            backend. Passing in a str is mostly useful for testing. In that
+            case, it should be a string in in ('gooseai', 'openai').
+        verbose: bool
+            If True, print the queue and running cost.
+
+        Examples
+        --------
+        # Allow at most $2 in the last 5 minutes.
+
+        price_monitor = PriceMonitor(time_window=300, max_price=2.0)
+        allowed = monitor.allowed(query, **query_kwargs)
+        if not allowed:
+            raise RuntimeError(allowed.message)
+        elif allowed.warn:
+            warnings.warn(allowed.message)
+        GPT.query(query)
+        """
+        dt = dt or datetime.now()
+        backend = backend or GPT.current()
+        if backend not in EngineMap.paid_backends:
+            return True
+
+        cost = EngineMap.estimate_cost(
+            max_tokens, prompt=prompt, tokenizer=self.tokenizer,
+            engines=[model], return_full=True
+        )['full'].loc[lambda x: x.backend == backend, 'cost'].values[0]
+        self.q.append((dt, cost))
+        self.running_cost += cost
+        while (dt - self.q[0][0]).total_seconds() > self.time_window:
+            _, cur_cost = self.q.popleft()
+            self.running_cost -= cur_cost
+        if verbose:
+            eprint([(dt.strftime('%H:%M:%S'), cost) for dt, cost in self.q])
+            print('Running cost:', self.running_cost)
+        error = self.running_cost >= self.max_cost
+        warn = not error and (self.running_cost >= self.warn_cost)
+        return QueryAllowedResult(error, warn, self)
+
+
+GPT = GPTBackend()
 
 
 def iter_engine_names(*backends, **kwargs):

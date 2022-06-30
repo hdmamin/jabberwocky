@@ -2333,10 +2333,26 @@ X -check on alexa approval process
 
 6/29/22 wed
 -----------
--wrap up pricemonitor
-	-select good values for time_window and max_cost (nb already has some tentative data to help with this)
-	-port cls to lib
-	-update _reply func in app.py to make use of this.
+X -wrap up pricemonitor
+	X -select good values for time_window and max_cost (nb already has some tentative data to help with this)
+	X -port cls to lib
+	X -port QueryAllowedResult to lib
+		UPDATE: also exposed a few other attrs from pricemonitor so all warnings/errors/prints only need to act on `allowed` object.
+	X -update _reply func in app.py to make use of this.
+		UPDATE: done but not tested yet.
+-pi: try imports in ipython
+	-various jabberwocky imports
+	-transformers imports (test memory usage works)
+-try running alexa app on pi
+-work through webserver tutorial. Try to get jabberwocky up and running there.
+
+6/30/22 thurs
+-------------
+-test pricemonitor functionality in app
+	-start app w/ show_cost=True mode and see how logs look. Maybe record some of these in misc.txt so we can later compare to the actual gpt charges to see how accurate the estimates are.
+	-consider how to test warning and error outcomes (could add cli option or just hardcode backend for a few minutes)
+	-test error outcome (should shutdown app)
+	-test warning outcome
 -pi: try imports in ipython
 	-various jabberwocky imports
 	-transformers imports (test memory usage works)

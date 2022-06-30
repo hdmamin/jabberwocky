@@ -35,12 +35,14 @@ import numpy as np
 # openai appears unused but is actually used by GPTBackend instance.
 import openai
 import requests
+import sys
 from transformers import pipeline
 
-from config import EMAIL, LOG_FILE
+from config import EMAIL, LOG_FILE, DEV_EMAIL
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load
-from jabberwocky.openai_utils import ConversationManager, PromptManager, GPT
+from jabberwocky.openai_utils import ConversationManager, PromptManager, GPT, \
+    PriceMonitor
 from utils import slot, Settings, model_type, CustomAsk, infer_intent, voice, \
     custom_question, select_polly_voice
 
@@ -545,6 +547,28 @@ def _reply(prompt=None):
                                    text=prompt, strip_output=True,
                                    max_tokens=2 * len(prompt.split()))
         prompt = prompt[0]
+
+    # Check that api usage level looks normal.
+    allowed = PRICE_MONITOR.allowed(prompt, model=state['model'],
+                                    max_tokens=state['max_tokens'])
+    if not allowed:
+        ask.logger.critical(allowed.message)
+        quickmail('[CRITICAL] Jabberwocky detected dangerous levels of API '
+                  'usage. App has been shut down.',
+                  message=f'PriceMonitor message: {allowed.message}',
+                  to_email=DEV_EMAIL, from_email=EMAIL)
+        sys.exit(1)
+    elif allowed.warn:
+        ask.logger.warning(allowed.message)
+    elif ARGS.show_cost:
+        ask.logger.info(f'\nRunning cost for last {allowed.time_window} sec: '
+                        f'${PRICE_MONITOR.running_cost:.2f}\n')
+        quickmail('[WARNING] Jabberwocky detected suspicious levels of '
+                  'API usage.',
+                  message=f'PriceMonitor message: {allowed.message}',
+                  to_email=DEV_EMAIL, from_email=EMAIL)
+
+    # Make the actual gpt query.
     ask.logger.info('BEFORE QUERY: ' + prompt)
     text, _ = CONV.query(prompt, **state)
     # Add custom accent/emotion audio.
@@ -784,10 +808,18 @@ if __name__ == '__main__':
         help='If True, include custom personas. If False, only include '
              'auto-generated personas.'
     )
+    parser.add_argument(
+        '--show_cost', default=False, type=ast.literal_eval,
+        help='If True, print the estimated running cost for the last relevant '
+             'series of queries within the time window set in PriceMonitor. '
+             'If False, prices are only logged when they look suspiciously '
+             'high.'
+    )
     ARGS = parser.parse_args()
     CONV = ConversationManager(custom_names=[] if ARGS.custom else False,
                                load_qa_pipe=not ARGS.dev)
     PROMPTER = PromptManager(['punctuate_alexa'], verbose=False)
+    PRICE_MONITOR = PriceMonitor()
     UTT2META = load('data/alexa/utterance2meta.pkl')
     # Weird values/spellings here are mis-transcriptions I observed Alexa make.
     NOBODY_UTTS = {'knobody', 'nobody', 'noone', 'no one', 'no1', 'no 1'}
