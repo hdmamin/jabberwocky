@@ -549,24 +549,34 @@ def _reply(prompt=None):
         prompt = prompt[0]
 
     # Check that api usage level looks normal.
+    # allowed = PRICE_MONITOR.allowed(prompt, model=state['model'],
+    #                                 max_tokens=state['max_tokens'])
+
+    # TODO rm
     allowed = PRICE_MONITOR.allowed(prompt, model=state['model'],
-                                    max_tokens=state['max_tokens'])
+                                    max_tokens=state['max_tokens'] * 44,
+                                    backend='openai')
+    # TODO end
+
     if not allowed:
         ask.logger.critical(allowed.message)
         quickmail('[CRITICAL] Jabberwocky detected dangerous levels of API '
                   'usage. App has been shut down.',
                   message=f'PriceMonitor message: {allowed.message}',
                   to_email=DEV_EMAIL, from_email=EMAIL)
-        sys.exit(1)
+        return statement('You\'ve exceeded the allowed API usage levels. '
+                         'Goodbye.')
     elif allowed.warn:
         ask.logger.warning(allowed.message)
-    elif ARGS.show_cost:
-        ask.logger.info(f'\nRunning cost for last {allowed.time_window} sec: '
-                        f'${PRICE_MONITOR.running_cost:.2f}\n')
         quickmail('[WARNING] Jabberwocky detected suspicious levels of '
                   'API usage.',
                   message=f'PriceMonitor message: {allowed.message}',
                   to_email=DEV_EMAIL, from_email=EMAIL)
+    elif ARGS.show_cost:
+        ask.logger.info(
+            f'\n[Price Monitor] Running cost for last {allowed.time_window} '
+            f'sec: ${PRICE_MONITOR.running_cost:.2f}\n'
+        )
 
     # Make the actual gpt query.
     ask.logger.info('BEFORE QUERY: ' + prompt)
@@ -773,8 +783,13 @@ def _end_chat(choice=None, **kwargs):
 
 @ask.session_ended
 def end_session():
-    """Called when user exits the skill. Note: I tried adding a goodbye message
-    but it looks like that's not supported.
+    """Called automatically when user exits the skill (I don't think we
+    can manually call this). Note that this is NOT triggered if we return a
+    statement rather than a question - that does end the session, just not via
+    this function.
+
+    Note: I also tried adding a goodbye message here but it looks like that's
+    not supported.
     """
     # Occasionally I've seen conversations get cut off unexpectedly (perhaps
     # echo fails to pick up any audio or something). Sending transcript just to

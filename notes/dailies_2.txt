@@ -2348,11 +2348,32 @@ X -wrap up pricemonitor
 
 6/30/22 thurs
 -------------
--test pricemonitor functionality in app
-	-start app w/ show_cost=True mode and see how logs look. Maybe record some of these in misc.txt so we can later compare to the actual gpt charges to see how accurate the estimates are.
-	-consider how to test warning and error outcomes (could add cli option or just hardcode backend for a few minutes)
-	-test error outcome (should shutdown app)
-	-test warning outcome
+~ -test pricemonitor functionality in app
+	X -start app w/ show_cost=True mode and see how logs look. Maybe record some of these in misc.txt so we can later compare to the actual gpt charges to see how accurate the estimates are.
+		UPDATE: fixed bug where we returned bool rather than QueryAllowedResult in pricemonitor.allowed. Fixed bug where we were sending warning email if everything was okay rather than if usage was high. Lowered max and warn rates a bit because I seem to be averaging only $0.03 / 2 min, much lower than I expected (granted, it might turn out that we're underestimating).
+	X -consider how to test warning and error outcomes (could add cli option or just hardcode backend for a few minutes)
+		UPDATE: just hardcode.
+	~ -test error outcome (should shutdown app)
+		UPDATE: a bit trickier than I expected. I'd prefer to have this a. say a relevant error message as Lou, b. send a transcript, and c. kill the script (not just end the session). Returning error message as statement() ends the session but doesn't let us execute code after that to kill the script (if we use a try/finally, it seems that the statement doesn't make it back to alexa).
+	X -test warning outcome
+-pi: try imports in ipython
+	-various jabberwocky imports
+	-transformers imports (test memory usage works)
+-try running alexa app on pi
+-work through webserver tutorial. Try to get jabberwocky up and running there.
+
+7/1/22 fri
+----------
+-get error mode working (i.e. read message, send transcript, then exit script entirely) on pricemonitor error in _reply (see notes from thurs for a reminder on the issue here)
+	-consider strategies to try to accomplish the behavior I want
+		-review yesterday's notes to see what didn't work
+		-make sure you can clearly state the problem
+		-write down a few possible things to try
+		-select first method
+	-implement selected method
+	-test with echo
+	-revert hardcoded allowed() call w/ artificially high price to real calculation
+-view openai console price usage. Does my estimate of ~3cents (maybe I saw 5 at times?) per 2min look about right or are we underestimating?
 -pi: try imports in ipython
 	-various jabberwocky imports
 	-transformers imports (test memory usage works)

@@ -1321,13 +1321,13 @@ class QueryAllowedResult:
         else:
             return ''
         queue_str = '\n'.join(
-            f"{dt.strftime('%Y/%m/%d %H:%M:%S')}, ${cost:.2f}"
+            f"{dt.strftime('%Y/%m/%d %H:%M:%S')}: ${cost:.2f}"
             for dt, cost in monitor.q
         )
         return f'Your recent api usage looks {adverb} high. In the last ' \
                f'{self.time_window} seconds, you spent an estimated ' \
                f'${self.running_cost:.2f} (> ${limit:.2f}). Here is your ' \
-               f'query queue:\n{queue_str}'
+               f'query queue:\n\n{queue_str}'
 
     def __bool__(self):
         """Returns True if no error was raised (i.e. we are allowed to
@@ -1349,7 +1349,7 @@ class QueryAllowedResult:
 
 class PriceMonitor:
 
-    def __init__(self, time_window=125, max_cost=0.75, warn_cost=0.5,
+    def __init__(self, time_window=125, max_cost=0.6, warn_cost=0.15,
                  tokenizer=MockTokenizer):
         """
         time_window: int
@@ -1361,11 +1361,13 @@ class PriceMonitor:
         max_cost: float
             The amount (specified in dollars) where, if we spend at least this
             much in `time_window`, we should assume something fishy is going
-            on).
+            on). I seem to average around $0.03 every 2 minutes so the default
+            value represents ~20x typical usage.
         warn_cost: float
             Similar to max_cost but a lower number. If total cost exceeds this
             within `time_window`, the user should be warned but the query
-            should be allowed to proceed.
+            should be allowed to proceed. The default value is ~5x typical
+            usage.
 
         Examples
         --------
@@ -1386,6 +1388,7 @@ class PriceMonitor:
         self.warn_cost = warn_cost or max_cost
         self.tokenizer = tokenizer
         self.running_cost = 0
+        self.n_errors = 0
         if self.warn_cost > self.max_cost:
             raise ValueError('warn_cost must be <= max_cost.')
 
@@ -1408,7 +1411,7 @@ class PriceMonitor:
         backend: None or str
             Usually don't need to specify this - it defaults to the current
             backend. Passing in a str is mostly useful for testing. In that
-            case, it should be a string in in ('gooseai', 'openai').
+            case, it should be a string in ('gooseai', 'openai').
         verbose: bool
             If True, print the queue and running cost.
 
@@ -1427,7 +1430,7 @@ class PriceMonitor:
         dt = dt or datetime.now()
         backend = backend or GPT.current()
         if backend not in EngineMap.paid_backends:
-            return True
+            return QueryAllowedResult(error=False, warn=False, moniotor=self)
 
         cost = EngineMap.estimate_cost(
             max_tokens, prompt=prompt, tokenizer=self.tokenizer,
@@ -1442,6 +1445,7 @@ class PriceMonitor:
             eprint([(dt.strftime('%H:%M:%S'), cost) for dt, cost in self.q])
             print('Running cost:', self.running_cost)
         error = self.running_cost >= self.max_cost
+        if error: self.n_errors += 1
         warn = not error and (self.running_cost >= self.warn_cost)
         return QueryAllowedResult(error, warn, self)
 
