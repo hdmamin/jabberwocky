@@ -32,6 +32,7 @@ from pathlib import Path
 from flask import Flask, request
 from flask_ask import question, context, statement
 import numpy as np
+import os
 # openai appears unused but is actually used by GPTBackend instance.
 import openai
 import requests
@@ -530,6 +531,15 @@ def _reply(prompt=None):
     """Generic conversation reply. I anticipate this endpoint making up the
     bulk of conversations.
     """
+    # When price monitor finds an error, it ends the session but doesn't shut
+    # down the app (I decided I'd rather exit smoothly with a message from Lou,
+    # and if we call sys.exit there then alexa won't receive our response to
+    # read. Use os rather than sys to exit because the latter method seems to
+    # be captured by flask's error handling and the app doesn't actually exit.
+    if PRICE_MONITOR.n_errors:
+        ask.logger.error('Shutting down app due to api usage.')
+        os._exit(1)
+
     prompt = prompt or slot(request, 'response', lower=False)
     if not prompt:
         return question('Did you say something? I didn\'t catch that.')
@@ -549,19 +559,13 @@ def _reply(prompt=None):
         prompt = prompt[0]
 
     # Check that api usage level looks normal.
-    # allowed = PRICE_MONITOR.allowed(prompt, model=state['model'],
-    #                                 max_tokens=state['max_tokens'])
-
-    # TODO rm
     allowed = PRICE_MONITOR.allowed(prompt, model=state['model'],
-                                    max_tokens=state['max_tokens'] * 44,
-                                    backend='openai')
-    # TODO end
-
+                                    max_tokens=state['max_tokens'])
     if not allowed:
         ask.logger.critical(allowed.message)
         quickmail('[CRITICAL] Jabberwocky detected dangerous levels of API '
-                  'usage. App has been shut down.',
+                  'usage. The app will be shut down if someone tries to get '
+                  'another response.',
                   message=f'PriceMonitor message: {allowed.message}',
                   to_email=DEV_EMAIL, from_email=EMAIL)
         return statement('You\'ve exceeded the allowed API usage levels. '

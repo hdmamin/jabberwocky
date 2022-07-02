@@ -2364,22 +2364,38 @@ X -wrap up pricemonitor
 
 7/1/22 fri
 ----------
--get error mode working (i.e. read message, send transcript, then exit script entirely) on pricemonitor error in _reply (see notes from thurs for a reminder on the issue here)
-	-consider strategies to try to accomplish the behavior I want
-		-review yesterday's notes to see what didn't work
-		-make sure you can clearly state the problem
-		-write down a few possible things to try
-		-select first method
-	-implement selected method
-	-test with echo
-	-revert hardcoded allowed() call w/ artificially high price to real calculation
--view openai console price usage. Does my estimate of ~3cents (maybe I saw 5 at times?) per 2min look about right or are we underestimating?
--pi: try imports in ipython
-	-various jabberwocky imports
+X -get error mode working (i.e. read message, send transcript, then exit script entirely) on pricemonitor error in _reply (see notes from thurs for a reminder on the issue here)
+	~ -consider strategies to try to accomplish the behavior I want
+		X -review yesterday's notes to see what didn't work
+		~ -make sure you can clearly state the problem
+		_ -write down a few possible things to try
+		X -select first method
+		UPDATE: briefly tried my idea of try/finally w/ sleep in the finally but the return hangs too so I don't think that would work w/ alexa. Just returned to the idea of placing a check at the start of _reply - I suppose the current max price is quite low and if the bad actor can't get any more completions, then what's the harm in the app staying live for a bit?
+	X -implement selected method
+	X -test with echo
+	X -revert hardcoded allowed() call w/ artificially high price to real calculation
+X -view openai console price usage. Does my estimate of ~3cents (maybe I saw 5 at times?) per 2min look about right or are we underestimating?
+	UPDATE: looks like ~5cents per 2 minutes. Maybe a bit higher than my estimates but maybe that's just due to the mock tokenizer underestimating (granted, the formula I used is directly from openai). Though I'm also realising the actual completions are usually quite a bit shorter than the max allowed tokens so if anything the real values should be significantly lower, not higher. Hmm. Usage levels aren't really important enough for this to matter I think, but I should keep in mind that these price estimates are likely underestimating things.
+	> Ended up adding a not to EngineMap.estimate_cost() method.
+~ -pi: try imports in ipython
+	~ -various jabberwocky imports
+		UPDATE: not found. In fact, basically no packages are found. Some (like numpy) were installed somewhere in /usr/something but weren't found by pip show/list.
 	-transformers imports (test memory usage works)
 -try running alexa app on pi
 -work through webserver tutorial. Try to get jabberwocky up and running there.
 
+7/2/22 sat
+----------
+-pi: get pip installs working
+	-check if new test package (wordlcoud) installed successfully
+	-look again for where packages are installed
+	-google around for solutions (could be related to pyenv active env, python version, pip version, pi, etc.)
+	-install lib requirements
+	-test jabberwocky imports
+	-test non-jabberwocky imports
+	-test transformers imports (pipelines used in app.py - test memory usage works)
+-try running alexa app on pi
+-work through webserver tutorial. Try to get jabberwocky up and running there.
 
 Backlog (short term)
 --------------------

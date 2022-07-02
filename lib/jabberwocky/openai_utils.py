@@ -712,6 +712,12 @@ class EngineMap:
         as guardrails and leave max_tokens higher than you expect to use in
         order to avoid truncating completions mid-sentence).
 
+        Note: as of 7/1/22, it seems that at least the openai estimates tend to
+        be a bit lower than the actual charges. I think this it's mostly that
+        the MockTokenizer formula is overly optimistic
+        (it was provided by openai though 🤨). If you want more accurate
+        estimates, passing in tokenizer=transformers.GPT2Tokenizer should help.
+
         Parameters
         ----------
         completion_length
