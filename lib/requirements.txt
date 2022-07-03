@@ -1,3 +1,4 @@
+banana-dev==2.0.2
 colorama==0.4.3
 htools[speedup]==6.8.0
 nltk==3.4.4

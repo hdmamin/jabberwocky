@@ -2386,7 +2386,7 @@ X -view openai console price usage. Does my estimate of ~3cents (maybe I saw 5 a
 
 7/2/22 sat
 ----------
--pi: get pip installs working
+~ -pi: get pip installs working
 	X -check if new test package (wordlcoud) installed successfully
 		UPDATE: pip show wordcloud finds nothing, python -m pip show wordcloud finds it! Importing wordcloud throws error but not an "import error", and importing numpy works.
 		> Now (at night) pip show wordcloud works!?
@@ -2395,14 +2395,23 @@ X -view openai console price usage. Does my estimate of ~3cents (maybe I saw 5 a
 	~ -google around for solutions (could be related to pyenv active env, python version, pip version, pi, etc.)
 	X -install lib requirements
 		UPDATE: seems we got tripped up on the same issue at the end of the gui project - htools doesn't specify pandas_flavor version and newest version causes install errors in some contexts. Updated htools/metas and pushed to pypi, updated jabberwocky lib reqs, pushed/pulled, etc. Install still failed (pip couldn't find latest version, though it found all others. BUT python -m pip install finally worked.)
-	-test jabberwocky imports
+	X -add missing deps to lib (transformers, banana-dev)
+	~ -test jabberwocky imports
+		UPDATE: failing due to numpy import error. Pasted it in misc.txt.
 	-test non-jabberwocky imports
 	-test transformers imports (pipelines used in app.py - test memory usage works)
+X -copy api keys to pi
 -try running alexa app on pi
 -work through webserver tutorial. Try to get jabberwocky up and running there.
 
 7/3/22 sun
 ----------
+-troubleshoot pi pip installs
+	-investigate numpy error in misc.txt
+	-investigate transformers install error (sounds like maybe we need to install rust compiler and add to path?)
+-confirm jabberwocky imports work w/out import errors
+-confirm a few external dep imports work w/out import errors
+-confirm transformers model loading works on pi w/out memory error
 -try running alexa app on pi
 -work through webserver tutorial. Try to get jabberwocky up and running there.
 

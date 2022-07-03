@@ -493,3 +493,27 @@ def _format_turns(self, total_turn_window):
     interleaved = list(filter(None, flatten(zip_longest(*ordered))))[-total_turn_window:]
     prompt = '\n\n'.join(interleaved)
     return prompt
+
+7/2/22
+------
+ImportError:
+
+IMPORTANT: PLEASE READ THIS FOR ADVICE ON HOW TO SOLVE THIS ISSUE!
+
+Importing the numpy C-extensions failed. This error can happen for
+many reasons, often due to issues with your setup or how NumPy was
+installed.
+
+We have compiled some common reasons and troubleshooting tips at:
+
+    https://numpy.org/devdocs/user/troubleshooting-importerror.html
+
+Please note and check the following:
+
+  * The Python version is: Python3.7 from "/home/pi/.pyenv/versions/3.7.4/envs/jabberwocky-env/bin/python3.7"
+  * The NumPy version is: "1.21.1"
+
+and make sure that they are the versions you expect.
+Please carefully study the documentation linked above for further help.
+
+Original error was: libf77blas.so.3: cannot open shared object file: No such file or directory
