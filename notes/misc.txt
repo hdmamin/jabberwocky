@@ -517,3 +517,16 @@ and make sure that they are the versions you expect.
 Please carefully study the documentation linked above for further help.
 
 Original error was: libf77blas.so.3: cannot open shared object file: No such file or directory
+
+7/3/22 sun
+----------
+  Failed building wheel for tokenizers
+  Running setup.py clean for tokenizers
+  Complete output from command /home/pi/.pyenv/versions/jabberwocky-env/bin/python -u -c "import setuptools, tokenize;__file__='/tmp/pip-install-b8lgp0m_/tokenizers/setup.py';f=getattr(tokenize, 'open', open)(__file__);code=f.read().replace('\r\n', '\n');f.close();exec(compile(code, __file__, 'exec'))" clean --all:
+  running clean
+  removing 'build/lib.linux-armv7l-cpython-37' (and everything under it)
+  'build/bdist.linux-armv7l' does not exist -- can't clean it
+  'build/scripts-3.7' does not exist -- can't clean it
+  removing 'build'
+  running clean_rust
+  error: can't find Rust compiler

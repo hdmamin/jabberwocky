@@ -2323,7 +2323,6 @@ class ConversationManager:
             name = name.lower()
         else:
             name = name.title()
-        name = unidecode.unidecode(name)
         res = process.extractOne(
             name,
             [person for person in self.personas(pretty=not processed)]

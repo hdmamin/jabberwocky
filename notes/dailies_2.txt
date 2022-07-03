@@ -2407,7 +2407,10 @@ X -copy api keys to pi
 7/3/22 sun
 ----------
 -troubleshoot pi pip installs
-	-investigate numpy error in misc.txt
+	X -investigate numpy error in misc.txt
+		UPDATE: upgrading to 1.21.6 seemed to fix it.
+	~ -add more missing imports as needed (both to requirements somewhere and install on pi)
+		UPDATE: moved unidecode to new alexa reqs file and removed it from jabberwocky deps. We only use it in conv.nearest_persona() to clean up alexa names, so we can just do that in app.py itself (prob better to use the normalized text for all other purposes anyway).
 	-investigate transformers install error (sounds like maybe we need to install rust compiler and add to path?)
 -confirm jabberwocky imports work w/out import errors
 -confirm a few external dep imports work w/out import errors
@@ -2415,6 +2418,16 @@ X -copy api keys to pi
 -try running alexa app on pi
 -work through webserver tutorial. Try to get jabberwocky up and running there.
 
+7/4/22 mon
+----------
+-more pi package installation troubleshooting
+	-review scipy official install instructions and see if there's something I haven't tried (apt install python3-scipy looks like it works but import simply says "no module named scipy". Also tried importing python3_scipy to no avail.)
+	-investigate transformers install error (sounds like maybe we need to install rust compiler and add to path? Error now in misc.txt.)
+-confirm jabberwocky imports work w/out import errors
+-confirm a few external dep imports work w/out import errors
+-confirm transformers model loading works on pi w/out memory error
+-try running alexa app on pi
+-work through webserver tutorial. Try to get jabberwocky up and running there.
 
 
 Backlog (short term)

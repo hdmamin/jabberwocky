@@ -38,6 +38,7 @@ import openai
 import requests
 import sys
 from transformers import pipeline
+import unidecode
 
 from config import EMAIL, LOG_FILE, DEV_EMAIL
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
@@ -232,6 +233,10 @@ def choose_person(person=None, **kwargs):
     "Harry Potter" (after being asked "Who would you like to speak to?")
     """
     person = person or kwargs.get('response') or slot(request, 'Person')
+    # Sometimes this includes special characters that cause problems with
+    # nearest_persona() and possibly in other places too.
+    person = unidecode.unidecode(person)
+
     # Handle case where conversation is already ongoing. This should have been
     # a reply - it just happened to consist of only a name.
     if CONV.is_active():
