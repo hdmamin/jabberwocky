@@ -2390,14 +2390,23 @@ X -view openai console price usage. Does my estimate of ~3cents (maybe I saw 5 a
 	X -check if new test package (wordlcoud) installed successfully
 		UPDATE: pip show wordcloud finds nothing, python -m pip show wordcloud finds it! Importing wordcloud throws error but not an "import error", and importing numpy works.
 		> Now (at night) pip show wordcloud works!?
-	-look again for where packages are installed
-	-google around for solutions (could be related to pyenv active env, python version, pip version, pi, etc.)
-	-install lib requirements
+	X -look again for where packages are installed
+		UPDATE: ~/.pyenv/versions/{python_version}/envs/{env_name}/lib/python{py_version}/site-packages/
+	~ -google around for solutions (could be related to pyenv active env, python version, pip version, pi, etc.)
+	X -install lib requirements
+		UPDATE: seems we got tripped up on the same issue at the end of the gui project - htools doesn't specify pandas_flavor version and newest version causes install errors in some contexts. Updated htools/metas and pushed to pypi, updated jabberwocky lib reqs, pushed/pulled, etc. Install still failed (pip couldn't find latest version, though it found all others. BUT python -m pip install finally worked.)
 	-test jabberwocky imports
 	-test non-jabberwocky imports
 	-test transformers imports (pipelines used in app.py - test memory usage works)
 -try running alexa app on pi
 -work through webserver tutorial. Try to get jabberwocky up and running there.
+
+7/3/22 sun
+----------
+-try running alexa app on pi
+-work through webserver tutorial. Try to get jabberwocky up and running there.
+
+
 
 Backlog (short term)
 --------------------
