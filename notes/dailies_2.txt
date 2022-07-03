@@ -2387,7 +2387,9 @@ X -view openai console price usage. Does my estimate of ~3cents (maybe I saw 5 a
 7/2/22 sat
 ----------
 -pi: get pip installs working
-	-check if new test package (wordlcoud) installed successfully
+	X -check if new test package (wordlcoud) installed successfully
+		UPDATE: pip show wordcloud finds nothing, python -m pip show wordcloud finds it! Importing wordcloud throws error but not an "import error", and importing numpy works.
+		> Now (at night) pip show wordcloud works!?
 	-look again for where packages are installed
 	-google around for solutions (could be related to pyenv active env, python version, pip version, pi, etc.)
 	-install lib requirements
