@@ -2420,14 +2420,38 @@ X -copy api keys to pi
 
 7/4/22 mon
 ----------
--more pi package installation troubleshooting
-	-review scipy official install instructions and see if there's something I haven't tried (apt install python3-scipy looks like it works but import simply says "no module named scipy". Also tried importing python3_scipy to no avail.)
+~ -more pi package installation troubleshooting
+	~ -review scipy official install instructions and see if there's something I haven't tried (apt install python3-scipy looks like it works but import simply says "no module named scipy". Also tried importing python3_scipy to no avail.)
+		UPDATE: pretty much exhausted stackoverflow on related issues. apt install completes without error but can't be imported. Upgrading pip and then python -m pip installing scipy allowed me to import scipy itself but (IIRC) 'from scipy.special import stats still failed with old libgfortran error. Apt installing various libgfortran variants did not resolve this. Current state is pip installed succeeded, pip show works, import scipy works, importing submodules throws libgfortran error.
 	-investigate transformers install error (sounds like maybe we need to install rust compiler and add to path? Error now in misc.txt.)
+		UPDATE: successfully installed rust
 -confirm jabberwocky imports work w/out import errors
 -confirm a few external dep imports work w/out import errors
 -confirm transformers model loading works on pi w/out memory error
 -try running alexa app on pi
 -work through webserver tutorial. Try to get jabberwocky up and running there.
+
+7/5/22 tues
+-----------
+-check on transformers install (lower pane of tmux sess on pi. See yesterday's top bullet points for notes on current state of installs.)
+-look into alternatives to pi deployment ☹️. This is sucking up more time than it justifies.
+	-look into lambda option
+		-find example script for alexa skill using lambda
+		-features I need to ensure are possible:
+			-data access (loading prompts, etc.)
+			-accessing private api keys
+			-cloning git repo (once, not every request)
+			-loading HF models happens only once, not every request
+	-find another option?
+	-consider pros/cons of running on laptop in background all the time
+-otherwise, return to more pi package installation troubleshooting
+	-get scipy import working
+	-get transformers import working
+	-confirm jabberwocky imports work w/out import errors
+	-confirm a few external dep imports work w/out import errors
+	-confirm transformers model loading works on pi w/out memory error
+	-try running alexa app on pi
+	-work through webserver tutorial. Try to get jabberwocky up and running there.
 
 
 Backlog (short term)
