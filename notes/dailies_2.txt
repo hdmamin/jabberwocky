@@ -2433,12 +2433,14 @@ X -copy api keys to pi
 ~ -prompting: prototype problem description -> pseudocode -> code prompts
 	UPDATE: Pseudocode LOOKS reasonable (generated with davinci, NOT codex) and then codex converts it to python beautifully. BUT the code does not produce the desired results. I probably should start with a problem I either deeply understand or have the answer in front of me - seems like there's some subtle mistake the model's making. I'm guessing it's coming at the pseudocode writing stage.
 	> Adding "answer key" to pseudocode generation prompt seemingly fixed this first function. Need to test more to see how it does on other problems. ALso should ocmpare to baseline of just generating codex problem -> code.
--prototype time/space complexity prompt
+X -prototype time/space complexity prompt
 	UPDATE: regular davinci is pretty good at this and gives longer explanations than codex - interesting data point to keep in mind. IIRC adding "ANSWER KEY" also added a longer explanation of the solution when using davinci - hoping it improved correctness too but unsure.
+X -regenerate openai api key (slightly suspicious behavior in usage? Shows a bunch of text moderation requests. Times coincided with my usage but I don't recall selecting that model (certainly not intentionally) and it does seem like multiple requests might have been coming at the same time.) Sigh.
 
 7/5/22 tues
 -----------
 -check on transformers install (lower pane of tmux sess on pi. See yesterday's top bullet points for notes on current state of installs.)
+-copy new openai api key to pi
 -look into alternatives to pi deployment ☹️. This is sucking up more time than it justifies.
 	-look into lambda option
 		-find example script for alexa skill using lambda
