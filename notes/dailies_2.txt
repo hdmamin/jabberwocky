@@ -2430,6 +2430,11 @@ X -copy api keys to pi
 -confirm transformers model loading works on pi w/out memory error
 -try running alexa app on pi
 -work through webserver tutorial. Try to get jabberwocky up and running there.
+~ -prompting: prototype problem description -> pseudocode -> code prompts
+	UPDATE: Pseudocode LOOKS reasonable (generated with davinci, NOT codex) and then codex converts it to python beautifully. BUT the code does not produce the desired results. I probably should start with a problem I either deeply understand or have the answer in front of me - seems like there's some subtle mistake the model's making. I'm guessing it's coming at the pseudocode writing stage.
+	> Adding "answer key" to pseudocode generation prompt seemingly fixed this first function. Need to test more to see how it does on other problems. ALso should ocmpare to baseline of just generating codex problem -> code.
+-prototype time/space complexity prompt
+	UPDATE: regular davinci is pretty good at this and gives longer explanations than codex - interesting data point to keep in mind. IIRC adding "ANSWER KEY" also added a longer explanation of the solution when using davinci - hoping it improved correctness too but unsure.
 
 7/5/22 tues
 -----------
@@ -2452,6 +2457,7 @@ X -copy api keys to pi
 	-confirm transformers model loading works on pi w/out memory error
 	-try running alexa app on pi
 	-work through webserver tutorial. Try to get jabberwocky up and running there.
+-revise time complexity prompt to include space complexity more explicitly? (Latest trial only completed time complexity.) Or could move space complexity to a different prompt, but I'm leaning towards keeping them together.
 
 
 Backlog (short term)
@@ -2502,6 +2508,7 @@ Long term backlog (misc)
 	-Global DSL - unsure of exact idea here but my experience w/ emotion markup suggests gpt is quite well suited to defining small DSLs. Have to think about this a bit but I think it might help to have some sort of general DSL prompt or function that makes it super easy to create/use one. (I.e. despite how easy it was to define the EML in the playground, I still don't feel like I instantly know how to create and use it programmatically. Might just be a matter of breaking down the steps and trying it out, or maybe some additional helpers are needed).
     -task with python library -> code snippet (get up to speed quickly with new library)
 	-something to help with debugging code. Undecided on best way to approach this atm - could just make stack traces less technical/abstruse and hypothesize an explanation/solution in natural language (sort of like a more ambitious version of pypi package pretty-errors; could make custom debugger to drop in for pdb that lets you just ask questions instead of using rigid commands; could do something like jurigged (sp?), basically take advantage of hot reloading to make gpt try to debug/patch *running code in real time* 😱)
+	-compute space and time complexity of code snippet
     -journal-based decision simulator (start an entry for a future date with desirable state ("Today was an amazing day because")or a specific positive outcome ("I met my SO 1 year ago at") or with a possible decision ("It's been six months since I took that job at {company} and I feel").
     -conv commentary (given a couple conv turns, gpt can comment "User seems a bit insensitive" or "user takes himself too seriously".
         -variant: given conv turns 1...n, generate a few options for n+1 and compare it to my real response at n+1.
