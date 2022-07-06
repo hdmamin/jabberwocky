@@ -2463,6 +2463,8 @@ X -check on transformers install (lower pane of tmux sess on pi. See yesterday's
 	-try running alexa app on pi
 	-work through webserver tutorial. Try to get jabberwocky up and running there.
 X -revise time complexity prompt to include space complexity more explicitly? (Latest trial only completed time complexity.) Or could move space complexity to a different prompt, but I'm leaning towards keeping them together.
+X -play around w/ some recommender prompts
+	UPDATE: music recs were decent. General "thing recommender" didn't work that well.
 
 7/6/22 wed
 ----------
