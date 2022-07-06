@@ -530,3 +530,11 @@ Original error was: libf77blas.so.3: cannot open shared object file: No such fil
   removing 'build'
   running clean_rust
   error: can't find Rust compiler
+
+7/5/22 tues
+-----------
+Hi,
+
+I noticed some activity on my account yesterday (7/4/22) that looked a little odd and wanted to get your thoughts. After using the openai playground to test some new prompts on the text-davinci and code-davinci models, I checked my usage tab and saw there were also quite a few completions made using the text-moderation-002 model, which I'm pretty sure I never used. Strangely, the times of the text moderation completions almost always matched the times of my davinci/codex completions (e.g. if I used the davinci model at 10:17, 10:19, and 10:24pm, my usage tab showed those completions as well as a second set of text-moderation completions made at the same times).
+
+I already changed my api key in case it was somehow exposed, but the way the completion times align makes me wonder if this is some new openai policy (i.e. maybe all completions are now run through a text moderation model and users are charged for those as well as the actual completion?). A couple months ago I did accidentally commit an api key in a public git repo, but I've since removed that commit, changed my api key multiple times in the openai console, and added git hooks to prevent me from committing a key accidentally again. Let me know if you have any thoughts regarding what might cause the behavior I described. Thanks!

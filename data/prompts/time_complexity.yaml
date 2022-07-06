@@ -1,15 +1,18 @@
 model: code-davinci-002
 temperature: 0
 top_p: .99
-max_tokens: 250
+max_tokens: 200
 frequency_penalty: 0.0
 presence_penalty: 0.0
 stop: 
 - '"""'
 version: 0
 doc: |-
-  "code" arg is a function or class implementing a solution to a leetcode-style problem. The completion attempts to find the time complexity and in practice, it basically always finds the space complexity as well. You can also swap out codex in favor of the regular text davinci model - this tends to explain the high level approach the solution takes as well. TODO: lately I noticed an example where space complexity wasn't returned. Consider how to rephrase prompt to make it more likely to answer both.
+  "code" arg is a function or class implementing a solution to a leetcode-style problem. The completion attempts to find the time complexity and in practice, it basically always finds the space complexity as well. You can also swap out codex in favor of the regular text davinci model - in initial experiments this provided more of an explanation while codex just provided time complexities, but I adjusted the prompt so both should provide an explanation now.
+warning: Answers almost always sound reasonable but that doesn't mean they're correct! I should evaluate this more formally before we can put very much trust in it.
 prompt: |-
   {code}
 
-  """ANSWER KEY: The time complexity of this solution is
+  """ANSWER KEY
+  Question: Find the time complexity and space complexity of this solution. Provide a brief explanation.
+  Answer: The time complexity is O(
