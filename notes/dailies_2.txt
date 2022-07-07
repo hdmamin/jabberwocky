@@ -2468,7 +2468,8 @@ X -play around w/ some recommender prompts
 
 7/6/22 wed
 ----------
--look into alternatives to pi deployment ☹️. 
+X -reply to openai chat re new cost estimate formula
+~ -look into alternatives to pi deployment ☹️. 
 	-look into lambda option
 		-find example script for alexa skill using lambda
 		-features I need to ensure are possible:
@@ -2476,8 +2477,34 @@ X -play around w/ some recommender prompts
 			-accessing private api keys
 			-cloning git repo (once, not every request)
 			-loading HF models happens only once, not every request
-	-find another option?
-	-consider pros/cons of running on laptop in background all the time
+	X -find another option?
+		UPDATE: try using old laptop. Still think lambda is probably a better option long term but I'm worried about kicking off another rabbit hole of technical issues.
+	X -consider pros/cons of running on laptop in background all the time
+		UPDATE: see misc.txt.
+~ -old laptop setup
+	X -get git ssh working
+	X -update dotfiles
+	_ -install pyenv
+		UPDATE: tried initially but brew no longer supports this OS 😬.
+	~ -create env
+		X -create empty conda env
+		-install jabberwocky env packages
+	-confirm jabberwocky imports work
+	-try running app locally
+-other options:
+	-record sample audio/video clip w/ alexa skill (lex?)
+	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+	-update jabberwocky version and upload to pypi
+
+7/7/22 thurs
+------------
+-old laptop setup
+	-create env
+		-install jabberwocky deps
+	-install appropriate pyenv python version
+	-build jabberwocky env
+	-confirm jabberwocky imports work
+	-try running app locally
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)

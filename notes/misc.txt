@@ -538,3 +538,23 @@ Hi,
 I noticed some activity on my account yesterday (7/4/22) that looked a little odd and wanted to get your thoughts. After using the openai playground to test some new prompts on the text-davinci and code-davinci models, I checked my usage tab and saw there were also quite a few completions made using the text-moderation-002 model, which I'm pretty sure I never used. Strangely, the times of the text moderation completions almost always matched the times of my davinci/codex completions (e.g. if I used the davinci model at 10:17, 10:19, and 10:24pm, my usage tab showed those completions as well as a second set of text-moderation completions made at the same times).
 
 I already changed my api key in case it was somehow exposed, but the way the completion times align makes me wonder if this is some new openai policy (i.e. maybe all completions are now run through a text moderation model and users are charged for those as well as the actual completion?). A couple months ago I did accidentally commit an api key in a public git repo, but I've since removed that commit, changed my api key multiple times in the openai console, and added git hooks to prevent me from committing a key accidentally again. Let me know if you have any thoughts regarding what might cause the behavior I described. Thanks!
+
+7/6/22 wed
+----------
+Got it. Just to confirm: these text moderation calls will happen automatically for every playground completion (and perhaps every completion through the api?) and will show up in my "Model usage" tab, but I will not be charged for them? I'm pretty sure this is accurate based on this line from the page you linked ("Pricing for the moderation endpoint is free when monitoring the outputs of OpenAI APIs"), but it's easy for docs to fall out of date so I just wanted to double check.
+
+Pros/cons of running laptop all the time
+----------------------------------------
+Pros
+-simple/easy - I'd be freed of endless raspberry pi installation errors
+-If I want to bring alexa with me while visiting home, there are fewer things to bring since I'll have my laptop anyway. (Compared to having to bring pi home too; while small, it does require some setup every time I switch locations.)
+-very convenient to quickly view logs (though now that my pi ssh is set up nicely, that's probably comparably easy)
+-no concerns about memory usage (which pi might have), no concerns about data persistence (which lambda might have), less concerns about privacy (probably?) than other approaches (no need to upload api keys elsewhere or put them on another server)
+
+Cons
+-atm the app uses a (probably large-ish) QA transformers pipeline (though it uses this quite rarely). Might slow my laptop down a little? Maybe it's not quite big enough to have a noticeable impact. Though my laptop has been quite slow lately...
+-so far my ngrok solution seems to be allowing me to keep the same url but tbh I'm not sure why. I thought the URL was supposed to expire every day or something.
+-in some ways, maybe more of a security risk? In that my pi has nothing else on it so opening it up to public traffic doesn't matter. But the same is obviously not true of my laptop.
+-if I ever want to try to scale this up to multiple users, running it on my personal laptop doesn't seem like a good strategy. Though tbh at that point the pi doesn't either.
+
+Using old laptop basically eliminates cons #1 and potentially #3 (if I delete most old data). Seems like a decent option for wrapping this up relatively quickly.
