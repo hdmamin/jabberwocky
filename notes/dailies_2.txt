@@ -2488,7 +2488,8 @@ X -reply to openai chat re new cost estimate formula
 		UPDATE: tried initially but brew no longer supports this OS 😬.
 	~ -create env
 		X -create empty conda env
-		-install jabberwocky env packages
+		~ -install jabberwocky env packages
+			UPDATE: in progress.
 	-confirm jabberwocky imports work
 	-try running app locally
 -other options:
@@ -2500,10 +2501,8 @@ X -reply to openai chat re new cost estimate formula
 ------------
 -old laptop setup
 	-create env
-		-install jabberwocky deps
-	-install appropriate pyenv python version
-	-build jabberwocky env
-	-confirm jabberwocky imports work
+		-check if jabberwocky install cmd appeared to work
+	-confirm jabberwocky imports work in ipython
 	-try running app locally
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
