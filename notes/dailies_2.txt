@@ -2504,13 +2504,37 @@ X -check openai customer service response
 ~ -try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
 	X -watch video tutorial
 		UPDATE: not that useful. Could try reading/watching more.
--old laptop setup
+	X -find example script for alexa skill using lambda
+	-features I need to ensure are possible:
+		X -data access (loading prompts, etc.)
+			UPDATE: I suppose I already implemented loading remote prompts so I know this is possible.
+		X -accessing private api keys
+			UPDATE: pretty sure I could get this to work using google drive. AWS also has some KeyManagementService that might work. Looks like lambda can also set env vars but that might be less secure (?).
+		X -cloning git repo (once, not every request)
+			UPDATE: I guess this isn't strictly necessary. Jabberwocky can be pip installed (eventually), prompts and other files can be loaded from google drive, etc. Might need to dump everything in app.py and alexa/utils.py into 1 lambda.py file but that's not impossible, just ugly.
+		X -running flask-ask
+			UPDATE: yes, though we prob lose support for our cli.
+		-loading HF models happens only once, not every request
+~ -old laptop setup
 	X -create conda env
 		X -check if jabberwocky install cmd appeared to work
 			UPDATE: no, timed out installing scipy (same package that killed my raspberry pi hopes 💀). Tried relaunching.
 	X -confirm jabberwocky imports work in ipython
 	-try running app locally
 		UPDATE: had to add flask-ask dep to alexa.
+-other options:
+	-record sample audio/video clip w/ alexa skill (lex?)
+	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+	-update jabberwocky version and upload to pypi
+
+7/8/22 fri
+----------
+-figure out how to add spacy en_core_web_sm to requirements.txt (or some kind of make-env script)
+-try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
+	-confirm slow processes (e.g. loading HF models happens only once), not every request
+	-confirm other state persists (e.g. convmanager)
+-old laptop setup
+	-try running app locally
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)

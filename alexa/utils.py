@@ -540,7 +540,11 @@ class CustomAsk(Ask):
 
     def get_logger(self, log_file, filler):
         # Indent log statements depending on our depth in the intent stack.
-        Path(log_file).unlink()
+        # File won't exist the first time we run this on a new machine.
+        try:
+            Path(log_file).unlink()
+        except FileNotFoundError:
+            pass
         logger = MultiLogger(log_file, fmode='a')
         formatter = IndentedFormatter(self, filler=filler)
         for handler in logger.handlers:
