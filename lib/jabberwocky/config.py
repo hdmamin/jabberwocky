@@ -57,7 +57,7 @@ class C:
     all_mocks_path = root/'data/misc/gooseai_sample_responses.pkl'
 
     # Project root directory.
-    root = Path('/Users/hmamin/jabberwocky')
+    root = Path('~/jabberwocky').expanduser()
 
     # Use with datetime.strptime() to convert from format like
     # 'Sun Apr 17 13:18:23 2022' back to datetime object. This is the format
