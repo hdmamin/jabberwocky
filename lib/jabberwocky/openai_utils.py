@@ -77,12 +77,15 @@ from jabberwocky.utils import strip, bold, load_yaml, colored, \
 
 HF_API_KEY = load_api_key('huggingface')
 BANANA_API_KEY = load_api_key('banana')
-MOCK_RESPONSE = [load(C.mock_stream_paths[False]),
-                 load(C.mock_stream_paths[True])]
 # Ex: MOCKS[True, True, False] means
 # n_prompts > 1, n_completions > 1, stream=False. N > 1 always means 2 in this
 # case.
-MOCKS = load(C.all_mocks_path)
+try:
+    MOCKS = load(C.all_mocks_path)
+except FileNotFoundError:
+    warnings.warn(f'File {C.all_mocks_path} not found. The "mock" backend '
+                  f'will be unavailable.')
+    MOCKS = {}
 
 
 @mark(batch_support=False)
@@ -389,6 +392,11 @@ def query_gpt_mock(prompt, n=1, stream=False, **kwargs):
     -------
     tuple[list[str], list[dict]] or generator[str, dict]
     """
+    if not MOCKS:
+        raise RuntimeError('The "mock" backend is unavailable at the moment '
+                           'because we could not find the cached response '
+                           'files on your system. They should live at '
+                           f'{C.all_mocks_path}.')
     if n > 2:
         warnings.warn(f'query_gpt_mock only supports n=1 or n=2, not n={n}. '
                       'Because you passed in a value > 1, we default to n=2.')
