@@ -2501,12 +2501,14 @@ X -reply to openai chat re new cost estimate formula
 ------------
 X -check openai customer service response
 	UPDATE: no response
--watch video tutorial on lambda to see if it sounds like it could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
+~ -try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
+	X -watch video tutorial
+		UPDATE: not that useful. Could try reading/watching more.
 -old laptop setup
 	X -create conda env
 		X -check if jabberwocky install cmd appeared to work
 			UPDATE: no, timed out installing scipy (same package that killed my raspberry pi hopes 💀). Tried relaunching.
-	-confirm jabberwocky imports work in ipython
+	X -confirm jabberwocky imports work in ipython
 	-try running app locally
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)

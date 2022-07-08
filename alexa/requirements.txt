@@ -1,1 +1,2 @@
+flask-ask==0.9.7
 unidecode==1.0.23
