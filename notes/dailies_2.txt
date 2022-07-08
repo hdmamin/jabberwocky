@@ -2522,6 +2522,7 @@ X -check openai customer service response
 	X -confirm jabberwocky imports work in ipython
 	~ -try running app locally
 		UPDATE: tons of env issues to work out but I'm sooo close. We now get up to line 847 (out of 868) before failing to load UTT2META obj. Fix this tomorrow.
+X -fix bug when ask creates logger on new system (previously assumed file existed)
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
