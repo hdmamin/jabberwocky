@@ -1,2 +1,7 @@
+flask==1.1.1
+jinja2==2.10.3
 flask-ask==0.9.7
+markupsafe==1.1.1
+itsdangerous==1.1.0
 unidecode==1.0.23
+werkzeug==0.16.1
