@@ -60,7 +60,6 @@ import shutil
 import sys
 from threading import Lock, Thread
 import time
-import unidecode
 import warnings
 import yaml
 

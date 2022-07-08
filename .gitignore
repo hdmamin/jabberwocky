@@ -12,6 +12,11 @@ data/*
 !data/icons/
 data/icons/*
 !data/icons/icon.png
+# Again, ignore most of this dir except for a couple files which are loaded in openai_utils.
+!data/misc/
+data/misc/*
+!data/misc/sample_stream_response.pkl
+!data/misc/sample_response.pkl
 *egg-info*
 lib/dist
 *.swp
