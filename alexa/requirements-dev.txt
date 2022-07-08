@@ -26,7 +26,6 @@ appnope==0.1.0
 appscript==1.1.0
 arcade==2.3.4
 argh==0.26.2
-argon2-cffi @ file:///Users/runner/miniforge3/conda-bld/argon2-cffi_1610522600362/work
 arrow==0.14.5
 ask-sdk-core==1.17.1
 ask-sdk-model==1.33.1
@@ -280,7 +279,6 @@ jinja2-time==0.2.0
 jmespath==0.9.4
 joblib==0.14.0
 json5==0.8.5
-jsonnet @ file:///Users/runner/miniforge3/conda-bld/jsonnet_1610241450535/work
 jsonpickle==1.5.0
 jsonschema==3.2.0
 jupyter==1.0.0
@@ -388,7 +386,6 @@ nlpaug==1.1.10
 nltk==3.4.4
 nodeenv==1.6.0
 nose==1.3.7
-notebook @ file:///Users/runner/miniforge3/conda-bld/notebook_1610575486451/work
 num2words==0.5.10
 numba==0.44.1
 numexpr==2.7.1
@@ -786,7 +783,6 @@ torch==1.10.2
 torch-lucent==0.1.2
 torchmetrics==0.4.1
 torchvision==0.11.3
-tornado @ file:///Users/runner/miniforge3/conda-bld/tornado_1610094698292/work
 tqdm==4.64.0
 traitlets==4.3.3
 transformers==4.19.2
