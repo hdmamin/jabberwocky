@@ -2510,6 +2510,7 @@ X -check openai customer service response
 			UPDATE: no, timed out installing scipy (same package that killed my raspberry pi hopes 💀). Tried relaunching.
 	X -confirm jabberwocky imports work in ipython
 	-try running app locally
+		UPDATE: had to add flask-ask dep to alexa.
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
