@@ -2520,8 +2520,8 @@ X -check openai customer service response
 		X -check if jabberwocky install cmd appeared to work
 			UPDATE: no, timed out installing scipy (same package that killed my raspberry pi hopes 💀). Tried relaunching.
 	X -confirm jabberwocky imports work in ipython
-	-try running app locally
-		UPDATE: had to add flask-ask dep to alexa.
+	~ -try running app locally
+		UPDATE: tons of env issues to work out but I'm sooo close. We now get up to line 847 (out of 868) before failing to load UTT2META obj. Fix this tomorrow.
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
@@ -2529,7 +2529,10 @@ X -check openai customer service response
 
 7/8/22 fri
 ----------
--figure out how to add spacy en_core_web_sm to requirements.txt (or some kind of make-env script)
+-airdrop utt2meta file to old laptop or commit it to git
+-figure out how to add the following to alexa/requirements.txt or some kind of install script
+	-spacy en_core_web_sm to requirements.txt (or some kind of make-env script)
+	-nltk punkt
 -try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
 	-confirm slow processes (e.g. loading HF models happens only once), not every request
 	-confirm other state persists (e.g. convmanager)
