@@ -2530,23 +2530,43 @@ X -fix bug when ask creates logger on new system (previously assumed file existe
 
 7/8/22 fri
 ----------
--airdrop utt2meta file to old laptop or commit it to git
--figure out how to add the following to alexa/requirements.txt or some kind of install script
-	-spacy en_core_web_sm to requirements.txt (or some kind of make-env script)
-	-nltk punkt
+X -airdrop utt2meta file to old laptop or commit it to git
+	UPDATE: commit to git. It's small, shouldn't have any private info, and maybe this will make things easier if I have to switch to the lambda method? (Probably not though, don't think I can clone the repo with that method.)
+~ -figure out how to add the following to alexa/requirements.txt or some kind of install script
+	X -spacy en_core_web_sm to requirements.txt (or some kind of make-env script)
+	X -nltk punkt
+	UPDATE: added install to bash script and makefile. Found possible spacy solution but not nltk. Since we need both, might as well just handle both together. Considered doing this in the library itself (try/except, download if error) but I'm a little concerned about what this would do if we have to go the lambda route).
 -try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
 	-confirm slow processes (e.g. loading HF models happens only once), not every request
 	-confirm other state persists (e.g. convmanager)
--old laptop setup
-	-try running app locally
+X -old laptop setup
+	X -try running app locally
+	X -try using ngrok and confirm I can access healthcheck endpoint from main computer
+		UPDATE: see slack_drafts for url. Feel like maybe I shouldn't push that to github (?).
+X -look into ngrok persistence policy (is url meant to persist as long as it seems to or is this some weird coincidence?)
+	UPDATE: sounds like it actually should be permanent - the 2 hour expiration was for anonymou users (no account).
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
 	-update jabberwocky version and upload to pypi
 
+7/9/22 sat
+----------
+-update url in alexa console to use new ngrok url
+-briefly try out a range of features (start conv, choose person, talk, email, quit, etc.) to make sure everything still works
+-try to set up ssh so I can more easily check logs (i.e. just like I can go `ssh pi`, I should be able to ssh in very easily. Maybe can do all work on that machine that way then.)
+-try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
+	-confirm slow processes (e.g. loading HF models happens only once), not every request
+	-confirm other state persists (e.g. convmanager)
+
+
 
 Backlog (short term)
 --------------------
+-other options:
+	-record sample audio/video clip w/ alexa skill (lex?)
+	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+	-update jabberwocky version and upload to pypi
 -[weekend - need another person to help] see what happens if I try to use this on 2 devices at once. Is this even possible? Guessing this totally breaks everything bc I didn't design for multi users, but let's confirm that.
 
 Easy Backlog (short term)

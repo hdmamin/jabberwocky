@@ -558,3 +558,9 @@ Cons
 -if I ever want to try to scale this up to multiple users, running it on my personal laptop doesn't seem like a good strategy. Though tbh at that point the pi doesn't either.
 
 Using old laptop basically eliminates cons #1 and potentially #3 (if I delete most old data). Seems like a decent option for wrapping this up relatively quickly.
+
+7/8/22 fri
+----------
+Trying bash scipt for now, but in case I need to cram everything into a requirements file later for alexa, here is a way that might work for downloading a spacy language model:
+# Should be equivalent to `python -m spacy download en_core_web_sm`.
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl

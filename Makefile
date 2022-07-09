@@ -1,4 +1,4 @@
-.PHONY: todo nb clean lib pypi readmes run prompt persona
+.PHONY: todo nb clean lib pypi readmes run prompt persona install install_dev install_alexa
 
 # Convention: add _ between comment sign and TODO to hide an item that you don't want to delete entirely. This will still be findable if you run `ack TODO`.
 todo:
@@ -29,6 +29,10 @@ install_dev:
 	brew install portaudio
 	pip install --upgrade --force-reinstall -r requirements-dev.txt
 	python -m nltk.downloader punkt
+
+install_alexa:
+	chmod u+x ./alexa/make_env.sh
+	./alexa/make_env.sh
  
 run:
 	python gui/main.py
