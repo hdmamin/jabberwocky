@@ -7,3 +7,5 @@ pyyaml==6.0
 spacy==3.2.3
 unidecode==1.0.23
 werkzeug==0.16.1
+# Should be equivalent to `python -m spacy download en_core_web_sm`.
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl

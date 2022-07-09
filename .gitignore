@@ -12,6 +12,10 @@ data/*
 !data/icons/
 data/icons/*
 !data/icons/icon.png
+# Use same method as above to add 1 file in data/alexa.
+!data/alexa/
+data/alexa/*
+!data/alexa/utterance2meta.pkl
 *egg-info*
 lib/dist
 *.swp

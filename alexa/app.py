@@ -36,7 +36,6 @@ import os
 # openai appears unused but is actually used by GPTBackend instance.
 import openai
 import requests
-import sys
 from transformers import pipeline
 import unidecode
 
