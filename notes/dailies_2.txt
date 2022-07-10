@@ -2552,13 +2552,24 @@ X -look into ngrok persistence policy (is url meant to persist as long as it see
 
 7/9/22 sat
 ----------
--update url in alexa console to use new ngrok url
--briefly try out a range of features (start conv, choose person, talk, email, quit, etc.) to make sure everything still works
--try to set up ssh so I can more easily check logs (i.e. just like I can go `ssh pi`, I should be able to ssh in very easily. Maybe can do all work on that machine that way then.)
+~ -update url in alexa console to use new ngrok url
+	UPDATE: updated dev version but it looks like I need to go through a new approval process to make the live version use it.
+X -briefly try out a range of features (start conv, choose person, talk, email, quit, etc.) to make sure everything still works
+X -try to set up ssh so I can more easily check logs (i.e. just like I can go `ssh pi`, I should be able to ssh in very easily. Maybe can do all work on that machine that way then.)
+	UPDATE: see ~/.ssh/config. Ran into issue again where mac asked for password after ssh. This time the solution was to delete the public key on the old device (which I'd originally copied over with scp) and instead use ssh-copy-id (maybe that does something special with permissions?).
+X -get ngrok running in background
+X -fix openai backend bug
+	UPDATE: just a version issue. Recall I had to update openai package at some point and the endpoints changed a bit.
 -try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
 	-confirm slow processes (e.g. loading HF models happens only once), not every request
 	-confirm other state persists (e.g. convmanager)
 
+7/10/22 sun
+-----------
+-look into recent issue where alexa no longer knows my name/email
+-try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
+	-confirm slow processes (e.g. loading HF models happens only once), not every request
+	-confirm other state persists (e.g. convmanager)
 
 
 Backlog (short term)
@@ -2590,6 +2601,9 @@ Won't Do (at least short term; undecided long term)
     -adjust gui accordingly (cur offer different radio buttons for each neo size; could instead have 1 radio and have it actually use the engine_i slider)
     -add gooseai backend option
 	REASON: GUI was mostly just a learning experience and alexa is generally a far better interface for this kind of thing.
+-support multiple echo users
+	-change alexa/utils/Settings so all user settings are stored in flask state rather than only some. Reason is that if I ever want to even consider supporting multiple users, the current state would cause a big problem. (Initially remembered it as model kwargs being stored in session and others not, but after a quick look it actually seems to be the opposite.)
+	REASON: I think a rather large redesign would be required, and a public skill would likely need openai approval.
 
 Long Term Backlog (Jabberwocky V3 )
 -----------------------------------
