@@ -121,8 +121,12 @@ def send_transcript(conv, user_email='', cleanup=False):
         return False
     date = datetime.today().strftime('%m/%d/%Y')
     datetime_ = datetime.today().strftime('%Y.%m.%d__%H.%M.%S')
+    # Changed output path format on 7/10 - used to have persona and datetime
+    # combined into filename, but decided creating an output dir per persona
+    # would help keep things organized in the future and make it easier to
+    # resume conversations or do some kind of document search.
     tmp_path = Path(
-        f'alexa/conversations/{conv.current["persona"]}__{datetime_}.txt'
+        f'alexa/conversations/{conv.current["persona"]}/{datetime_}.txt'
     )
     save(conv.full_conversation(), tmp_path)
     name = conv.process_name(conv.current["persona"], inverse=True)

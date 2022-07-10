@@ -564,3 +564,7 @@ Using old laptop basically eliminates cons #1 and potentially #3 (if I delete mo
 Trying bash scipt for now, but in case I need to cram everything into a requirements file later for alexa, here is a way that might work for downloading a spacy language model:
 # Should be equivalent to `python -m spacy download en_core_web_sm`.
 en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl
+
+7/10/22 sun
+-----------
+ nohup python alexa/app.py --dev True > /tmp/log.txt 2>&1 &

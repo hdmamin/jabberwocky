@@ -2568,14 +2568,38 @@ X -fix bug in QueryAllowedResult
 
 7/10/22 sun
 -----------
--look into recent issue where alexa no longer knows my name/email
--try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
-	-confirm slow processes (e.g. loading HF models happens only once), not every request
-	-confirm other state persists (e.g. convmanager)
+~ -look into recent issue where alexa no longer knows my name/email
+	UPDATE: had to re-enable skill in phone app. Also turns out the live skill is using the new url that I added to the dev skill - not sure how that happened. Thought I needed to resubmit it first but maybe not. New problem though: seems like the old mac sort of goes to sleep or shuts down or something when unused, and makes the app unreachable. Might need to return to lambda idea. First try to find out if there's some easy mac setting I can change to avoid this.
+X -some changes to make future resuming conv easier
+	X -save alexa transcripts in alexa/conversations/{name}/{datetime}.txt rather than alexa/conversations/{name}__{datetime}.txt.
+	X -document resume_text and resume_path args in start_conv
+~ -look into issue of laptop seemingly shutting down (or sleeping? Seems like something halfway in between.) between uses
+	UPDATE: not 100% sure but I think it's just sleeping since I didn't have to reopen terminal/tmux etc. Tried changing setting in /etc/ssh config to keep ssh alive but not sure if it will work yet. Also tried running app with nohup prefix in the hopes that will help. Might need gunicorn and/or something like systemd though.
+	> This did not seem to resolve the issue. Skill still becomes unavailable when computer sleeps.
+~ -try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
+	~ -maybe easiest way is to start creating a hello world alexa skill w/ lambda. Think this will be more effective than trying to research answers more.
+		UPDATE: created new skill from template using lambda option instead of custom. Haven't filled anything in yet. Chose conversation template in case it might give me new ideas or knowledge of best practices for chatbot-like skills. Only changed invocation name to "lambda test" but haven't filled anything else out yet.
+		-confirm slow processes (e.g. loading HF models happens only once), not every request
+		-confirm other state persists (e.g. convmanager)
+
+7/11/22 mon
+-----------
+-flesh out dummy lambda skill
+	-look through code and ensure functionality is there for minimal example
+	-try testing in AWS console
+	-try adding in 1 slow process (e.g. loading HF QA pipe) to make sure it only happens once
+	-check that object state can persist (e.g. for convmanager attributes; use much simpler toy example)
+	-try read/write from local file system
+	-try to see how we can load private api keys
+-another option (try above first though to get basic sense of lambda): read through flask-ask/zappa/lambda tutorial. Looks like these might all be compatible at once?
+-add personas to git? Want to make them more easily accessible on old mac/lambda etc.
+	-or make it possible to load them from git, like how prompts can be loaded remotely
 
 
 Backlog (short term)
 --------------------
+-check if I need to validate that request was sent by alexa or if flask-ask handles that
+	https://developer.amazon.com/en-US/docs/alexa/custom-skills/host-a-custom-skill-as-a-web-service.html#checking-the-signature-of-the-request
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
 	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
