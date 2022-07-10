@@ -1443,7 +1443,7 @@ class PriceMonitor:
         dt = dt or datetime.now()
         backend = backend or GPT.current()
         if backend not in EngineMap.paid_backends:
-            return QueryAllowedResult(error=False, warn=False, moniotor=self)
+            return QueryAllowedResult(error=False, warn=False, monitor=self)
 
         cost = EngineMap.estimate_cost(
             max_tokens, prompt=prompt, tokenizer=self.tokenizer,
