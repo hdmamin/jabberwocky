@@ -2560,6 +2560,8 @@ X -try to set up ssh so I can more easily check logs (i.e. just like I can go `s
 X -get ngrok running in background
 X -fix openai backend bug
 	UPDATE: just a version issue. Recall I had to update openai package at some point and the endpoints changed a bit.
+X -fix bug in QueryAllowedResult
+	UPDATE: just a typo.
 -try again to determine if lambda could meet my requirements (old laptop is looking a bit shaky, not an ideal long term solution)
 	-confirm slow processes (e.g. loading HF models happens only once), not every request
 	-confirm other state persists (e.g. convmanager)
