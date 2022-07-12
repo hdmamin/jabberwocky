@@ -2605,6 +2605,7 @@ X -old laptop approach
 X -restart ngrok in background, restart app, update url in console (while testing this I accidentally killed my ngrok tunnel)
 	X -update ngrok makefile cmd to run in background, get url and filter with jq
 	X -update alexa/make_env.sh
+X -push new jabberwocky version to pypi and update alexa deps with it
 -add personas to git? Want to make them more easily accessible on old mac/lambda etc.
 	-or make it possible to load them from git, like how prompts can be loaded remotely
 
