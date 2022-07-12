@@ -1,7 +1,7 @@
 flask==1.1.1
-jabberwocky==2.0.0
+jabberwocky==2.0.1
 jinja2==2.10.3
-flask-ask==0.9.7
+# flask-ask==0.9.7
 markupsafe==1.1.1
 itsdangerous==1.1.0
 spacy==3.2.3

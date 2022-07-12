@@ -1,0 +1,2 @@
+# Install this after installing requirements.txt. Use --no-deps flag here. Flask ask dependency versions cause lots of problems.
+flask-ask==0.9.7
