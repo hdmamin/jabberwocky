@@ -38,7 +38,8 @@ run:
 	python gui/main.py
 
 ngrok:
-	ngrok http 5000
+	nohup ngrok http 5000 > /dev/null &
+	curl localhost:4040/api/tunnels | jq '.tunnels[0].public_url'
 
 run_alexa:
 	python alexa/app.py

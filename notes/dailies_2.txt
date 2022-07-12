@@ -2584,11 +2584,12 @@ X -some changes to make future resuming conv easier
 
 7/11/22 mon
 -----------
--flesh out dummy lambda skill ("lambda test")
+~ -flesh out dummy lambda skill ("lambda test")
 	~ -look through code and ensure functionality is there for minimal example
 		UPDATE: got a quick sense, maybe we can figure the rest out through trial and error.
 	X -try testing in AWS console
-	-try replacing code w/ flask ask
+	~ -try replacing code w/ flask ask
+	UPDATE: import error with flask even though I added it to the requirements.txt file. I think a more promising approach is to work through the zappa tutorial.
 	-try adding in 1 slow process (e.g. loading HF QA pipe) to make sure it only happens once
 	-check that object state can persist (e.g. for convmanager attributes; use much simpler toy example)
 	-try read/write from local file system
@@ -2598,9 +2599,27 @@ X -old laptop approach
 	~ -test in console
 		UPDATE: worked at first but after a while when I tried to start the skill alexa would just flash blue for a bit and silently fail 🤷‍♂️. Argh. I think it's clear this is not a solution either. It's either going to be the personal laptop or the lambda.
 	X -change url back to local for now
--another option (try above first though to get basic sense of lambda): read through flask-ask/zappa/lambda tutorial. Looks like these might all be compatible at once?
+~ -another option (try above first though to get basic sense of lambda): read through flask-ask/zappa/lambda tutorial. Looks like these might all be compatible at once?
+	~ -create virtualenv
+		UPDATE: thought I'd sorted this out already when I created conda env commands but I encountered lots of issues still. Maybe it's the difference between installing an editable local dir vs a pypi package? Either way, I think my virtualenv should mostly work now, though it does require two separate requirements files (1 with --no-deps) and I'm back to the question of how to handle the nltk and spacy downloads. 
+X -restart ngrok in background, restart app, update url in console (while testing this I accidentally killed my ngrok tunnel)
+	X -update ngrok makefile cmd to run in background, get url and filter with jq
+	X -update alexa/make_env.sh
 -add personas to git? Want to make them more easily accessible on old mac/lambda etc.
 	-or make it possible to load them from git, like how prompts can be loaded remotely
+
+7/12/22 tues
+------------
+-check that alexa skill is back up after recent restart (as of EOD mon it was not, but I think it just takes a few minutes. Seems like when I stop the flask app it disables the skill in my alexa phone app, but it's re-enabled now.)
+-continue working through flask-ask/zappa/lambda tutorial
+	-create virtualenv
+		-try adding spacy dep to requirements file
+			-if fails, try adding to module
+		-add nltk download in module
+	-proceed to next steps in tutorial
+-add personas to git? Want to make them more easily accessible on old mac/lambda etc.
+	-or make it possible to load them from git, like how prompts can be loaded remotely
+
 
 
 Backlog (short term)

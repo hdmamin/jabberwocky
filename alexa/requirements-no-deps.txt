@@ -1,2 +1,3 @@
-# Install this after installing requirements.txt. Use --no-deps flag here. Flask ask dependency versions cause lots of problems.
+# Install this after installing requirements.txt. Use --no-deps flag here. Flask ask dependency versions cause lots of problems. Flag order is important:
+# pip install --no-deps -r alexa/requirements-no-deps.txt
 flask-ask==0.9.7
