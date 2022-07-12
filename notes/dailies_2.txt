@@ -2584,13 +2584,20 @@ X -some changes to make future resuming conv easier
 
 7/11/22 mon
 -----------
--flesh out dummy lambda skill
-	-look through code and ensure functionality is there for minimal example
-	-try testing in AWS console
+-flesh out dummy lambda skill ("lambda test")
+	~ -look through code and ensure functionality is there for minimal example
+		UPDATE: got a quick sense, maybe we can figure the rest out through trial and error.
+	X -try testing in AWS console
+	-try replacing code w/ flask ask
 	-try adding in 1 slow process (e.g. loading HF QA pipe) to make sure it only happens once
 	-check that object state can persist (e.g. for convmanager attributes; use much simpler toy example)
 	-try read/write from local file system
 	-try to see how we can load private api keys
+X -old laptop approach
+	X -try setting sleep to never
+	~ -test in console
+		UPDATE: worked at first but after a while when I tried to start the skill alexa would just flash blue for a bit and silently fail 🤷‍♂️. Argh. I think it's clear this is not a solution either. It's either going to be the personal laptop or the lambda.
+	X -change url back to local for now
 -another option (try above first though to get basic sense of lambda): read through flask-ask/zappa/lambda tutorial. Looks like these might all be compatible at once?
 -add personas to git? Want to make them more easily accessible on old mac/lambda etc.
 	-or make it possible to load them from git, like how prompts can be loaded remotely
