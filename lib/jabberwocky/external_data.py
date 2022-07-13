@@ -1,7 +1,15 @@
 """Functionality to fetch and work with YouTube transcripts."""
 from bs4 import BeautifulSoup
 from fuzzywuzzy import fuzz, process
-from nltk.tokenize import sent_tokenize
+# This is the first jabberwocky module to import sent_tokenize so we only need
+# to do this here. Seems like we can't specify this in requirements.txt, though
+# maybe we could do some kind of post-install hook in the future.
+try:
+    from nltk.tokenize import sent_tokenize
+except:
+    import nltk
+    nltk.download('punkt')
+    from nltk.tokenize import sent_tokenize
 import numpy as np
 import os
 import pandas as pd

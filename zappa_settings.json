@@ -1,0 +1,11 @@
+{
+    "dev": {
+        "app_function": "alexa.app.app",
+        "aws_region": "us-east-1",
+        "profile_name": "default",
+        "project_name": "jabberwocky",
+        "runtime": "python3.7",
+        "s3_bucket": "jabberwocky-alexa",
+        "slim_handler": true
+    }
+}

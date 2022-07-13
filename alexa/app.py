@@ -823,6 +823,11 @@ if __name__ == '__main__':
              'default).'
     )
     parser.add_argument(
+        '--custom', default=True, type=ast.literal_eval,
+        help='If True, include custom personas. If False, only include '
+             'auto-generated personas.'
+    )
+    parser.add_argument(
         '--voice', default=True, type=ast.literal_eval,
         help='If True, use custom voices from Polly. If False, use the '
              'default Alexa voice. This is generally a worse experience '
@@ -831,16 +836,15 @@ if __name__ == '__main__':
              '"sadness" at the moment).'
     )
     parser.add_argument(
-        '--custom', default=True, type=ast.literal_eval,
-        help='If True, include custom personas. If False, only include '
-             'auto-generated personas.'
-    )
-    parser.add_argument(
         '--show_cost', default=False, type=ast.literal_eval,
         help='If True, print the estimated running cost for the last relevant '
              'series of queries within the time window set in PriceMonitor. '
              'If False, prices are only logged when they look suspiciously '
              'high.'
+    )
+    parser.add_argument(
+        '--port', default=5000, type=int,
+        help='Port to run the app on.'
     )
     ARGS = parser.parse_args()
     CONV = ConversationManager(custom_names=[] if ARGS.custom else False,
@@ -868,4 +872,4 @@ if __name__ == '__main__':
     # middle of a conversation. Tried calling reset_app_state() in this if
     # block but it seems to need to be called after run() so session is not
     # None, but we can't explicitly call it there because app.run call blocks.
-    app.run(debug=False)
+    app.run(debug=False, port=ARGS.port)

@@ -2611,13 +2611,30 @@ X -push new jabberwocky version to pypi and update alexa deps with it
 
 7/12/22 tues
 ------------
--check that alexa skill is back up after recent restart (as of EOD mon it was not, but I think it just takes a few minutes. Seems like when I stop the flask app it disables the skill in my alexa phone app, but it's re-enabled now.)
+X -check that alexa skill is back up after recent restart (as of EOD mon it was not, but I think it just takes a few minutes. Seems like when I stop the flask app it disables the skill in my alexa phone app, but it's re-enabled now.)
+	UPDATE: oddly, it re-disabled it in my phone app. But after I re-enabled it the skill works again.
+~ -continue working through flask-ask/zappa/lambda tutorial
+	X -create virtualenv
+		X -try adding spacy dep to requirements file
+			_ -if fails, try adding to module
+		X -add nltk download in module
+		X -add option to run app on diff port so I don't have to bring down my prod skill
+		X -test that skill can run in virtualenv on diff port
+	~ -proceed to next steps in tutorial
+		X -create new IAM role
+		X -awscli local configuration
+		X -create zappa config w/ `zappa init`
+		-zappa deploy dev 🤞
+			UPDATE: first try was too big. Added option in zappa config to allow bigger size but I suspect it still won't be enough - venv dir alone is 700mb.
+-add personas to git? Want to make them more easily accessible on old mac/lambda etc.
+	-or make it possible to load them from git, like how prompts can be loaded remotely
+
+7/13/22 wed
+-----------
 -continue working through flask-ask/zappa/lambda tutorial
-	-create virtualenv
-		-try adding spacy dep to requirements file
-			-if fails, try adding to module
-		-add nltk download in module
 	-proceed to next steps in tutorial
+		-zappa deploy dev 🤞
+			-Deal with this Error: Warning! Status check on the deployed lambda failed. A GET request to '/' yielded a 502 response code. (Basically, seems like zappa uses root url as healthcheck. My app has an explicit /health endpoint instead.)
 -add personas to git? Want to make them more easily accessible on old mac/lambda etc.
 	-or make it possible to load them from git, like how prompts can be loaded remotely
 
