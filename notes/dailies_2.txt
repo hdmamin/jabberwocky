@@ -2624,8 +2624,9 @@ X -check that alexa skill is back up after recent restart (as of EOD mon it was 
 		X -create new IAM role
 		X -awscli local configuration
 		X -create zappa config w/ `zappa init`
-		-zappa deploy dev 🤞
+		~ -zappa deploy dev 🤞
 			UPDATE: first try was too big. Added option in zappa config to allow bigger size but I suspect it still won't be enough - venv dir alone is 700mb.
+			> Second try with slim settings maybe got farther? Threw error bc request to '/' caused error but that's expected w/ my current app. Seems like maybe it did get the app running? Or at least the env wasn't instantly judged to be too big.
 -add personas to git? Want to make them more easily accessible on old mac/lambda etc.
 	-or make it possible to load them from git, like how prompts can be loaded remotely
 
