@@ -39,7 +39,7 @@ import requests
 from transformers import pipeline
 import unidecode
 
-from config import EMAIL, LOG_FILE, DEV_EMAIL
+from config import EMAIL, LOG_FILE, DEV_EMAIL, REPROMPTS, NOBODY_UTTS
 from htools import quickmail, save, tolist, listlike, decorate_functions,\
     debug as debug_decorator, load
 from jabberwocky.openai_utils import ConversationManager, PromptManager, GPT, \
@@ -813,7 +813,7 @@ def end_session():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser()
     # WARNING: in dev mode, each new conversation resets backend to banana.
     # Use literal_eval for type rather than bool - the latter oddly still seems
     # to parse inputs as strings.
@@ -852,21 +852,11 @@ if __name__ == '__main__':
     PROMPTER = PromptManager(['punctuate_alexa'], verbose=False)
     PRICE_MONITOR = PriceMonitor()
     UTT2META = load('data/alexa/utterance2meta.pkl')
-    # Weird values/spellings here are mis-transcriptions I observed Alexa make.
-    NOBODY_UTTS = {'knobody', 'nobody', 'noone', 'no one', 'no1', 'no 1'}
-    REPROMPTS = [
-        'I know, it\'s a lot to take in.',
-        'I can see you\'re thinking hard.',
-        'I know you like to mull things over.',
-        'I can see the gears turning.',
-        'I\'m not going anywhere. Take your time.'
-    ]
     EMO_PIPE = None if ARGS.voice else pipeline(
         'text-classification',
         model='j-hartmann/emotion-english-distilroberta-base',
         return_all_scores=False
     )
-
     decorate_functions(debug_decorator)
     # Set false because otherwise weird things happen to app state in the
     # middle of a conversation. Tried calling reset_app_state() in this if

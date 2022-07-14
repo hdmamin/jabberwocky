@@ -2632,13 +2632,32 @@ X -check that alexa skill is back up after recent restart (as of EOD mon it was 
 
 7/13/22 wed
 -----------
--continue working through flask-ask/zappa/lambda tutorial
-	-proceed to next steps in tutorial
-		-zappa deploy dev 🤞
-			-Deal with this Error: Warning! Status check on the deployed lambda failed. A GET request to '/' yielded a 502 response code. (Basically, seems like zappa uses root url as healthcheck. My app has an explicit /health endpoint instead.)
+~ -continue working through flask-ask/zappa/lambda tutorial
+	~ -proceed to next steps in tutorial
+		~ -zappa deploy dev 🤞
+			~ -Deal with this Error: Warning! Status check on the deployed lambda failed. A GET request to '/' yielded a 502 response code. (Basically, seems like zappa uses root url as healthcheck. My app has an explicit /health endpoint instead.)
+-add personas to git? Want to make them more easily accessible on old mac/lambda etc.
+				UPDATE: internet seems to think it's not as simple as adding a '/' endpoint but none of their ideas seemed to apply to my situation. Tried making a slightly simpler copy of app.py w/ hardcoded cli args and a '/' endpoint.
+				> This produced the same 502 error. I found `zappa status` does provide my url and visiting it reveals that the `app` var is None but the cause of that is unknown atm. Oddly, they try to call app() instead of app.run(). Wonder if we need to use that flask-ask lambda function wrapper. Next: tried further paring down tmp_app.py (rm almost all imports, all openai stuff, all local file loading, etc.). Also tried moving zappa conf to alexa dir.
+				> Still no. Next trying making an entirely new repo, copying their minimal example, and seeing if I can even reproduce that.
+				> New minimal example works! Note that s3 bucket name must be globally unique. Next try renaming lambda_handler function and see if that breaks it.
+				> No, still works. Next try removing zappa from requirements.txt and see if that breaks it.
+				> No, still works. Try setting slim_handler=True and see if that breaks it.
+				> No, still works. Try copying big venv over and see if that breaks it.
+				> Yep, that breaks it. That may be a tough one to get around.
+				> Trying reverting to slim_handler=False to see if that restores it.
 -add personas to git? Want to make them more easily accessible on old mac/lambda etc.
 	-or make it possible to load them from git, like how prompts can be loaded remotely
 
+7/14/22 thurs
+-------------
+-continue working through flask-ask/zappa/lambda tutorial
+	-proceed to next steps in tutorial
+		-check if lambda works again (refresh chrome tab) after setting slim_handler=False. (Doubtful)
+		-briefly google around to see if anyone found some crazy workaround to using a giant venv. Seems unlikely but this seems to be the culprit.
+			-could also try the "memory_size" arg in zappa config that someone suggested for spacy install errors - maybe look into lambda pricing first? I'm guessing that may cost extra.
+-add personas to git? Want to make them more easily accessible on old mac/lambda etc.
+	-or make it possible to load them from git, like how prompts can be loaded remotely
 
 
 Backlog (short term)
