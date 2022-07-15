@@ -2672,6 +2672,7 @@ X -mv all old alexa conversations to fit new dir structure
 
 7/15/22 fri
 -----------
+-see if we can put venv elsewhere? I think this is making git commit very slow due to having to search all the files in venv
 -write brief notes to self on zappa settings file in case I revisit this in the future (lambda size limits could change, zappa could add new functionality, etc.)
 -test alexa env creation on old machine
 -other options:
