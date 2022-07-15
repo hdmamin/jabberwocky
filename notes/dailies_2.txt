@@ -2651,7 +2651,7 @@ X -check that alexa skill is back up after recent restart (as of EOD mon it was 
 
 7/14/22 thurs
 -------------
-~ -continue working through flask-ask/zappa/lambda tutorial
+X -continue working through flask-ask/zappa/lambda tutorial
 	~ -proceed to next steps in tutorial
 		X -check if lambda works again (refresh chrome tab) after setting slim_handler=False. (Doubtful)
 			UPDATE: no :(. Error about zipped size being too big is back.
@@ -2661,6 +2661,9 @@ X -check that alexa skill is back up after recent restart (as of EOD mon it was 
 			UPDATE: not finding anything too relevant/promising.
 		X -could also try the "memory_size" arg in zappa config that someone suggested for spacy install errors - maybe look into lambda pricing first? I'm guessing that may cost extra.
 			UPDATE: tried bumping from 512 to 768. alexa subdir is 694 mb pre-zipped, figured it was worth a shot to see if this 1 change fixes things. But I doubt it.
+			> Nope. Next try bumping jabberwocky version to 2.0.3 (no pillow) and bumping zappa memory_size to 1024.
+			> No 😞
+	UPDATE: undeployed. Accepted that lambda does not seem to be the solution either.
 X -mv requirements to gui/, add pillow dep, rm requirements-dev, update makefile and readme
 X -mv all old alexa conversations to fit new dir structure
 	UPDATE: done in ipython :)
@@ -2669,15 +2672,19 @@ X -mv all old alexa conversations to fit new dir structure
 
 7/15/22 fri
 -----------
+-write brief notes to self on zappa settings file in case I revisit this in the future (lambda size limits could change, zappa could add new functionality, etc.)
+-test alexa env creation on old machine
+-other options:
+	-record sample audio/video clip w/ alexa skill (lex?)
+	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+-add personas to git? Want to make them more easily accessible on old mac/lambda etc.
+	-or make it possible to load them from git, like how prompts can be loaded remotely
+
 
 Backlog (short term)
 --------------------
 -check if I need to validate that request was sent by alexa or if flask-ask handles that
 	https://developer.amazon.com/en-US/docs/alexa/custom-skills/host-a-custom-skill-as-a-web-service.html#checking-the-signature-of-the-request
--other options:
-	-record sample audio/video clip w/ alexa skill (lex?)
-	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
-	-update jabberwocky version and upload to pypi
 -[weekend - need another person to help] see what happens if I try to use this on 2 devices at once. Is this even possible? Guessing this totally breaks everything bc I didn't design for multi users, but let's confirm that.
 
 Easy Backlog (short term)

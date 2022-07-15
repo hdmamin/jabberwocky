@@ -26,8 +26,9 @@ install_gui:
 	python -m nltk.downloader punkt
 
 install_alexa:
-	chmod u+x ./alexa/make_env.sh
-	./alexa/make_env.sh
+	cd alexa
+	chmod u+x make_env.sh
+	make_env.sh
  
 run:
 	python gui/main.py
