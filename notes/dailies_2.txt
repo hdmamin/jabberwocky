@@ -2667,14 +2667,15 @@ X -continue working through flask-ask/zappa/lambda tutorial
 X -mv requirements to gui/, add pillow dep, rm requirements-dev, update makefile and readme
 X -mv all old alexa conversations to fit new dir structure
 	UPDATE: done in ipython :)
+X -delete toy lambda skill in console
 -add personas to git? Want to make them more easily accessible on old mac/lambda etc.
 	-or make it possible to load them from git, like how prompts can be loaded remotely
 
 7/15/22 fri
 -----------
 -see if we can put venv elsewhere? I think this is making git commit very slow due to having to search all the files in venv
--write brief notes to self on zappa settings file in case I revisit this in the future (lambda size limits could change, zappa could add new functionality, etc.)
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 -test alexa env creation on old machine
 -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
