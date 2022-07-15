@@ -435,36 +435,6 @@ def most_recent_filepath(dir_, mode='m'):
     return max(paths, key=lambda x: getattr(x.stat(), f'st_{mode}time'))
 
 
-def _img_dims(curr_width, curr_height, width=None, height=None):
-    xor_none(width, height)
-    if width:
-        width, height = width, int(curr_height * width/curr_width)
-    else:
-        height, width = height, int(curr_width * height/curr_height)
-    return dict(width=width, height=height)
-
-
-def img_dims(path, width=None, height=None, verbose=False):
-    """Given the path to an image file and 1 desired dimension, compute the
-    other dimensions that would maintain its height:width ratio.
-
-    Parameters
-    ----------
-    path: str or Path
-    width: int or None
-        Desired width of output image. Specify either this OR height.
-    height: int or None
-        Desired height of output image. Specify either this OR width.
-    verbose: bool
-
-    Returns
-    -------
-    dict
-    """
-    curr_width, curr_height = Image.open(path).size
-    if verbose: print(f'width: {curr_width}, height: {curr_height}')
-    return _img_dims(curr_width, curr_height, width=width, height=height)
-
 
 def set_module_global(module, key, value):
     """Create global variable in an imported module. This is a slightly hacky

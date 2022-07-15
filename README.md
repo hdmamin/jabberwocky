@@ -31,18 +31,18 @@ git clone https://github.com/hdmamin/jabberwocky.git
 2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're not using Mac OS, you could try installing portaudio with whatever package manager you're using, but app behavior on other systems is unknown. If you have `make` installed, you can simply use the command (after activating your virtual environment):
 
 ```
-make install
+make install_gui
 ```
 
 which is equivalent to:
 
 ```
 brew install portaudio
-pip install -r requirements.txt
+pip install -r gui/requirements.txt
 python -m nltk.downloader punkt
 ```
 
-Note: this will install a slightly older version of Jabberwocky so you can run the GUI. The Alexa skill uses the latest version of the library. The command `make install_dev` should be used instead of `make install` when working on that.
+Note: this will install a slightly older version of Jabberwocky so you can run the GUI. The Alexa skill uses the latest version of the library.
 
 3. Add your openai API key somewhere the program can access it. There are two ways to do this:
 
@@ -118,5 +118,5 @@ The `docker` and `setup` dirs contain remnants from previous attempts to package
 
 ### Updates
 
-**4/6/22**: The library is currently undergoing some fairly major changes to support my Jabberwocky alexa skill (still a work in progress) and future projects. The GUI should still work using the pinned version of jabberwocky in requirements.txt - just note that the installed library's source code will no longer correspond to the current state of the `lib` directory.
+**4/6/22**: The library is currently undergoing some fairly major changes to support my Jabberwocky alexa skill (still a work in progress) and future projects. The GUI should still work using the pinned version of jabberwocky in gui/requirements.txt - just note that the installed library's source code will no longer correspond to the current state of the `lib` directory.
 

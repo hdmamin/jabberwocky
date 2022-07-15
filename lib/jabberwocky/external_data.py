@@ -1,4 +1,5 @@
-"""Functionality to fetch and work with YouTube transcripts."""
+"""Functionality to fetch and work with YouTube transcripts and Wikipedia data.
+"""
 from bs4 import BeautifulSoup
 from fuzzywuzzy import fuzz, process
 # This is the first jabberwocky module to import sent_tokenize so we only need

@@ -26,10 +26,9 @@ from threading import Thread
 from htools.core import save, select
 from htools.meta import min_wait
 from jabberwocky.openai_utils import query_gpt_neo, query_gpt_j
-from jabberwocky.utils import img_dims
 
-from utils import read_response_coro, stream, monitor_interrupt_checkbox,\
-    CoroutinableThread, PropagatingThread, interrupt
+from utils import read_response_coro, stream, monitor_interrupt_checkbox, \
+    CoroutinableThread, PropagatingThread, interrupt, img_dims
 
 
 RECOGNIZER = sr.Recognizer()
