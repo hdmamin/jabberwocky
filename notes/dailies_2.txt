@@ -2677,15 +2677,30 @@ X -maybe one last try with zappa? looks like memory_size actually goes up to 10.
 	UPDATE: tried with 5gb memory size.
 	> Zappa has limit of 3.008gb. Trying again w/ memory_size=3000.
 	> Still no. 500 status code instead of 502 but error is the same about app being None. Zappa says a newer version is available but I checked and it's only a minor increment. Undeployed again - I think it's clear lambda is not the way to go at least right now.
--see if we can put venv elsewhere? I think this is making git commit very slow due to having to search all the files in venv
+~ -see if we can put venv elsewhere? I think this is making git commit very slow due to having to search all the files in venv
+	UPDATE: Found virtualenvwrapper (a pypi package) that stores envs in ~/.virtualenvs, so it is possible, but that lib also hasn't been updated in years, and I read that *moving* a virtualenv can be tricky. For now I instead updated my pre-commit hook to skip acking gui/venv and alexa/venv.
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
--test alexa env creation on old machine
--other options:
+~ -test alexa env creation on old machine
+	UPDATE: appeared to install w/out error but running the app raised error when trying to create HF pipeline that there is no pytorch or tensorflow>=2.0.0. Surprisingly, this is true - I guess HF doesn't install those? Installing this on old machine atm.	
+	> Health check works now. Added torch to lib requirements (pipeline is imported there too). Bumped version of lib and published, then updated version in alexa requirements file.
+~ -other options:
 	-record sample audio/video clip w/ alexa skill (lex?)
-	-update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
--add personas to git? Want to make them more easily accessible on old mac/lambda etc.
-	-or make it possible to load them from git, like how prompts can be loaded remotely
+	~ -update readme (new alexa clips, maybe instructions for setting up your own alexa skill?)
+		UPDATE: cleaned up some old commands and instructions, added mentions to alexa skill. Still need to write docs on how to USE the alexa skill. Maybe also on how to create it in aws console since mine is private.
+X -add personas to git? Want to make them more easily accessible on old mac/lambda etc.
+	_ -or make it possible to load them from git, like how prompts can be loaded remotely
+		UPDATE: I'm intrigued by this idea but I think we have to hold off this for now for "practical reasons". Actually, I'm also interested in the idea that we could skip saving the image entirely and just store the URL, and load it on start_conv. It would slow that step down a bit but that's a 1 time "cost" per conversation, not on every response, and it would allow me to save a single yaml file per person rather than needing a dir w/ multiple files. Then again..."practical reasons".
+
+7/16/22 sat
+-----------
+-readme updates
+	-docs on using alexa skill (what are intents, sample utterances, etc.)
+	-record sample audio/video clip w/ alexa skill
+		-lex for subreddit?
+		-general purpose demo that shows all functionality: changing settings, generating person, ending conv and getting transcript, etc.
+-look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 
 
 Backlog (short term)

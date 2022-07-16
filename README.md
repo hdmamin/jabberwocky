@@ -7,9 +7,9 @@ https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-
 
 # Project Description
 
-This GUI provides an audio interface to GPT-3. My main goal was to provide a convenient way to interact with various experts or public figures: imagine discussing physics with Einstein or hip hop with Kanye (or hip hop with Einstein? 🤔). I often find writing and speaking to be wildly different experiences and I imagined the same would be true when interacting with GPT-3. This turned out to be partially true - the default Mac text-to-speech functionality I'm using here is certainly not as lifelike as I'd like. Perhaps more powerful audio generation methods will pop up in a future release...
+This project provides two audio interfaces (a conversational alexa skill and a desktop GUI) to GPT-3 and a few of its open source variants. One goal is to provide a convenient way to interact with various experts or public figures, as mimicked by GPT-3: imagine discussing physics with Einstein or hip hop with Kanye (or hip hop with Einstein? 🤔). Previously, this required going to the OpenAI playground, writing a bio, and periodically deleting parts of your conversation as you exceeded the max prompt window. Sometimes I just couldn't be bothered. But now, it's as simple as "Alexa, start Quick Chat"...
 
-We also provide Task Mode containing built-in prompts for a number of sample tasks:
+While the alexa skill is (currently) purely conversational, the GUI also provides Task Mode which contains built-in prompts for a number of sample tasks:
 
 - Summarization
 - Explain like I'm 5
@@ -20,6 +20,8 @@ We also provide Task Mode containing built-in prompts for a number of sample tas
 - Generate ML paper abstracts
 - MMA Fight Analysis and Prediction
 
+I anticipate that further development will take place on the alexa skill but I don't plan to actively maintain the GUI.
+
 ## Getting Started
 
 1. Clone the repo.
@@ -28,21 +30,20 @@ We also provide Task Mode containing built-in prompts for a number of sample tas
 git clone https://github.com/hdmamin/jabberwocky.git
 ```
 
-2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're not using Mac OS, you could try installing portaudio with whatever package manager you're using, but app behavior on other systems is unknown. If you have `make` installed, you can simply use the command (after activating your virtual environment):
+2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're using Mac OS and virtualenv, you can use the command
 
 ```
-make install_gui
+make gui_env
 ```
 
-which is equivalent to:
+to create a virtual environment for the GUI or
 
 ```
-brew install portaudio
-pip install -r gui/requirements.txt
-python -m nltk.downloader punkt
-```
+make alexa_env
+````
 
-Note: this will install a slightly older version of Jabberwocky so you can run the GUI. The Alexa skill uses the latest version of the library.
+to create a virtual environment for the alexa skill. If you're not using Mac OS or prefer to use a different environment manager, see `gui/make_env.sh` or `alexa/make_env.sh` to see what logic is actually being executed. Note: the GUI uses an older version of Jabberwocky. The library has since undergone many major changes and is not backward compatible.
+
 
 3. Add your openai API key somewhere the program can access it. There are two ways to do this:
 
@@ -58,21 +59,20 @@ export OPENAI_API_KEY=your_openai_api_key
 
 (Make sure to use your actual key, not the literal text `your_openai_api_key`.)
 
-4. Run the app.
+4. Run the app from inside your virtual environment.
 
 ```
+source gui/venv/bin/activate
 python gui/main.py
-```
-
-Or with `make`:
-
-```
-make run
 ```
 
 I also recommend using the command `make hooks` to install a git pre-commit hook to prevent you from accidentally exposing your openai API key. You only need to run this once.
 
-## Usage
+## Alexa Skill Usage
+
+\# TODO
+
+## GUI Usage
 
 ### Conversation Mode
 
@@ -100,23 +100,21 @@ The first time you speak, the speech transcription back end will take a few seco
 **CTRL + SHIFT**: Start recording audio (same as pressing the "Record" button).  
 **CTRL + a**: Get GPT-3's response to whatever input you've recorded (same as pressing the "Get Response" button).
 
+## Dev Notes
+
 ### Project Members
 * Harrison Mamin
 
 ### Repo Structure
 ```
 jabberwocky/
-├── data         # Raw and processed data. Some files are excluded from github but the ones needed to run the app are there.
+├── lib          # Python package providing helpers for dealing with the openai api. Powers a lot of the functionality in both the GUI and alexa skill. Note that this also includes some other stuff that ultimately went unused - I initially experimented a bit with youtube transcripts, for example. Most useful functionality lives in the openai_utils module at this point.
+├── alexa        # Code used to create a conversational alexa skill.
+├── gui          # GUI scripts. The main script should be run from the project root directory. 
+├── data         # Raw and processed data. Some files are excluded from github but the ones needed to run the app are there. This also includes miscellaneous gpt3 prompt files and conversational personas.
 ├── notes        # Miscellaneous notes from the development process stored as raw text files.
 ├── notebooks    # Jupyter notebooks for experimentation and exploratory analysis.
-├── reports      # Markdown reports (performance reports, blog posts, etc.)
-├── gui          # GUI scripts. The main script should be run from the project root directory. 
-└── lib          # Python package. Code can be imported in analysis notebooks, py scripts, etc.
+└── reports      # Markdown reports (performance reports, blog posts, etc.)
 ```
 
 The `docker` and `setup` dirs contain remnants from previous attempts to package the app. While I ultimately decided to go with a simpler approach, I left them in the repo so I have the option of picking up where I left off if I decide to work on a new version.
-
-### Updates
-
-**4/6/22**: The library is currently undergoing some fairly major changes to support my Jabberwocky alexa skill (still a work in progress) and future projects. The GUI should still work using the pinned version of jabberwocky in gui/requirements.txt - just note that the installed library's source code will no longer correspond to the current state of the `lib` directory.
-

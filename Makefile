@@ -1,4 +1,4 @@
-.PHONY: todo nb clean lib pypi readmes run prompt persona install_gui install_alexa
+.PHONY: todo nb clean lib pypi readmes run prompt persona gui_env alexa_env
 
 # Convention: add _ between comment sign and TODO to hide an item that you don't want to delete entirely. This will still be findable if you run `ack TODO`.
 todo:
@@ -20,15 +20,11 @@ readmes:
 	htools update_readmes "['gui', 'notebooks', 'lib/jabberwocky', 'alexa']"
 	python ./lib/jabberwocky/cli.py update_prompt_readme
 
-install_gui:
-	brew install portaudio
-	pip install -r gui/requirements.txt
-	python -m nltk.downloader punkt
+gui_env:
+	cd gui && chmod u+x make_env.sh && ./make_env.sh
 
-install_alexa:
-	cd alexa
-	chmod u+x make_env.sh
-	make_env.sh
+alexa_env:
+	cd alexa && chmod u+x make_env.sh && ./make_env.sh
  
 run:
 	python gui/main.py

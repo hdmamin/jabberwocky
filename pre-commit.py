@@ -32,10 +32,13 @@ def main():
         error('\nERROR: FOUND POSSIBLE EXPOSED API KEY. \nCommit aborted. '
               'Use the `--no-verify` to force commit anyway.\n')
     else:
-        # Disabled checking alexa/venv because it was making commits sooo slow.
+        # Disabled checking venv dirs because it was making commits sooo slow.
         print('Checking all files for openai API keys...')
         all_matches = subprocess.run(
-            ['ack', '--ignore-dir=./alexa/venv', OPENAI_KEY_PATTERN,
+            ['ack',
+             '--ignore-dir=./alexa/venv',
+             '--ignore-dir=./gui/venv',
+             OPENAI_KEY_PATTERN,
              Path('~/jabberwocky/').expanduser()]
         )
         if not all_matches.returncode:
