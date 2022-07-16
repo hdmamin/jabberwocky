@@ -51,7 +51,7 @@ When Lou asks who you want to speak to, you can also answer "Nobody" or "Noone" 
 
 This causes your Echo to launch the skill.
 
-## Intents
+## Background
 
 Jabberwocky, like most alexa skills, provides several `intents`. Think of these as actions you want to perform while using the skill. Rather than clicking on a button or menu as you might in an app or GUI, you invoke these using plain English. 
 
@@ -70,6 +70,8 @@ Scope | Explanation
 global | These changes will affect all people and all conversations.
 person | These changes will be attached to the person you're currently speaking with (notice this means you must have started a conversation already). They will persist across future conversations with this same person but will not affect your conversations with other people.
 conversation | These changes will only affect the current conversation. They will be un-done as soon as the conversation ends.
+
+## Intents
 
 #### `changeBackend`
 

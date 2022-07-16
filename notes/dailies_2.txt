@@ -2708,9 +2708,19 @@ X -add personas to git? Want to make them more easily accessible on old mac/lamb
 -add pillow dep...somewhere? (Noticed it wasn't included in alexa env. Check if it needs to be in jabberwocky, alexa, gui, etc.)
 -investigate git hook issue (running ack from command line is WAY faster - seems like ignore-dir may not be working in script?)
 -readme updates
+	-alexa readme
+		-add mention of needing to give permission for email/name
+		-see what it looks like if we rm spaces between quickstart replies and have 1 giant blockquote (diff than before bc names are bold now)
+	-main readme
+		-revise opening paragraph
+		-consider moving some gui stuff to gui/readme?
+		-[BLOCKED] if I like the no-space look in the alexa readme, update the quickstart here too
 	-record sample audio/video clip w/ alexa skill
 		-lex for subreddit?
 		-general purpose demo that shows all functionality: changing settings, generating person, ending conv and getting transcript, etc.
+-check that gui still works
+	-install on old device
+	-launch gui
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 
