@@ -25,6 +25,49 @@ I anticipate that further development will take place on the alexa skill but I d
 
 ## Alexa Skill Usage
 
+### Quickstart
+
+**Launch the skill, start a conversation with a new contact, then exit the skill when done.**
+
+> **User:** Alexa, start Quick Chat.
+
+> **Lou:** Hi there! Who would you like to speak to?
+
+> **User:** William Shakespeare
+
+> **Lou:** I don't see anyone named William Shakespeare in 
+your contacts. Would you like to add a new contact?
+
+> **User:** Yes please.
+
+> **Lou:** I've connected you with William Shakespeare.
+
+> **User:** Hi William! I've been struggling with how to end my novel and I thought you could provide some input.
+
+[User and William Shakespeare chat for a bit.]
+
+...
+
+> **User:** Thanks William! That really helped.
+
+> **William Shakespeare:** My pleasure.
+
+> **User:** Goodbye.
+
+The above example exits the skill entirely, but you could also choose to end the current conversation and start a new one:
+
+> **User:** Lou, hang up.
+
+> **Lou:** Would you like me to send you a transcript of your conversation?
+
+> **User:** Yes please.
+
+> **Lou:** I've sent you a transcript of your conversation. Who would you like to speak to next?
+
+> **User:** Mozart
+
+When Lou asks who you want to speak to, you can also answer "Nobody" or "Noone" to exit the skill.
+
 The video below provides a brief demo of the skill's basic functionality. You can view more thorough documentation in [alexa/README](alexa/README.md).
 
 \# TODO: add demo vid
