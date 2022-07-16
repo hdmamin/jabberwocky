@@ -2694,8 +2694,18 @@ X -add personas to git? Want to make them more easily accessible on old mac/lamb
 
 7/16/22 sat
 -----------
+~ -readme updates
+	X -docs on using alexa skill (what are intents, sample utterances, etc.)
+		UPDATE: this doesn't look like a ton of progress but it was actually a ton and took almost 2.5 hours.
+	-record sample audio/video clip w/ alexa skill
+		-lex for subreddit?
+		-general purpose demo that shows all functionality: changing settings, generating person, ending conv and getting transcript, etc.
+-look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
+
+7/17/22 sun
+-----------
 -readme updates
-	-docs on using alexa skill (what are intents, sample utterances, etc.)
 	-record sample audio/video clip w/ alexa skill
 		-lex for subreddit?
 		-general purpose demo that shows all functionality: changing settings, generating person, ending conv and getting transcript, etc.
@@ -2743,6 +2753,7 @@ Long Term Backlog (Jabberwocky V3 )
 -consider if we can extend GPTBackend to handle other types of tasks (e.g. instead of GPT.query(), also allow us to go GPT.embed() or GPT.qa() or GPT.code()).
 	-prob would need different config format for other tasks - some require multiple models, for instance
 -idea: prompt mixin? I.e. add snippet of text to start/end of a prompt, e.g. "You are a friendly, polite AI assistant.".
+-When generating a persona, assign a "whimsy" score indicating how serious/sciency vs. creative/whimsical the person is. We can then use this to auto-set temperature differently for each persona.
 
 Long term backlog (misc)
 ------------------------

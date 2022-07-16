@@ -260,7 +260,7 @@ def choose_person(person=None, **kwargs):
     # persona is who they meant.
     if not kwargs.get('choice', True):
         ask.func_push(_generate_person, person=kwargs['original'])
-        return question('Ok. Would you like to create a new contact?')
+        return question('Ok. Would you like to add a new contact?')
 
     if person not in CONV:
         match, match_p = CONV.nearest_persona(person)
@@ -269,7 +269,7 @@ def choose_person(person=None, **kwargs):
             ask.func_push(_generate_person, person=person)
             return question(
                 f'I don\'t see anyone named {person} in your contacts. '
-                'Would you like to create a new contact?'
+                'Would you like to add a new contact?'
             )
         elif match_p < .8:
             ask.func_push(choose_person, person=match, original=person)
@@ -368,9 +368,10 @@ def change_model(scope=None, model=None):
 
 @ask.intent('changeMaxLength')
 def change_max_length(scope=None, number=None):
-    """Change the max number of tokens in a generated response. The max is
-    2048. There are roughly 1.33 tokens per word. I've set the default to
-    50 tokens, which equates to roughly 2-3 sentences.
+    """Change the max number of tokens in a generated response. The max we
+    allow is 900. There are roughly 1.33 tokens per word. I've set the default
+    to 100 tokens, which equates to roughly 4-6 sentences, but most responses
+    will automatically conclude before that point.
 
     Sample Utterances
     -----------------
@@ -850,7 +851,7 @@ if __name__ == '__main__':
     CONV = ConversationManager(custom_names=[] if ARGS.custom else False,
                                load_qa_pipe=not ARGS.dev)
     PROMPTER = PromptManager(['punctuate_alexa'], verbose=False)
-    PRICE_MONITOR = PriceMonitor()
+    PRICE_MONITOR = PriceMonitor(4
     UTT2META = load('data/alexa/utterance2meta.pkl')
     EMO_PIPE = None if ARGS.voice else pipeline(
         'text-classification',
