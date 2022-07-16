@@ -2673,8 +2673,10 @@ X -delete toy lambda skill in console
 
 7/15/22 fri
 -----------
--maybe one last try with zappa? looks like memory_size actually goes up to 10.24 gb...
+X -maybe one last try with zappa? looks like memory_size actually goes up to 10.24 gb...
 	UPDATE: tried with 5gb memory size.
+	> Zappa has limit of 3.008gb. Trying again w/ memory_size=3000.
+	> Still no. 500 status code instead of 502 but error is the same about app being None. Zappa says a newer version is available but I checked and it's only a minor increment. Undeployed again - I think it's clear lambda is not the way to go at least right now.
 -see if we can put venv elsewhere? I think this is making git commit very slow due to having to search all the files in venv
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
