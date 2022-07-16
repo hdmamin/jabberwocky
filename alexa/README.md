@@ -45,12 +45,6 @@ When Lou asks who you want to speak to, you can also answer "Nobody" or "Noone" 
 
 # Documentation
 
-## Launching the skill
-
-> Alexa, start Quick Chat.
-
-This causes your Echo to launch the skill.
-
 ## Background
 
 Jabberwocky, like most alexa skills, provides several `intents`. Think of these as actions you want to perform while using the skill. Rather than clicking on a button or menu as you might in an app or GUI, you invoke these using plain English. 
@@ -61,7 +55,14 @@ Some of our intents accept one or more options (e.g. if you want to change the m
 
 Finally, note that there are a few intents that aren't explicitly documented here because they should already be pretty straightforward. E.g. if Lou asks you a yes or no question, you can respond with "Yes" or "No" (or "yes please" or "no thank you" if appropriate - I'm a proponent of treating human-like interfaces with the same basic respect you'd use when speaking with a living person). Once you've started a conversation, you can simply speak normally and it will be treated as a conversational response as long as it doesn't sound like you're trying to invoke one of the other intents.
 
-**Scopes**
+
+## Launching the skill
+
+> Alexa, start Quick Chat.
+
+This causes your Echo to launch the skill.
+
+## Scopes
 
 A few intents can be used to change settings that affect the nature and overall quality of your conversations. Settings can be changed at different "scopes" which determine how long your changes persist. We use a "global" scope if you don't explicitly specify one when making a change. This may make more sense after reading through the rest of the intents section (for example, see the `changeModel` intent's Sample Utterances. `changeMaxLength` and `changeTemperature` also use scopes.).
 
