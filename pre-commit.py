@@ -33,11 +33,13 @@ def main():
               'Use the `--no-verify` to force commit anyway.\n')
     else:
         # Disabled checking venv dirs because it was making commits sooo slow.
+        # Don't prefix ignore dirs with "./" - that syntax doesn't seem to
+        # work.
         print('Checking all files for openai API keys...')
         all_matches = subprocess.run(
             ['ack',
-             '--ignore-dir=./alexa/venv',
-             '--ignore-dir=./gui/venv',
+             '--ignore-dir=alexa/venv',
+             '--ignore-dir=gui/venv',
              OPENAI_KEY_PATTERN,
              Path('~/jabberwocky/').expanduser()]
         )
