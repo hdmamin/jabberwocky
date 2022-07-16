@@ -1,3 +1,13 @@
+`zappa_settings.json` is currently unused - I couldn't get this to work so far. The issue seems to be that my environment is just too big (I think). If you want to try this again, add these files back to `requirements.txt`, though perhaps with whatever the most up-to-date versions are is in the future. 
+
+```
+awscli==1.25.28
+zappa==0.54.1
+```
+
+Then follow this tutorial:
+
+ https://developer.amazon.com/blogs/post/8e8ad73a-99e9-4c0f-a7b3-60f92287b0bf/new-alexa-tutorial-deploy-flask-ask-skills-to-aws-lambda-with-zappa
 
 ---
 Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:48

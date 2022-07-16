@@ -7,6 +7,6 @@
         "runtime": "python3.7",
         "s3_bucket": "jabberwocky-alexa",
         "slim_handler": true,
-        "memory_size": 5000
+        "memory_size": 512
     }
 }
