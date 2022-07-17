@@ -2705,7 +2705,8 @@ X -add personas to git? Want to make them more easily accessible on old mac/lamb
 
 7/17/22 sun
 -----------
--add pillow dep...somewhere? (Noticed it wasn't included in alexa env. Check if it needs to be in jabberwocky, alexa, gui, etc.)
+X -add pillow dep...somewhere? (Noticed it wasn't included in alexa env. Check if it needs to be in jabberwocky, alexa, gui, etc.)
+	UPDATE: just forgot to rm import from lib utils. It's not actually used there anymore. Fixed.
 -investigate git hook issue (running ack from command line is WAY faster - seems like ignore-dir may not be working in script?)
 -readme updates
 	-alexa readme

@@ -9,6 +9,7 @@ YELLOW = '\033[93m'
 RED = '\033[91m'
 END = '\033[0m'
 BOLD = '\033[1m'
+PROJECT_DIR = Path('~/jabberwocky/').expanduser()
 
 
 def warn(text):
@@ -36,13 +37,10 @@ def main():
         # Don't prefix ignore dirs with "./" - that syntax doesn't seem to
         # work.
         print('Checking all files for openai API keys...')
-        all_matches = subprocess.run(
-            ['ack',
-             '--ignore-dir=alexa/venv',
-             '--ignore-dir=gui/venv',
-             OPENAI_KEY_PATTERN,
-             Path('~/jabberwocky/').expanduser()]
-        )
+        cmd = f'ack --ignore-dir={PROJECT_DIR/"alexa/venv"} --ignore-dir='\
+              f'{PROJECT_DIR/"gui/venv"} {OPENAI_KEY_PATTERN} {PROJECT_DIR}'
+        print(cmd)
+        all_matches = subprocess.run(cmd.split())
         if not all_matches.returncode:
             warn('\nWARNING: FOUND POSSIBLE EXPOSED API KEY. \nAllowing '
                  'commit to proceed because it doesn\'t appear to be in a '

@@ -8,7 +8,6 @@ import json
 import logging
 import os
 from pathlib import Path
-from PIL import Image
 import re
 import sys
 from threading import Thread
@@ -433,7 +432,6 @@ def most_recent_filepath(dir_, mode='m'):
     if not paths:
         raise RuntimeError(f'No files in directory {dir_}.')
     return max(paths, key=lambda x: getattr(x.stat(), f'st_{mode}time'))
-
 
 
 def set_module_global(module, key, value):
