@@ -851,7 +851,7 @@ if __name__ == '__main__':
     CONV = ConversationManager(custom_names=[] if ARGS.custom else False,
                                load_qa_pipe=not ARGS.dev)
     PROMPTER = PromptManager(['punctuate_alexa'], verbose=False)
-    PRICE_MONITOR = PriceMonitor(4
+    PRICE_MONITOR = PriceMonitor()
     UTT2META = load('data/alexa/utterance2meta.pkl')
     EMO_PIPE = None if ARGS.voice else pipeline(
         'text-classification',

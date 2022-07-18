@@ -568,3 +568,24 @@ en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_
 7/10/22 sun
 -----------
  nohup python alexa/app.py --dev True > /tmp/log.txt 2>&1 &
+
+7/17/22 sun
+-----------
+If you asked an intelligent robot to design a test to determine whether a human being was truly intelligent, what do you think that test might look like?
+
+If we succeeded in building intelligent robots, do you think they would consider humans to be intelligent?
+
+If we succeeded in building intelligent robots, do you think their conception of intelligence would be similar to ours?
+
+If you asked an intelligent robot to define intelligence, what do you think it would say?
+
+Do you think intelligent robots would define intelligence in a way that differs from the way humans define it?
+
+Do you think intelligent robots would have a human-centric view of intelligence, or would their definition differ from ours?
+
+	They're also not constrained by biology in the way humans are, and so their conception of what is possible.
+
+	Perhaps every intelligent group defines intelligence in a way that highlights their own strengths.
+	In other words, they might define intelligence in a way that highlights their own strengths, much like humans do.
+
+Do you think intelligent robots can exist with possessing the capacity to experience emotion?

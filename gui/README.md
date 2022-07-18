@@ -1,6 +1,26 @@
-# GUI
+# Jabberwocky-GUI
 
-This folder is for scripts that can be run from the command line (usually python or shell scripts).
+### Usage Notes
+
+The first time you speak, the speech transcription backend will take a few seconds to calibrate to the level of ambient noise in your environment. You will know it's ready for transcription when you see a "Listening..." message appear below the Record button. Calibration only occurs once to save time.
+
+### Built-in Tasks
+
+Task Mode provides a miscellaneous assortment of built-in prompts for the following tasks:
+
+- Summarization
+- Explain like I'm 5
+- Translation
+- How To (step by step instructions for performing everyday tasks)
+- Writing Style Analysis
+- Explain machine learning concepts in simple language
+- Generate ML paper abstracts
+- MMA Fight Analysis and Prediction
+
+### Hotkeys
+
+**CTRL + SHIFT**: Start recording audio (same as pressing the "Record" button).  
+**CTRL + a**: Get GPT-3's response to whatever input you've recorded (same as pressing the "Get Response" button).
 
 
 ---

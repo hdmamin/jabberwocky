@@ -2,21 +2,21 @@
 
 ## Quickstart
 
-**Launch the skill, start a conversation with a new contact, then exit the skill when done.**
+**This chat log provides a minimal example of the dialogue needed to launch the skill, start a conversation with a new contact, and exit the skill when done.**
 
 > **User:** Alexa, start Quick Chat.
-
+<br>
 > **Lou:** Hi there! Who would you like to speak to?
-
+<br>
 > **User:** William Shakespeare
-
+<br>
 > **Lou:** I don't see anyone named William Shakespeare in 
 your contacts. Would you like to add a new contact?
-
+<br>
 > **User:** Yes please.
-
+<br>
 > **Lou:** I've connected you with William Shakespeare.
-
+<br>
 > **User:** Hi William! I've been struggling with how to end my novel and I thought you could provide some input.
 
 [User and William Shakespeare chat for a bit.]
@@ -24,21 +24,21 @@ your contacts. Would you like to add a new contact?
 ...
 
 > **User:** Thanks William! That really helped.
-
+<br>
 > **William Shakespeare:** My pleasure.
-
+<br>
 > **User:** Goodbye.
 
 The above example exits the skill entirely, but you could also choose to end the current conversation and start a new one:
 
 > **User:** Lou, hang up.
-
+<br>
 > **Lou:** Would you like me to send you a transcript of your conversation?
-
+<br>
 > **User:** Yes please.
-
+<br>
 > **Lou:** I've sent you a transcript of your conversation. Who would you like to speak to next?
-
+<br>
 > **User:** Mozart
 
 When Lou asks who you want to speak to, you can also answer "Nobody" or "Noone" to exit the skill.
@@ -80,11 +80,11 @@ Jabberwocky provides models from a number of different sources which we call "ba
 
 **Sample Utterances**
 > Lou, use gooseai backend.
->
+<br>
 > Lou, change backend to openai.
->
+<br>
 > Lou, please switch backend to banana.
->
+<br>
 > Lou, switch to huggingface backend.
 
 **Options**
@@ -108,16 +108,17 @@ Our paid backends provide multiple models (technically, so does Huggingface, but
 
 Like most intents that change settings, you can specify a scope that will determine how long your changes persist (refer to the Scopes table at the start of the Intents section).
 
+**Sample Utterances**
 > Lou, use model 0.
-> 
+<br>
 > Lou, change model to 1.
-> 
+<br>
 > Lou, switch to model 2.
-> 
+<br>
 > Lou, switch to global model 2.
-> 
+<br>
 > Lou, use conversation model 0.
-> 
+<br>
 > Lou, change person model to 3.
 
 **Options**
@@ -139,15 +140,15 @@ Like most intents that change settings, you can specify a scope that will determ
 **Sample Utterances**
 
 > Lou, change max length to 75.
->
+<br>
 > Lou, set max length to 50.
->
+<br>
 > Lou, set max tokens to 33.
->
+<br>
 > Lou, set global max length to 90.
->
+<br>
 > Lou, set conversation max length to 90.
->
+<br>
 > Lou, set person max length to 100.
 
 **Options**
@@ -162,15 +163,15 @@ Like most intents that change settings, you can specify a scope that will determ
 
 **Sample Utterances**
 > Lou, change temperature to 1.
->
+<br>
 > Lou, set temp to 90.
->
+<br>
 > Lou, set temperature to 20.
->
+<br>
 > Lou, set global temperature to 45.
->
+<br>
 > Lou, change persona temperature to 2.
->
+<br>
 > Lou, change conversation temperature to 85.
 
 **Options**
@@ -183,9 +184,9 @@ This lets you hear a list of all the people you can chat with. (Note that you ca
 
 **Sample Utterances**
 > Lou, who are my contacts?
->
+<br>
 > Lou, please read me my contacts.
->
+<br>
 > Lou, can you read me my contacts?
 
 
@@ -195,7 +196,7 @@ This lets you hear all your current settings. This can be useful if you've chang
 
 **Sample Utterance**
 > Lou, what are my settings?
->
+<br>
 > Lou, read me my settings.
 
 #### `choosePerson`
@@ -204,7 +205,7 @@ This intent is invoked when Lou asks who you would like to speak to and you resp
 
 **Sample Utterances**
 > Maya Angelou
->
+<br>
 > Harry Potter
 
 #### `enableAutoPunctuation`
@@ -213,11 +214,11 @@ Use this to enable an experimental feature that uses a model to improve Alexa's 
 
 **Sample Utterances**
 > Lou, please use auto punctuation.
-> 
+<br>
 > Lou, enable automatic punctuation.
-> 
+<br>
 > Lou, please turn on automatic punctuation.
-> 
+<br>
 > Lou, turn on auto punctuation.
 
 #### `disableAutoPunctuation`
@@ -226,13 +227,12 @@ Disable the experimental auto punctuation feature (see the `enableAutoPunctuatio
 
 **Sample Utterances**
 > Lou, disable auto punctuation.
-> 
+<br>
 > Lou, please disable automatic punctuation.
-> 
+<br>
 > Lou please stop using auto punctuation.
-> 
+<br>
 > Lou, turn off automatic punctuation.
-> 
 
 #### `endChat`
 
@@ -240,7 +240,7 @@ End the conversation that's currently in progress. If you've given Jabberwocky p
 
 **Sample Utterances**
 > "Lou, hang up."
->
+<br>
 > "Lou, end chat."
 
 #### `Goodbye`

@@ -2707,27 +2707,50 @@ X -add personas to git? Want to make them more easily accessible on old mac/lamb
 -----------
 X -add pillow dep...somewhere? (Noticed it wasn't included in alexa env. Check if it needs to be in jabberwocky, alexa, gui, etc.)
 	UPDATE: just forgot to rm import from lib utils. It's not actually used there anymore. Fixed.
--investigate git hook issue (running ack from command line is WAY faster - seems like ignore-dir may not be working in script?)
--readme updates
-	-alexa readme
+X -investigate git hook issue (running ack from command line is WAY faster - seems like ignore-dir may not be working in script?)
+	UPDATE: ack seems to (understandably) interpret ignore-dirs as absolute when the main path to search is absolute. I was using relative paths for ignore-dirs. Fixed.
+~ -readme updates
+	~ -alexa readme
 		-add mention of needing to give permission for email/name
-		-see what it looks like if we rm spaces between quickstart replies and have 1 giant blockquote (diff than before bc names are bold now)
+		X -see what it looks like if we rm spaces between quickstart replies and have 1 giant blockquote (diff than before bc names are bold now)
+			UPDATE: yep, much better.
 	-main readme
-		-revise opening paragraph
-		-consider moving some gui stuff to gui/readme?
-		-[BLOCKED] if I like the no-space look in the alexa readme, update the quickstart here too
-	-record sample audio/video clip w/ alexa skill
-		-lex for subreddit?
-		-general purpose demo that shows all functionality: changing settings, generating person, ending conv and getting transcript, etc.
+		X -revise opening paragraph
+		~ -consider moving some gui stuff to gui/readme?
+			UPDATE: moved some stuff. Still undecided if I should move more or not.
+		X -if I like the no-space look in the alexa readme, update the quickstart here too
+	~ -record sample audio/video clip w/ alexa skill
+		~ -lex for subreddit?
+			UPDATE: recorded a bunch of options. Should check on charges tomorrow to see if I need to edit my monthly limit.
+		_ -general purpose demo that shows all functionality: changing settings, generating person, ending conv and getting transcript, etc.
+			UPDATE: I think we can skip some of that. The docs show enough of that stuff.
 -check that gui still works
 	-install on old device
 	-launch gui
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 
+7/18/22 mon
+-----------
+-readme updates
+	-alexa readme
+		-add mention of needing to give permission for email/name
+	-main readme
+		-consider if there's anything else I want to move to/from gui readme
+-check charges for 7/17 or 7/18 (not sure which they'll show up on). See if I need to change limit for this month.
+-video demo
+	-transfer all recordings to computer
+	-select 1 or more for readme and/or reddit
+	-consider trying to record another sanderson brainstorming sess
+-look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 
 Backlog (short term)
 --------------------
+-check that gui still works
+	-install on old device
+	-launch gui
+-check that alexa install works on new device after adding pytorch dep
 -check if I need to validate that request was sent by alexa or if flask-ask handles that
 	https://developer.amazon.com/en-US/docs/alexa/custom-skills/host-a-custom-skill-as-a-web-service.html#checking-the-signature-of-the-request
 -[weekend - need another person to help] see what happens if I try to use this on 2 devices at once. Is this even possible? Guessing this totally breaks everything bc I didn't design for multi users, but let's confirm that.
