@@ -342,7 +342,7 @@ You can use this to exit the skill (and any ongoing conversation) immediately. T
 
 You can think of Lou as your personal assistant within Jabberwocky. Their presence is mostly a practical implementation detail: by starting all settings-changing commands with "Lou", it becomes easier to distinguish between requests to change settings and conversational responses. Granted, adding a contact named Lou might raise some problems, but I'll tackle that concern if/when it becomes an issue.
 
-The name "Lou" is selected mostly because it's fast to say, reliably recognized by Alexa (voice transcription is still imperfect), and gender neutral (Lou uses your default Alexa voice, which can be male or female depending on your settings; I wanted speaking to Lou to feel natural).
+The name "Lou" is selected mostly because it's fast to say, reliably recognized by Alexa (voice transcription is still imperfect), and gender neutral (Lou uses your default Alexa voice, which can be male or female depending on your settings; the name "Lou" allows you to visualize whichever gender matches your settings).
 
 ## Dev Notes
 
