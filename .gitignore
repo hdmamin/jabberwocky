@@ -17,6 +17,7 @@ data/icons/*
 !data/alexa/
 data/alexa/*
 !data/alexa/utterance2meta.pkl
+!data/alexa/dialog_model.json
 *egg-info*
 lib/dist
 *.swp

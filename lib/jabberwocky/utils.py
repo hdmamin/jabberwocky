@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import sys
 from threading import Thread
+import warnings
 import yaml
 import _thread
 
@@ -278,7 +279,7 @@ def load_huggingface_api_key():
     return load_api_key('huggingface')
 
 
-def load_api_key(name):
+def load_api_key(name, raise_error=True):
     """Generic api key loader. Assumes you store the key as a text file
     containing only one key in a file called ~/.{name}.
 
@@ -286,13 +287,31 @@ def load_api_key(name):
     ----------
     name: str
         Examples: 'booste', 'huggingface', 'gooseai'.
+    raise_error: bool
+        If True, a missing file will raise an error. If False, a missing file
+        will only cause a warning and will return an empty string.
 
     Returns
     -------
     str
     """
-    with open(Path(f'~/.{name}').expanduser(), 'r') as f:
-        return f.read().strip()
+    def _load_key(name):
+        with open(Path(f'~/.{name}').expanduser(), 'r') as f:
+            return f.read().strip()
+
+    if raise_error:
+        return _load_key(name)
+    try:
+        return _load_key(name)
+    except FileNotFoundError:
+        warnings.warn(
+            f'Jabberwocky expected to find an api key for backend '
+            f'{name} but couldn\'t. Using {name} backend will throw '
+            f'auth errors. Add your api key to "~/.{name} (if you are using a '
+            f'GPTBackend object, you will then need to use its '
+            f'refresh_api_keys method to enable the backend.'
+        )
+        return ''
 
 
 load_goose_api_key = partial(load_api_key, name='gooseai')

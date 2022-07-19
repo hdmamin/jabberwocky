@@ -75,8 +75,9 @@ from jabberwocky.utils import strip, bold, load_yaml, colored, \
     seconds_til_midnight
 
 
-HF_API_KEY = load_api_key('huggingface')
-BANANA_API_KEY = load_api_key('banana')
+HF_API_KEY = load_api_key('huggingface', raise_error=False)
+BANANA_API_KEY = load_api_key('banana', raise_error=False)
+
 # Ex: MOCKS[True, True, False] means
 # n_prompts > 1, n_completions > 1, stream=False. N > 1 always means 2 in this
 # case.
@@ -847,6 +848,14 @@ class GPTBackend:
         'mock': query_gpt_mock
     }
 
+    # Backends that require an api key.
+    needs_api_key = {
+        'openai',
+        'gooseai',
+        'huggingface',
+        'banana'
+    }
+
     # Names of backends that perform stop word truncation how we want (i.e.
     # allow us to specify stop phrases AND truncate before the phrase rather
     # than after, if we encounter one).
@@ -854,15 +863,17 @@ class GPTBackend:
 
     name2key = {}
     for name in name2func:
-        try:
-            name2key[name] = load_api_key(name)
-        except FileNotFoundError:
+        if name in needs_api_key:
+            name2key[name] = load_api_key(name, raise_error=False)
+        else:
             name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
 
     def __init__(self, date_fmt="%Y.%m.%d"):
         self.new_name = ''
         self.old_name = ''
         self.old_key = ''
+        self.verbose_switch = True
+        self.old_verbose_switch = self.verbose_switch
         self.date_fmt = date_fmt
         self.logger = JsonlinesLogger(
             C.root/
@@ -870,7 +881,7 @@ class GPTBackend:
         )
         self.thread = Thread(target=self.update_log_path, daemon=True).start()
 
-    def __call__(self, name):
+    def __call__(self, name, verbose=True):
         """__enter__ can't take arguments so we need to specify this here.
         Notice that name is auto-lowercased and spaces are removed.
         """
@@ -881,13 +892,16 @@ class GPTBackend:
 
         self.new_name = new_name
         self.old_name = self.current()
+        self.old_verbose_switch, self.verbose_switch = self.verbose_switch, \
+                                                       verbose
         return self
 
     def __enter__(self):
         """Change backend to the one specified in __call__, which is
         automatically called first when using `with` syntax.
         """
-        print(f'Switching openai backend to "{self.new_name}".')
+        if self.verbose_switch:
+            print(f'Switching openai backend to "{self.new_name}".')
         # Store an attribute on openai itself to reduce risk of bugs caused by
         # GPTBackend being deleted or recreated. Previously used a
         # self.base2name mapping to retrieve the current name but that doesn't
@@ -902,7 +916,9 @@ class GPTBackend:
 
     def __exit__(self, exc_type, exc_val, traceback):
         """Revert to previously used backend on contextmanager exit."""
-        print(f'Switching  backend back to "{self.old_name}".')
+        if self.verbose_switch:
+            print(f'Switching  backend back to "{self.old_name}".')
+        self.verbose_switch = self.old_verbose_switch
         openai.api_key = self.old_key
         if self.old_name in self.name2base:
             openai.api_base = self.name2base[self.old_name]

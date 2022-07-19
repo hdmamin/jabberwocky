@@ -1,0 +1,25 @@
+model: code-davinci-002
+temperature: .0
+top_p: .99
+max_tokens: 200
+frequency_penalty: 0.0
+presence_penalty: 0.0
+stop: 
+- '"""'
+version: 0
+reminder: "Could try davinci text as well but codex is free for now."
+doc: |-
+  TODO - Fill me in with a description of the prompt, what inputs shoud look like, and any other notes that may help future you remember what this prompt is trying to do. (Granted, a good prompt should usually make this obvious from the prompt text itself, but this can still be a useful way to record ideas for improvement, document where the prompt is used, or note that it's deprecated.)
+prompt: |-
+  This code snippet is not working as expected. Help the developer debug it. First read their question, then examine the snippet of code that is causing the issue and look at the values of the local and global variables. Finally, explain what the problem is and how to fix it. Use simple language a beginning programmer could understand.
+
+  QUESTION:
+  {question}
+
+  CURRENT CODE SNIPPET:
+  {code}
+
+  LOCAL VARIABLES:
+  {local_vars}
+
+  EXPLANATION AND SUGGESTED FIX:

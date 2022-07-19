@@ -2724,6 +2724,8 @@ X -investigate git hook issue (running ack from command line is WAY faster - see
 			UPDATE: recorded a bunch of options. Should check on charges tomorrow to see if I need to edit my monthly limit.
 		_ -general purpose demo that shows all functionality: changing settings, generating person, ending conv and getting transcript, etc.
 			UPDATE: I think we can skip some of that. The docs show enough of that stuff.
+X -allow GPT backend switch to be non-verbose
+	UPDATE: a little ugly but it seems to work okay.
 -check that gui still works
 	-install on old device
 	-launch gui
@@ -2742,6 +2744,7 @@ X -investigate git hook issue (running ack from command line is WAY faster - see
 	-transfer all recordings to computer
 	-select 1 or more for readme and/or reddit
 	-consider trying to record another sanderson brainstorming sess
+-look into possibility of adding option so gpt.query only logs to jsonlines for a single query (no stdout)
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 

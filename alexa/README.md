@@ -1,5 +1,89 @@
 # Jabberwocky-Alexa
 
+I'm keeping this as a private skill for the time being - it was initially designed for a single user (me) and might require a redesign to handle more. Publishing it publicly would also likely require formal approval from OpenAI. In the meantime, you are free to use this repo to set up your own private skill. 
+
+## Creating your own private skill
+
+### Code Setup
+
+1. Clone the repo.
+
+```
+git clone https://github.com/hdmamin/jabberwocky.git
+```
+
+2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're using Mac OS and virtualenv, you can use the command
+
+```
+make alexa_env
+```
+
+
+If you're not using Mac OS or prefer to use a different environment manager, I suggest viewing `alexa/make_env.sh` to get an idea of the steps you need to implement. Note: the alexa skill uses a newer version of the jabberwocky library than the GUI does, and it's not backward compatible.
+
+3. Add your openai API key somewhere the program can access it. (Make sure to use your actual keys, not the literal text `your_openai_api_key`.)
+
+```
+echo your_openai_api_key > ~/.openai
+```
+
+If you plan to use other backends like huggingface, goose.ai, or banana.dev, you should make their api key(s) available.
+
+```
+echo your_gooseai_api_key > ~/.gooseai
+echo your_huggingface_api_key > ~/.huggingface
+echo your_banana_api_key > ~/.banana
+```
+
+
+4. Run the skill from inside your virtual environment.
+
+```
+source alexa/venv/bin/activate
+python alexa/main.py
+```
+
+5. Use ngrok to expose your endpoint to Alexa. (In theory you can also use AWS Lambda for this, but that seems to be built for smaller skills with less state.)
+
+```
+make ngrok
+```
+
+This should print a url ending with "ngrok.io" in your terminal. Copy that url and run `curl {url}/health` (paste your actual url in place of {url}). The response should be:
+
+```
+{"status":200}
+```
+
+**Developer note:**
+
+If you plan to push new changes to github, I'd recommend using the command `make hooks` to install a git pre-commit hook to prevent you from accidentally exposing your openai API key. (This shouldn't happen regardless but the hook provides some layer of safety in case you print your key in a notebook or something.) You only need to run this once. You can also use the file `pre-commit.py` in the project root as a reference for creating your own hook.
+
+
+### AWS Console Setup
+
+You will also need to create your skill in the alexa console. I imagine the exact process for this will change over time, but here's how to get started (as of July 2022):
+
+Go to [alexa console](https://developer.amazon.com/alexa/console/ask) and click `Create Skill`.
+
+Name your skill, then choose the following settings below.
+
+1. Choose a model to add to your skill
+> Custom
+
+2. Choose a method to host your skill's backend resources
+> Provision your own
+
+(The above assumes you plan to use the ngrok deployment method rather than AWS Lambda.)
+
+Scroll back up and click `Create Skill`. On the next page, select "Start from scratch" when asked to choose a template.
+
+Next, go to
+
+Interaction Model > Intents > JSON Editor
+
+in the menu on the left side of your screen. Use `Drag and drop a .json file` to upload the file `data/alexa/dialog_model.json` from this repo.
+
 ## Quickstart
 
 **This chat log provides a minimal example of the dialogue needed to launch the skill, start a conversation with a new contact, and exit the skill when done.**
