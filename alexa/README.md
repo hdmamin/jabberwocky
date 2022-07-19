@@ -78,15 +78,17 @@ Name your skill, then choose the following settings below.
 
 Scroll back up and click `Create Skill`. On the next page, select "Start from scratch" when asked to choose a template.
 
-Next, go to
-
 Interaction Model > Intents > JSON Editor
 
-in the menu on the left side of your screen. Use `Drag and drop a .json file` to upload the file `data/alexa/dialog_model.json` from this repo.
+in the menu on the left side of your screen. Use `Drag and drop a .json file` to upload the file `data/alexa/dialog_model.json` from this repo. This will create all the intents and slots used by the skill. Click "Save Model" and then "Build Model" at the top of your screen. This will take a few minutes.
+
+To point alexa towards the Flask app you started running earlier, go to the `endpoint` section of the left-hand-side menu and change your service endpoint type from "AWS Lambda ARN" to "HTTPS". Paste your ngrok URL from earlier (make sure it starts with "https" rather than "http" and excludes the "/health" suffix) into the "Default Region" text box. For SSL certificate type select "My development endpoint is a sub-domain of a domain that has a wildcard certificate from a certificate authority". Finally, click "Save Endpoints" at the top of your screen.
+
+You can enable the skill on your phone's alexa app or on the [web version](https://alexa.amazon.com/spa/index.html). You can use the skill settings to enable access to your name (this lets your conversational partners address you by your first name). Enabling access to your email allows Jabberwocky to send you transcripts of your conversations when requested.
 
 ## Quickstart
 
-**This chat log provides a minimal example of the dialogue needed to launch the skill, start a conversation with a new contact, and exit the skill when done.**
+**This chat log provides a minimal example of the dialogue needed to launch the skill, start a conversation with a new contact, and exit the skill when done. We assume you've already enabled your skill on your echo device using the steps above.**
 
 > **User:** Alexa, start Quick Chat.
 <br>

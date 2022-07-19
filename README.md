@@ -102,13 +102,7 @@ git clone https://github.com/hdmamin/jabberwocky.git
 make gui_env
 ```
 
-to create a virtual environment for the GUI or
-
-```
-make alexa_env
-````
-
-to create a virtual environment for the alexa skill. If you're not using Mac OS or prefer to use a different environment manager, see `gui/make_env.sh` or `alexa/make_env.sh` to see what logic is actually being executed. Note: the GUI uses an older version of Jabberwocky. The library has since undergone many major changes and is not backward compatible.
+to create a virtual environment for the GUI. If you're not using Mac OS or prefer to use a different environment manager, see `gui/make_env.sh` or `alexa/make_env.sh` to see what logic is actually being executed. Note: the GUI uses an older version of Jabberwocky. The library has since undergone many major changes and is not backward compatible.
 
 
 3. Add your openai API key somewhere the program can access it. There are two ways to do this:

@@ -2734,12 +2734,16 @@ X -allow GPT backend switch to be non-verbose
 
 7/18/22 mon
 -----------
--readme updates
-	-alexa readme
-		-add mention of needing to give permission for email/name
+~ -readme updates
+	X -alexa readme
+		X -add mention of needing to give permission for email/name
+		X -write instructions for code setup
+		X -write instructions for console setup
+			UPDATE: not sure how easily followable this really is but I don't really expect anyone to use this. If someone asks I can always help troubleshoot.
 	-main readme
 		-consider if there's anything else I want to move to/from gui readme
--check charges for 7/17 or 7/18 (not sure which they'll show up on). See if I need to change limit for this month.
+X -check charges for 7/17 or 7/18 (not sure which they'll show up on). See if I need to change limit for this month.
+	UPDATE: not bad at all, $1-2. I guess a lot of those convs were very short.
 -video demo
 	-transfer all recordings to computer
 	-select 1 or more for readme and/or reddit
@@ -2747,9 +2751,23 @@ X -allow GPT backend switch to be non-verbose
 -look into possibility of adding option so gpt.query only logs to jsonlines for a single query (no stdout)
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
+X -add alexa dialog model json to git so people can more easily recreate skill in console
+
+7/19/22 tues
+------------
+-maybe move instructions on python env and running gui to gui/readme
+-video demo
+	-transfer all recordings to computer
+	-select 1 or more for readme and/or reddit
+	-consider trying to record another sanderson brainstorming sess
+	-add video to readme (this probably has multiple substeps, e.g. do I need to upload to youtube or somewhere else?)
+-look into possibility of adding option so gpt.query only logs to jsonlines for a single query (no stdout)
+
 
 Backlog (short term)
 --------------------
+-look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 -check that gui still works
 	-install on old device
 	-launch gui
