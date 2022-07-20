@@ -296,8 +296,16 @@ def load_api_key(name, raise_error=True):
     str
     """
     def _load_key(name):
-        with open(Path(f'~/.{name}').expanduser(), 'r') as f:
-            return f.read().strip()
+        """Load api key or raise FileNotFoundError. We also check for
+        an environment variable like OPENAI_API_KEY.
+        """
+        try:
+            with open(Path(f'~/.{name}').expanduser(), 'r') as f:
+                return f.read().strip()
+        except FileNotFoundError as e:
+            key = os.getenv(f'{name.upper()}_API_KEY')
+            if key: return key
+            raise e
 
     if raise_error:
         return _load_key(name)

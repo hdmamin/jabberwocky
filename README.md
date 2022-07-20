@@ -18,29 +18,20 @@ While the alexa skill is currently purely conversational, the GUI also provides 
 
 **This chat log provides a minimal example of the dialogue needed to launch the skill, start a conversation with a new contact, and exit the skill when done.**
 
-> **User:** Alexa, start Quick Chat.
-<br>
-> **Lou:** Hi there! Who would you like to speak to?
-<br>
-> **User:** William Shakespeare
-<br>
-> **Lou:** I don't see anyone named William Shakespeare in 
-your contacts. Would you like to add a new contact?
-<br>
-> **User:** Yes please.
-<br>
-> **Lou:** I've connected you with William Shakespeare.
-<br>
+> **User:** Alexa, start Quick Chat.<br>
+> **Lou:** Hi there! Who would you like to speak to?<br>
+> **User:** William Shakespeare<br>
+> **Lou:** I don't see anyone named William Shakespeare in your contacts. Would you like to add a new contact?<br>
+> **User:** Yes please.<br>
+> **Lou:** I've connected you with William Shakespeare.<br>
 > **User:** Hi William! I've been struggling with how to end my novel and I thought you could provide some input.
 
 [User and William Shakespeare chat for a bit.]
 
 ...
 
-> **User:** Thanks William! That really helped.
-<br>
-> **William Shakespeare:** My pleasure.
-<br>
+> **User:** Thanks William! That really helped.<br>
+> **William Shakespeare:** My pleasure.<br>
 > **User:** Goodbye.
 
 You can view more thorough documentation on setting up or using the skill in [alexa/README](alexa/README.md).
@@ -86,44 +77,3 @@ jabberwocky/
 The `docker` and `setup` dirs contain remnants from previous attempts to package the app. While I ultimately decided to go with a simpler approach, I left them in the repo so I have the option of picking up where I left off if I decide to work on a new version.
 
 
-### Getting Started
-
-Use the following steps to set up your environment and run the GUI.
-
-1. Clone the repo.
-
-```
-git clone https://github.com/hdmamin/jabberwocky.git
-```
-
-2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're using Mac OS and virtualenv, you can use the command
-
-```
-make gui_env
-```
-
-to create a virtual environment for the GUI. If you're not using Mac OS or prefer to use a different environment manager, see `gui/make_env.sh` or `alexa/make_env.sh` to see what logic is actually being executed. Note: the GUI uses an older version of Jabberwocky. The library has since undergone many major changes and is not backward compatible.
-
-
-3. Add your openai API key somewhere the program can access it. There are two ways to do this:
-
-```
-echo your_openai_api_key > ~/.openai
-```
-
-or
-
-```
-export OPENAI_API_KEY=your_openai_api_key
-```
-
-(Make sure to use your actual key, not the literal text `your_openai_api_key`.)
-
-4. Run the app from inside your virtual environment.
-
-```
-source gui/venv/bin/activate
-python gui/main.py
-```
-
-If you plan to push new changes to github, I'd recommend using the command `make hooks` to install a git pre-commit hook to prevent you from accidentally exposing your openai API key. (This shouldn't happen regardless but the hook provides some layer of safety in case you print your key in a notebook or something.) You only need to run this once. You can also use the file `pre-commit.py` in the project root as a reference for creating your own hook.

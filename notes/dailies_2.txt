@@ -2755,9 +2755,10 @@ X -add alexa dialog model json to git so people can more easily recreate skill i
 
 7/19/22 tues
 ------------
--look into markdown rendering problems on readme + alexa/readme (blockquoted conv renders correctly in jupyterlab but not github)
-	-also affects sample utterances for alexa/readme intents section
--maybe move instructions on python env and running gui to gui/readme
+X -look into markdown rendering problems on readme + alexa/readme (blockquoted conv renders correctly in jupyterlab but not github)
+	X -also affects sample utterances for alexa/readme intents section
+	UPDATE: solution was to move <br> tags to lie flush at end of line provide a newline after. Previously had them on their own line, which rendered fine in jupyterlab but not github. Fyi, grip renders the same way github does, at least in this scenario.
+X -maybe move instructions on python env and running gui to gui/readme
 -video demo
 	-transfer all recordings to computer
 	-select 1 or more for readme and/or reddit

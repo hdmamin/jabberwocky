@@ -1,10 +1,10 @@
 # Jabberwocky-GUI
 
-### Usage Notes
+## Usage Notes
 
 The first time you speak, the speech transcription backend will take a few seconds to calibrate to the level of ambient noise in your environment. You will know it's ready for transcription when you see a "Listening..." message appear below the Record button. Calibration only occurs once to save time.
 
-### Built-in Tasks
+## Built-in Tasks
 
 Task Mode provides a miscellaneous assortment of built-in prompts for the following tasks:
 
@@ -17,10 +17,58 @@ Task Mode provides a miscellaneous assortment of built-in prompts for the follow
 - Generate ML paper abstracts
 - MMA Fight Analysis and Prediction
 
-### Hotkeys
+## Hotkeys
 
 **CTRL + SHIFT**: Start recording audio (same as pressing the "Record" button).  
 **CTRL + a**: Get GPT-3's response to whatever input you've recorded (same as pressing the "Get Response" button).
+
+## Getting Started
+
+Use the following steps to set up your environment and run the GUI.
+
+1. Clone the repo.
+
+```
+git clone https://github.com/hdmamin/jabberwocky.git
+```
+
+2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're using Mac OS and virtualenv, you can use the command
+
+```
+make gui_env
+```
+
+to create a virtual environment for the GUI. If you're not using Mac OS or prefer to use a different environment manager, you can view `gui/make_env.sh` to see what logic is actually being executed. Note: the alexa skill uses a newer version of jabberwocky that is not backward compatible, so you can't run the GUI and the skill in the same virtual environment.
+
+
+3. Add your openai API key somewhere the program can access it. There are two ways to do this (make sure to use your actual key, not the literal text `your_openai_api_key`):
+
+```
+echo your_openai_api_key > ~/.openai
+```
+
+or
+
+```
+export OPENAI_API_KEY=your_openai_api_key
+```
+
+If you plan to use other backends like huggingface, goose.ai, or banana.dev, you should make their api key(s) available too.
+
+```
+echo your_gooseai_api_key > ~/.gooseai
+echo your_huggingface_api_key > ~/.huggingface
+echo your_banana_api_key > ~/.banana
+```
+
+4. Run the gui from inside your virtual environment.
+
+```
+source gui/venv/bin/activate
+python gui/main.py
+```
+
+If you plan to push new changes to github, I'd recommend using the command `make hooks` to install a git pre-commit hook to prevent you from accidentally exposing your openai API key. (This shouldn't happen regardless but the hook provides some layer of safety in case you print your key in a notebook or something.) You only need to run this once. You can also use the file `pre-commit.py` in the project root as a reference for creating your own hook.
 
 
 ---

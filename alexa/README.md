@@ -21,13 +21,19 @@ make alexa_env
 
 If you're not using Mac OS or prefer to use a different environment manager, I suggest viewing `alexa/make_env.sh` to get an idea of the steps you need to implement. Note: the alexa skill uses a newer version of the jabberwocky library than the GUI does, and it's not backward compatible.
 
-3. Add your openai API key somewhere the program can access it. (Make sure to use your actual keys, not the literal text `your_openai_api_key`.)
+3. Add your openai API key somewhere the program can access it. (Make sure to use your actual key, not the literal text `your_openai_api_key`.)
 
 ```
 echo your_openai_api_key > ~/.openai
 ```
 
-If you plan to use other backends like huggingface, goose.ai, or banana.dev, you should make their api key(s) available.
+or
+
+```
+export OPENAI_API_KEY=your_openai_api_key
+```
+
+If you plan to use other backends like huggingface, goose.ai, or banana.dev, you should make their api key(s) available too.
 
 ```
 echo your_gooseai_api_key > ~/.gooseai
@@ -90,41 +96,28 @@ You can enable the skill on your phone's alexa app or on the [web version](https
 
 **This chat log provides a minimal example of the dialogue needed to launch the skill, start a conversation with a new contact, and exit the skill when done. We assume you've already enabled your skill on your echo device using the steps above.**
 
-> **User:** Alexa, start Quick Chat.
-<br>
-> **Lou:** Hi there! Who would you like to speak to?
-<br>
-> **User:** William Shakespeare
-<br>
-> **Lou:** I don't see anyone named William Shakespeare in 
-your contacts. Would you like to add a new contact?
-<br>
-> **User:** Yes please.
-<br>
-> **Lou:** I've connected you with William Shakespeare.
-<br>
+> **User:** Alexa, start Quick Chat.<br>
+> **Lou:** Hi there! Who would you like to speak to?<br>
+> **User:** William Shakespeare<br>
+> **Lou:** I don't see anyone named William Shakespeare in your contacts. Would you like to add a new contact?<br>
+> **User:** Yes please.<br>
+> **Lou:** I've connected you with William Shakespeare.<br>
 > **User:** Hi William! I've been struggling with how to end my novel and I thought you could provide some input.
 
 [User and William Shakespeare chat for a bit.]
 
 ...
 
-> **User:** Thanks William! That really helped.
-<br>
-> **William Shakespeare:** My pleasure.
-<br>
+> **User:** Thanks William! That really helped.<br>
+> **William Shakespeare:** My pleasure.<br>
 > **User:** Goodbye.
 
 The above example exits the skill entirely, but you could also choose to end the current conversation and start a new one:
 
-> **User:** Lou, hang up.
-<br>
-> **Lou:** Would you like me to send you a transcript of your conversation?
-<br>
-> **User:** Yes please.
-<br>
-> **Lou:** I've sent you a transcript of your conversation. Who would you like to speak to next?
-<br>
+> **User:** Lou, hang up.<br>
+> **Lou:** Would you like me to send you a transcript of your conversation?<br>
+> **User:** Yes please.<br>
+> **Lou:** I've sent you a transcript of your conversation. Who would you like to speak to next?<br>
 > **User:** Mozart
 
 When Lou asks who you want to speak to, you can also answer "Nobody" or "Noone" to exit the skill.
@@ -165,12 +158,9 @@ conversation | These changes will only affect the current conversation. They wil
 Jabberwocky provides models from a number of different sources which we call "backends". Conversational quality, price, and other factors can vary dramatically by backend. You can change your backend at basically any time.
 
 **Sample Utterances**
-> Lou, use gooseai backend.
-<br>
-> Lou, change backend to openai.
-<br>
-> Lou, please switch backend to banana.
-<br>
+> Lou, use gooseai backend.<br>
+> Lou, change backend to openai.<br>
+> Lou, please switch backend to banana.<br>
 > Lou, switch to huggingface backend.
 
 **Options**
@@ -195,16 +185,11 @@ Our paid backends provide multiple models (technically, so does Huggingface, but
 Like most intents that change settings, you can specify a scope that will determine how long your changes persist (refer to the Scopes table at the start of the Intents section).
 
 **Sample Utterances**
-> Lou, use model 0.
-<br>
-> Lou, change model to 1.
-<br>
-> Lou, switch to model 2.
-<br>
-> Lou, switch to global model 2.
-<br>
-> Lou, use conversation model 0.
-<br>
+> Lou, use model 0.<br>
+> Lou, change model to 1.<br>
+> Lou, switch to model 2.<br>
+> Lou, switch to global model 2.<br>
+> Lou, use conversation model 0.<br>
 > Lou, change person model to 3.
 
 **Options**
@@ -225,16 +210,11 @@ Like most intents that change settings, you can specify a scope that will determ
 
 **Sample Utterances**
 
-> Lou, change max length to 75.
-<br>
-> Lou, set max length to 50.
-<br>
-> Lou, set max tokens to 33.
-<br>
-> Lou, set global max length to 90.
-<br>
-> Lou, set conversation max length to 90.
-<br>
+> Lou, change max length to 75.<br>
+> Lou, set max length to 50.<br>
+> Lou, set max tokens to 33.<br>
+> Lou, set global max length to 90.<br>
+> Lou, set conversation max length to 90.<br>
 > Lou, set person max length to 100.
 
 **Options**
@@ -248,16 +228,11 @@ This lets you change the model "temperature". Lower values (near 0) are often be
 Like most intents that change settings, you can specify a scope that will determine how long your changes persist (refer to the Scopes table at the start of the Intents section).
 
 **Sample Utterances**
-> Lou, change temperature to 1.
-<br>
-> Lou, set temp to 90.
-<br>
-> Lou, set temperature to 20.
-<br>
-> Lou, set global temperature to 45.
-<br>
-> Lou, change persona temperature to 2.
-<br>
+> Lou, change temperature to 1.<br>
+> Lou, set temp to 90.<br>
+> Lou, set temperature to 20.<br>
+> Lou, set global temperature to 45.<br>
+> Lou, change persona temperature to 2.<br>
 > Lou, change conversation temperature to 85.
 
 **Options**
@@ -269,10 +244,8 @@ Like most intents that change settings, you can specify a scope that will determ
 This lets you hear a list of all the people you can chat with. (Note that you can always create new contacts - when Lou asks who you'd like to speak to, simply respond with a name that's not in your contacts, then answer "Yes" when asked if you'd like to add a new contact.)
 
 **Sample Utterances**
-> Lou, who are my contacts?
-<br>
-> Lou, please read me my contacts.
-<br>
+> Lou, who are my contacts?<br>
+> Lou, please read me my contacts.<br>
 > Lou, can you read me my contacts?
 
 
@@ -281,8 +254,7 @@ This lets you hear a list of all the people you can chat with. (Note that you ca
 This lets you hear all your current settings. This can be useful if you've changed a bunch of settings at different scopes and don't remember what they currently resolve to.
 
 **Sample Utterance**
-> Lou, what are my settings?
-<br>
+> Lou, what are my settings?<br>
 > Lou, read me my settings.
 
 #### `choosePerson`
@@ -290,8 +262,7 @@ This lets you hear all your current settings. This can be useful if you've chang
 This intent is invoked when Lou asks who you would like to speak to and you respond with a name. The person can be real or fictional. If they're not already in your contacts, jabberwocky tries to create the persona for you. 
 
 **Sample Utterances**
-> Maya Angelou
-<br>
+> Maya Angelou<br>
 > Harry Potter
 
 #### `enableAutoPunctuation`
@@ -299,12 +270,9 @@ This intent is invoked when Lou asks who you would like to speak to and you resp
 Use this to enable an experimental feature that uses a model to improve Alexa's transcription of your speech (insert punctuation, fix likely mistranscribed words, etc.). This may lead to higher quality responses and reduce the chance of miscommunications. However, it also makes responses take longer and we've observed frequent timeouts with this enabled. We may provide better support for this in a future release.
 
 **Sample Utterances**
-> Lou, please use auto punctuation.
-<br>
-> Lou, enable automatic punctuation.
-<br>
-> Lou, please turn on automatic punctuation.
-<br>
+> Lou, please use auto punctuation.<br>
+> Lou, enable automatic punctuation.<br>
+> Lou, please turn on automatic punctuation.<br>
 > Lou, turn on auto punctuation.
 
 #### `disableAutoPunctuation`
@@ -312,12 +280,9 @@ Use this to enable an experimental feature that uses a model to improve Alexa's 
 Disable the experimental auto punctuation feature (see the `enableAutoPunctuation` intent described above). The feature is disabled by default so you only need to use this if you enable it and then want to disable it again.
 
 **Sample Utterances**
-> Lou, disable auto punctuation.
-<br>
-> Lou, please disable automatic punctuation.
-<br>
-> Lou please stop using auto punctuation.
-<br>
+> Lou, disable auto punctuation.<br>
+> Lou, please disable automatic punctuation.<br>
+> Lou please stop using auto punctuation.<br>
 > Lou, turn off automatic punctuation.
 
 #### `endChat`
@@ -325,15 +290,14 @@ Disable the experimental auto punctuation feature (see the `enableAutoPunctuatio
 End the conversation that's currently in progress. If you've given Jabberwocky permission to email you, Lou will ask you if you'd like to receive an emailed transcript of your conversation. This only exits the current conversation, whereas `Goodbye` exits the skill entirely.
 
 **Sample Utterances**
-> "Lou, hang up."
-<br>
+> "Lou, hang up."<br>
 > "Lou, end chat."
 
 #### `Goodbye`
 
 You can use this to exit the skill (and any ongoing conversation) immediately. This is the fastest way to exit. If you've given the skill permission to email you, you will automatically receive an emailed transcript of your conversation if one is in progress. (Normally, Lou asks you if you'd like a transcript or not, but we can't do that here since it's more of a hard exit. We err on the side of caution and always send a transcript rather than never sending it.)
 
-**Sample Utterances*
+**Sample Utterances**
 > Goodbye.
 
 ## FAQ
