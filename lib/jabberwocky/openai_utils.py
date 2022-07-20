@@ -868,7 +868,7 @@ class GPTBackend:
         else:
             name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
 
-    def __init__(self, date_fmt="%Y.%m.%d"):
+    def __init__(self, date_fmt="%Y.%m.%d", log_stdout=True):
         self.new_name = ''
         self.old_name = ''
         self.old_key = ''
@@ -879,6 +879,11 @@ class GPTBackend:
             C.root/
             f'data/logs/{datetime.today().strftime(date_fmt)}.jsonlines'
         )
+        # Even if we remove stdout handler, jsonlines logging will still occur.
+        # Disabling the jsonlines logger can still be done at the query level
+        # with log=False but it usually makes sense to keep it.
+        if not log_stdout:
+            self.disable_stdout_logging()
         self.thread = Thread(target=self.update_log_path, daemon=True).start()
 
     def __call__(self, name, verbose=True):
@@ -1296,6 +1301,12 @@ class GPTBackend:
                 cls.name2key[name] = load_api_key(name)
             except FileNotFoundError:
                 cls.name2key[name] = f'<{name.upper()} BACKEND: FAKE API KEY>'
+
+    def disable_stdout_logging(self):
+        # Stop the logger from printing to stdout. Unlike passing log=False to
+        # the query method, this change persists. It does not affect jsonlines
+        # logging.
+        self.logger.remove_stdout_handler()
 
     def update_log_path(self):
         """Method that GPT runs in the background (threaded) to update the log

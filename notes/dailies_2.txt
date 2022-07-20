@@ -2759,25 +2759,38 @@ X -look into markdown rendering problems on readme + alexa/readme (blockquoted c
 	X -also affects sample utterances for alexa/readme intents section
 	UPDATE: solution was to move <br> tags to lie flush at end of line provide a newline after. Previously had them on their own line, which rendered fine in jupyterlab but not github. Fyi, grip renders the same way github does, at least in this scenario.
 X -maybe move instructions on python env and running gui to gui/readme
--video demo
-	-transfer all recordings to computer
+~ -video demo
+	X -transfer all recordings to computer
+		UPDATE: silently failed when I tried to airdrop all at once. Had to do them 1 by 1. They are currently in downloads.
 	-select 1 or more for readme and/or reddit
 	-consider trying to record another sanderson brainstorming sess
 	-add video to readme (this probably has multiple substeps, e.g. do I need to upload to youtube or somewhere else?)
--look into possibility of adding option so gpt.query only logs to jsonlines for a single query (no stdout)
+X -look into possibility of adding option so gpt.query only logs to jsonlines for a single query (no stdout)
+	X -update htools logger cls
+	X -update htools version in jabberwocky lib requirements and in alexa venv
+	X -update GPTBackend cls
+	X -test in LLM debugger nb
+	X -add GPT method to wrap the logger's method
+
+7/20/22 wed
+-----------
+-look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
+-video demo
+	-watch samples (currently in ~/downloads) and select 1 or more for readme and/or reddit
+	-consider trying to record another sanderson brainstorming sess
+	-add video to readme (this probably has multiple substeps, e.g. do I need to upload to youtube or somewhere else?)
+
 
 
 Backlog (short term)
 --------------------
--look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
-	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 -check that gui still works
 	-install on old device
 	-launch gui
 -check that alexa install works on new device after adding pytorch dep
 -check if I need to validate that request was sent by alexa or if flask-ask handles that
 	https://developer.amazon.com/en-US/docs/alexa/custom-skills/host-a-custom-skill-as-a-web-service.html#checking-the-signature-of-the-request
--[weekend - need another person to help] see what happens if I try to use this on 2 devices at once. Is this even possible? Guessing this totally breaks everything bc I didn't design for multi users, but let's confirm that.
 
 Easy Backlog (short term)
 -------------------------
@@ -2814,6 +2827,8 @@ Long Term Backlog (Jabberwocky V3 )
 	-prob would need different config format for other tasks - some require multiple models, for instance
 -idea: prompt mixin? I.e. add snippet of text to start/end of a prompt, e.g. "You are a friendly, polite AI assistant.".
 -When generating a persona, assign a "whimsy" score indicating how serious/sciency vs. creative/whimsical the person is. We can then use this to auto-set temperature differently for each persona.
+-redesign skill to work on multiple devices (i.e. a step towards making public usage technically feasible, even if I don't actually choose to do that)
+	-see what happens if I try to use this on 2 devices at once. Is this even possible? Guessing this totally breaks everything bc I didn't design for multi users, but let's confirm that. Guess we need to create a new ConvManager for each user and store all settings in alexa session object - right now I think dot access usually uses session for vars in reserved_keys, but query kwargs set with getitem don't.
 
 Long term backlog (misc)
 ------------------------
