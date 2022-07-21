@@ -2776,11 +2776,31 @@ X -look into possibility of adding option so gpt.query only logs to jsonlines fo
 -----------
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
--video demo
-	-watch samples (currently in ~/downloads) and select 1 or more for readme and/or reddit
-	-consider trying to record another sanderson brainstorming sess
+X -video demo
+	~ -watch samples (currently in ~/downloads) and select 1 or more for readme and/or reddit
+		-narrowed down to 3 candidates. Notes in misc.txt. Open in imovie.	
+	_ -consider trying to record another sanderson brainstorming sess
+		UPDATE: think we can skip this.
+	~ -start cleaning up audio
+		UPDATE: trying out imovie for this. Having some struggles but I think we'll get there.
 	-add video to readme (this probably has multiple substeps, e.g. do I need to upload to youtube or somewhere else?)
 
+7/20/22 wed
+-----------
+-audio cleanup
+	-look up intended way to lower volume for a portion of audio
+	-fix audio for 74
+		-soften mouth noises
+		-rm any unnecessary parts
+	-fix audio for 73
+		-soften mouth noises
+		-rm any unnecessary parts
+	-fix audio for 72
+		-soften mouth noises
+		-rm any unnecessary parts
+	-add video to readme (this probably has multiple substeps, e.g. do I need to upload to youtube or somewhere else?)
+-look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 
 
 Backlog (short term)

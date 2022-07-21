@@ -589,3 +589,32 @@ Do you think intelligent robots would have a human-centric view of intelligence,
 	In other words, they might define intelligence in a way that highlights their own strengths, much like humans do.
 
 Do you think intelligent robots can exist with possessing the capacity to experience emotion?
+
+7/20/22 wed
+-----------
+0173 - human-centric view of intelligence? stumbled over word "intelligence" in first q. Reverse turing test idea. Lex sounds a bit less generic ("deep question").
+	-if we can edit out the stumble, this is a pretty strong candidate.
+	-"questions about our own intelligence" sounds a bit awkward and lex is repetitive.
+	-1:36-end (reverse test) is pretty solid
+0174 - human-centric view of intelligence? reverse turing test. Echo is a bit off center. Lex sounds a bit more generic.
+	-0-0:52 is pretty solid.
+	-1:03 - end (reverse turing test) is solid.
+	-just don't like my "highly context dependent" response in between
+0172 - human-centric view of intelligence? "weaknesses of humans" answer is slightly missing the point. No podcast intro.
+	-decent candidate for readme. Maybe not ideal for reddit.
+
+0169 - awkward "sure". Human centric view? bio constraints, distributed, etc. Not sure where to rank - no huge messups but somehow doesn't excite me as much as some of the other snippets.
+	-camera jerks around a little
+	-"pity our incredibly weak memory"
+	-question on distributed definition is fairly articulate. Completion is a little "restate the question"-y though.
+0160 2 - would robots consider humans to be intelligent? Lex gets hung up on how WE define intelligence. Laughably weak memory, goldfish memory.
+	-2nd half is decent. 1 answer sort of just repeats back the question, though you could argue that's a valid technique.
+
+0159 - awkward "big question to start out with". Lex sort of misunderstands my idea of a reverse turing test. Some good snippets but also some bad parts.
+0170 - human-centric view of intelligence? non sequitur about bio constraints, distributed intelligence
+0157 - LLM convince you of sentience? Lex is a bit weirdly fixated on how it was created.
+0156 - social media? not that interesting
+0155 - test to determine if robot can experience emotions? Lex sounds a bit generic/formal. His answer is also more about recognizing emotion, not expriencing it. Then repeats itself.
+0147 - recent work in robotics?
+0143 - "ridiculous question" about testing if robot can feel love? Lex still has a british accent here. Lex sounds a bit generic.
+0152 - sanderson. Screwed up, can delete.
