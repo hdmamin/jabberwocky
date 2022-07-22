@@ -2785,20 +2785,31 @@ X -video demo
 		UPDATE: trying out imovie for this. Having some struggles but I think we'll get there.
 	-add video to readme (this probably has multiple substeps, e.g. do I need to upload to youtube or somewhere else?)
 
-7/20/22 wed
+7/21/22 thurs
+-------------
+X -audio cleanup
+	X -look up intended way to lower volume for a portion of audio
+	X -fix audio for 74
+		X -soften mouth noises
+		X -rm any unnecessary parts
+	X -fix audio for 73
+		X -soften mouth noises
+		X -rm any unnecessary parts
+	X -fix audio for 72
+		X -soften mouth noises
+		X -rm any unnecessary parts
+~ -add video to readme (this probably has multiple substeps, e.g. do I need to upload to youtube or somewhere else?)
+	X -upload long video (conceptions, reverse turing test) to youtube
+	X -upload short video (conceptions) to youtube
+-look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
+
+7/22/22 fri
 -----------
--audio cleanup
-	-look up intended way to lower volume for a portion of audio
-	-fix audio for 74
-		-soften mouth noises
-		-rm any unnecessary parts
-	-fix audio for 73
-		-soften mouth noises
-		-rm any unnecessary parts
-	-fix audio for 72
-		-soften mouth noises
-		-rm any unnecessary parts
-	-add video to readme (this probably has multiple substeps, e.g. do I need to upload to youtube or somewhere else?)
+-video stuff
+	-chose 1 for readme and maybe 1 for reddit (could be same one?)
+	-check if someone with link to one video can view the other via my profile
+	-add video to readme (leave private for now)
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 
@@ -2808,9 +2819,8 @@ Backlog (short term)
 -check that gui still works
 	-install on old device
 	-launch gui
--check that alexa install works on new device after adding pytorch dep
--check if I need to validate that request was sent by alexa or if flask-ask handles that
-	https://developer.amazon.com/en-US/docs/alexa/custom-skills/host-a-custom-skill-as-a-web-service.html#checking-the-signature-of-the-request
+-check that alexa install works on new device (last time I checked was pre torch dep addition; not sure how that worked)
+-postmortem
 
 Easy Backlog (short term)
 -------------------------
@@ -2836,6 +2846,10 @@ Won't Do (at least short term; undecided long term)
 -support multiple echo users
 	-change alexa/utils/Settings so all user settings are stored in flask state rather than only some. Reason is that if I ever want to even consider supporting multiple users, the current state would cause a big problem. (Initially remembered it as model kwargs being stored in session and others not, but after a quick look it actually seems to be the opposite.)
 	REASON: I think a rather large redesign would be required, and a public skill would likely need openai approval.
+-check if I need to validate that request was sent by alexa or if flask-ask handles that
+	https://developer.amazon.com/en-US/docs/alexa/custom-skills/host-a-custom-skill-as-a-web-service.html#checking-the-signature-of-the-request
+	REASON: ¯\_(ツ)_/¯
+
 
 Long Term Backlog (Jabberwocky V3 )
 -----------------------------------
