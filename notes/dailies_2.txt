@@ -2819,7 +2819,22 @@ X -video stuff
 -----------
 ~ -see if we can remove black background/narrow shape of alexa video
 	UPDATE: turns out it's pretty easy to do this in iMovie. However, I felt like it maybe made the camera shakiness a little more noticeable and possibly made quality worse? Unsure. Just stick with vertical video for this release.
--prep r/lex demo post
+X -gitignore files in notes
+	UPDATE: decided to keep dailies for now. Maybe rm eventually.
+X -prep r/lex demo post
+-look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
+-check that install commands work on new device (may need to recruit D's help)
+	-gui
+		-install w/out error
+		-launches w/out error
+	-alexa (last time I checked was pre torch dep addition)
+		-install w/out error
+		-launches w/out error
+
+7/24/22 sun
+-----------
+-r/lex post
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
 -check that install commands work on new device (may need to recruit D's help)

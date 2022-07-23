@@ -76,8 +76,8 @@ jabberwocky/
 ├── gui          # GUI scripts. The main script should be run from the project root directory. 
 ├── data         # Raw and processed data. Some files are excluded from github but the ones needed to run the app are there. This also includes miscellaneous gpt3 prompt files and conversational personas.
 ├── notes        # Miscellaneous notes from the development process stored as raw text files.
-├── notebooks    # Jupyter notebooks for experimentation and exploratory analysis.
-└── reports      # Markdown reports (performance reports, blog posts, etc.)
+└── notebooks    # Jupyter notebooks for experimentation and exploratory analysis.
+ 
 ```
 
 The `docker` and `setup` dirs contain remnants from previous attempts to package the app. While I ultimately decided to go with a simpler approach, I left them in the repo so I have the option of picking up where I left off if I decide to work on a new version.
