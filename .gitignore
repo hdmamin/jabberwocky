@@ -18,6 +18,10 @@ data/icons/*
 data/alexa/*
 !data/alexa/utterance2meta.pkl
 !data/alexa/dialog_model.json
+# Use same method as above to add 2 files in notes.
+!notes
+notes/*
+notes/dailies*.txt
 *egg-info*
 lib/dist
 *.swp
@@ -40,4 +44,3 @@ handler_jabberwocky-dev-1657681437.zip
 alexa/handler_venv/
 alexa/*.tar.gz
 alexa/*.zip
-notes/*
