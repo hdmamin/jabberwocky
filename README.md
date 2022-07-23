@@ -5,8 +5,10 @@
 
 https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4
 
-[![Alexa skill video](https://img.youtube.com/vi/wlJI9fzWFCc/0.jpg)](https://youtu.be/wlJI9fzWFCc)
-
+<center>
+<a href='https://youtu.be/wlJI9fzWFCc'><img src='https://img.youtube.com/vi/wlJI9fzWFCc/0.jpg'></a>
+</center>
+    
 # Project Description
 
 This project provides two audio interfaces (a conversational alexa skill and a desktop GUI) to GPT-3 and a few of its open source variants. This provides a convenient way to interact with various experts or public figures, as mimicked by GPT-3: imagine discussing physics with Einstein or hip hop with Kanye. Instead of going to the OpenAI playground, writing a bio, and periodically deleting parts of your conversation as you exceed the max prompt window, you can simply say "Alexa, start Quick Chat"...
