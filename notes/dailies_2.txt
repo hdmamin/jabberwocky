@@ -2806,20 +2806,31 @@ X -audio cleanup
 
 7/22/22 fri
 -----------
--video stuff
-	-choose 1 for readme and maybe 1 for reddit (could be same one?)
-	-check if someone with link to one video can view the other via my profile
-	-add video to readme (leave private for now)
+X -video stuff
+	X -choose 1 for readme and maybe 1 for reddit (could be same one?)
+		UPDATE: let's use the longer example for the readme. Leaning short one for reddit.
+	X -check if someone with link to one video can view the other via my profile
+	X -add video to readme (leave private for now)
+		UPDATE: key is to compress mp4 online (this ends up a lot smaller than imovie produces and quality seems fine here, maybe because it wasn't crazy sharp to begin with and it's just looking at a motionless echo) to get file <=10mb, then upload to readme by drag and dropping it in with the github UI. That gives me the images.githubusercontent URL.
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
+
+7/23/22 sat
+-----------
+-prep r/lex demo post
+-look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
+-check that install commands work on new device (may need to recruit D's help)
+	-gui
+		-install w/out error
+		-launches w/out error
+	-alexa (last time I checked was pre torch dep addition)
+		-install w/out error
+		-launches w/out error
 
 
 Backlog (short term)
 --------------------
--check that gui still works
-	-install on old device
-	-launch gui
--check that alexa install works on new device (last time I checked was pre torch dep addition; not sure how that worked)
 -postmortem
 
 Easy Backlog (short term)
