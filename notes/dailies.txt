@@ -1,0 +1,1847 @@
+4/9/21
+------
+X -update cookiecutter template makefile and notes files
+X -choose project name
+X -final investigation of dearpygui vs kivy (+kivymd)
+    [dearpygui mobile won't be ready in time. Use this if you want to build a desktop app, use kivy if you want to build mobile. Leaning mobile - dearpygui looks cool but I feel if I'm going to do something non-streamlit/dash, I should make it REALLY different. I'm now thinking the gans could be a problem though - gpt3 is just an api so that's fine, but I'd need to host the gans somewhere. This is meant to be pretty open ended though so I could do gan stuff on paperspace and then a voice app or something else for mobile (spoken/written bullet points -> speech in my voice?). Time may be a constraint though if I try to do both - gpt3 trial expires at end of June. Maybe learning fund can help out there.]
+X -make new git project
+X -write project requirements
+X -write premortem
+-write lessons from last time
+
+4/10/21
+-------
+X -write lessons from last time
+    X -documented various project ideas
+    X -looked through openai repos for more ideas. Briefly tried out dall-e notebook.
+X -try out openai pypi package to make sure I can communicate w/ gpt3 programmatically
+    -if necessary, write my own helper functions to wrap common actions
+X -choose method of loading api key and write func
+    [dotfile or env var both supported]
+X -define constants to easily access engine names by index and view prices
+X -watch video on sirens (in this context, basically a way to create better combinations of inputs (e.g. images) than simple interpolation)
+X -run dall-e and deep-daze demo notebooks in colab
+-look into how to use various gan packages (install? clone?)
+-make sure I can still access paperspace
+    -maybe update dotfiles/envs etc. on machine if necessary
+
+4/11/21
+-------
+-try out chronology lib for programmatic gpt3 access and see if it looks helpful compared to openai lib
+    -if necessary, write my own helper functions to wrap common actions
+    X -try a couple simple requests
+X -make sure I can still access paperspace
+    X -maybe update dotfiles/envs etc. on machine if necessary
+    X -copy over openai dotfile
+    X -create new machine and configure (some things changed)
+        X -test that gpu is available
+X -create prompts dir and write func to load_prompt
+    X -allow data/prompts subdir in git (not very big)
+X -write helper to print prompt in bold and resp in normal text
+X -add jabberwocky imports to template nb
+X -re-watched kilcher Clip video
+-choose a first use case to work on
+    -download/install a gan package?
+
+4/12/21
+-------
+~ -more api exploration
+    -try out chronology lib for programmatic gpt3 access and see if it looks helpful compared to openai lib
+    -if necessary, write my own helper functions to wrap common actions
+    ~ -check if there's a free gpt2 endpoint?
+        [pypi library booste. API key is in gmail 55.]
+        ~ -if not, maybe create mock request func to save credits (though ada is pretty cheap)
+X -try free content filter in openai api
+    X -write wrapper
+X -udpate openai_auth func to set key automatically
+X -finish signup for booste lib
+-choose a first use case to work on
+    -download/install a gan package?
+
+4/13/21
+-------
+-try chronology lib
+X -write booste api key loading func
+X -port and finalize text_segment func for youtube transcription idea
+X -document functions in utils
+X -finish query_gpt3 func
+    X -how to handle logprobs?
+        [Just let user choose to return everything if they want.]
+    X -try stream=True
+        -write generator version of query_gpt3 (func must be one or the other)
+    -add tab completion for extra params? Would take some py magic
+X -create even shorter prompt to save tokens
+X -port query_content_filter func
+    X -finish documenting
+-re-watch dall-e video
+
+4/14/21
+-------
+X -port query_gpt3
+    X -document
+    X -save sample response and use it for better mocking
+    X -write generator version of query_gpt3 (func must be one or the other)
+        X -port and document
+    -tab completion magic?
+-try chronology lib
+-try booste lib
+-re-watch dall-e video
+
+4/15/21
+-------
+_ -tab completion magic for query_gpt3 and generator?
+    UPDATE: looked into this but doesn't look like openai api includes this anywhere. Good enough - I included the major kwargs.
+X -rewrite 2 query functions into 1 merged function (stream=True returns a generator rather than yielding values)
+-try chronology lib
+-try booste lib
+-look through misc.txt notes and decide on a first use case to try
+    -if videos, start messing around with youtube transcription package
+    -if gans, select a gan to start with and look into download/installation (dall-e, deep daze, etc.)
+-re-watch dall-e video
+
+4/16/21
+-------
+X -look through misc.txt notes and decide on a first use case to try (leaning heavily towards youtube transcription-related stuff)
+    UPDATE: start with youtube transcription stuff. The jabberwocky name may make less sense here, as does the supposed requirement for a mobile/desktop app. I suppose if really necessary I could always push my gan mobile app to a separate project - probably easier to justify gpt3 payment if I demo something useful first.
+~ -if youtube, start messing around with youtube transcription package
+    ~ -do all/most videos have transcripts?
+        UPDATE: I think all/most have auto-generated transcripts, but relatively few have manually generated ones.
+    _ -maybe wrap text_segment func to work if we want the PREV n seconds instead of specifying start/end
+        UPDATE: unnecessary atm. We can make the user facing version ask for last n seconds, but for now it makes sense to keep it this way.
+    -try out "explain to a fifth grader" etc. prompts from docs
+    -save some in prompts dir
+    -consider cleaning up text_segment and related funcs to act on whole sentences when possible
+-if gans, select a gan to start with and look into download/installation (dall-e, deep daze, etc.)
+
+4/17/21
+-------
+X -try out "explain to a fifth grader" etc. prompts from docs
+    X -save some in prompts dir
+    X -try tuning ML simplifier prompt
+    -consider cleaning up text_segment and related funcs to act on whole sentences when possible
+-try some format fixing prompts (autogenerated -> manual transcript. Maybe use chunks from different videos to get some variety. This idea alone actually seems pretty powerful - a way to rapidly improve quality of speech to text.)
+
+4/18/21
+-------
+X -save more generic ELI5 prompt (mine is very ml-focused. They provide a good jupiter example.)
+-start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
+X -update or write new load_prompt func:
+    X -some prompts should allow us to embed input text into them (e.g. rather than being static like short_dates, we want to show a few examples (saved in txt file) and then append our new piece of text to generate based on)
+    X -store recommended kwargs for calling query_gpt3 (e.g. simplify_ml really requires davinci to work well. Stop sequence should be specified as well.)
+    X -add kwarg info to data dir (single json file mapping file name to kwargs? Or make each prompt file a txt/yaml file containing multiple fields?)
+        UPDATE: give each prompt a subdir with a config.yaml file and prompt.txt file. Reasons in load_prompt func.
+-consider cleaning up text_segment and related funcs to act on whole sentences when possible
+-try some format fixing prompts (autogenerated -> manual transcript. Maybe use chunks from different videos to get some variety. This idea alone actually seems pretty powerful - a way to rapidly improve quality of speech to text.)
+
+4/19/21
+-------
+-start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
+-consider cleaning up text_segment and related funcs to act on whole sentences when possible
+    X -error checking for times
+X -try some format fixing prompts (autogenerated -> manual transcript. Maybe use chunks from different videos to get some variety. This idea alone actually seems pretty powerful - a way to rapidly improve quality of speech to text.)
+    UPDATE: not perfect but this generally works quite well.
+    X -try chaining <PUNCTUATE> - <ELI>
+        UPDATE: didn't work very well. Maybe the input passage was too simple already, or maybe we need to provide a few examples from youtube transcripts.
+X -add some printed outputs to get_transcripts() so I don't always have to check which are None
+X -update load_prompt to separate printed reminder from main prompt
+
+4/20/21
+-------
+-consider cleaning up text_segment and related funcs to act on whole sentences when possible
+    ~ -consider: add punctuation once (to whole transcript) or add it to a small segment each time we ask for a summary/eli5 etc?
+-start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
+-try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
+-try out other tasks and add to prompts dir:
+    -key point extraction
+    -question generation
+
+4/21/21
+-------
+~ -continue working on func to re-map punctuated text to timestamps. (Even if we don't do this all at once, we should probably cache results from translating chunks.)
+    X -try re.split in place of split
+    X -add strip results option to query_gpt3 (and prompt config files)
+    X -try fuzzywuzzy-based approach to realignment
+-consider cleaning up text_segment and related funcs to act on whole sentences when possible
+-start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
+-try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
+-try out other tasks and add to prompts dir:
+    -key point extraction
+    -question generation
+
+4/22/21
+-------
+X -continue working on func to re-map punctuated text to timestamps. (Even if we don't do this all at once, we should probably cache results from translating chunks.)
+    -evaluate fuzzywuzzy realignment approach on a couple more chunks
+    -consider ways to improve:
+        X -bigram similarity instead of single word
+        X -wider candidate window (instead of last 3 words, use whole chunk? Must make sure we reindex correctly when appending to rows if length is less than expected)
+-consider cleaning up text_segment and related funcs to act on whole sentences when possible
+-start tuning some custom prompts based on youtube transcripts (realized even academic lectures tend to have much more informal language than written papers)
+-try some other prompts post punctuation: summarize, simplify_ml (on an ml video)
+-try out other tasks and add to prompts dir:
+    -key point extraction
+    -question generation
+
+4/23/21
+-------
+~ -evaluate fuzzywuzzy realignment approach on a couple more chunks
+~ -consider updating alignment func to update a chunk of a df instead of returning a new df?
+    UPDATE: think it may be a good idea to write a class which maintains two copies of the df, original and punctuated. If the user asks for an overlapping chunk, maybe we can punctuate only the portion that needs it.
+X -maybe update get_transcripts to check for british english manual transcripts (better than US generated + saves tokens)
+X -add warnings to realignment func when max similarity score is low
+-consider cleaning up text_segment and related funcs to act on whole sentences when possible
+
+4/24/21
+-------
+~ -start designing obj that will track unpunct and punct dfs
+    ~ -rewrite text_segment if necessary to (optionally?) return df slice/ids so we can avoid punctuating overlaps twice.
+        UPDATE: currently returns relevant rows from df rather than str. May adjust interface as needed though.
+    -consider cleaning up text_segment and related funcs to act on whole sentences when possible
+X -add verbose option to load_prompt
+
+4/25/21
+-------
+~ -continue building Transcript classes
+    -rewrite text_segment if necessary to (optionally?) return df slice/ids so we can avoid punctuating overlaps twice.
+    -add option to text_segment-related funcs to act on whole sentences when possible
+    ~ -make unpunct transcript auto call gpt3 when accessing an unpunctuated chunk of df? First need a lot of scoping about desired interface.
+        UPDATE: adding punctuated_chunk method which just is loc for PunctuatedTranscript and queries gpt3 for UnpunctTranscript. Mostly works but need to troubleshoot the update to self.df_punct (settingwithcopywarning caused error).
+
+4/26/21
+-------
+~ -continue building Transcript classes
+    X -fix settingwithcopyerror when punctuating part of df_punct
+    X -rewrite time_segment/related methods to avoid re-punctuating rows we've already punctuated
+    -add functionality to make text_segment-related funcs act on whole sentences when possible
+-lots of docstrings to write for Transcript classes
+
+4/27/21
+-------
+-continue building Transcript classes
+    X -add option for time_segment to not punctuate text
+    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+        -if possible and advisable, start building this functionality
+    X -design interface for allowing multiple tasks post punct (just diff methods on generatedTranscript? Or allow user to pass in funcs somehow?)
+        X -first draft of PromptManager class
+        -select first task to try post-punctuation (maybe tldr?)
+            _ -start building method
+                UPDATE: new PromptManager class auto-loads all prompts in prompt dir so no need to do this.
+
+4/28/21
+-------
+-revise PromptManager class
+    ~ -add option to skip certain prompts or load dynamically?
+        UPDATE: skip dynamic loading, but allow passing in a select number of prompts.
+    ~ -clean up dynamic method generation (or find graceful way to do this)
+-continue building Transcript classes
+    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+        -if possible and advisable, start building this functionality
+        -select first task to try post-punctuation (maybe tldr?)
+-write draft of function to tie together Transcript.time_range() and PromptManager.query().
+
+4/29/21
+-------
+-revise PromptManager class
+    ~ -work on rigorous_partial issues in nb
+        X -handling param order in cases it changes
+        X -handling new kwargs
+            UPDATE: tentatively mostly working? Need to stop it from mutating old func though.
+    -update dynamic method generation in cls
+
+4/30/21
+-------
+X -stop rigorous_partial from mutating original func (look at old copy_func func)
+~ -test on more cases to see if it seems to work
+    UPDATE: found and fixed bug where *args was handled incorrectly.
+-add dynamic method generation to cls (hopefully going from func to method doesn't break anything)
+-return to Transcript classes
+    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+
+5/1/21
+------
+X -Fix newfound issue when sorting new_pars (instead of using x.default, maybe can use constant or index in old parms) if defaults have mixed types
+X -test if renaming func works
+    UPDATE: yes, but repr and str are not updated. Wrote class that can do this but haven't integrated it into the partial function yet. Might also provide a simpler way to do a lot stuff - not sure yet.
+X -fix __defaults__ and __kwdefaults__ (only worked on wrapped func before)
+-test on more cases to try to track down any other bugs
+-add dynamic method generation to cls (hopefully going from func to method doesn't break anything)
+
+5/2/21
+------
+X -revise partial func to use attach_repr
+    UPDATE: technically didn't use attach_repr, but used same concept to update repr and str.
+X -test on more cases to try to track down any other bugs
+_ -add dynamic method generation to cls (hopefully going from func to method doesn't break anything)
+    UPDATE: spent some time trying this but we still run into annoying issues (apparently generating methods always has these difficulties, even with functools version of partial). Decided it's good enough for now that I got Partial working and I should really just use a non-hacky method ('query' method) for this use case. No need to burn more GPT3 trial time on this.
+X -port getindex
+    _ -port attach_repr
+        UPDATE: skip for now. Not really a common use case, I think.
+    X -port rigorous_partial (rename?)
+        UPDATE: renamed to Partial
+
+5/3/21
+------
+X -finalize PromptManager
+    X -port
+-maybe clean up notebook a bit
+-return to Transcript classes
+    -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+    -if possible and advisable, start building this functionality
+    -select first task to try post-punctuation (maybe tldr?)
+-write draft of function to tie together Transcript.time_range() and PromptManager.query().
+
+5/4/21
+------
+X -maybe clean up notebook a bit
+~ -return to Transcript classes
+    X -consider: could we make text_segment-related funcs act on whole sentences when possible? generatedTrans can't determine this til after punctuation. Maybe we could select an extra wide window to be safe, punctuate it, and then select whole sentences? Or we could just simplify everything and punctuate the whole transcript from the start (either in chunks or all at once) at the cost of gpt3 tokens.
+    ~ -if possible and advisable, start building this functionality
+        UPDATE: trimmed off partial sentences at start, still need to do end.
+    -select first task to try post-punctuation (maybe tldr?)
+    X -update unpunct transcript class w/ promptmanager
+    X -cleanup old code a bit
+-write draft of function to tie together Transcript.time_range() and PromptManager.query().
+
+5/5/21
+------
+X -trim off partial sentences from end of time_range_str
+    -clean up methods/delete old code
+    -test on generated transcript
+-write draft of function/interface of some sort tying together transcript and external promptmanager
+~ -flex task!: work on less fragile alternative to htools.Args
+    UPDATE: see ipython session. Just need to test picklablility.
+
+5/6/21
+------
+-debug time_range_str issue (not using punctuated rows but time_range is?)
+    UPDATE: found bug cause (see nb03) but haven't fixed yet.
+    -consider: add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
+    -clean up methods/delete old code
+    -test on generated transcript
+-write draft of function/interface of some sort tying together transcript and external promptmanager
+X -flex task!: check Object picklability (see ipython session)
+    UPDATE: fleshed out Object, renamed to Results, wrote barebones docs, fixed picklability
+
+5/7/21
+------
+X -write module docstrings
+    UPDATE: pretty sick so slept most of the day. Just spent a couple minutes knocking out an easy task.
+X -find cause of readme updating issue
+    UPDATE: need error handling in case dir has no relevant files. Check if df empty in self._parse_dir_files before sorting.
+-consider desired behavior re time_range_str issue
+    -consider: add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
+    -clean up methods/delete old code
+    -test on generated transcript
+-write draft of function/interface of some sort tying together transcript and external promptmanager
+
+5/8/21
+------
+X -add error handling for empty dir in readme updater cli
+~ -look into live speech recognition options with timestamps to extend beyond youtube
+    UPDATE: pocketsphinx, but installing is proving to be a challenge. Come back to this later.
+X -consider reorganizing lib structure (some utils probably belong in youtube or openai modules; part of core module belongs in openai and youtube modules)
+X -fix time_range_str bug
+    UPDATE: just add warning suggesting what to do.
+X -fix text realignment bug
+    UPDATE: thought I'd set max_tokens somewhere but maybe I deleted it. This meant we were only receving 50 tokens back from gpt3 but many more rows of df, so realignment wasn't working properly.
+~ -consider desired behavior re time_range_str issue
+    UPDATE: Think I should add an always/never/if_necessary option as suggested below. Haven't implemented yet though.
+    -begin implementing
+    -consider: add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
+    -clean up methods/delete old code
+    -test on generated transcript
+-write draft of function/interface of some sort tying together transcript and external promptmanager
+
+5/9/21
+------
+X -add another option for punctuate (always, never, if_necessary)? Might be good to be able to be sure we can get an unpunctuated chunk sometimes.
+    -clean up methods/delete old code
+    -test on generated transcript
+-write draft of function/interface of some sort tying together transcript and external promptmanager
+-start basic gui
+-watch sentdex video to see if that new nvidia package might be a good alternative to the annoyingly hard to install pocketsphinx
+
+5/10/21
+-------
+X -add option/setting to avoid chopping off start/end of time_segment when fragment is sufficiently long? (Sometimes transcription fails or youtuber has a long run on sentence. Rather than throwing away 50 words (for ex), we might just want to keep it - we just don't want to feed a short meaningless fragment to gpt3).
+X -add method to get punctuated indices of transcript
+    X -method to get unpunct indices
+    X -method to get punct rows
+    X -move na_index_rows from staticmethod to function
+
+5/11/21
+-------
+X -try out various transcript options
+    X -passing in different kwargs (e.g. engine_i)
+    X -try mock mode
+        X -add option for different mock modes in query_gpt3
+        X -write mock func for punctuate task
+        X -method to reset punct df (useful after mocked calls. Considered making mock calls not update df_punct but that prevents us from testing side effects.)
+    X -fix bug where punctuated_rows called unpunct df
+_ -clean up nb
+    UPDATE: skip, these are all just dev notebooks at this point, not anything polished to display somewhere.
+X -port to lib
+    ~ -document
+
+5/12/21
+-------
+X -select first task to try post-punctuation (maybe tldr?)
+    UPDATE: didn't work that well. Even the punctuation task alone is struggling. Thinking it may not have been a great idea to work on transcripts - prompt engineering guide specifically mentioned any typos or grammatical errors make it hard to get good responses.
+X -write draft of function to tie together Transcript.time_range() and PromptManager.query().
+    UPDATE: started session class to handle multiple videos. Thinking we might want to look for backup tasks (identifying similar videos?) in case running standard queries (e.g. tldr, eli5) on the transcripts doesn't work so well.
+-choose: desktop gui, mobile, or web? (web makes most sense but part of the point of this project was supposed to be learning one of the others. Maybe start with desktop for learning purposes and if it ends up being particularly cool, I could always rebuild a simple streamlit app.)
+    UPDATE: choosing desktop gui. Just want to learn here, even if it's not as practical for sharing as a web app. And initial results are not promising so that probably won't be a concern anyway.
+    -maybe start building? Might be good to set up a UI early for easy experimentation.
+
+5/13/21
+-------
+-consider if there's anything else worth adding to Session
+    -port
+-code to find videos w/ transcripts? Maybe just try to avoid punctuation task for now.
+~ -start building desktop gui
+-easier options: document Session
+    -document Transcript methods
+
+5/14/21
+-------
+X -work through rest of dearpygui video
+    ~ -look through available widgets and see if it sparks any interesting ideas
+X -add microphone recording option to app
+X -add skeleton button to punctuate text
+
+5/15/21
+-------
+X -figure out how to change labels (don't want element id's to be shown as text to user)
+    UPDATE: fixed for buttons. Input_text label suppression seems a little hacky but I think it's how the lib intends us to do it.
+~ -add menu bar
+    UPDATE: layout/alignment still a work in progress.
+X -refactor transcribe callback_data
+    UPDATE: now can pass in as many ids to show during/after as we want.
+X -try adding tooltip
+    UPDATE: a little wonky (must use context manager) but it seems to work.
+-add option to gpt3 punctuate text?
+-add buttons/dropdown menu/etc. for different tasks (keypoints, eli5, summarize, fancier language, etc.)
+-look into possibility of longer mic sessions (don't immediately stop at first pause)
+    -maybe can translate as we go in a different thread or something? Ideally would be able to make request to google api while user is still talking and process in chunks.
+
+5/16/21
+-------
+X -add buttons/dropdown menu/etc. for different tasks (keypoints, eli5, summarize, fancier language, etc.)
+-add option to gpt3 punctuate text?
+-look into possibility of longer mic sessions (don't immediately stop at first pause)
+    -maybe can translate as we go in a different thread or something? Ideally would be able to make request to google api while user is still talking and process in chunks.
+
+5/17/21
+-------
+X -clean up layout and make more flexible
+    X -methods to calculate heights/widths
+    X -callback to adjust these when window is resized
+    -rename windows (would prefer to find way to separate id and label, but I don't think that's available)
+-add query button
+-look into issue of all text being displayed on same line in text input
+-aesthetic improvements
+    -diff font?
+    -diff font size?
+-add prompt warning (if exists) after selecting a task
+-add query button
+    -add query callback to actually query gpt3 and update output text
+
+5/18/21
+-------
+X -port Session
+X -put prompt text last after other options.
+_ -format so no long horizontal scrollbar.
+    UPDATE: not supported by dearpygui. Could write a function to break text into fixed length pieces but that's a bit annoying since with text box width is also variable.
+X -update options callback to update value when prompt changes.
+-rename windows (would prefer to find way to separate id and label, but I don't think that's available)
+X -add query button
+    X -add query callback to actually query gpt3 and update output text
+
+5/19/21
+-------
+X -generalize query_callback so it works on passed in data rather than hardcoded IDs
+-see if we can add places to enter options like:
+    -mock_fn
+    -stop_terms (name might be wrong here)
+X -make transcription finish trigger update of options (prompt needs to be reformatted)
+-add warning in case you try to query with empty text for a prompt that needs input
+X -investigate bug where options are no longer updated with each task selection.
+
+5/20/21
+-------
+X -see if we can add places to enter options like:
+    _ -mock_fn
+    UPDATE: I think this is only necessary for transcript. Fine to leave out for now.
+    X -stop_terms (name might be wrong here)
+-add warning in case you try to query with empty text for a prompt that needs input
+-consider how we might support other (non-gpt3) tasks
+    -what tasks might those be? (translation package, huggingface pretrained models (see py_project.txt notes)
+    -how to show in gui? Probably ideal to have all tasks together but maybe it would be okay to separate them from gpt3 since options might be different.
+    -could update manager class to support this? Would be a bit messy.
+X -prevent user moving/resizing windows?
+X -redo layout so options gets full height
+-see if there's a way so manually typing input in record box (and then moving focus or something) can trigger options update too. This would also be useful if the user manually cleans up the punctuation after recording.
+-add more voice interface features:
+    -read gpt3 output
+    -allow voice commands? E.g. say "Task: Summarize. Input: ..."
+
+5/21/21
+-------
+X -add new font
+    X -adjust font size
+-see if there's a way so manually typing input in record box (and then moving focus or something) can trigger options update too. This would also be useful if the user manually cleans up the punctuation after recording.
+X -add output audio (see old translation file)
+X -fix bug where empty stop param is list when openai expects None
+-add warning from a prompt's config file in options window
+-add warning in case you try to query with empty text for a prompt that needs input
+-consider image task tie-ins
+    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
+
+5/22/21
+-------
+X -get voice response working (put in thread?)
+    UPDATE: tried threads but it sounds like there may be a threading issue on mac specifically. Found workaround using builtin mac os functionality.
+X -adjust speaking pace
+-maybe make it so we can choose a voice in the app?
+-see if there's a way so manually typing input in record box (and then moving focus or something) can trigger options update too. This would also be useful if the user manually cleans up the punctuation after recording.
+-add warning in case you try to query with empty text for a prompt that needs input
+
+5/23/21
+-------
+X -see if we can add slight pauses on newlines when reading responses
+X -consider adjusting pace a little
+-consider removing auto-punct button since it's already available in prompts? Or remove from prompts menu?
+-maybe make it so we can choose a voice in the app?
+X -see if there's a way so manually typing input in record box (and then moving focus or something) can trigger options update too. This would also be useful if the user manually cleans up the punctuation after recording.
+-add warning in case you try to query with empty text for a prompt that needs input
+
+5/24/21
+-------
+X -work on prompt mapping term to ELI5 (or an average high schooler, really) passage
+    UPDATE: tried mapping term to metaphor, but haven't been able to get this working well yet. Mapping idea (basically a simplified TLDR from semantic scholar) to abstract works reasonably well, however. Unfortunately, abstracts are usually not technically detailed enough for this to be particularly useful as a brainstorming technique.
+    X -add this option to gui and experiment
+-Think about how we might add a gui option for URL entry (youtube video, arxiv paper, etc.). Might need a menu that allows us to open a separate window since the expected workflow is a bit different (fetch text from URL rather than operate on input directly.)
+-consider removing auto-punct button since it's already available in prompts? Or remove from prompts menu?
+-add warning in case you try to query with empty text for a prompt that needs input
+
+5/25/21
+-------
+~ -try gpt neo in colab
+    UPDATE: crashed colab due to ram limit. Put on hold in favor of Huggingface api.
+X -try huggingface api
+~ -start building query_gpt_neo function
+
+5/26/21
+-------
+X -update query_gpt_neo func
+    UPDATE: Found and fixed some bugs. Most importantly, we were passing in parameters wrong which caused them to be ignored.
+    _ -work on different length responses (seems to return slightly different format depending on max_tokens)
+        UPDATE: This should only happen if we pass in a list of input strings, which I don't do with this interface.
+    X -make interface more compatible w/ query_gpt_3?
+        UPDATE: made it work as a mock_func.
+    X -consider interface: should we hide this inside query_gpt3 (basically another mock mode option) or make interfaces identical so we can swap out functions interchangeably?
+        X -work on implementing changes
+~ -add gpt neo option to gui
+    UPDATE: hardcoded for now when user selects mock mode. Eventually, might want to distinguish between a truly mocked call (faster) and neo.
+
+5/27/21
+-------
+X -better error handling for query_neo (see error message in pycharm console) 
+    UPDATE: also found and fixed bug w/ max_token len and identified possible cause of api errors (input is too long - tried to test this but then started getting errors about rate limits, which is odd because I'm nowhere near the documented limit).
+~ -experiment with other information seeking task
+    UPDATE: see misc
+
+5/28/21
+-------
+X -create file to track tough google searches and the ultimately helpful piece of information
+X -gui options for true mock call vs. neo call.
+    UPDATE: collapsed mock checkbox and model options into one radio button list.
+~ -make speech interruptable
+    UPDATE: set default to off for dev purposes. Also started building interruptable decorator in ipython session.
+X -show more graceful error message in gui if response fails for some reason (or maybe w/ my new error handling in query func this is unlikely enough that it basically never hapepns? Assess.)
+X -tweak "how to" prompt params
+    UPDATE: higher model, longer length, new stop_word
+-make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
+-check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
+    -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+-document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
+
+5/29/21
+-------
+X -interruptable decorator
+    ~ -test with @callback
+        X -consider integrating callbacks natively? So use just 1 deco, not 2.
+    X -port to htools
+    ~ -integrate into GUI/speaker class to allow speech interrupt
+ -make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
+-check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
+    -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+-document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
+
+5/30/21
+-------
+X -integrate into GUI/speaker class to allow speech interrupt
+    X -troubleshoot threading issues: seems that each callback is run in a separate thread and it's tricky to propagate an exception from one thread to another
+-make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
+-check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
+    -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+-document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
+
+5/31/21
+-------
+X -clean up code a bit after speaker interrupt ordeal
+    X -document new funcs
+X -make gui show when response is in progress (sometimes unsure if click didn't work or if response is just slow)
+-check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
+    -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+X -document gpt neo (maybe can largely copy from query_gpt3 or use add_docstring decorator.
+~ -start generic monitor class (see ipy session)
+
+6/1/21
+------
+X -check if we do any auto-updating of max_tokens in query manager when task is Punctuate (pretty sure we don't)
+    X -maybe adapt logic from UnpunctuatedTranscript to GUI: i.e. if we punctuate, we want the output to be the appropriate length.
+X -consider removing auto-punct button since it's already available in prompts? Or remove from prompts menu?
+    UPDATE: removed. Updated transcribe task and get_query_kwargs method to do some light autoformatting.
+X -add vanilla gpt3 prompt (no instructions, no specific task, just give it some text and let it talk for a bit)
+-add chatbot prompt
+-add translation prompt?
+-continue work on more generic Monitor class for htools
+
+6/2/21
+------
+X -add tooltips to everything
+X -fix bug where empty default task resulted in a colon
+-increase max tokens (gpt3 allows up to 2048 between input+output, though neo allows only up to 250 token outputs)
+
+6/3/21
+------
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+-investigate and fix possible bug where vanilla query seems to replace apostrophes with question marks
+-prototype chatbot prompt
+X -build steelman prompt
+    X -add config and prompt files to data/prompts dir
+    X -integrate into UI
+X -fix bug in speaker where hyphens are still interpreted as CLI flags
+~ -start looking into potential slack app
+-prototype translation prompt
+-continue work on more generic Monitor class for htools
+
+6/4/21
+------
+X -consider ways to avoid unwanted pauses after periods in words like U.S.A.
+X -prototype MMA fight predictor prompt
+    X- add files to data/prompts dir
+    X -integrate into UI
+X -investigate and fix possible bug where vanilla query seems to replace apostrophes with question marks
+
+6/5/21
+------
+~ -prototype "slack replier" prompt
+    UPDATE: tried a bit but realized I blocked slack and it's harder without sample messages. Maybe try again tomorrow.
+X -prototype translation prompt
+    X -update config/prompt files
+    X -add to UI
+-record some mma examples (text? silent gif? video with audio?)
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+-see if slack app is a possibility (do I have auth to do in GG workspace?)
+X -explore possiblity of scraping pro/con website for t5-like dataset.
+    UPDATE: No api, but it does look fairly scrapable. Only ~100 issues though, it seems.
+-maybe manually add 1 more example to debate prompt to see if it improves response quality? Does mean queries would be more token-intensive though.
+
+6/6/21
+------
+~ -prototype "slack replier" prompt
+    UPDATE: still couldn't find that many great examples. Maybe keep an eye out for useful data that comes up organically in the future.
+~ -prototype chat w/ various public figures
+    UPDATE: Tried with a few and results were decent. Worth pursuing further.
+~ -write basic func to get wiki summary about a person
+    UPDATE: still some improvements to be made.
+X -prototype writing analyzer prompt, add data files, add to UI
+    UPDATE: examples probably could be better - this seems to fixate more on author emotion/feelings than writing style
+-prototype cover letter writer from job posting
+-record some mma examples (text? silent gif? video with audio?)
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+-see if slack app is a possibility (do I have auth to do in GG workspace?)
+-maybe manually add 1 more example to debate prompt to see if it improves response quality? Does mean queries would be more token-intensive though.
+
+6/7/21
+------
+X -make wiki_summary func more robust
+    X -handle situation where page not found
+    _ -handle situation where wiki page is disambiguation page (idea for both: ask user for optional *tags args. On disambiguation page, look for semantically similar person. E.g. if I search wiki_summary('john smith', 'wrestling') that should let me find an article named something like 'John_Smith_(Collegiate_Wrestler)'. For case where no disambiguation page, we could try googling 'john smith wrestling wikipedia' and see if something comes up)
+        UPDATE: think this isn't necessary with current solution - I'll never intentionally search for a disambiguation page and I skip them in search results. Worked on the google search approach a bit but decided wikipedia api was more reliable and more stable for the future.
+    X -add img downloading functionality
+
+6/8/21
+------
+X -improve text cleanup in wiki summary (name pronunciations don't always parse to the same char; need something more generic to find junk after parenthesis)
+    X -select best image
+    X -validate page is a reasonable match
+    X -port 
+    -document
+    -see how to load image in gui
+-figure out how to integrate conversation prompt into gui
+    -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+
+6/9/21
+------
+~ -document wiki funcs
+X -figure out how to make conversation prompt work w/ current setup (may need to add hook func so user to call when loading)
+    UPDATE: added option to provide custom formatter. Not the most elegant but seems workable so far.
+    ~ -figure out how to integrate conversation prompt into gui
+        UPDATE: Sort of works, but I think we might be calling wiki_data every time the user types a character, horribly gumming up the app. Need to work on this.
+    -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
+-see how to load image in gui
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+X -flex task: monitor_time decorator (see ipython session)
+
+6/10/21
+-------
+-update gui so conversation wiki_summary isn't run repeatedly (remove reliance on promptmanager.kwargs? Or somehow cache results? Or logic to wait several seconds after user stops typing?)
+-consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2?
+-investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+X -see how to load image in gui
+X -add frequency_penalty to query_gpt3
+X -add freq penalty to conversation default config
+X -make conversation formatter sentence tokenize more reliably (prev didn't support names like Dr. Seuss or J.K. Rowling).
+X -func to get most recently edited path in dir (workaround for lack of access to downloaded img url)
+X -port monitor_time deco
+    X -document
+
+6/11/21
+-------
+X -update img size
+X -fix bug in name (period was attached to end)
+~ -consider how we might allow for an ongoing conversation - maybe there should be a single text input field instead of 2? Do we need multiple windows/tabs or change window depending on settings?
+    UPDATE: Decision: I think we need a separate conversation mode. Everything now is geared towards 1 format (1 input -> 1 output). I could imagine a whole class of tasks that are more conversational, and trying to wedge them into the current setup could get ugly(er). Can plan more tomorrow, but might need a new ConversationManager class (the convo equivalent of PromptManager) and a new gui window/tab.
+-update gui so conversation wiki_summary isn't run repeatedly (remove reliance on promptmanager.kwargs? Or somehow cache results? Or logic to wait several seconds after user stops typing?)
+    UPDATE: on hold. Wait til we figure out a Conversation setup since this might naturally remove the problem.
+X -investigate possible bug where manually updating a setting sometimes resets other settings (seems to happen when you type in a number for max_tokens but not when you adjust it with arrow keys)
+    UPDATE: my text_update callback seems to have triggered it. Added an option to only update the text.
+
+6/12/21
+-------
+X -adjust img_size calcs to account for padding
+    X -adjust so it updates on window resize
+X -adjust text input size calculations to avoid horizontal scrolling
+X -change text input label position from right to top to avoid horizontal scrolling
+-research options for adding new tab/window
+    -start working on convo tab
+    -add URL tab?
+-start conversationmanager class
+-easier:
+    -document session
+    -document transcript methods
+~ -rewatch yannic siren video
+    UPDATE: watched first half and took notes. Trying method of pausing ever 20% and writing down what I remember from the last chunk to try to force recall.
+
+6/13/21
+-------
+X -write wrapper func to make text input w/ label above instead of to the right
+    UPDATE: turned out to be shockingly difficult. Ended up accomplishing with context manager, though still not thrilled with implementation.
+
+6/14/21
+-------
+X -update other cases that could benefit from new label_above ctx_manager
+X -build class to go back and forth between raw text and text with newlines inserted to be under some max_len
+    ~ -incorporate into gui
+        UPDATE: added button to do this (gets hairy if we try to handle this automatically, and text_edit_callback doesn't seem to let us change outputs in the input item we're monitoring). Still need to update response textbox to use the transform and update the prompt textbox to undo the transform.
+
+6/15/21
+-------
+X -update prompt textbox (under query kwargs) to undo chunking transform
+    X -update response textbox to do the chunking transform
+    X -update query_callback to get unchunked text rather than what's shown in transcribed window
+-add __contains__ method to chunker
+
+6/16/21
+-------
+X -check for bugs in yesterday's formatting updates (does transcribed text insert newlines as expected? Does resolved prompt (under kwargs) update as expected? Does the right prompt get sent in query? Does response get displayed correctly?)
+X -investigate bug (?) where adding text repeatedly to chunker gradually makes lines shorter and shorter.
+X -updates to textchunker: method to check if previously added, split on \n\r as well as spaces
+X -port lazy decorator to htools
+
+6/17/21
+-------
+X -look into bug w/ "?" chars in prompt textbox for analyze_writing
+    UPDATE: book used weird dash, replaced it with a more common one.
+    ~ -look into possible bug w/ extra newlines still being added to prompt text box sometimes?
+        UPDATE: found, fixed, and maybe introduced many bugs here. I THINK this is (hopefully) almost working now, with the exception that double newlines now seem to be single. Investigate tomorrow. Brain fried.
+
+6/18/21
+-------
+X -investigate double newline bug in textchunker (see yesterday's notes)
+    UPDATE: wrote better hsplit alternative to fix this. Maybe port at some point to replace regex method which is apparently a bit shaky logic?
+X -consider how to handle autoformat button: auto press it (in which case we need some magic (threaded?) to help in typing case because dearpygui callback can't edit the input box it's monitoring), add instructions to press it and just don't support the other case, or update query_func and other places to be able to get the raw version if it hasn't been added to chunker
+    UPDATE: added tooltip encouraging user to do it and explaining repercussions. It's really mostly for human convenience as most text does not have many newlines (except in specific cases where it's important for formatting)). Also made this automatic for voice transcription mode.
+X -port new sticky split to htools as hsplit subcase (with slight tweak to allow leading sep(s))
+-rm newlines from analyze_writing prompts
+    UPDATE: Done, but it looks like we'd really need more examples for this to work well. Right now, we only have 1 for casual/funny, 1 for analytical/scientific, etc. So gpt3 often selects from the exact bullet point descriptions rather than generating novel ones.
+
+6/19/21
+-------
+X -add logging functionality to save most recent prompt/kwargs used (either in promptmanager or in file). This way after making any changes (such as adding the newline insertion in various places), we can check to make sure that what we ultimately send to gpt3 is what's intended.
+X -error handling: press query when no text in transcribed
+X -error handling: query_callback always gets text from chunker, what if user hand-typed and didn't auto-format?
+    UPDATE: make text_edit_callback update chunker. We don't do anything with the chunked lines but it updates the text in chunker.raw.
+X -error handling: saved kwargs suggest query is (sometimes/always?) made with chunked input, not raw input
+    UPDATE: kwargs generated by app.get_query_kwargs include a 'prompt' param. This was pre-formatted and overrode the unformatted prompt param in promptmanager. Lesson: validate kwargs if there's a risk of passing unintended names in?
+X -fleshed out, ported, and documented sleepy_range to htools
+
+6/20/21
+-------
+-research options for adding new tab/window
+    -start working on convo tab
+    -add URL tab?
+X -start conversationmanager class
+    UPDATE: got pretty far but still need to do some testing, flesh out query/kwargs/prompt behavior, etc.
+X -fleshed out, documented, and ported venumerate to htools
+
+6/21/21
+-------
+X -test adding new personas to ConversationManager
+X -improve func that cleans wiki summary
+    UPDATE: removes more junk now.
+X -flesh out OwnerAccess metaclass
+    UPDATE: added option for subset of attrs or all
+
+6/22/21
+-------
+-add more methods to conversationmanager:
+    X -add kwargs method/attr?
+    _ -add prompt method/attr?
+        UPDATE: promptmanager doesn't actually use this anywhere, just a convenience method for the user which isn't that helpful here bc there's only 1 task.
+    ~ -write query func (figure out how to update running conv - maybe another attr needed)
+        UPDATE: got 1 query working. Still need to adjust it to handle ongoing conversations (distinguish between first call and subsequent calls).
+    ~ -can we remove name2summary or name2base? Pretty redundant.
+        UPDATE: prob eventually rm name2summary but keep for a couple more days while the class develops, just in case.
+    -clean up old tmp dir of downloaded photos?
+-research options for adding new tab/window
+    -start working on convo tab
+    -add URL tab?
+-easier:
+    -document session
+    -document transcript methods
+    -document textchunking class
+    -port htools as_df
+    ~ -flesh out owneraccess more
+        UPDATE: started rebuilding metaclass as cls decorator and so far it seems to work.
+
+6/23/21
+-------
+X -continue fleshing out conversationmanager
+    X -update query_func to work w/ ongoing convos. Need to distinguish between first call and subsequent calls.
+    X -rm name2summary
+    X -add conversation saving option
+    X -add contextmanager option
+    X -test out functionality
+    -clean up old tmp dir of downloaded photos?
+-flesh out owneraccess decorator
+
+6/24/21
+-------
+~ -add method for prettier formatting of ongoing conversation (auto bold all user-provided text?)
+    UPDATE: wrote func to do this but haven't added to class yet.
+X -underline func
+    UPDATE: tried italicize first but that didn't work.
+
+6/25/21
+-------
+X -add format_conversation function to class? Could also be staticmethod or standalone function.
+X -port conversationmanager to lib
+X -document conversationmanager methods
+X -add new window/tab to dearpygui
+-maybe update converse contextmanager to have input baked in
+-flesh out owneraccess decorator
+
+6/26/21
+-------
+~ -continue fleshing out conversationmanager window
+    UPDATE: built out basics of new conv window AND new options window (don't worry about code duplication for now, just get something working)
+    X -figure out better way to select which window is shown (menu bar at top? Currently just have a checkbox in main window for testing purposes but that's definitely not a long term solution)
+        UPDATE: Added menu bar that lets us select different modes.
+    ~ -do we need a different kwargs window or can we figure out a way to adjust the existing one?
+        ~ -in fact, might we be able to keep a single interface and obscure any differences between conversation mode and single response mode from user? Not sure yet if that's even desirable.
+        UPDATE: for now, just focus on building new functionality that works. Maybe later we can refactor to be more elegant, but let's get something working first.
+X -delete old conv prompt and rename new one
+X -add persona selection menu
+X -dynamically update image based on selected persona
+-flesh out owneraccess decorator
+
+6/27/21
+-------
+X -adjust window size computations to better account for menu
+X -add current_summary prop in conv_manager
+~ -allow adding new persona
+    UPDATE: added button and textbox, no functionality yet though.
+X -make image smaller
+X -add bio next to image
+    X -update when persona changes
+X -move query and read widgets to left window
+    UPDATE: done, but considering moving back now that I made image much smaller. Consistent UI would be nice.
+-adjust name formatting to better pretty-format initials (e.g. TJ, JK, AJ)
+-start trying to get conversation query button to work
+~ -look through new windows for old names/callback_data params that need to be updated
+    UPDATE: cleaned up a few old unnecessary lines
+-flesh out owneraccess decorator
+
+6/28/21
+-------
+X -debug: why is image width not staying constant for different personas?
+    UPDATE: refactored into helper function to take care of this.
+    X -tune text max_chars for bio (fix after image issue since it's affected by that)
+        UPDATE: Also recomputed chunked line length on resize.
+X -add_persona button
+    UPDATE: also made it update the listbox.
+-adjust name formatting to better handle initials (TJ, JK)
+-start trying to get conversation query button to work
+-flesh out owneraccess decorator
+
+6/29/21
+-------
+X -update convmanager to handle pages w/out "born" in summary (realized that's more common than I thought - maybe all dead and fictional people?)
+X -add progress message/widget when downloading new persona
+X -maybe move query/read response widgets back to options panel now that image isn't as tall?
+    X -maybe move summary under photo and make it twice as wide? Gets pretty long sometimes with how narrow it is.
+X -handle case where there are no existing personas
+    UPDATE: Made it easier to check by implementing __len__, then if 0 make gui download a default persona (Obama).
+-adjust name formatting to better handle initials (TJ, JK); maybe remember user capitalization (ex: Neil deGrasse Tyson middle name has unusual casing)
+-start trying to get conversation query button to work
+-flesh out owneraccess decorator
+
+6/30/21
+-------
+X -look more into how (if?) we can center align image (could make it full width but then height would be giant in many cases). add_dummy() may be the closest we can get.
+    UPDATE: yeah, add_dummy works.
+X -deal w/ listbox height issues (seems frozen at whatever the initial height is, which is undesirable when we add many. And if we start w/ many there's no scrolling which is annoying.)
+    X -see if we can change height
+    _ -try radio buttons instead?
+    _ -try menu instead?
+    UPDATE: fixed by setting num_items in listbox.
+X -test on fictional character (should be possible now that I've removed references to "born" in summary)
+    UPDATE: so far so good.
+X -allow ConvManager to pass in names at the start, like specifying tasks in PromptManager.
+~ -adjust name formatting to better handle initials (TJ, JK); maybe remember user capitalization (ex: Neil deGrasse Tyson middle name has unusual casing). 
+    UPDATE: inverse transform won't reinsert them but we can handle user-input names w/ periods. However, noticed downloading dillashaw only retrieved a summary, no photo. This happens too if we use wiki_data() directly so I don't think it's related but should investigate more.
+    X -Also noticed Dr Seuss worked when I first downloaded it but on subsequent gui runs it was loaded simply as "Dr". Check if that works now.
+        UPDATE: yes.
+X -add payment info to gpt3 api
+    UPDATE: 😬
+-start trying to get conversation query button to work
+-flesh out owneraccess decorator
+
+7/1/21
+------
+X -investigate dillashaw photo download issue (does wiki page have no images? Were none of the names a close enough match?)
+    UPDATE: convmanager logic to remove periods was mistakenly placed in the inverse transform case.
+    -if applicable, maybe adjust logic to choose a fallback if there's not a close enough match?
+    -or diff func to search for that person's face outside of wiki? Might be more reliable anyway.
+X -set usage limits on gpt3 api account
+X -add transcription to conv mode
+~ -start trying to get conversation query button to work
+    X -build dummy query w/ chunking
+-flesh out owneraccess decorator
+
+7/2/21
+------
+X -debug failed image download
+    UPDATE: wikimedia requires user-agent now to make frequent requests.
+X -create save_summary() method (just refactored from end_conversation)
+~ -add save_conversation button
+    UPDATE: button is there and it saves, but user can't choose location (dearpygui removed its save file dialogue widget?). Also still reflects lack of update if user spoke last. Could either get text from text input directly or make text edits and transcription always trigger an update of prompt? Probably the former makes more sense.
+
+7/3/21
+------
+X -allow kwarg customization? Or temp change config? Want to be able to test w/ engine_i=0 rather than 3 to save $.
+    UPDATE: for now simplest to hardcode in engine_i=0. For real thing, we'll probably want to stick w/ 3 most of the time. Can experiment in openai UI w/ 1 or 2 but 0 is notably poor.
+X -get real query working in place of dummy query (conv mode)
+    X -how to extract last user text? Cache in transcription callback or extract from full summary?
+        UPDATE: instead, allowed query method to pass in a fully-resolved prompt instead of single new line. Seemed less hacky that re-extracting the last user comment from a full prompt.
+    -get voice mode working for post-query
+    -consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
+~ -stop conv text from disappearing during recording
+    UPDATE: added functionality but haven't tried it yet.
+~ -save button improvements: currently doesn't get last line if user spoke last
+    UPDATE: added functionality but haven't tried it yet.
+    -show message saying where file saved to
+~ -for conv mode, only clear text when conversation ends, not every time we transcribe
+    UPDATE: done, but implemented as a side effect of saving. Maybe should support case where we want to end a conversation but not save? Does this happen already if we switch to another persona? Investigate further.
+X -text edit callback for conv mode: atm, if we edit text the chunker still only has the pre-edited version
+-other options:
+    -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
+    -start planning out blog about page and intro
+    X -start writing fight predictor blog post
+
+7/4/21
+------
+X -test new functionality: conv text shouldn't disappearing during recording
+    UPDATE: works
+~ -test that save button includes last line when it's by the user (built but haven't tried)
+    UPDATE: yes, but we should delete the start of a line below containing "{current_persona}:".
+    ~ -update saving logic to end a conversation 
+        UPDATE: Otherwise, saving temporarily deletes the text but maintains a memory of it internally, so if we speak again without selecting a new persona, it will continue the ghost of our past conversation.) But now that it's done I'm thinking that might be desirable (save as we go along, like saving a doc we're working on in case something crashes). Consider.
+    -show message saying where file saved to
+X -further cleanup to wiki_summary
+    X -replace en dash
+    X -see if we can remove more junk that appears in Einstein summary?
+X -fix bug in _load_personas where all personas are loaded even if we specified a list of names
+    UPDATE: found this bug early in today's session. Because I remove a name every time we process it, if the excluded name is last, the names cache is empty, mimicking a scenario where we didn't specify any names. Created boolean var upfront to address this.
+X -add default image when wiki fails to download one
+X -update add_persona to check if we have files locally first?
+    X -update gui to auto switch to a persona after we add it
+        UPDATE: done, though a little hacky. Can't find a way to actually change the selected item in dearpygui so we override it with the callback's data parameter, meaning the name technically isn't selected. Thought this might cause problemes w/ resizing but it doesn't seem to. Updated logic so re-selecting the current name doesn't erase a conversation.
+X -allow deletion of item from CHUNKER
+X -check if switching personas resets conversation text.
+    UPDATE: No. Updated select_persona_callback.
+-get voice mode working for post-query
+    -check if we can refactor to combine query and conv_query callbacks
+-other options:
+    -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
+    -start planning out blog about page and intro
+    -work more on gpt3 blog post
+    X -start bookdown repo
+
+7/5/21
+------
+X -update save button to trim off partial last line when user talks last (or maybe adjust this in text updating so it only shows up after a query? Would feel more like a natural conversation maybe.)
+    UPDATE: changed this in convmanager.format_prompt() instead so we only see the person's name pop up after they respond.
+X -update convmanager/chunker so that gpt3 curly quotes are replaced with more standard ones for dearpygui's sake
+    UPDATE: chunker now (by default) handles both single and double curly quotes and en dashes. This seems to work well except for if I manually type the curly quotes in (the prompt ends up correct but the input text isn't changed).
+X -show message saying where file saved to
+    UPDATE: Found that I can mimic most of file dialogue functionality with a popup() item. Basic functionality works but still fleshing out some error handling.
+-think more about desired saving functionality. Differentiate between saving+ending vs. saving+continuing a conversation vs. ending without saving? Which of these should we support?
+-get voice mode working for post-query
+    -check if we can refactor to combine query and conv_query callbacks
+-other options:
+    X -record some mma prediction examples (maybe next n main events? Predicting on lesser known fights may give more generic or less realistic answers since the model's probably seen less analysis of, for example, the guy debuting against Sean O'Malley than it has of McGregor or other popular fighters)
+    -start planning out blog about page and intro
+    -work more on gpt3 blog post
+
+7/6/21
+------
+X -widen save popup (path is overflowing atm)
+    X -reset default values for dir and file name after first save? Right now they persist, not sure why.
+    X -reset error message
+    X -Allow user to override both errors? They're really more like warnings.
+        UPDATE: achieved via hidden checkbox that becomes visible on error.
+X -think more about desired saving functionality. Differentiate between saving+ending vs. saving+continuing a conversation vs. ending without saving? Which of these should we support?
+    UPDATE: added option to not end conversation.
+
+7/7/21
+------
+X -get voice mode working for post-query
+    -check if we can refactor to combine query and conv_query callbacks
+X -add em dash replacement to chunker
+X -troubleshoot issue where default save filename always seems to be obama (assuming whoever the default persona is when we load the app?)
+    UPDATE: added callback for saveas button.
+-add options for more voices (at least 1 male 1 female)
+    X -try out diff mac voices
+        UPDATE: Daniel seems like a reasonable choice for men.
+    X -for conv mode, auto-select voice based on prediction of male or female name? Or maybe we can extract pronoun from wiki summary - e.g. space split and lowercase summary and check if he or she is more frequent, and return an extra value from wiki_data(). 
+        UPDATE: wrote, ported, and documented func to do this. Use wiki summary pronoun method and worked well on a sample of ~10 names I chose, roughly split between men and women + 1 fictional character.
+        -update wiki_data func
+        -update convmanager's usage of it
+
+7/8/21
+------
+X -update wiki_data w/ inferred gender
+    X -update convmanage to account for this new returned value
+    X -update conv gui to auto select based on inferred gender
+        UPDATE: Also found bug where attempting to query w/ no conv throws unhandled error. Also still seems like speaker is chunking sentences on newlines and maybe commas, which I don't think I asked for.
+    X -manually update voice after first starting app because we can't call persona_select_callback until right col has been rendered.
+X -update speaker to allow setting voice without breaking cmd_prefix
+
+7/9/21
+------
+X -look into possible tokenization bug (pausing on commas and newlines in addition to sentences, I think. Need to figure out intended behavior that works with various prompt types - How To, for example, often doesn't have periods. Could use diff rule for conv vs default mode, I suppose.)
+    UPDATE: seems to just split on sentences as intended. Added behavior where it splits on double newlines as well. Conv model seems to often return short responses anyway.
+-possible bug: how to prompt no longer adds colon at end?
+X -end conversation w/out saving option
+-start planning how to deal with long convs (e.g. summarize past conv, delete it and just use the past couple responses, etc. Realizing my current implementation may present a problem because I pass in the full conv blob to query so we'd have to do some less than ideal surgery to extract the new bits.)
+X -try recording a couple conversations with engine_i=3.
+X -thought there was a message shown during conv query but I'm not seeing it show up?
+    UPDATE: there was but I never added logic to display in in conv_query_callback. Did that now.
+-other options:
+    -work more on gpt3 blog post
+    -start planning out blog about page and intro
+    -play around w/ mma prompt variations ("this brilliant analyst", "this casual mma fan", etc.)
+    -record conversation w/ joe rogan asking for prediction?
+
+7/10/21
+-------
+-finish blog post?
+X -minor bug: os say cmd read "No" as "number"
+    UPDATE: quirk in Daniel voice's functionality. Used some careful string replacements in speech module to eliminate this.
+X -error handling when we fail to download a wiki persona
+-start planning how to deal with long convs (e.g. summarize past conv, delete it and just use the past couple responses, etc. Realizing my current implementation may present a problem because I pass in the full conv blob to query so we'd have to do some less than ideal surgery to extract the new bits.)
+-other options:
+    -start planning out blog about page and intro
+
+7/11/21
+-------
+-start planning how to deal with long convs (e.g. summarize past conv, delete it and just use the past couple responses, etc. Realizing my current implementation may present a problem because I pass in the full conv blob to query so we'd have to do some less than ideal surgery to extract the new bits.)
+    UPDATE: wrote htools decorators to get all functions defined in module and optionally decorate them to help debug this (wanted to wrap all with @debug to more easily map out a model of how all the conv components interact to better plan how we might refactor convmanager to deal with long convs. But dearpygui does weird things (I think bc it's largely written in another language and somehow ported to python magically? Unsure.) So we'll probably need to do this manually.
+-consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
+-text edit callback for conv mode: atm, if we edit text the chunker still only has the pre-edited version
+X -add save as button to default mode
+
+7/12/21
+-------
+X -map out how convmanager prompt is updated and its interactions with CHUNKER, app, etc. (e.g. does it get input from chunker or text box? Does it use that to replace its running prompt or does it just lop off the last new line? Trying to figure out how we might deal with longer convs and I have a vague intuition that the current setup doesn't allow for this easily, but I need a more concrete understanding of why that is.)
+    X -start planning potential approaches (summarize past conv, include only last 1 message, only last n messages, etc.)
+        UPDATE: summarizing past feels a bit excessive for now. Let's try to get a "last n messages" approach working. If that turns out to not be sufficient we can revisit that decision.
+~ -start rebuilding convmanager
+    UPDATE: maintain list of user turns and gpt3 turns (as in your turn in a conversation). Then for each query, grab the last n and reconstruct a prompt. Don't allow user to pass in full prompt, just a single text input. Allow them to do this with query_later() as well (lazy isn't appropriate after all because it will return an object that needs to be called, whereas we want it to use the cached value the next time we call the method. I'm sure we could build a decorator like that without too much trouble but this solution is probably simpler).
+
+7/13/21
+-------
+X -try ProtoConvManager to see what is/isn't working about new system
+    UPDATE: lots of things to fix as expected, but tentatively seems to be working okay now.
+X -start refactoring format_prompt to allow use in generating full conversation (avoid so much duplicated storage)
+    UPDATE: _format_prompt draft is written but untested. Same w/ updated format_prompt and format_conversation. Eventually remove full_conv attr and update refs.
+X -draft full_conversation property to replace full_conv
+
+7/14/21
+-------
+X -test format_prompt
+    X -test full_conversation property
+    X -once troubleshooting done, remove refs to full_conv and update (not just text replace: can no longer delete property unless I make some tweaks but I don't think that's necessary)
+X -port new convmanager
+    X -update gui refs to running_prompt
+
+7/15/21
+-------
+X -update gui to work w/ new turn-limited conv process
+    X -check notes: where does conv_query get text from? what conv-related keys does chunker maintain? Where do we need to cache new turn (presumably both in transcribe callback and text edit callback?)
+    X -check that saving w/ no conv still produces warning. Might need to adjust full_conversation property to return empty str when no turns.
+        UPDATE: gets text from chunker anyway so recent changes didn't affect this.
+    X -implement changes
+X -show error msg when user tries to edit an old turn
+    UPDATE: would have liked popup the user has to close but that seems to need to be tied to a button (i.e. appears on click, not from callback. Newer dearpygui versions supposedly have this but I tried updating and it looks like the api changed significantly and would break all my code so I should stick with 0.6.415.)
+X -text edit callback for conv mode: atm, if we edit text the chunker still only has the pre-edited version [should do mapping task (1st bullet point) first]
+X -start looking into pyinstaller
+    UPDATE: tried running even though not quite done yet just to see what the process looks like and how difficult it might be. Quite slow to run, not sure if this will work yet.
+
+7/16/21
+-------
+X -follow up on pyinstaller - did it work?
+    UPDATE: sort of - pyinstaller completed but we get an error when trying to run the app. See misc.txt.
+X -add popup modal on click save btn (default mode)
+    X -write save callback
+    X -write cancel callback
+    X -are we able to refactor to combine w/ existing funcs? Or need to keep separate?
+        UPDATE: ended up editing existing funcs for these rather than writing new ones.
+-consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
+-start considering how we might refactor giant mess of giant gui file
+
+7/17/21
+-------
+X -update default save mode to combine output w/ PROMPT, not just input in top text box. Maybe can use logged json file or could cache this in CHUNKER.
+    UPDATE: realized I don't want prompt either (that often includes lots of examples), more like a specific subset of it. Performed some surgery to reconstruct the relevant portion. Logic is not bulletproof but it seems to work okay for most of my prompts.
+-investigate possible interruption checkbox bug (seems to auto-uncheck at end of sentence and keep going. So far only tried in default mode)
+    UPDATE: Didn't get to this today but did notice another issue: if we click save as while the speaker is speaking, file names aren't populated and we can't save or cancel until speaking is done. I think this is because callbacks are blocking and the popup's appearance is somehow triggered another way by dearpygui.
+X -clean up callback_data for default mode saving. Have some unused kwargs and some missing ones (currently hardcoded chunker keys, for example)
+    UPDATE: decided hardcoded keys are okay but deleted some other keys.
+X -rm conversation (prev referenced old name conv_proto), shortest, and short_dates from default mode. Testing w/ engine_i =0 is almost free and we're mostly done with testing this mode anyway.
+-consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
+-start considering how we might refactor giant mess of giant gui file
+-document callbacks and other stuff in main.py (large backlog here)
+
+7/18/21
+-------
+X -investigate possible interruption checkbox bug (seems to auto-uncheck at end of sentence and keep going. So far only tried in default mode)
+    UPDATE: nested for loop issue. Changed checkbox monitor to append an exception object to error list and have the speech function raise that inside a try/except block rather than deal with for/else weirdness.
+X -add tooltips warning user about end_conversation button and about using save_as during speaking.
+X -revisit project requirements to see if anything is missing
+	UPDATE: reviewed and ended up filling out the postmortem (except for end date) - slightly cheating but I found I'm at a point where I can address most of the issues laid out there.
+
+7/19/21
+-------
+X -start considering how we might refactor giant mess of giant gui file
+	UPDATE: managed to separate out callbacks and utils to separate files but it took some minor hackery w/ setting globals in imported modules. 😬
+
+7/20/21
+-------
+X -document bin/utils functions
+X -document bin/callbacks functions (large backlog here)
+X -document bin/app functions/methods
+X -revisit project backlog to see if there's anything I should get to
+	UPDATE: nothing too major I really need to do.
+
+7/21/21
+-------
+X -check punctuate task kwargs: do we update max_len dynamically? I don't think so but it would be nice.
+	UPDATE: max_tokens updates only when we click Punctuate task. Updated it so it updates when typing while still ensuring other kwargs don't update.
+~ -see how hard it would be to add a warning in app based on task's config file message.
+	UPDATE: this would require changing load_prompt, prompt_manager, and gui (at a minimum). Don't think it's worth it given the low payoff here. Warnings aren't anything too crucial.
+X -make requirements for jabberwocky and upload to pypi
+	UPDATE: fixed cli bug where sorting can be messed up after sklearn->scikit-learn type conversions, added a couple more of those cases, generated requirements, and uploaded v1.
+X -add pyinstaller import hook from stackoverflow to try to resolve numpy error
+~ -give pyinstaller another shot (I think I may have saved some notes on the error msg I got last time)
+	UPDATE: currently building. We'll see - I'm guessing this will still take a lot of head bashing before success but I'll check back in later.
+X -clean up dailies a bit (many copies of backlog and easy task had appeared at bottom, some from accidental vim duplication and maybe some from me forgetting I had an existing section for that)
+X -fix bug where dummy prompts were still showing up in gui
+	UPDATE: realized my skip_tasks logic in PromptManager wasn't right. Fixed this and updated gui accordingly.
+-consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
+-consider: are we able to easily refactor conv_query to fit into query callback (i.e. remove duplication?)
+
+7/22/21
+-------
+-check on pyinstaller results
+	UPDATE: Same error as before. 
+	-troubleshoot if necessary (lol)
+	UPDATE: Tried adding pyinstaller hook from stackoverflow and upgrading numpy. Wordninja data file failed to be included so added Tree. Tried to add my data dir but pyinstaller won't accept parent data paths so moved spec file to project root. Current status: data dir not included correctly (but maybe that means wordninja now works?). See error msg in misc.txt.
+~ -consider format and content of blog post (lessons learned about gpt3? about modes of programming (declarative vs. OOP)?)
+	UPDATE: misc.txt
+-try to record kap mp4 w/ audio
+	UPDATE: worked but very slow to export and couldn't open in quicktime. VLC can play it but complains about the codec. Maybe try h264 mp4 next time.
+
+7/23/21
+-------
+~ -more pyinstaller troubleshooting
+	X -try auto-py-to-exe if stuck w/ pyinstaller? Same underlying lib but maybe gui makes some options more intuitive
+		UPDATE: dir structure looks good after building but paths no longer work as expected. I think paths may work differently for EXEs.
+X -take screenshots of both gui modes
+	X -record gif of 1 or more modes (or mp4 h264 if using sound)
+		UPDATE: listened to some old examples and sound quality is real bad. Just do silent for now.
+	X -update readme w/ some or all of these
+-consider adding voice speed slider? For actual voice conversations I think it might get frustrating with the current rate of speech (slow).
+
+7/24/21
+-------
+X -move constants under __main__ check
+X -design way to handle custom personas
+	X -update convmanager to support custom personas
+	X -update dir structure to support custom personas
+	-update gui to support custom personas
+
+7/25/21
+-------
+~ -update gui to support custom personas
+	_ -is_custom checkbox
+	UPDATE: still figuring out UI. For now I have a separate add_custom button.
+	X -add modal popup on add_persona btn click if is_custom is checked. Needs text box for summary, select field for gender, optional text input/file select for image
+
+7/26/21
+-------
+X -add error msg for case where custom img doesn't exist
+	X -add error msg for no summary/no name
+	X -add error msg for already exists locally
+    X -add error msg for already loaded
+
+7/27/21
+-------
+~ -more add_persona updates:
+    X -reset name/summary/path on save
+    X -add checkbox for force generate
+        X -update logic to check force generate checkbox value
+    X -refactor so cancel_generate_callback is merged into cancel_save_conversation_callback?
+X -more consideration re UI for add_persona vs. add_custom_persona (should we have 1 popup window handle both? An is_custom checkbox? 2 buttons?)
+    UPDATE: keep as 2 diff buttons. For default mode, user can just click generate button and for custom mode, it opens up a window to provide more info. I think that's a sensible UI.
+_ -see if we can refactor callbacks to work w/ default add_persona
+    UPDATE: different enough that let's just keep them separate.
+
+7/28/21
+-------
+X -investigate bug where we replace an existing persona. Picture + summary don't update until we manually click on the persona.
+    UPDATE: updated persona_select_callback to handle specific case where we overwrite an existing persona with a custom one. In this case, the new name is the same as the old one (which usually means we don't want to start_conversation or make other updates since it's mid convo) but here we do.
+_ -add text item (think H1 title) above summary showing current persona (hopefully make our inability to change selected listbox item a little less confusing)
+    UPDATE: tried this but without ability to change fontsize (dearpygui version limitation), I didn't like this and reverted to the current system. I think this issue was mostly raised when I added a custom persona with the same name as an existing one AND wrote a fake couple word summary for testing purposes - in reality, the summary will almost always be pretty informative and include the name at the beginning.
+X -add warning that generating a new persona will end the current conversation
+
+7/29/21
+-------
+X -widget in UI to control voice speed
+    X -find good min and max spees for speaker
+        UPDATE: 120-220 seems reasonable.
+    X -adjust Speaker design so rate can be set between 0-10 and translated to Mac speaker scale automatically
+    X -add functionality so it actually affects SPEAKER obj
+~ -think if there's any way to use streaming mode w/ prompt/conv managers and Speaker. Probably won't be compatible, and we'd have to do some surgery to give speaker natural sounding chunks of text (speaking 1 word at a time would sound much more robotic). But the slowness is annoying so we should at least look into it.
+    UPDATE: looks like this actually should work for promptmanager but prob not convmanager. See ipython session.
+
+7/30/21
+-------
+-more work on streaming mode for default mode (see ipy sess). 
+    X -I think we need to set strip=False when querying w/ stream=True otherwise we either end up w/ too many spaces or not enough. Confirm this change fixes things.
+        UPDATE: It does.
+        X -If so, update query_gpt3 to error or warn if user doesn't do this correctly.
+            UPDATE: warn user and auto skip stripping when in stream mode.
+    -try to update default mode in GUI to do this. (still some uncertainty: hopefully our chunker doesn't cause any errors)
+    -think: is there any way to redesign convmanager to do this without requiring a total rewrite?
+X -look into changing window names ('conv_options_window' vs 'Conversation Options'). Ideally we'd keep the ID separate from the visible name but I think it's worth making the change even if we have to change the ID too.
+    UPDATE: just changed ID, not worth trying to hack something crazy together to get around this. Also changed main window name to Jabberwocky from default dearpygui.
+X -add voice speed widget to default options window too
+X -clean up backlog a bit - create wontfix section
+
+7/31/21
+-------
+X -more work on streaming mode for default mode (see ipy sess). 
+    X -try to update default mode in GUI to do this. (still some uncertainty: hopefully our chunker doesn't cause any errors)
+-think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
+-look into gpt-neo funcs - seems like these stopped working after a while
+-consider: should we just dockerize this instead of dealing with exe headache? [NOTE: maybe not the highest priority since I found a couple more features I'd like to add.]
+	-if yes, work on docker file, docker-compose, etc.
+	-if no, dig into path issues in pyinstaller build (Note: if we go this route, maybe create a super tiny app for testing purposes. jabberwocky is super slow to build which makes troubleshooting paths hard/annoying.)
+
+8/1/21
+------
+X -bug: stop phrases don't show up until we actively click on a prompt (not when the app first loads). UPDATE: looks like this affects all or most kwargs, not just stop phrases.
+~ -see if there's any way to make speaking/typing occur simultaneously. Previously tried launching a thread with target=read_response but that stopped new text from showing up until speaking ended. Have to investigate to determine if that's a limit of python or of dearpygui specifically (vaguely recall threads work kind of wonkily in callbacks - maybe if we move the threading inside read_response() itself).
+    UPDATE: yes. Definitely works in ipython and mostly works in GUI now, just refining details.
+-think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
+-look into gpt-neo funcs - seems like these stopped working after a while
+X -change 'query in progress...' message to 'typing...' like in many chat apps
+
+8/2/21
+------
+X -bug: stop phrases still don't work for summarize task though they do for other tasks
+    UPDATE: huh, I guess the config just didn't have any stop words. Could have sworn it did but I updated it so it does now.
+X -add newline-prefixed stop phrase to punctuate config (esp w/ low engine_i, existing ones don't always work otherwise)
+    UPDATE: also had to adjust load_prompt() func since yaml escapes newlines (I think that's why I didn't use them before). But that broke how they're displayed in the GUI so I re-escaped them after loading and then re-unescaped them before making the query. Yikes.
+~ -fix inability to interrupt threaded speaker (currently read_response handles error which works if we call it once, but we're currently calling it repeatedly. Either need to raise error and handle it outside the func or rewrite func (maybe to do all the threading stuff as 1 self-contained unit).
+    UPDATE: interruption is possible now though requires a bit of refinement. Need to adjust checkbox so it is visible from start to end. Currently disappears between each speech turn.
+    _ -related: should we revise read_response to do all the threading stuff itself?
+        UPDATE: no for now, not sure yet how conv mode will handle things.
+
+8/3/21
+------
+X -stop interrupt_checkbox from disappearing between speaker turns
+X -clean up query_callback a bit (lots of commented out stuff)
+_ -sometimes speaker gets ahead of typer and has to wait. Consider ways to fix this (e.g. delay speaker start to the 2nd sentence? Get all text (non streamed) and then use my stream() func to start typing? Would certainly make it easier to use in conv mode though it wouldn't resolve the long waiting issues.)
+    UPDATE: haven't seen this issue recently. Maybe skip fixing unless I notice it being an issue.
+~ -think: is there any way to redesign convmanager to do streaming without requiring a total rewrite?
+    UPDATE: I think so. It would actually be quite simple if we only wanted to support stream mode. Since I want both options, it's a little trickier but I think I've got something working. We attach hooks to a generator (see utils.py - maybe port to htools later) so gpt3 turns are still updated if we return a generator.
+    X -test that non-stream mode still works
+    -test that stream mode now works
+
+8/4/21
+------
+X -test that stream mode now works for convmanager (just run through an example in nb with stream=True; functionality is already written)
+    X -if no, troubleshoot
+        UPDATE: needed to update hooked_generator() to allow a post-hook since gpt3 usually adds double newlines at the end (makes sense given the prompt format) which my formatter doesn't want since we strip outputs in not streaming mode.
+    X -quickly look through convmanager code to see if there's anything else that our new streaming mode might break (converse()?)
+        UPDATE: think it's fine, converse() only calls start and end conversation. Nothing to do with querying.
+    X -if yes, update gui to use stream mode all the time
+        UPDATE: works, though we leave speaking til afterwards at least for now. Most chat responses are only 1-2 sentences anyway so this doesn't change much.
+X -add widget to UI to control conv engine (maybe just a checkbox for dummy mode? For a real conversation we really do want davinci model, I think. So it's either engine_i=0 or 3, no need for 1 or 2).
+    X -add functionality
+
+8/5/21
+------
+X -add hover tooltip to debug checkbox
+    UPDATE: changed to int input.
+X -add hover tooltip to speaker speed widget in both modes
+X -maybe play around w/ alignment of various widgets
+X -bug: transcription callback only displays most recent prompt when done recording, not full conv.
+    UPDATE: fixed, also allowed user to pass in new prompt even with full_conversation mode in format_prompt.
+X -document newly added kwargs in conv_query_callback
+
+8/6/21
+------
+X -error handling for when auto-add persona fails
+    UPDATE: already had error handling for case where page not found but when disambiguation error occurs we weren't catching it. Fixed now. wiki_data() always raises runtime error. Also moved error messages to new line.
+X -error handling when conv_query is called with no user input
+~ -start investigating new bug: 'Me: Me: {thing I actually said}'
+    UPDATE: seems to appear on conv_query_callback (in the first iteration of streaming response chunks), not text_edit_callback as I first thought. Does not change any messages after the first one. Also does not add a Me each team (i.e. after 10 queries, we still only have 2 Mes for the first user turn and 1 for the rest). Will require more investigation.
+-consider: can I provide better support for a text only mode? Right now I'm not sure this works, especially not at first. Would probably need "Me:" to show up in textbox on persona_select.
+
+8/7/21
+------
+X -fix conv_query_callback bug: changes first line to 'Me: Me: {thing I actually said}'
+    UPDATE: bug in text_edit_callback text parsing caused by removing the summary from the displayed chat. This meant partitioning on "\n\nMe: " behaved unexpectedly for the first user turn because of the lack of newlines.
+X -consider: how might we add (optional?) auto punctuate mode for conv? Constant text edits, especially without vim hotkeys, ruins the fun a bit.
+    UPDATE: actually the basic functionality is quite easy to add with the components I've built. Tested it out and engine_i=3 does make the experience quite a bit smoother. Most of the fixes are pretty small but there's a big difference in user experience between needing to edit every transcription (even if it's just a couple punctuation marks) and just being able to talk. Engine_i of 0 and 1 didn't seem to work so well here though. Still need to try 2.
+~ -look into speech_recognition first word errors
+    UPDATE: couldn't find any references to this but looks like there are a bunch of settings I haven't tuned. Should look through those at some point and see what I can find.
+-consider: can I provide better support for a text only mode? Right now I'm not sure this works, especially not at first. Would probably need "Me:" to show up in textbox on persona_select.
+
+8/8/21
+------
+-see if I can generate a shorter/cheaper punctuation prompt and kwargs. Punct prompt was originally developed to punctuate large-ish chunks of youtube transcription text so I believe the samples I used were pretty long. Most chat responses are very short so I think we could save $ by using shorter examples. Chat specific examples might also improve performance - I can use real transcription errors to help the model learn better fixes (i.e. how the transcriber often misses the first word).
+    X -run transcribe a bunch of times to try to determine common transcription error types
+    -prototype prompt in openai web UI
+    -save prompt and config file (e.g. "punctuate_transcribed")
+    -update naming/GUI if necessary (don't want 2 punctuate versions to show up in promptmanager task options)
+X -consider: should I make auto-punctuation optional? It really does seem to improve the experience. If I do make it optional it should just be a general mode, not a button you click to auto punctuate a single turn because that ruins the point.
+    UPDATE: no, with a shorter transcription-specific punctuation prompt we should be able to make this have negligible cost (e.g. 1 cent per 50 transcriptions with engine_i=0 should be doable)
+    X -consider: maybe change default mode to make this a general mode, not a single transcription button too? Less important but still seems like a good idea.
+        UPDATE: Yes, I like this idea. Haven't implemented it yet.
+~ -look through speech_recognition settings - maybe can reduce premature timeouts, errors on first word, etc.
+    UPDATE: got through first few. See file in data/tmp. Slightly increased pause threshold from .8 sec to .9.
+
+8/9/21
+------
+X -continue going through speech_recognition options 1 by 1
+    ~ -listen_in_background
+        UPDATE: looks like this could plausibly remove the need to hit the transcribe button. However, need to confirm that threading doesn't cause dearpygui problems. Also unclear what would happen if user speaks during a query. Maybe stop it during a query and then restart it. Or maybe it will work fine as is?
+    ~ -recognize_google(show_all=True)
+        UPDATE: Could have prompt get a piece of text and a confidence score and allow slightly bigger changes when confidence is low. But gp3 isn't great with numbers IIRc so this might do more harm than good.
+    ~ -audio.get_wave_data()
+        UPDATE: Got this working with listen in background (didn't try regular listen but I'd imagine that's even simpler bc no need to stitch together segments).
+X -prototype new shorter punctuation prompt in openai web ui
+    X -save prompt and config file (e.g. "punctuate_transcribed")
+	X -add to gui conv mode
+		UPDATE: updated task name, still untested in gui though.
+    -update naming/GUI if necessary (don't want 2 punctuate versions to show up in promptmanager task options)
+
+8/10/21
+-------
+X -maybe add conv mode checkbox to do auto-punctuation or not?
+	X -maybe update default mode to do this too?
+	_ -remove auto-punct button/functionality from default mode?
+		UPDATE: Looked and this actually does other stuff too (e.g. trailing colon for How To task). Keep.
+	X -consider how to handle default mode task list: should both punctuate tasks really show up in listbox?
+		UPDATE: we already only see Punctuate as long as I don't update the NAME2TASK dict. Think that's fine.
+	~ -clean up transcribe callback
+		UPDATE: keep before/after print statements for now. Nice way to keep an eye on how effective auto-punctuation is.
+~ -consider how we might integrate listen_in_background and/or auto start regular listen() method between gpt3 queries
+	UPDATE: persona_select_callback and conv_query_callback both trigger transcribe callback now.
+~ -start updating conv mode's speaking to not wait for whole response to complete. With engine_i=3 we seem to get longer responses and this functionality seems worth it to port over.
+	UPDATE: extracted relevant query_callback functionality into new function. Still a few things to look into and test.
+
+8/11/21
+-------
+X -replace conv_query_cb logic w/ concurrent_typing function. See if this works.
+	-does conv_query callback not hide interrupt msg at end? Or maybe that's part of read_response and I can remove it from default query cb?
+	-does default mode forget to look at read_checkbox_id? Looks like we might just always read it atm. Fix if necessary.
+	X -replace default mode query concurrent typing logic w/ call to function I factored out.
+~ -check default max timeout for listen() and consider if we need to increase it
+	UPDATE: docs claim timeout=None by default which means we never time out, but usually seems to timeout after 3-15 seconds. Unclear what's going on here.
+	~ -consider: should we start listening immediately when entering conv mode? Transcribe button is mostly unnecessary now so I'm tempted to delete it, but I don't know if we should thrust a user immediately into a conv when they enter conv window.
+		UPDATE: if we're even going to consider this, we need to figure out a way to prevent timeouts first.
+~ -consider: auto query when transcription is done? This doesn't give us a chance to clean up or edit transcriptions manually but maybe with gpt3 postprocessing they're good enough. And I bet this would make the conv feel much more real.
+	UPDATE: hold off for now. Would be cool but I need to see more evidence that an edit-free conv (or at least no manual edits) provides good enough quality.
+
+8/12/21
+-------
+_ -plan how we might be able to swap in listen_in_background
+	UPDATE: unnecessary. Listen actually does exactly what we want, the only issue is that the energy_threshold can get things wrong and trigger prematurely. But listen_in_background wouldn't solve that problem either.
+	_ -start implementing
+~ -work on dockerfile, docker-compose, etc.
+	UPDATE: draft of dockerfile and docker-compose. Still working on this.
+X -make fuzzywuzzy speedup optional for htools
+	UPDATE: removed from defaults and added new versions with it and with speedup. Eventually should update to make a version for each module.
+
+8/13/21
+-------
+X -troubleshoot gcc failure in docker build
+	UPDATE: fuzzywuzzy[speedup] required apt install build-essentials.
+~ -continue working on docker, docker-compose, etc.
+	UPDATE: Some solid progress. Got python packages to install and volumes to mount. However, pandas_flavor is causing import issues (see misc.txt for error).
+
+8/14/21
+-------
+X -troubleshoot pandas_flavor xarray import bug
+	UPDATE: specified old pandas_flavor version w/out xarray dep.
+~ -add dockerignore so only relevant data subdirs are mounted?
+	UPDATE: doesn't work on volumes apparently, just copy/add commands. Instead, manually mount each data subdir using multiple vars in setenv.sh. Not ideal but it works.
+~ -more docker troubleshooting
+	UPDATE: docker-compose up not working but wrote out equivalent command in start.sh for now. Nltk was missing a download so I added that in dockerfile. Added Speechrecognition package dep (not in jabberwocky, just in bin I guess). Didn't quite get gui running (see error in misc.txt) - I think this error may be related to running the gui in docker. Not as straightforward as I thought. Found some hints of possibly getting this to work but it would only work on mac.
+
+8/15/21
+-------
+~ -more docker troubleshooting
+	X -install xquartz
+	~ -follow tutorial to connect from container
+        UPDATE: made a tiny bit of progress. I think the problem is not (yet) the connecting to my mac bit, it's something about the rendering engine dearpygui uses under the hood. Related to nvidia drivers?
+
+8/16/21
+-------
+-more docker troubleshooting
+    ~ -read through tabs about error trying to open drirc files
+        UPDATE: sounds like this is not really the problem, those files are optional, it's the other issues (fbconfig, swrast) that I already tried to fix that are the problem.
+-consider: worth giving pyinstaller another shot?
+    X -create very simple app
+    ~ -see if I can get that to generate exe
+        UPDATE: even barebones app fails w/ segmentation fault. Stack suggests this may just be a mac thing.
+~ -look into pyinstaller alternatives
+    UPDATE: py2app maybe?
+-other options (break from IT troubleshooting):
+    ~ -maybe update concurrent typing func to sentence_tokenize repeatedly rather than check for period (otherwise we get unnecessary pauses for sentences like "J.T. Snow hit a fly ball."
+        UPDATE: started on this (see tmux pane 2)
+    -write documentation for running w/ docker in docker dir and/or project root
+    X -fix stream_text issue
+        UPDATE: realized we don't really want random subwords because we can get splits like "It is over. W", "ho are you?". Although it's it possible for gpt3 to give us something sort of like that (maybe w/ more common subword than W but still).
+
+8/17/21
+-------
+~ -continue working on possible version of concurrent_typing that uses sentence_tokenize rather than check for period
+    UPDATE: Some progress but there's a ways to go. Rewrote simple version of read_response as a coroutine which lets us pass in tokens 1 at a time and reads sentences when appropriate. Wrote custom Thread class to try to let us pass things to it after starting. Runs without raising error but doesn't work as intended yet - while it speaks at the appropriate times, speech is once again blocking.
+    -integrate into GUI
+-look into other pyinstaller alternatives (py2app looks alright but want to explore options)
+
+8/18/21
+-------
+X -try updating custom Thread class to use queu like stackoverflow example. Hopefully this will make speech non-blocking.
+    UPDATE: works in notebook. Still lacking some dearpygui details and error monitoring though.
+    _ -alternate plan: make coro launch thread w/ speaker when necessary?
+~ -port to py files
+    UPDATE: ported read_response_coro and started adding in dearpygui-specific functionality. Still haven't ported concurrent_typing().
+
+8/19/21
+-------
+X -port concurrent_typing func (don't delete old one yet)
+    X -update so data is passed to thread so it can pass it to coro
+X -test read_response_coro WITHOUT any interrupt monitoring (keep it simple)
+    X -debug if necessary
+~ -add in interrupt monitoring
+    ~ -test
+    ~ -debug if necessary
+        UPDATE: almost working. Just found a new bug though: I allowed concurrent_speaking_typing function to run to completion without interruption but it never reached the call to hide the query_msg_id ("typing..."). This means I can't make additional queries. Also, while interruption appears to work, I'm worried there might still be an error: we see thread raising an error even though I feel like all the error handling in concurrent_speaking_typing() should have accounted for this.
+
+8/20/21
+-------
+X -investigate new bug: concurrent_speaking_typing never reaches the last hide_item call when not interrupted
+    UPDATE: speaker contextmanager was never closing to checkbox monitor was never breaking out of its infinite loop so we could never join the monitor thread. Updated speaker session so we can start and end it manually.
+-look more into what overriding thread.run() is doing. Try to nail down concerns about error in thread (seems it continues to send values after coro is done accepting them).
+~ -clean up code (lots of commented out bits, print statements, etc. from porting new concurrent speaking functionality)
+
+8/21/21
+-------
+X -finish cleaning up code in concurrent_speaking funcs, read_response funcs (comments, print statements, etc.)
+~ -bug: can't seem to halt listener? Can only end conv which erases history or wait for listener to time out.
+    UPDATE: added checkbox to allow us to interrupt listener. Wrote propagatingThread to see if we can raise error directly rather than using convoluted method of passing list of errors around and constnatly checking it. Tentatively works in ipython but in dearpygui it seems that we're still not catching errors in the main thread.
+-See if I can reproduce issue where thread encounters error even though it doesn't raise an error in the overall program (seems it continues to send values after coro is done accepting them). Think maybe I fixed this with the "if val is None" check in thread.run()? Maybe look more into what overriding thread.run() is doing. 
+-look into gpt-neo funcs - seems like these stopped working after a while
+
+8/22/21
+-------
+~ -investigate stop_recording bug. Seems PropagatingThread works in ipython but not in dearpygui. Investigate how dearpygui deals with threads (guessing there's some magic going on that's causing problems here).
+    UPDATE: realized PropagatingThread actually was NOT working as intended even in ipython. Fixed that but found that while new method works in ipython, it does not work in dearpygui. Also found that dearpygui used to use run_async_function for this type of thing but removed it in favor of threads. Even _thread.interrupt_main() does not work in dearpygui.
+
+8/23/21
+-------
+-brainstorm more ways around threading error propagation problem
+    X -look into adding checkbox callback that raises error directly (why didn't I do this earlier? I thought maybe this wasn't an option for checkbox but it looks like it is)
+        UPDATE: Ah, that's why. Callback blocks next callback, so once we hit record no callbacks will trigger until that function exits, meaning interrupt callback can't interrupt until it's too late.
+    X -look into speech_recognition interruption strategies (that's the main thing I want to interrupt. Investigated briefly already and it's not promising)
+        UPDATE: no promising leads.
+    UPDATE: also tried making thread a global var, starting thread with just the monitor thread and the speech_recognition stuff (was hoping that bc we're not just in the callback thread that the interrupt would work again) but neither worked. New ideas added below.
+    -try writing interruptable thread, then launch monitor in 1 thread and listener in 1 interruptable thread. Then use inf loop to frequently check if monitor thread is alive and if not, interrupt listener thread. May be able to use existing _stop method.
+    ~ -similar to above but use multiprocessing.Process. Has built in terminate() method.
+        UPDATE: this looks like it's working! Still need to polish things up a bit and test diff situations but this looks promising.
+-look into gpt-neo funcs - seems like these stopped working after a while
+
+8/24/21
+-------
+-confirm process-based approach to interruption works when quitting immediately
+    X -when quitting pre speech
+    _ -when not quitting
+        UPDATE: recording no longer works :(. I guess we can't run speech_recognizer in another process? Also tried running the recognizer in a thread inside a process and that also fails. In ipython, any use of a Process with speech_recognition results in a portAudio error. Multiprocessing.pool.ThreadPool shows some promise (can run speech_recognition listener; can interrupt, at least in theory). However, interrupting it in the middle of speaking seems to fail (only if listening has started but we haven't started talking yet). Also not sure if I'm imagining it but it seems real slow.
+    -when quitting mid speech
+    -when quitting after speech, during google TTS
+    -when quitting after TTS, during gpt3 punctuate
+-clean up transcribe_callback, transcribe, concurrent_typing, Propagating thread, monitor_checkbox funcs (comments, print statements, etc.)
+    -rm useless return value from transcribe (or figure out a way to return it and get rid of results.append)
+-check interruption works in conv mode - does this require any changes?
+-look into gpt-neo funcs - seems like these stopped working after a while
+
+8/25/21
+-------
+X -see if there's a way to make threadpool faster
+    UPDATE: confirmed it was slower than regular Thread in ipython though not as slow as I expected.
+    -see if we can interrupt threadpool in ipython
+    -consider: maybe only support cancellation before speaking starts or before gpt3 punctuate?
+    ~ -consider other alternatives: e.g. say "STOP" (but a more distinctive phrase?) to cancel and not punctuate.
+        UPDATE: tried one more standard method of writing my own stop method but I'm having trouble making stop throw an error that run() can see.
+X -look into thread._stop based interrupt method
+    UPDATE: doesn't look useful. Realized example still uses it for a looping style setup with frequent checks.
+X -move 'listening' message a bit later
+    UPDATE: will require further testing and ideally I'd move it even later, but I did move it a little bit. Didn't notice much of a diference though.
+
+8/26/21
+-------
+~ -try reproducing threadpool method in ipython and see if we can interrupt record() func there (recall problem: can't interrupt DURING speech. Also, interruption generally seems very slow.)
+    UPDATE: wasn't able to interrupt speaker here either once it started.
+~ -try pydev method using frames
+    UPDATE: started but found a comment on that post suggesting another way using ctypes. Tried that instead and it SEEMS to be very promising, fingers crossed. Added it to gui and so far everything looks good, though not extensively tested.
+
+8/27/21
+-------
+X -add extra ctypes call for when threads_affected > 1 (see programtalk tab)
+    X -adj var names to be more descriptive
+    X -document: doesn't work w/ time.sleep
+X -test ctypes-based interrupt more thoroughly (insert time.sleep between steps to test. If several work, at some point it might become clear this method works and maybe we don't need to formally test every possible variation)
+    X -interrupt before start mic
+    X -interrupt during ambient noise adjustment
+    X -interrupt during talking
+    X -interrupt during listening w/ no talking
+    X -interrupt after talking, during TTS
+    X -interrupt post TTS, pre-query
+    X -don't interrupt (actually record something)
+X -code cleanup
+X -add interruption checkbox to conv mode
+X -move show during message in transcribe so "listening..." doesn't show too early. If we speak while recognizer is still adjusting to ambient noise level, it will miss it.
+    UPDATE: also added 'adjusting mic' msg that shows before 'listening...'
+X -test interruptions in conv mode
+
+8/28/21
+-------
+X -look into slow mic startup - do we really need to adjust for ambient noise every time?
+    UPDATE: docs say no. Technically if we turn on/off a fan midway through a conv, this would be a problem, but for now let's try just calibrating once at the beginning.
+X -look into possible lack of auto-listen in conv mode (though now that I think of it I didn't make any queries today aside from punct, so there's really no reason to think it's not working as expected)
+    UPDATE: the problem I thought was there wasn't, but I did find some old calls that needed to be updated based on my updates to the data passed to transcribe_callback and the interface of checkbox_monitor.
+~ -prototype god prompt using standard method
+    X -check out fine tuning endpoint
+        UPDATE: see notes in misc.txt
+
+8/29/21
+-------
+X -update transcribe_callback docstring w/ new expected keys
+X -investigate possibly broken gpt-neo funcs
+    UPDATE: Looks like this may be an api problem? Realized if I generate text on the modelhub api, we get a message saying model loading and if I later try to query it everything works (and generally quite quickly). The slow responses and errors must be because the model is not currently loaded on their end. Looked a bit online but couldn't find any mentions about this.
+~ -start building gpt-j query func
+    UPDATE: mostly working, just need to see if there are any warnings or extra things I need to add to handle unavailable options. Also check if this works as a mock func.
+-more god prompt prototyping
+-look into py2app for exe generation
+-description viewable on pypi (think this needs to be rst, not md)
+
+8/30/21
+-------
+-finish gptj func
+    X -warnings/errors/handling for unavailable hypers?
+    X -does this work as a query_gpt3 mock func?
+        UPDATE: can't test because api seems to be down atm but after checking what mock_func is expected to do, it should work fine.
+    X -port to lib
+    X -document (include some details on what engine this is equivalent to. IIRC it's curie, aka engine_i=2, but confirm)
+X -add gptj option to default mode?
+    -add to conv mode?
+_ -try various default tasks with gptj a bit and see how it performs
+    UPDATE: gptj api down so can't try in GUI.
+    ~ -try conv mode w/ gptj
+        UPDATE: gptj api is down so can't try it in GUI. Tried a prompt in online UI and there were some noticeable errors but it was good enough that maybe it's worth adding to my GUI (if api seems to have decent uptime). Not a bad free option, especially with a more carefully constructed prompt.
+    ~ -try code generation w/ gptj
+        UPDATE: not bad. Yikes.
+~ -look into other pyinstaller alternatives (py2app looks alright but want to explore options)
+    UPDATE: found pyoxidizer and nuitka but haven't looked into them much yet.
+
+8/31/21
+-------
+X -add gptj option to conv mode
+X -update model blurb to include gpt-j
+X -fix save issue
+    UPDATE: strangely, missing os import. Wonder how that worked before. Maybe it got lost in refactoring or due to accidental vim magic.
+X -fix logging issue
+    UPDATE: can't save function as json so when mock_func is provided it failed. Save str(mock_func) if is Function.
+~ -investigate new bugs when using gpt-j (or maybe any time stream=False? Unsure)
+    ~ -typing is super fast (if effect is there at all? Hard to tell)
+        UPDATE: for non-gpt models, stream is False and we currently seem to be returning the mocked response (i.e. not wrapping it w/ stream()) so the first "token" is the prompt and the second is the full response. Surprisingly, this occurs in both default and conv mode - could have sworn I'd implemented this already but I guess not.
+    ~ -instead of reading last sentence, speaker starts over from the beginning and reads up until the last sentence again before quitting (need to confirm that behavior but that seems to be what's happening)
+        UPDATE: same root cause as prev issue. I guess that's good.
+-look into py2app for exe generation
+    -look more into pyoxidizer and/or nuitka if this fails
+
+9/1/21
+------
+X -fix newly discovered bugs when stream=False (see yesterday - need to wrap text response in streamable gen, ignoring prompt)
+    X -check if that fixes lack of typing effect
+    X -check if that fixes skipping last sentence + repeating first
+    X -clean up debugging statements in utils.read_response_coro
+X -update persona_select_callback so listening does not begin automatically after hitting "end conversation" button (decided this felt unnatural)
+
+9/2/21
+------
+~ -look into py2app for exe generation
+    UPDATE: some progress. Got app to build in Alias mode (similar to editable mode for pip).
+    -look more into pyoxidizer and/or nuitka if this fails
+X -launch big sleep training run to generate logo/icon (if I ever get exe to build I can provide an icon. One option is to try to generate one. Don't know how well this will work but I want to try the notebook anyway so this is a fine place to start.)
+-look through some logos/icons for ideas in case I go manual route
+    UPDATE: relevant components: audio lines, microphone, telephone, two faces, message bubbles, J, 
+
+9/3/21
+------
+~ -continue py2app exe generation troubleshooting
+    ~ -start with err in lower left pane "no such file or directory ...python3.7/site-packages/rtree/lib"
+        UPDATE: found some signs rtree is a common issue here. Tried upgrading rtree (a few people claim that fixes it but some say otherwise) and started rebuilding. Started reading a bit about py2app recipes. After looking into sip warnings, sounds like the build isn't working even aside from this: if it completes, we'll still be missing some (all?) packages.
+X -check in on big sleep training run
+    _ -maybe try a new prompt
+        UPDATE: Was okay but not really what I want for icon.
+X -start editing manual icon in gimp
+    UPDATE: done. Worked pretty well IMO!
+
+9/4/21
+------
+X -switch app default mode to Conv
+    X -make first in main menu
+    X -rename default mode to "task" mode and update all func names, var names, etc.
+X -description viewable on pypi (think this needs to be rst, not md)
+    X -add icon to both versions of the readme
+-py2app troubleshooting
+    X -check on build
+        UPDATED: failed w/ same rtree error.
+    -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
+
+9/5/21
+------
+X -record new example gif showing concurrent typing/speaking (punctuation default prompt)
+    X -record new conv response gif/mp4
+    X -figure out how to add mp4 to github readme (it is possible now!)
+    X -update readme
+    X -update pypi readme
+    X -add blurb to pypi readme
+-py2app troubleshooting
+    -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
+    -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
+    X -join dearpygui discord
+        -msg for help there? May be difficult since it's now a pretty outdated version.
+~ -look into adding icon w/ dearpygui (bundling should do this too but would be nice if it appeared when running manually)
+    UPDATE: github conversations imply it is in this version but I'm not finding any of the functions they listed so maybe it got pushed to a later version.
+
+9/6/21
+------
+X -noticed readme auto table is from notebooks dir. Try to diagnose cause and fix it.
+    UPDATE: py2app setup.py in project root made htools cli think notebooks was a package. Should probably make user specify lib dirs separately from non-lib dirs in future htools update, but for now I just move the setup.py file to a new subdir and made a note of the issue in htools.
+    X -check if lib readme works after fix (currently has correct refs to lib, note notebooks. Weird.)
+X -change task option order? Either prioritize manually (default first, punct second, etc.) or alphabetize. Right now it looks to be neither.
+    UPDATE: Turns out I just manually specified the order. Updated it so default is first. Order after that is less important but I tweaked it a little.
+X -clear name in Add Persona input after adding
+    UPDATE: fixed. Also realized the In Progress message wasn't disappearing at the right time since persona_select_callback triggers transcription so it continued to show until we finished listening. Subtlety about try/except/else/finally/separate block when returning in Except.
+    X -check that I can rm commented out same_line() calls before add persona msgs. Then either uncomment or rm.
+        UPDATE: Removed.
+    X -made same changes in custom add_persona mode (I think it uses separate functionality so the above changes prob didn't fix it, but check)
+_ -add start conv button? Not technically necessary but maybe it would be good from a UX perspective?
+    UPDATE: Decided to skip this. Added an explanation to the stop_conv button instead.
+X -show error msg if user tries to add empty name in auto add persona mode
+    UPDATE: also strengthened logic here and in add custom persona mode so that leading/trailing spaces are stripped (also from summary in custom case) and therefore ' ' triggers the same error.
+~ -add some basic docs to GuiTextChunker
+    UPDATE: some methods are still undocumented but I wrote something to remind myself of the gist of what's going on. Can decide whether to add more later or not.
+-look into possibility of keyboard shortcuts?
+    UPDATE: seeing some promise here with is_key_down(), maybe is_key_pressed(), set_key_press_callback().
+
+9/7/21
+------
+X -consider: rename Record to Talk or Transcribe? Undecided.
+    UPDATE: no. None of the alternatives seem clearly better.
+-look more into possibility of keyboard shortcuts
+    ~ -diff between is_key_down and is_key_pressed?
+        UPDATE: Still a tad unclear but key_press_callback seems to be working well. Use is_key_down to check if CTRL (the anchor hotkey) is down and check if data is one of the modifier keys.
+    ~ -if relatively quick, add hotkey for record, query, maybe cancel record?
+        UPDATE: added hotkey for record (ctrl+shift). Could still change this though. Briefly looked into possibility of a cancel hotkey but that's harder since it currently occurs by interrupting a thread defined inside transcribe_callback. Also tried seeing if I could change pause threshold during listening but it doesn't seem to take effect til afterward listening completes.
+
+9/8/21
+------
+X -document record hotkey in conv mode button
+    X -in task mode button
+-try to add other hotkeys
+    _ -save
+        UPDATE: this callback is a bit different since there's a popup involved that requires a mousebutton event. Deleted my attempt.
+    ~ -query
+        UPDATE: this seems rather buggy, esp in conv mode (?).
+    X -fix other hotkey bugs: old text_edit callback was overriden so new writing wasn't updating prompt.
+X -htools decorator: min_wait
+
+9/9/21
+------
+X -instructions in readme
+    X -how to add your api key
+    X -how to install packages
+        _ -makefile command?
+    X -how to run
+    ~ -hotkeys
+        UPDATE: depends on whether I get these working or decide to skip them.
+-try enabling just transcribe hotkey. Do we still get errors?
+    -try enabling just query hotkey. Do we still get errors?
+    -fix issue if possible, otherwise rm
+    -clean up comments, extra code
+X -evaluate difficulty of adding "delete persona" option. Mostly helpful for testing and it's not hard to delete from the terminal but might be nice.
+    UPDATE: not super clear what UI for this would even look like. Now that I'm (hopefully) done testing functionality for now, I think this is a "skip" at this point.
+~ -evaluate difficulty of changing typing from word-level to character level (currently whole tok/word appears at a time which doesn't look quite as real)
+    UPDATE: maybe possible but not super easy with my current setup - we always re-chunk text before displaying it so switching to char level would mean re-chunking ~3-5x as often. Still considering.
+
+9/10/21
+-------
+X -try enabling just transcribe hotkey. Do we still get errors?
+    UPDATE: no (checked both modes).
+    X -try enabling just query hotkey. Do we still get errors?
+        UPDATE: no errors in task mode, yes in conv mode. Further clues: seems like if I press hotkey while cursor is in text input box, we get the error. But if I press it while something else is selected it works. I'm thinking maybe dearpygui can't update the text in an input box while the cursor is in it. That might explain why task mode seems to work ok - I'm usually in the input box so the output box can be updated without problem. Further update: task mode fails if cursor is in the output text box! I think this must be it. Possible solution: make escape (or caps lock on my computer) the anchor hotkey. That deselects the textbox. Further update: escape acts as delete+esc which is not great. But I found an undocumented focus_item() function which sounds promising (just choose some other window/item to focus on when hotkey is used).
+
+9/11/21
+-------
+X -try having query hotkey auto-focus an element that's not the output text box. Otherwise we can't update it.
+    UPDATE: focus_item() not available til later version. Tried escape as hotkey again but realized it actually acts as Undo, not backspace, which I can't figure out how to override. Tried creating text item but that didn't change focus. Tried creating dummy window and that does change focus, though a couple issues remain. Query hotkey works both in conv mode and task mode, regardless of cursor location. Record hotkey works in both modes IF cursor is not in record text box (in conv mode, that means the only text box) but works if it's anywhere else.
+    -clean up comments, extra code
+    -update readme hotkey section depending on whether hotkeys are ultimately included or not
+-fix new bug: no error msg if we try to save to a path that exists
+-update postmortem
+
+9/12/21
+-------
+X -add new line before edit_warning_msg
+-try commenting out dummy window add/del (both in hotkey_handler and transcribe_cb). Check if record hotkey works when cursor in output text box in conv mode
+    UPDATE: doesn't work when cursor in output text box.
+    X -same as above but in task mode
+        UPDATE: doesn't work here either. This confirms that the addition of the dummy window doesn't break that functionality - it simply doesn't solve it the way it does for query callback.
+    X -continue debugging why record hotkey not working
+        _ -write list of all possible points of failure (window doesn't appear, does but isn't deleted, etc.)
+        _ -try to narrow down list by ruling out each item 1 by 1
+        UPDATE: transcribe hotkey immediately triggers transcribe cb which was auto-deleting my dummy window at the start and thus returning focus to the textbox the dummy was meant to take focus away from. I added an option to postpone dummy deletion to the end of the transcribe callback and this fixes recording in both modes.
+    X -clean up comments, extra code
+    X -document new data args in transcribe_callback and add comments in hotkey_handler
+X -update readme hotkey section depending on whether hotkeys are ultimately included or not
+X -update record button tooltip w/ or w/out hotkey
+    X -update query button tooltip w/ or w/out hotkey
+    UPDATE: decided to remove tooltips for hotkeys. Just specify in readme.
+X -record new Add Persona example
+    X -update main readme
+    X -update pypi readme
+X -update pypi readme w/ other recent readme changes
+X -decide what to do about docker and setup dirs (keep for potential changes later? Or del to keep things tidy?)
+    UPDATE: leave in but add note in readme that they're not working.
+_ -fix new bug: no error msg if we try to save to a path that exists
+    UPDATE: failed to reproduce. Maybe the error msg actually did appear last time and I didn't notice?
+X -check: can we force text input to auto focus on the bottom portion when there's a lot to scroll through?
+   UPDATE: no. dearpygui 0.7 feature. 
+X -update and finalize postmortem
+~ -make sure this can actually be installed on another computer
+    UPDATE: 2 issues remain: need to download nltk.punkt and need to investigate segfault 11 (maybe due to lib/core.py?).
+
+9/13/21
+-------
+X -try to update lib/setup.py to install nltk punkt module
+    UPDATE: added makefile install cmd. Didn't like the idea of installing on import and overriding installer cls in setup.py sounds unreliable based on stack comments.
+    X -update readme w/ install instructions for nltk
+    X -update lib/readme
+X -investigate "segfault 11" error (maybe due to lib/core.py? Only occurs on work machine)
+    UPDATE: segault triggered by line "start_dearpygui(primary_window='primary_window')". That's the window with everything so with that commented out the script runs w/out error but nothing happens (no gui pops up). Further update: font file was missing.
+X -fix any remaining install issues and confirm app works
+    UPDATE: added brew install of portaudio to makefile and pyaudio python dep to requirements. Updated readmes w/ notes about questionable non-mac support
+X -fix video in lib readme (can't embed, just link to it - html was showing up otherwise)
+
+
+-------------------------------------------------------------------------------
+
+backlog
+-------
+
+easy tasks for low energy days
+------------------------------
+-
+
+Won't Do (things I considered doing but ultimately decided to skip, at least in this project)
+---------------------------------------------------------------------------------------------
+-update typing to occur w/ every new char rather than every new tok (simplest way would require re-chunking after every char but that seems excessive, esp since long convs lose site of live typing anyway since dearpygui didn't add support for updating focus w/ scrollbar until 0.7).
+-prototype cover letter writer from job posting
+-consider image task tie-ins [already allowed a ton of scope creep. At the very least leave this for a later project.]
+    -consider ways to interact with internet (i.e. scrape some data based on gpt3 response?)
+-document session and transcript classes in core.py (most of those ended up not being used for the GUI)
+-update converse contextmanager to have input baked in (I think there are enough potention options for interesting new interfaces (sms, alexa, VR/AR) that I'd prefer to devote any future efforts to one of those rather than something that's likely limited to CLI-type usage.
+
+Future Extensions
+-----------------
+-custom voices w/ something like tacotron
+-face animation (look like they're speaking the words in sync with audio)
+-support for text messaging, Alexa, other modes of communication?
+-support to record conversation (audio)
+-some sort of coding mode
+-delete persona
+-add new prompt in task mode
+-edit persona
+-py2app troubleshooting
+    -msg dpygui for help w/ bundling? May be difficult since it's now a pretty outdated version.
+    -investigate: am I supposed to manually provide requirements for py2app? Seems like it's trying to install many libs I don't need. Is it pulling this from the active env?
+    -possible strategy: try building a trivial version of app (no deps, just a 1 line file). Guessing this will still fail based on the errors I'm seeing.
+    -look more into pyoxidizer and/or nuitka instead
+-look into new nvidia package which might be a good alternative for transcription and/or TTS (sentdex has a video on it which might help)
+-update personal site w/ quick summary, things learned, etc.? (Not sure there's that much interesting/useful stuff for me to document really. Couldn't get packaging working, dearpygui API looks totally different now, haven't really spent much time USING the thing so don't have much interesting to say about gpt3. Maybe after talking to gpt3 for a few weeks or months I'll have more interesting insights here.)
