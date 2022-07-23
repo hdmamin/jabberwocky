@@ -2817,6 +2817,7 @@ X -video stuff
 
 7/23/22 sat
 -----------
+-see if we can remove black background/narrow shape of alexa video
 -prep r/lex demo post
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
 	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
