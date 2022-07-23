@@ -3,18 +3,9 @@
 <h1 align='center'>Jabberwocky</h1>
 </p>
 
-<table border="0" cellpadding="0" cellspacing="0">
-<tr>
-<td>
-<video width="250">
-<source src="https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4" type="video/mp4">
-</video>
-</td>
-<td>
-<a href='https://youtu.be/wlJI9fzWFCc'><img src='https://img.youtube.com/vi/wlJI9fzWFCc/0.jpg'></a>
-</td>
-</tr>
-</table>
+| Video 1  | Video 2 |
+| ------------- | ------------- |
+| <video src="https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4">  | _
     
 # Project Description
 
