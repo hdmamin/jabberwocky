@@ -2807,7 +2807,7 @@ X -audio cleanup
 7/22/22 fri
 -----------
 -video stuff
-	-chose 1 for readme and maybe 1 for reddit (could be same one?)
+	-choose 1 for readme and maybe 1 for reddit (could be same one?)
 	-check if someone with link to one video can view the other via my profile
 	-add video to readme (leave private for now)
 -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
