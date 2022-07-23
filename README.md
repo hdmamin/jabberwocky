@@ -3,10 +3,10 @@
 <h1 align='center'>Jabberwocky</h1>
 </p>
 
-| GUI  | Alexa Skill |
-| ------------- | ------------- |
-| <video src="https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4" height="400">  | <video src="https://user-images.githubusercontent.com/40480855/180587882-8eb0e689-86dd-48fe-9ce3-401c360771e8.mp4" height="400">
-| Neil de Grasse Tyson discusses the state of science education. | AI researcher and pocaster Lex Fridman discusses robot conceptions of intelligence. |
+| |
+| ------------- |
+| <video src="https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4" width="400">  Neil de Grasse Tyson discusses the state of science education.  |
+| <video src="https://user-images.githubusercontent.com/40480855/180587882-8eb0e689-86dd-48fe-9ce3-401c360771e8.mp4" width="400"> AI researcher and pocaster Lex Fridman discusses robot conceptions of intelligence. |
     
 # Project Description
 
