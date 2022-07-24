@@ -12,9 +12,10 @@ I'm keeping this as a private skill for the time being - it was initially design
 git clone https://github.com/hdmamin/jabberwocky.git
 ```
 
-2. Install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're using Mac OS and virtualenv, you can use the command
+2. Enter the project directory and install the necessary packages. I recommend using a virtual environment of some kind (virtualenv, conda, etc). If you're using Mac OS and virtualenv, you can use the command
 
 ```
+cd jabberwocky
 make alexa_env
 ```
 
