@@ -47,7 +47,7 @@ echo your_banana_api_key > ~/.banana
 
 ```
 source alexa/venv/bin/activate
-python alexa/main.py
+python alexa/app.py
 ```
 
 5. Use ngrok to expose your endpoint to Alexa. (In theory you can also use AWS Lambda for this, but that seems to be built for smaller skills with less state.)
@@ -59,7 +59,7 @@ make ngrok
 This should print a url ending with "ngrok.io" in your terminal. Copy that url and run `curl {url}/health` (paste your actual url in place of {url}). The response should be:
 
 ```
-{"status":200}
+{"status": 200, "source": "jabberwocky-alex"}
 ```
 
 **Developer note:**
