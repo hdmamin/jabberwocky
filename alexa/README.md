@@ -56,7 +56,7 @@ source alexa/venv/bin/activate
 python alexa/app.py
 ```
 
-6. Use ngrok to expose your endpoint to Alexa. (In theory you can also use AWS Lambda for this, but that seems to be built for smaller skills with less state.)
+6. Use ngrok to expose your endpoint to Alexa. (In theory you can also use AWS Lambda for this, but that seems to be built for skills with smaller environments.) If you haven't previously installed ngrok, you must first run `brew install --cask ngrok`.
 
 ```
 make ngrok

@@ -34,9 +34,10 @@ run:
 ngrok_url:
 	curl localhost:4040/api/tunnels | jq '.tunnels[0].public_url'
 
-# Start ngrok in background and print the url in your terminal.
+# Start ngrok in background and print the url in your terminal. Sleep briefly in between to avoid errors - I guess it can take some time for the URL to become available.
 ngrok:
 	nohup ngrok http 5000 > /dev/null &
+	sleep 1
 	$(MAKE) ngrok_url
 
 run_alexa:
