@@ -1,6 +1,6 @@
 banana-dev==2.0.2
 colorama==0.4.3
-htools[speedup]==7.1.0
+htools[speedup]==7.1.1
 nltk==3.4.4
 numpy==1.21.6
 openai==0.18.1
@@ -10,5 +10,6 @@ pyyaml==6.0
 # Must install torch for transformers pipeline import to work.
 torch==1.10.2
 transformers==4.19.2
+unidecode==1.0.23
 wikipedia==1.4.0
 youtube-transcript-api==0.4.1
