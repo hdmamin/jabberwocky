@@ -16,6 +16,8 @@
 This project provides two audio interfaces (a conversational alexa skill and a desktop GUI) to GPT-3 and a few of its open source variants. This provides a convenient way to interact with various experts or public figures, as mimicked by GPT-3: imagine discussing physics with Einstein or hip hop with Kanye. Instead of going to the OpenAI playground, writing a bio, and periodically deleting parts of your conversation as you exceed the max prompt window, you can simply say "Alexa, start Quick Chat"...
 
 While the alexa skill is currently purely conversational, the GUI also provides Task Mode which contains built-in prompts for a number of sample tasks. It also supports generic GPT completions (i.e. no additional prompting is provided beyond what you say or type). I anticipate that further development will take place on the alexa skill but I don't plan to add to or actively maintain the GUI.
+    
+**July 2022 update:** The Alexa skill is now the preferred Jabberwocky interface. The GUI was developed with an older version of the core Jabberwocky library and has not been fully updated to reflect the changes (and won't be in the forseeable future).
 
 
 ## Alexa Skill
