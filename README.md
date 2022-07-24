@@ -17,7 +17,7 @@ This project provides two audio interfaces (a conversational alexa skill and a d
 
 While the alexa skill is currently purely conversational, the GUI also provides Task Mode which contains built-in prompts for a number of sample tasks. It also supports generic GPT completions (i.e. no additional prompting is provided beyond what you say or type). I anticipate that further development will take place on the alexa skill but I don't plan to add to or actively maintain the GUI.
     
-**July 2022 update:** The Alexa skill is now the only official Jabberwocky interface. The GUI was developed with an older version of the core Jabberwocky library and has not been fully updated to reflect the change, and won't be in the forseeable future. You can see a (possibly incomplete) list of outstanding issues in the **Developer Notes** section of [gui/README.md](gui/README.md).
+**July 2022 update:** The Alexa skill is now the only official Jabberwocky interface. The GUI was developed with an older version of the core Jabberwocky library and has not been fully updated to reflect the changes, and won't be in the forseeable future. You can see a (possibly incomplete) list of outstanding issues in the **Developer Notes** section of [gui/README.md](gui/README.md).
 
 
 ## Alexa Skill
