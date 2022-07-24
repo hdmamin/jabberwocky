@@ -2786,8 +2786,8 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True,
         # V1 style prompt files are stored in dir, v2 style are stored in
         # single config.
         if path.is_dir():
-            prompt_fmt = load(path / 'prompt.txt')
-            kwargs = load_yaml(path / 'config.yaml')
+            prompt_fmt = load(path/'prompt.txt')
+            kwargs = load_yaml(path/'config.yaml')
         else:
             kwargs = load_yaml(f'{path}.yaml')
             prompt_fmt = kwargs.pop('prompt')
