@@ -42,15 +42,21 @@ echo your_huggingface_api_key > ~/.huggingface
 echo your_banana_api_key > ~/.banana
 ```
 
+4. The app monitors usage levels and emails you if a paid API is being hit suspiciously often. Add your developer email in `data/private/dev_email.txt` so the app knows who to alert if this happens.
 
-4. Run the skill from inside your virtual environment.
+```
+mkdir data/private
+echo YOUR_EMAIL_HERE > data/private/dev_email.txt
+```
+
+5. Run the skill from inside your virtual environment.
 
 ```
 source alexa/venv/bin/activate
 python alexa/app.py
 ```
 
-5. Use ngrok to expose your endpoint to Alexa. (In theory you can also use AWS Lambda for this, but that seems to be built for smaller skills with less state.)
+6. Use ngrok to expose your endpoint to Alexa. (In theory you can also use AWS Lambda for this, but that seems to be built for smaller skills with less state.)
 
 ```
 make ngrok

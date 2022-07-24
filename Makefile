@@ -41,9 +41,11 @@ ngrok:
 
 run_alexa:
 	# Backslash makes makefile run the app inside the env we just activated. It uses a new shell otherwise.
+	# Don't use backticks in echo (habit from markdown) - this tries to execute the command inside.
 	. alexa/venv/bin/activate; \
 	nohup python alexa/app.py > /dev/null 2>&1 &
-	echo "You can use `make alexa_logs` to view the latest logs from your running skill."
+	echo "You can use 'make alexa_logs' to view the latest logs from your running skill."
+
 
 alexa_logs:
 	watch -n 1 -d tail alexa/app.log
