@@ -70,8 +70,19 @@ python gui/main.py
 
 `make run_gui` also works.
 
-**Developer Tip:** If you plan to push new changes to github, I'd recommend using the command `make hooks` to install a git pre-commit hook to prevent you from accidentally exposing your openai API key. (This shouldn't happen regardless but the hook provides some layer of safety in case you print your key in a notebook or something.) You only need to run this once. You can also use the file `pre-commit.py` in the project root as a reference for creating your own hook.
+### Developer Notes
 
+**Developer Tip** 
+
+If you plan to push new changes to github, I'd recommend using the command `make hooks` to install a git pre-commit hook to prevent you from accidentally exposing your openai API key. (This shouldn't happen regardless but the hook provides some layer of safety in case you print your key in a notebook or something.) You only need to run this once. You can also use the file `pre-commit.py` in the project root as a reference for creating your own hook.
+
+**Outstanding Issues**
+
+Here is a (possibly incomplete) list of changes that would need to be made for the GUI to be compatible with Jabberwocky v2.
+
+- Change all references to the "engine_i" query parameter to "model" and ensure that this doesn't cause any conflicts with existing "model" variables.
+- Update model options to reflect the ones that are actually available in jabberwocky.config. For example, the Huggingface models provided in the GUI are not the same as the ones provided by jabberwocky v2.
+- Test everything end to end.
 
 ---
 Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:46

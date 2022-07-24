@@ -8,13 +8,15 @@ python gui/main.py
 # I think dearpygui imports a different contextmanager so we rename this one.
 from dearpygui.core import *
 from dearpygui.simple import *
+# openai appears unused but is actually used by GPTBackend instance.
+import openai
 
 from htools.core import tolist, select
 from htools.meta import params
 from htools.structures import IndexedDict
 from jabberwocky.core import GuiTextChunker
 from jabberwocky.openai_utils import PromptManager, ConversationManager, \
-    query_gpt3
+    query_gpt3, GPTBackend
 from jabberwocky.speech import Speaker
 from jabberwocky.utils import set_module_globals
 
@@ -730,6 +732,7 @@ class App:
 
 
 if __name__ == '__main__':
+    GPT = GPTBackend()
     SPEAKER = Speaker(newline_pause=400)
     CHUNKER = GuiTextChunker(max_chars=70)
     MANAGER = PromptManager(verbose=False, skip_tasks=['conversation',
@@ -761,5 +764,5 @@ if __name__ == '__main__':
         set_module_globals(module, SPEAKER=SPEAKER, CHUNKER=CHUNKER,
                            CONV_MANAGER=CONV_MANAGER, MANAGER=MANAGER,
                            NAME2TASK=NAME2TASK, MODEL_NAMES=MODEL_NAMES,
-                           GENDER2VOICE=GENDER2VOICE, APP=APP)
+                           GENDER2VOICE=GENDER2VOICE, APP=APP, GPT=GPT)
     APP.run()

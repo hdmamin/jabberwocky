@@ -1,6 +1,6 @@
 # The version of htools I use doesn't specify pandas_flavor version and newer pandas_flavor adds xarray dependency which caused docker errors. Probably unnecessary for non-docker approach but just to be safe let's lock it in.
 dearpygui==0.6.415
-jabberwocky==1.0.4
+jabberwocky==2.1.0
 pandas_flavor==0.1.2
 pillow==8.1.0
 pyaudio==0.2.11

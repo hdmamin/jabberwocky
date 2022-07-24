@@ -25,7 +25,7 @@ from threading import Thread
 
 from htools.core import save, select
 from htools.meta import min_wait
-from jabberwocky.openai_utils import query_gpt_neo, query_gpt_j
+from jabberwocky.openai_utils import GPTBackend
 
 from utils import read_response_coro, stream, monitor_interrupt_checkbox, \
     CoroutinableThread, PropagatingThread, interrupt, img_dims
@@ -784,13 +784,17 @@ def update_query_kwargs_from_model_name(model, query_kwargs):
     model = model.lower()
     query_kwargs = dict(query_kwargs)
     if 'neo' in model:
-        query_kwargs.update(mock_func=query_gpt_neo,
-                            size=model.split()[-1].upper(),
-                            mock=True)
+        GPT.switch('huggingface')
+        # ISSUE: update query_kwargs with new model name. Problem is new
+        # jabberwocky only provides 2 huggingface engines, only 1 of which
+        # overlaps with the 3 options in the GUI. (This made things more
+        # consistent with the EngineMap interface - i.e. if we ask for model 3
+        # we're probably expecting davinci-level models, which huggingface did
+        # not provide at jabberwocky v2 development time.
     elif model == 'gpt-j':
-        query_kwargs.update(mock=True, mock_func=query_gpt_j)
+        GPT.switch('banana')
     elif model == 'naive':
-        query_kwargs.update(mock=True, mock_func=None)
+        GPT.switch('mock')
     else:
         # Only gpt3 mode really supports streaming. Naive technically does
         # but it's not particularly useful.
