@@ -1116,6 +1116,18 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True, **format_kwargs):
     usage.
     """
     dir_ = Path(f'data/prompts/{name}')
+    # Patch v1: this dir moved to legacy_prompts.
+    if not dir_.is_dir():
+        dir_ = Path(str(dir_).replace('/prompts/', '/legacy_prompts/'))
+        if not dir_.is_dir():
+            raise RuntimeError(
+                'You are running an old version of jabberwocky that expects a '
+                'legacy prompt format. We could not find your directory of '
+                'legacy prompts (it should be at either data/prompts or '
+                'data/legacy_prompts, and each prompt should have a '
+                'corresponding directory containing both a txt file and a '
+                'yaml file.'
+            )
     prompt_fmt = load(dir_/'prompt.txt')
     kwargs = load_yaml(dir_/'config.yaml')
     # If no prompt is passed in, we load the template and store it for later.
