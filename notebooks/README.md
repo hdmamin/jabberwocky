@@ -4,7 +4,7 @@ Jupyter notebooks for data exploration and experimentation.
 
 
 ---
-Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:47
+Start of auto-generated file data.<br/>Last updated: 2022-07-24 14:12:51
 
 <table border="1" class="dataframe">
   <thead>
@@ -105,6 +105,14 @@ Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:47
       <td>6</td>
       <td>2022-06-19 16:59:18</td>
       <td>53.99 kb</td>
+    </tr>
+    <tr>
+      <td>nb021-price-monitor.ipynb</td>
+      <td>Monitor api usage over time so we can shut things down before things get out of hand if someone figures out a way to start calling the api and using my api key.</td>
+      <td>24</td>
+      <td>3</td>
+      <td>2022-06-30 20:41:29</td>
+      <td>129.55 kb</td>
     </tr>
     <tr>
       <td>nb03-transcript-manager.ipynb</td>

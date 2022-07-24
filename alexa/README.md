@@ -56,6 +56,8 @@ source alexa/venv/bin/activate
 python alexa/app.py
 ```
 
+Alternatively, use `make run_alexa` to run this the app in the background. This is preferable when running the skill long term but it can make it harder to troubleshoot errors when you're working through the initial setup.
+
 6. Use ngrok to expose your endpoint to Alexa. (In theory you can also use AWS Lambda for this, but that seems to be built for skills with smaller environments.) If you haven't previously installed ngrok, you must first run `brew install --cask ngrok`.
 
 ```
@@ -65,12 +67,10 @@ make ngrok
 This should print a url ending with "ngrok.io" in your terminal. Copy that url and run `curl {url}/health` (paste your actual url in place of {url}). The response should be:
 
 ```
-{"status": 200, "source": "jabberwocky-alex"}
+{"status": 200, "source": "jabberwocky-alexa"}
 ```
 
-**Developer note:**
-
-If you plan to push new changes to github, I'd recommend using the command `make hooks` to install a git pre-commit hook to prevent you from accidentally exposing your openai API key. (This shouldn't happen regardless but the hook provides some layer of safety in case you print your key in a notebook or something.) You only need to run this once. You can also use the file `pre-commit.py` in the project root as a reference for creating your own hook.
+**Developer Tip:** If you plan to push new changes to github, I'd recommend using the command `make hooks` to install a git pre-commit hook to prevent you from accidentally exposing your openai API key. (This shouldn't happen regardless but the hook provides some layer of safety in case you print your key in a notebook or something.) You only need to run this once. You can also use the file `pre-commit.py` in the project root as a reference for creating your own hook.
 
 
 ### AWS Console Setup
@@ -329,7 +329,7 @@ Then follow this tutorial:
  https://developer.amazon.com/blogs/post/8e8ad73a-99e9-4c0f-a7b3-60f92287b0bf/new-alexa-tutorial-deploy-flask-ask-skills-to-aws-lambda-with-zappa
 
 ---
-Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:48
+Start of auto-generated file data.<br/>Last updated: 2022-07-24 14:12:52
 
 <table border="1" class="dataframe">
   <thead>
@@ -345,23 +345,23 @@ Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:48
     <tr>
       <td>app.py</td>
       <td>Flask web server where each alexa intent has its own endpoint. Responses<br/>that don't match a recognized intent (most of them) are routed to the<br/>`delegate` endpoint which attempts to infer the intended intent. Often this is<br/>just a standard conversational reply, in which case the user text is used to<br/>continue a conversation with a GPT-powered persona. Functions can be enqueued<br/>to handle cases like yes/no questions (in hindsight, a finite state machine<br/>would likely have been a more elegant solution here, but I was not that<br/>familiar with them when I started building this).<br/><br/>Examples<br/>--------<br/># Default mode. This uses the openai backend, loads both custom and<br/># auto-generated personas, and uses AI-generated voices via Amazon Polly.<br/>python alexa/app.py<br/><br/># Run the app in dev mode (use free gpt backend by default) and only load<br/># auto-generated personas (people with wikipedia pages).<br/>python alexa/app.py --dev True --custom False<br/><br/># Disable Amazon Polly voices in favor of default alexa voice for everyone.<br/># Downside is persona voices are no longer differentiated by<br/># gender/nationality; upside is we get some primitive emotional inflections<br/># when appropriate.<br/>python alexa/app.py --voice False</td>
-      <td>812</td>
-      <td>2022-06-25 10:44:05</td>
-      <td>31.60 kb</td>
+      <td>867</td>
+      <td>2022-07-24 12:15:45</td>
+      <td>34.26 kb</td>
     </tr>
     <tr>
       <td>config.py</td>
       <td>Constants used in our alexa skill. The email is used to send transcripts<br/>to the user when desired. Note that in addition to the log file specified here,<br/>GPT queries are also logged to files like `2022.06.25.jsonlines`. A new file is<br/>generated for each day (the switch occurs at midnight) and each line in the<br/>file corresponds to kwargs for a single gpt query.</td>
-      <td>9</td>
-      <td>2022-06-24 19:16:41</td>
-      <td>435.00 b</td>
+      <td>23</td>
+      <td>2022-07-13 20:48:57</td>
+      <td>979.00 b</td>
     </tr>
     <tr>
       <td>utils.py</td>
       <td>Helpers used in our alexa app. Particularly important<br/>- CustomAsk class: subclass of one of the core flask-ask classes. Lots of<br/>functionality around callbacks/logging/etc. take place here.<br/>- Settings class: used to maintain gpt settings throughout a session. There are<br/>global-level, conversation-level, and person-level settings (recency is<br/>prioritized when resolving the final gpt query kwargs). You can read more about<br/>this system in its docstrings.<br/>- build_utterance_map function: any time we update the dialogue model in the<br/>alexa UI, we must download the model JSON, save it to<br/>jabberwocky/data/alexa/dialogue_model.json, and pass it to this function. This<br/>will save a new dict-like object that allows us to infer intents and slots when<br/>user utterances are not recognized as invoking an existing intent.</td>
-      <td>1171</td>
-      <td>2022-06-24 19:16:41</td>
-      <td>44.25 kb</td>
+      <td>1175</td>
+      <td>2022-07-07 20:49:09</td>
+      <td>44.39 kb</td>
     </tr>
   </tbody>
 </table>

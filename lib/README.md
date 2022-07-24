@@ -117,7 +117,7 @@ jabberwocky/
 ```
 
 ---
-Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:48
+Start of auto-generated file data.<br/>Last updated: 2022-07-24 14:12:52
 
 <table border="1" class="dataframe">
   <thead>
@@ -134,22 +134,22 @@ Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:48
       <td>__init__.py</td>
       <td>_</td>
       <td>1</td>
-      <td>2022-03-06 16:49:43</td>
+      <td>2022-07-23 20:30:48</td>
       <td>22.00 b</td>
     </tr>
     <tr>
       <td>cli.py</td>
-      <td>This was a brief experiment with an old version of Jabberwocky and no longer<br/>reflects the current API. I'm keeping it around for future reference since I'm<br/>still interested in combining prompt_toolkit with jabberwocky and it may be<br/>useful to see my old thoughts on implementation (or at the very least, serve as<br/>a sort of API reference about the prompt_toolkit features I care about).</td>
-      <td>103</td>
-      <td>2022-06-25 10:43:37</td>
-      <td>3.51 kb</td>
+      <td>At the moment, the only useful part of this is the `update_prompt_readme`<br/>command which updates the readme in data/prompts to make it easier to review<br/>what prompts are currently available.<br/><br/>The chat functionality was a brief experiment with an old version of<br/>Jabberwocky and no longer reflects the current API. I'm keeping it around for<br/>future reference since I'm still interested in combining prompt_toolkit with<br/>jabberwocky and it may be useful to see my old thoughts on implementation<br/>(or at the very least, serve as a sort of API reference about the<br/>prompt_toolkit features I care about).</td>
+      <td>108</td>
+      <td>2022-06-25 11:08:06</td>
+      <td>3.71 kb</td>
     </tr>
     <tr>
       <td>config.py</td>
       <td>Define constants used throughout the project.</td>
-      <td>74</td>
-      <td>2022-05-12 22:08:49</td>
-      <td>2.64 kb</td>
+      <td>72</td>
+      <td>2022-07-07 20:05:07</td>
+      <td>2.49 kb</td>
     </tr>
     <tr>
       <td>core.py</td>
@@ -160,17 +160,17 @@ Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:48
     </tr>
     <tr>
       <td>external_data.py</td>
-      <td>Functionality to fetch and work with YouTube transcripts.</td>
-      <td>417</td>
-      <td>2022-05-30 22:12:52</td>
-      <td>15.21 kb</td>
+      <td>Functionality to fetch and work with YouTube transcripts and Wikipedia data.</td>
+      <td>426</td>
+      <td>2022-07-14 20:35:09</td>
+      <td>15.56 kb</td>
     </tr>
     <tr>
       <td>openai_utils.py</td>
       <td>Utility functions for interacting with the gpt3 api.<br/><br/>A note on query functions:<br/>There are a number of different services (both paid and free) that provide<br/>access to GPT-like models. GPTBackend.query() provides a convenient interface<br/>to them by calling different query functions under the hood. These query<br/>functions are all defined in this module and have names starting with<br/>'query_gpt'. There are a number of steps to defining a new query function:<br/><br/>1. Use the `mark` decorator to set "batch_support" to either True or False.<br/>True means you can pass in a list of prompts, False means the prompt must be a<br/>single string. GPTBackend will support batching either way, but it needs to<br/>know whether each query function supports this natively in order to determine<br/>how to do this.<br/>2. The first parameter should be 'prompt' with no default. The other parameters<br/>should have defaults, but keep in mind many of these will be ignored when<br/>called by GPTBackend.query - the latter has its own defaults which are passed<br/>in as kwargs. Speaking of which...<br/>3. It must accept kwargs.<br/>4. If it supports multiple completions, include a parameter "n" with a default<br/>value of 1 in the signature. GPTBackend.query will support it either way, but<br/>again it needs to know how to achieve this.<br/>5. If multiple engines are available through this backend, update<br/>jabberwocky.config.C.backend_engines, using the other examples as guidance. In<br/>addition, in this scenario we recommend retrieving the engine name explicitly<br/>as query_gpt_huggingface does:<br/>```engine = GPTBackend.engine(engine, backend='huggingface')```<br/>rather than simply calling ```GPTBackend.engine(engine)```.<br/>6. We recommend popping off kwargs that you actually do want to use and then<br/>providing a warning so the user can see the remaining unused kwargs if there<br/>are any.<br/>7. The fuction should either return a (str, dict-like) tuple or<br/>(list[str], list[dict-like]). Use the latter if batch_support is True and<br/>multiple completions per prompt are supported (i.e. n is in its parameters).<br/>Technically I suppose there could be a backend that supported 1 but not the<br/>other, but I haven't seen it yet so I'll figure that case out if/when needed.<br/>8. When done, update some or all of the following GPTBackend class attributes.<br/>- name2base<br/>- name2func<br/>- skip_trunc<br/>Use the comments and examples in the class as guidance.</td>
-      <td>2887</td>
-      <td>2022-06-25 10:43:37</td>
-      <td>122.16 kb</td>
+      <td>3090</td>
+      <td>2022-07-19 19:43:49</td>
+      <td>130.72 kb</td>
     </tr>
     <tr>
       <td>speech.py</td>
@@ -189,9 +189,9 @@ Start of auto-generated file data.<br/>Last updated: 2022-06-25 11:03:48
     <tr>
       <td>utils.py</td>
       <td>General purpose utilities.</td>
-      <td>704</td>
-      <td>2022-05-31 21:52:14</td>
-      <td>23.33 kb</td>
+      <td>699</td>
+      <td>2022-07-19 18:57:35</td>
+      <td>23.36 kb</td>
     </tr>
   </tbody>
 </table>
