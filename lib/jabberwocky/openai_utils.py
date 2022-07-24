@@ -516,6 +516,12 @@ class ConversationManager:
         self._load_personas(names, is_custom=False)
         self._load_personas(custom_names, is_custom=True)
 
+        # Another v1 patch: we provide at least 1 default persona. This means
+		# we can run the gui if we manually rename our
+		# data/conversation_personas dir r delete its contents.
+        if not self.personas():
+            self.add_persona('Albert Einstein')
+
     def _load_personas(self, names, is_custom=False):
         """Load any stored summaries and image paths of existing personas."""
         names = names or [path.stem for path in
