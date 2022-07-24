@@ -2834,16 +2834,38 @@ X -prep r/lex demo post
 
 7/24/22 sun
 -----------
--r/lex post
--look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
-	-combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
+~ -look into best practices re running flask forever (e.g. thinking I should probably be using gunicorn? And maybe something like systemd also? Unsure.)
+	_ -combine into 1 makefile cmd? And if so, maybe cleanup old separate commands.
+	UPDATE: sounds like I probably should be using gunicorn + nginx, but that's largely for load balancing w/ many users. I only have 1 so it's not a huge priority atm. launchd (mac equivalent of systemd?) can be used to ensure service is restarted if it goes down, on reboot, etc. but I don't want that to happen if my auto-shutdown trigger gets launched due to suspicious API usage. I.e. let's stick with vanilla python run method for now.
 -check that install commands work on new device (may need to recruit D's help)
+	UPDATE: tried a bit but couldn't get ssh on remote device to work - at first it was in that weird sleeping/half dead mode, then when I got M to help wake it up it had other issues (frozen? wrong user?). Maybe can try pc next time.
 	-gui
 		-install w/out error
 		-launches w/out error
 	-alexa (last time I checked was pre torch dep addition)
 		-install w/out error
 		-launches w/out error
+X -various makefile updates
+	X -use venv in run_alexa
+	X -run alexa app in background w/ nohup
+	X -get alexa logs
+	X -silence some commands
+	X -get ngrok_url
+-r/lex post
+	UPDATE: forgot about this and blocked reddit for most of the day.
+X -consider other places to share work
+
+7/25/22 mon
+-----------
+-check that install commands work on other device (try pc)
+	-gui
+		-install w/out error
+		-launches w/out error
+	-alexa (last time I checked was pre torch dep addition)
+		-install w/out error
+		-launches w/out error
+-share work on various channels
+-postmortem
 
 
 Backlog (short term)

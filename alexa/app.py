@@ -91,7 +91,8 @@ def get_user_info(attrs=('name', 'email')):
 
 @app.route('/health')
 def health():
-    return {'status': 200}
+    return {'status': 200,
+            'source': 'jabberwocky-alexa'}
 
 
 def send_transcript(conv, user_email='', cleanup=False):
