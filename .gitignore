@@ -22,3 +22,4 @@ output/
 tmp/
 alexa/*.log
 alexa/conversations/*
+notes/
