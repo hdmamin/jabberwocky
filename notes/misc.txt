@@ -1,0 +1,620 @@
+-gpt3 writes a poem/interesting phrase, then GAN "illustrates" (image and or gif)
+    -maybe some way to incorporate torch lucent for more interesting styles
+    -incorporate clip to select best "painting"
+    -available on github: dall-e, lucidrains dall-e/deep daze/big sleep (note: apparently openai dall-e text encoder is not open sourced so can't directly input text)
+-gpt3 provides instructions for building something with stylebreeder (need to experiment a bit manually first)
+-provide written (or spoken, followed by speech to text lib) bullet points, then expand to a full speech of some kind in your own voice. Think virtual assistant.
+    -chatbot with yourself (prompt gpt3 with your own writing, then use voice cloning app for text to speech)
+    -chatbot with famous person (others have done this with gpt3 so should be good pre-existing prompts) combined with voice cloner, so you can actually "chat" with (e.g.) jk rowling in real time. Not sure what audio requirements are for voice cloner yet.
+    -transcribe audio (of a meeting, phone call, speech, etc.), generate written feedback, maybe deliver via audio
+-ask how to do something, gpt3 provides step by step instructions in text (then text to speech app for a virtual assistant)
+-something with GANs for video? Look through coursera notebook.
+    -or gans for music? gpt-scrolls pypi lib has example of this, not sure how well it works but I imagine we could find a lib to convert those notes to audio. (Compose background music for gan-generated gif?)
+-youtube assistant (chrome extension?)
+    -specify a time chunk of a video and have gpt3 explain it in simpler terms (i.e. explain a difficult concept in a stats lecture to a 5th grader, 9th grader, etc.)
+        -could even try to generate audio using the voice of the person in the video, though this might not work that well (not much available data, some have multiple speakers)
+    -identify emotion/tone throughout the video (see spikes of anger, humor, sadness)
+    -identify key points/takeaways
+    -generate questions corresponding to various timestamps
+    -not just youtube videos: live lectures from remote learning!
+-translate my rambling questions/explanations into more concise points (a Harrison translator!)
+
+4/16/21
+-------
+-idea: we can show gpt3 some paired examples of generated and manual transcripts in hopes it can "translate" from generated to manual. That way, we can get improved transcript quality for videos that only have generated transcripts.
+    -4/17 update: after some thought, I've concluded the paired transcripts are a bit less useful than I thought. We could construct something similar by taking fully punctuated text and removing all punctuation. It wouldn't have the occasional errors of speech-to-text (e.g. "adverse cereal" vs "adversarial") but the sentence tokenization task would be solvable that way.
+
+4/17/21
+-------
+-explain to a 2nd grader prompt:
+    -ada and babbage just repeat the input. Curie maybe shortened sentences a bit but wasn't that impressive. Seems like we really do have to use davinci here.
+-idea: video recommender or clustering system. gpt3 is good at semantic search, and transcripts let us easily turn videos into "documents". (babbage engine suggested)
+-idea: integrate with apple arkit
+    -have gpt3 write a story, then use text descriptions plus clip to find available artifacts online to insert into the scene as illustration
+    -img recognition -> text description of your surroundings -> some kind of instructions/feedback?
+        -batting/yoga/lifting form feedback
+
+5/23/21
+-------
+-arxiv/semantic scholar integration ideas:
+    -say a topic (linear attention) or a question (how does linformer reduce attention time complexity?), find the most relevant paper using API (or get top n, then use gpt3 doc search to choose 1), then have gpt3 use question answering to provide the answer.
+    -use my Explain ML prompt or the standard tldr prompt to summarize the abstract, the whole paper, or a portion of the paper.
+    -prompt gpt3 to generate abstract from title
+        -or generate paper from abstract, but that's very token intensive
+    -"Expand On" model: input is a term like "instance norm", output is a short passage explaining it. Just manually construct the prompt once, no need for api - gpt3 already contains compressed representations of all this knowledge.
+   -add gui option to paste paper ID/url, then get summary 
+
+5/28/21
+-------
+Thinking there might be some room to improve google's information retrieval capabilities. Effective googling is definitely still a skill, and it can take multiple query phrasings, clicking on  multiple pages, or reading through long chunks of a page to find the desired answer. I'm thinking we may be able to speed this up with gpt3. I briefly tried to think of a few searches to construct samples manually, but this was a bit tough. I'm thinking it may be better to organically let challenging searches arise and make note of them (and their ultimately useful results) when they do.
+
+7/10/21
+-------
+I asked GPT3, a massive machine learning model built by OpenAI, to analyze a few of tonights matchups and predict who will win. 
+It's not flawless but I've certainly seen worse takes (in the examples below, I typed the lines starting with "Matchup"; the rest is the model):
+
+> **Matchup:** Gilbert Burns vs. Stephen Thompson  
+**Analysis:** It's been a long time since we've seen Thompson fight, and it's fair to wonder if he'll still have the same pop on his counters or ability to end a fight in the blink of an eye. He's a very safe fighter, however, and his kicks, volume and power give him a clear edge in this matchup. It's possible that Burns will be able to get in his face or put him in the clinch, but that's not Thompson's game. He'll pick Burns apart with his low kicks and eventually turn this into a kickboxing match.  
+**Prediction:** Stephen Thompson by TKO.
+
+***
+
+> **Matchup:** Dustin Poirier vs. Conor McGregor 3  
+**Analysis:** McGregor's takedown defense has been steadily improving, and he has the speed and movement to strike with Poirier and avoid exchanges he can't win. Poirier doesn't have the best boxing, but he can crack with power and has a solid wrestling base. He can also scramble up quickly from the bottom, but getting there is a risky proposition against McGregor. McGregor's pressure and pace can create opportunities to land big strikes that time well, and his physical gifts are tough to match. He can finish whenever he wants and Poirier is still an underrated wrestler, but I think McGregor gets off more strikes and forces more action.  
+**Prediction:** Conor McGregor by KO.
+
+A few more notes for anyone interested:
+-GPT3 basically tries to generate responses that sound plausible but that doesn't guarantee they'll be particularly accurate or insightful. Its training data likely contains far more dumb MMA twitter takes than quality fight articles so we end up with something in between. Carefully phrasing our prompts can lead to very different results (e.g. we could ask for one set of predictions from a casual fan, one from a brilliant fight analyst, etc.). I didn't put a ton of time into engineering the prompts that generated these responses so we could likely get better quality analysis with some effort.
+-GPT3 was released over a year ago and I haven't been able to confirm whether OpenAI does any kind of fine-tuning over time. If not, the model's knowledge of these fighters may be a bit outdated.
+-GPT3 can also imitate specific people (it's much easier if they're reasonably well-known). As far as mma goes, imagine chatting with Rogan about tonight's fights or asking McGregor how it feels to walk out to a title fight. Pretty cool. I built myself a simple audio interface which adds to the effect, though I haven't added any custom voices yet so Rogan's words are still delivered in a humorless British accent.
+
+7/12/21
+-------
+Problem: want to be able to hold longer conversations without prompts growing infeasibly long (aside from cost, gpt3 can only handle a limited number of tokens at a time). Current implementation makes that difficult because we pass in a FULL PROMPT each time (we'd need to re-extract the last response). Also, query() gets full text from manager's RUNNING_PROMPT, though I think that can be changed more easily.
+
+Thoughts: 
+-maybe we should store a list of user inputs and gpt3 responses so it's easy to choose how many to pass in each time (imagine a param response_window=2, for example).
+-running_prompt should not be used by GUI: keep that fully internal. Provide a separate conversation_history var (basically what running_prompt currently refers to).
+-maybe should provide method to "query_later". Or this could be an opportunity for my @lazy decorator!
+
+7/16/21
+-------
+pyinstaller error when trying to run result (file bin/dist/main/main.exe, exe not visible though):
+
+https://stackoverflow.com/questions/35478526/pyinstaller-numpy-intel-mkl-fatal-error-cannot-load-mkl-intel-thread-dll
+
+Looks like we need to write some hook for pyinstaller. I'm guessing this will be just one of many pyinstaller errors so I'll hold off until I'm pretty sure I'm done.
+
+7/22/21
+-------
+possible post themes
+-pick 1 thing ("this is what I learned from talking to gpt3"; "this is what I learned from building my first GUI"; etc.) and focus on that
+-document technical things I learned and want to be able to reference later (harder here since this wasn't super technically ambitious)
+-jot down a random assortment of thoughts
+-quick description of what I did - more portfolio-like than blog post like
+-general side project lessons
+
+possible post topics
+-take some time to actually talk to the available personas, then write about that. 
+-my first gui. Diffs from web app.
+-Building an audio interface to gpt3. UX difficulties.
+-Programming paradigms: declarative vs OOP and shoehorning one in where it's not ideal
+-using a library that's under frequent development (dearpygui)
+-pyinstaller and dearpygui
+
+---
+Latest dearpygui error:
+FileNotFoundError: [Errno 2] No such file or directory: 'data/prompts'
+
+8/13/21
+-------
+-latest docker error [UPDATE: fixed by downgrading pandas_flavor]:
+
+ File "/usr/local/lib/python3.7/site-packages/pandas_flavor/__init__.py", line 5, in <module>
+    from .xarray import (register_xarray_dataarray_method, 
+  File "/usr/local/lib/python3.7/site-packages/pandas_flavor/xarray.py", line 2, in <module>
+    import xarray as xr
+  File "/usr/local/lib/python3.7/site-packages/xarray/__init__.py", line 3, in <module>
+    from . import testing, tutorial, ufuncs
+  File "/usr/local/lib/python3.7/site-packages/xarray/testing.py", line 9, in <module>
+    from xarray.core import duck_array_ops, formatting, utils
+  File "/usr/local/lib/python3.7/site-packages/xarray/core/duck_array_ops.py", line 16, in <module>
+    from . import dask_array_compat, dask_array_ops, dtypes, npcompat, nputils
+  File "/usr/local/lib/python3.7/site-packages/xarray/core/npcompat.py", line 80, in <module>
+    from numpy.typing import DTypeLike
+  File "/usr/local/lib/python3.7/site-packages/numpy/typing/__init__.py", line 316, in <module>
+    from ._dtype_like import (
+  File "/usr/local/lib/python3.7/site-packages/numpy/typing/_dtype_like.py", line 95, in <module>
+    class _SupportsDType(Generic[_DType_co]):
+
+8/14/21
+-------
+latest docker error:
+Glfw Error 65544: X11: The DISPLAY environment variable is missing
+Glfw Error 65537: The GLFW library is not initialized
+Glfw Error 65537: The GLFW library is not initialized
+Glfw Error 65537: The GLFW library is not initialized
+python: /home/appveyor/projects/dearpygui/Dependencies/glfw/src/window.c:531: glfwSetWindowPos: Assertion `window != NULL' failed
+
+8/15/21
+-------
+recent docker changes (order matters):
+
+apt install sudo
+apt-get install -y gnupg gnupg2
+apt-get install -y mesa-utils and libgl1-mesa-glx
+sudo add-apt-repository ppa:ubuntu-x-swat/updates
+sudo apt dist-upgrad
+
+8/28/21
+-------
+fine tuning notes
+-no davinci fine tuning
+-pricing is a bit more expensive for the same model but not prohibitively so - fine-tuned curie is half the cost of davinci, and the lack of instructions/prompt can reduce the number of tokens
+-conditional generation recommends at least ~500 examples. Open-ended generation (e.g. generating whole podcast transcripts) needs at least a few thousand. Those numbers are honestly not that bad for most tasks. I could probably scrape data for most tasks, but if it really comes down to it, generating 500 manual examples manually isn't crazy.
+
+notes on god prompt
+-for better or for worse, god is not very talkative. I guess it's probably common for fictional conversations with god to have the character hoping for some detailed solution to their problems but what they get are short, vague, slightly mystical answers.
+-still lots of room to experiment with the prompt. A Douglas Adams-y god might be fun, but would probably require fine-tuning.
+
+9/2/21
+------
+running app in alias mode. Save as in default mode has default path:
+/Users/hmamin/jabberwocky/dist/main.app/Contents/Resources/data/completions/punctuate
+instead of
+/Users/hmamin/jabberwocky/data/completions/punctuate
+
+2/1/22
+------
+Possible intents:
+
+- choosePersona
+- chooseModel
+- changeTemperature
+- changeMaxLength
+
+Possible slots:
+
+- person (e.g. Alex Honnold)
+- model (e.g. GPT-J)
+- temperature
+- length
+
+2/9/22 wed
+----------
+In case I need to revisit email attachment stuff:
+https://datamakessense.com/easy-scheduled-emailing-with-python-for-typical-bi-needs/
+
+2/12/22 sat
+-----------
+Thought: maybe Voice Chat name is being clobbered by an existing skill (either user-built or default). Thought of this because when building dummy app, I forgot I used the name "skill debugger" and tried to launch the skill "memory game" in the dev console since that's what the tutorial used. Rather than failing, it just calls an actual Memory Game skill that's not related to my app. Same thing could be happening with voice chat.
+
+2/13/22 sun
+-----------
+Observations about skill naming
+-when trying to start Fake Chat/Quick Chat/Voice Chat from Skill Debugger test console, it doesn't find anything. When I try to from Jabberwocky, I get a msg like "I have a few skills that can help" followed by questions of if I mean PetChatz, BrandChat, etc.
+-when trying to start it from jabberwocky, I get some conversation template.
+
+Conclusion: 
+-probably configured jabberwocky differently in console and there's some boilerplate it's falling back to.
+
+Try:
+1. Try non-intent response to see if fallback handler works on jabberwocky (maybe don't even try to actively start app? Could try both ways.)
+2. If that doesn't work, switch to make skill debugger console the main one and deprecate/delete jabberwocky in console. Choice of vanilla skill rather than conv template might fix things.
+
+2/19/22 sat
+-----------
+Thoughts on session and kwargs persistence:
+
+-If I change model_i during a session, I think I'd expect it to persist even if I change personas.
+-If I change temperature, maybe that would be more persona-specific?
+-If I change max_length, that could go either way.
+
+-If I start a new conv with the same persona, I'd expect all my settings to persist.
+
+Maybe track user-specified settings AND current persona settings. When a user starts a new conv, check if they've previously changed settings. If yes, ask what they'd like to do.
+
+Or when setting settings, ask if they'd like them to persist.
+
+Or could have a Global Settings centralized location and a Conv Settings centralized location and a Persona settings centralized location.
+
+3/13/22 sun
+-----------
+Problem:
+Unrecognized utterance gets sent to delegate() instead of the intended intent
+Delegate then delegates to whatever's in the queue or just replies
+
+Solution:
+Create some kind of key-value store of all my sample utterances -> corresponding endpoint.
+Have delegate check for close matches and if it finds one, redirect to that endpoint instead of _reply. Undecided yet if this should override queued functions.
+    -Can also have some stricter logic about things like "starts with Lou" which is a good indicator that this is a setting change and not a response. (Careful: check to make sure current persona, if exists, does not have first name lou)
+
+3/19/22 sat
+-----------
+slot extraction ideas (focusing on get_backend atm):
+-ask gpt3 (seemed to work well in console, less well via ipython. Not sure if bug or just more testing revealing flaws.)
+    -variant: ask gpt3 to rewrite sentence w/ corrected backend, similar to punctuate task
+-brute force python "x in backend"
+-compare all ngrams of size 1-2 or 3 w/ allowed backend strs using fuzzywuzzy or similar
+-compare all phonetic representation (using jellyfish, g2p, SoundsLike, etc.) of n=1-3 grams using fuzzywuzzy or similar
+    -encode whole utterance phonetically. Then str.join and compare to pre-computed phonetic representations of each utterance in fuzzdict. (NOTE: cur fuzzy dict seems to not have new slot vals for backend.)
+-some sort of spacy matcher or partially rule-based approach that uses some knowledge of structure (e.g. extract word directly before or after "backend")
+
+3/20/22 sun
+-----------
+Adrienne advice re phonetic similarity:
+
+"""
+Vowels are relatively easy to quantify phonetically because they have formants (some physical property of the sound wave). For an audio file, there are tools (like Praat) that can calculate the formant values. For text, you can look up average formant values for each vowel (though of course these are the values of the phonetic vowels, not the orthographic vowels, so you’d need some way of translating the written words into something phonetically meaningful, like IPA). The first and second formants (“F1” and “F2”) are most important, and F3 is sometimes important too. You can probably ignore F0 and F4, unless you’re interested in measuring differences between individual speakers saying the same word. 
+
+To measure similarity between consonants, I would probably use phonological features, although you’d need some way of quantifying them. The big three phonological features are voicing, place of articulation, and manner of articulation. For example, “n” and “m” are similar because they have the same voicing (they’re both voiced or [+voice]), and the same manner of articulation, [+nasal]. The only difference is the place of articulation (“n” is alveolar, “m” is bilabial). 
+
+“k” and “g” are similar because they have the same place of articulation (velar) and the same manner of articulation (stop/plosive), and the only difference is the voicing (“k” is voiceless and “g” is voiced). 
+
+My sense is that manner of articulation is somehow the most important — I imagine that misperception/mishearing tends to have more to do with manner of articulation than with place or voicing. For example, “s” and “t” have the same voicing and place of articulation, but different manners of articulation, and they probably don’t seem very intuitively similar to most English speakers. But “s” and “th” have the same voicing and manner of articulation, but different places of articulation, and probably seem more intuitively similar and are probably more likely to be confused with each other auditorily.
+"""
+
+4/21/22 thurs
+-------------
+openai documentation notes
+
+Pricing
+-fine tuned completion models are 2x the cost of vanilla models
+-embeddings models are 10x the cost of vanilla models (!)
+-seems like Search/Answers/Classification can easily eat up a lot of tokens
+
+Search
+-query + longest doc must be <= 2k tokens combined
+-can upload files separately rather than including "documents" in request, and this may be slightly more cost effective
+-Scores are usually between 0 and ~300, but sounds like technically no upper bound. Docs suggest 200 as a good threshold for "similar".
+-Returned files are not sorted by score.
+-can only store 1gb of files at a time.
+-initial filtering is done w/ keyword search to select `max_rerank` docs. Then gpt model is used to compute similarity scores.
+
+# Sample Search input
+openai.Engine("ada").search(
+    search_model="ada", 
+    query="happy", 
+    max_rerank=5,
+    file="file-Lwjuy0q2ezi00jdpfCbl28CO"
+)
+
+# Sample output
+[{
+  "document": "puppy A is happy",
+  "file_id": "file-Lwjuy0q2ezi00jdpfCbl28CO",
+  "score": 587.767
+}]
+
+Answers
+-basically seems to stack Search and Completion endpoints together. search_model finds relevant docs, model generates answer.
+
+# Sample Answer input
+openai.Answer.create(
+    search_model="ada", 
+    model="curie", 
+    question="which puppy is happy?", 
+    file="file-2ksWL61f0Q5c5vCYOLwUuhPk", 
+    examples_context="In 2017, U.S. life expectancy was 78.6 years.", 
+    examples=[["What is human life expectancy in the United States?", "78 years."]], 
+    max_rerank=10,
+    max_tokens=5,
+    stop=["\n", "<|endoftext|>"]
+)
+
+Embeddings
+-many different model variants. For simple clustering/regression/visualization, names like 'text-similarity-ada-001'. There are also text search models and code search models (in each case, there are different versions depending on whether you want to encode the query or the document).
+-unless input is code, they suggest replacing newlines with spaces
+
+# Sample function
+def get_embedding(text, engine="text-similarity-davinci-001"):
+   text = text.replace("\n", " ")
+   return openai.Embedding.create(input = [text], engine=engine)['data'][0]['embedding']
+
+Completions
+-ada/davinci etc. are outdated! Whoops. Newer versions are 'text-davinci-002', 'text-curie-001', 'text-babbage-001', 'text-ada-001'. I think these are from the Instruct series but need to confirm that.
+	-old versions are still recommended for other tasks like search/q&a
+
+Classifications
+
+# Sample input
+openai.Classification.create(
+    file="file-hRsoFZ4J3dNoiTeudHesgPoh",
+    query="movie is very good",
+    search_model="ada", 
+    model="curie", 
+    max_examples=3
+)
+
+# Sample output
+{
+  "completion": "cmpl-2clicODHMMKQnAVW9TpipNzJCWA5t",
+  "file": "file-hRsoFZ4J3dNoiTeudHesgPoh",
+  "label": "Positive",
+  "model": "curie",
+  "object": "classification",
+  "search_model": "ada",
+  "selected_examples": [
+    {
+      "document": 0,
+      "label": "Positive",
+      "object": "search_result",
+      "score": 178.353,
+      "text": "the very definition of the `small' movie, but it is a good stepping stone for director sprecher."
+    },
+    {
+      "document": 3,
+      "label": "Positive",
+      "object": "search_result",
+      "score": 183.586,
+      "text": "good film, but very glum."
+    },
+    {
+      "document": 1,
+      "label": "Negative",
+      "object": "search_result",
+      "score": 180.673,
+      "text": "i sympathize with the plight of these families, but the movie doesn't do a very good job conveying the issue at hand."
+    }
+  ]
+}
+
+
+Considerations re specifying engine:
+-looks like openai engine names may continue to change frequently
+-openai has a ton of different engines now - search alone probably has over a dozen variants (though jabberwocky doesn't support that atm anyway)
+	UPDATE: as of 4/22/22, openai has 50 and gooseai has 14.
+-using numbers seems increasingly infeasible. Worked fine when there were just 4 models, but that's no longer true and we're moving further and further from that state.
+-the option to pass in an int for engine was mostly nice when making an adhoc query (not from a prompt config). It's less necessary for openai's 4 main engines since they have the abcd naming, though other backends don't necessarily have that.
+
+5/10/22 tues
+------------
+thoughts on dropping sentence fragments
+
+-only apply in static mode (probably COULD do something similar to my StopwordStreamer but don't think it's worth it)
+-make optional via arg in query() signature
+-do not apply if response has only one sentence total? Would presumably drop the whole thing then.
+-do not apply if the backend provides a finish_reason and that reason is NOT length
+
+5/17/22 tues
+------------
+Good tutorial for adding account linking (currently disabled since built in permissions started working again but might need to reference this again since that has often been disabled periodically in the past).
+https://www.youtube.com/watch?v=C9fWMYyRWls&ab_channel=DabbleLab
+
+5/19/22 thurs
+-------------
+<speak> 
+     Pitch and timbre are connected.
+<amazon:effect vocal-tract-length="-5%"> <prosody pitch="+25%"> 
+   If you are going to reduce the vocal tract length,  you 
+     might consider increasing the pitch, too. </prosody></amazon:effect>  
+</speak>
+
+5/28/22 sat
+-----------
+Outlook email send error:
+
+smtplib.SMTPAuthenticationError: (535, b'5.7.139 Authentication unsuccessful, account locked. Contact your administrator. [BY3PR05CA0003.namprd05.prod.outlook.com]')
+
+5/30/22 mon
+-----------
+Error when saying "Goodbye" during a conversation:
+NotImplementedError: Intent "AMAZON.StopIntent" not found and no default intent specified.
+
+5/31/22 tues
+------------
+logger path updates
+
+X -move logger (and lock?) creation to instance var
+~ -write method to refresh path
+    UPDATE: written but untested.
+~ -check if we need to update path on each call
+    UPDATE: instead, tried using thread to update file name at midnight. Have to wait til tomorrow to confirm if this works.
+
+6/14/22 tues
+------------
+error when trying to infer change_max_length or change_temperature (something about wrong param names maybe? Unsure if this is the same issue or different but bc slots are hardcoded in utts, this prob isn't as straightforward as changing model which has a fixed set of options):
+
+            ON BEGIN (delegate)
+            Prev intent: None
+            State: {'drop_fragment': True, 'model': 3, 'temperature': 0.7, 'max_tokens': 100, 'frequency_penalty': 0.5}
+            Queue: deque([(<function choose_person at 0x7fa7c3dbc9d8>, {})])
+
+                SLOTS
+                name=response
+                slots_={'response': {'name': 'response', 'value': 'lose max link to 10', 'confirmationStatus': 'NONE', 'source': 'USER', 'slotValue': {'type': 'Simple', 'value': 'lose max link to 10'}}}
+                SLOT RESOLVED: lose max link to 10
+
+                Inferred intent match scores:
+                {'intent': 'changeMaxLength', 'slots': {'Number': '0', 'Scope': 'global'}, 'confidence': 0.73, 'reason': 'weighted', 'res': [('Lou set max length to 0', {'intent': 'changeMaxLength', 'slots': {'Number': '0', 'Scope': 'global'}}, 76), ('Lou set max length to 1', {'intent': 'changeMaxLength', 'slots': {'Number': '1', 'Scope': 'global'}}, 76), ('Lou set max tokens to 0', {'intent': 'changeMaxLength', 'slots': {'Number': '0', 'Scope': 'global'}}, 71), ('Lou set max tokens to 1', {'intent': 'changeMaxLength', 'slots': {'Number': '1', 'Scope': 'global'}}, 71), ('Lou set max length to 2', {'intent': 'changeMaxLength', 'slots': {'Number': '2', 'Scope': 'global'}}, 71)]}
+                CALLING INFERRED INTENT: changeMaxLength
+[2022-06-14 19:51:38,608] ERROR in app: Exception on / [POST]
+Traceback (most recent call last):
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/app.py", line 2446, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/app.py", line 1951, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/app.py", line 1820, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/_compat.py", line 39, in reraise
+    raise value
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/app.py", line 1949, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask/app.py", line 1935, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/Users/hmamin/anaconda3/lib/python3.7/site-packages/flask_ask/core.py", line 806, in _flask_view_func
+    result = self._map_intent_to_view_func(self.request.intent)()
+  File "/Users/hmamin/pythonhm/htools/htools/meta.py", line 1474, in wrapper
+    out = func(*args, **kwargs)
+  File "alexa/app.py", line 550, in delegate
+    **{k.lower(): v for k, v in matches['slots'].items()}
+  File "/Users/hmamin/pythonhm/htools/htools/meta.py", line 1721, in wrapper
+    sig = bound_args(wrapper, args, kwargs, collapse_kwargs=True)
+  File "/Users/hmamin/pythonhm/htools/htools/meta.py", line 1011, in bound_args
+    bound = signature(func).bind_partial(*args, **kwargs)
+  File "/Users/hmamin/anaconda3/lib/python3.7/inspect.py", line 3022, in bind_partial
+    return args[0]._bind(args[1:], kwargs, partial=True)
+  File "/Users/hmamin/anaconda3/lib/python3.7/inspect.py", line 3006, in _bind
+    arg=next(iter(kwargs))))
+TypeError: got an unexpected keyword argument 'number'
+
+6/22/22 wed
+-----------
+Jotting down a potential future conversation prompt (mode is a word like "conversation" or "debate" or "appointment"). Maybe reduce bio to 1 sentence. Optional description is something like "silly" or "informative" or "intense". I can see this will rely heavily on the more complex Prompt functionality I've been toying with - lots of need for resolution logic, default values, inserting outputs from other prompts, etc.
+---
+
+The following is an excerpt from a transcript of {a} {optional_description} {mode} with {name}. {bio} Earlier in the {mode}, {name} and {me} discussed the following topics:
+{concatenated_summaries}
+
+{recent_turns}
+
+---
+WIP: prototyping convmanager method to format last n turns into a single str. Potentially useful if/when we implement iterative summarization. Holding off on this for now because that is out of scope for v2. I suspect the future implementation may replace user_turns and gpt_turns with a single turn list that includes the name associated with each turn as part of the string. This would make resolving the last n turns easier and might make it easier to generalize to n-person conversations - however, the latter will take larger changes since we currently auto-append the desired name to the end of each prompt. That might get left up to gpt in a future n-person conv (i.e. if I'm talking to Mark and Cara and ask Cara a question, Cara should probably respond). Aside from that change, we might also need to keep track of the 'last_summarized_index' (unless maybe we always do the last n? Or maybe it would be something like self.turns[-self.total_turn_window - self.summary_turn_window:-self.total_turn_window] (i.e. summarize the turns that preceded the turns included in the current prompt. Actually maybe we do still need to track some summary index though because we don't want to generate overlapping summaries. Alternative is to decorate query w/ count_calls and only summarize on every n'th query, but conceptually maybe that's the same.
+
+def _format_turns(self, total_turn_window):
+    pretty_name = self.process_name(self.current['persona'], inverse=True)
+    idx = getattr(self, 'last_summarized_index', -1) + 1
+    user_turns = self.user_turns
+    gpt3_turns = self.gpt3_turns
+    if len(user_turns) - len(gpt3_turns) not in (0, 1):
+        raise RuntimeError(
+            f'Mismatched turn counts: user has {len(user_turns)} and gpt3'
+            f' has {len(gpt3_turns)} turns.'
+        )
+        
+    user_turns = [f'{self.me}: {turn}' for turn in user_turns]
+    # Strip gpt3 turns to be safe since streaming mode only strips them
+    # once the full query completes, and GUI uses full_conversation
+    # property while query is still in progress.
+    gpt3_turns = [f'{pretty_name}: {turn.strip()}' for turn in gpt3_turns]
+    ordered = [user_turns, gpt3_turns]
+    if len(gpt3_turns) == len(user_turns):
+        ordered = reversed(ordered)
+    interleaved = list(filter(None, flatten(zip_longest(*ordered))))[-total_turn_window:]
+    prompt = '\n\n'.join(interleaved)
+    return prompt
+
+7/2/22
+------
+ImportError:
+
+IMPORTANT: PLEASE READ THIS FOR ADVICE ON HOW TO SOLVE THIS ISSUE!
+
+Importing the numpy C-extensions failed. This error can happen for
+many reasons, often due to issues with your setup or how NumPy was
+installed.
+
+We have compiled some common reasons and troubleshooting tips at:
+
+    https://numpy.org/devdocs/user/troubleshooting-importerror.html
+
+Please note and check the following:
+
+  * The Python version is: Python3.7 from "/home/pi/.pyenv/versions/3.7.4/envs/jabberwocky-env/bin/python3.7"
+  * The NumPy version is: "1.21.1"
+
+and make sure that they are the versions you expect.
+Please carefully study the documentation linked above for further help.
+
+Original error was: libf77blas.so.3: cannot open shared object file: No such file or directory
+
+7/3/22 sun
+----------
+  Failed building wheel for tokenizers
+  Running setup.py clean for tokenizers
+  Complete output from command /home/pi/.pyenv/versions/jabberwocky-env/bin/python -u -c "import setuptools, tokenize;__file__='/tmp/pip-install-b8lgp0m_/tokenizers/setup.py';f=getattr(tokenize, 'open', open)(__file__);code=f.read().replace('\r\n', '\n');f.close();exec(compile(code, __file__, 'exec'))" clean --all:
+  running clean
+  removing 'build/lib.linux-armv7l-cpython-37' (and everything under it)
+  'build/bdist.linux-armv7l' does not exist -- can't clean it
+  'build/scripts-3.7' does not exist -- can't clean it
+  removing 'build'
+  running clean_rust
+  error: can't find Rust compiler
+
+7/5/22 tues
+-----------
+Hi,
+
+I noticed some activity on my account yesterday (7/4/22) that looked a little odd and wanted to get your thoughts. After using the openai playground to test some new prompts on the text-davinci and code-davinci models, I checked my usage tab and saw there were also quite a few completions made using the text-moderation-002 model, which I'm pretty sure I never used. Strangely, the times of the text moderation completions almost always matched the times of my davinci/codex completions (e.g. if I used the davinci model at 10:17, 10:19, and 10:24pm, my usage tab showed those completions as well as a second set of text-moderation completions made at the same times).
+
+I already changed my api key in case it was somehow exposed, but the way the completion times align makes me wonder if this is some new openai policy (i.e. maybe all completions are now run through a text moderation model and users are charged for those as well as the actual completion?). A couple months ago I did accidentally commit an api key in a public git repo, but I've since removed that commit, changed my api key multiple times in the openai console, and added git hooks to prevent me from committing a key accidentally again. Let me know if you have any thoughts regarding what might cause the behavior I described. Thanks!
+
+7/6/22 wed
+----------
+Got it. Just to confirm: these text moderation calls will happen automatically for every playground completion (and perhaps every completion through the api?) and will show up in my "Model usage" tab, but I will not be charged for them? I'm pretty sure this is accurate based on this line from the page you linked ("Pricing for the moderation endpoint is free when monitoring the outputs of OpenAI APIs"), but it's easy for docs to fall out of date so I just wanted to double check.
+
+Pros/cons of running laptop all the time
+----------------------------------------
+Pros
+-simple/easy - I'd be freed of endless raspberry pi installation errors
+-If I want to bring alexa with me while visiting home, there are fewer things to bring since I'll have my laptop anyway. (Compared to having to bring pi home too; while small, it does require some setup every time I switch locations.)
+-very convenient to quickly view logs (though now that my pi ssh is set up nicely, that's probably comparably easy)
+-no concerns about memory usage (which pi might have), no concerns about data persistence (which lambda might have), less concerns about privacy (probably?) than other approaches (no need to upload api keys elsewhere or put them on another server)
+
+Cons
+-atm the app uses a (probably large-ish) QA transformers pipeline (though it uses this quite rarely). Might slow my laptop down a little? Maybe it's not quite big enough to have a noticeable impact. Though my laptop has been quite slow lately...
+-so far my ngrok solution seems to be allowing me to keep the same url but tbh I'm not sure why. I thought the URL was supposed to expire every day or something.
+-in some ways, maybe more of a security risk? In that my pi has nothing else on it so opening it up to public traffic doesn't matter. But the same is obviously not true of my laptop.
+-if I ever want to try to scale this up to multiple users, running it on my personal laptop doesn't seem like a good strategy. Though tbh at that point the pi doesn't either.
+
+Using old laptop basically eliminates cons #1 and potentially #3 (if I delete most old data). Seems like a decent option for wrapping this up relatively quickly.
+
+7/8/22 fri
+----------
+Trying bash scipt for now, but in case I need to cram everything into a requirements file later for alexa, here is a way that might work for downloading a spacy language model:
+# Should be equivalent to `python -m spacy download en_core_web_sm`.
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl
+
+7/10/22 sun
+-----------
+ nohup python alexa/app.py --dev True > /tmp/log.txt 2>&1 &
+
+7/17/22 sun
+-----------
+If you asked an intelligent robot to design a test to determine whether a human being was truly intelligent, what do you think that test might look like?
+
+If we succeeded in building intelligent robots, do you think they would consider humans to be intelligent?
+
+If we succeeded in building intelligent robots, do you think their conception of intelligence would be similar to ours?
+
+If you asked an intelligent robot to define intelligence, what do you think it would say?
+
+Do you think intelligent robots would define intelligence in a way that differs from the way humans define it?
+
+Do you think intelligent robots would have a human-centric view of intelligence, or would their definition differ from ours?
+
+	They're also not constrained by biology in the way humans are, and so their conception of what is possible.
+
+	Perhaps every intelligent group defines intelligence in a way that highlights their own strengths.
+	In other words, they might define intelligence in a way that highlights their own strengths, much like humans do.
+
+Do you think intelligent robots can exist with possessing the capacity to experience emotion?
+
+7/20/22 wed
+-----------
+0173 - human-centric view of intelligence? stumbled over word "intelligence" in first q. Reverse turing test idea. Lex sounds a bit less generic ("deep question").
+	-if we can edit out the stumble, this is a pretty strong candidate.
+	-"questions about our own intelligence" sounds a bit awkward and lex is repetitive.
+	-1:36-end (reverse test) is pretty solid
+0174 - human-centric view of intelligence? reverse turing test. Echo is a bit off center. Lex sounds a bit more generic.
+	-0-0:52 is pretty solid.
+	-1:03 - end (reverse turing test) is solid.
+	-just don't like my "highly context dependent" response in between
+0172 - human-centric view of intelligence? "weaknesses of humans" answer is slightly missing the point. No podcast intro.
+	-decent candidate for readme. Maybe not ideal for reddit.
+
+0169 - awkward "sure". Human centric view? bio constraints, distributed, etc. Not sure where to rank - no huge messups but somehow doesn't excite me as much as some of the other snippets.
+	-camera jerks around a little
+	-"pity our incredibly weak memory"
+	-question on distributed definition is fairly articulate. Completion is a little "restate the question"-y though.
+0160 2 - would robots consider humans to be intelligent? Lex gets hung up on how WE define intelligence. Laughably weak memory, goldfish memory.
+	-2nd half is decent. 1 answer sort of just repeats back the question, though you could argue that's a valid technique.
+
+0159 - awkward "big question to start out with". Lex sort of misunderstands my idea of a reverse turing test. Some good snippets but also some bad parts.
+0170 - human-centric view of intelligence? non sequitur about bio constraints, distributed intelligence
+0157 - LLM convince you of sentience? Lex is a bit weirdly fixated on how it was created.
+0156 - social media? not that interesting
+0155 - test to determine if robot can experience emotions? Lex sounds a bit generic/formal. His answer is also more about recognizing emotion, not expriencing it. Then repeats itself.
+0147 - recent work in robotics?
+0143 - "ridiculous question" about testing if robot can feel love? Lex still has a british accent here. Lex sounds a bit generic.
+0152 - sanderson. Screwed up, can delete.

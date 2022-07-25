@@ -18,10 +18,6 @@ data/icons/*
 data/alexa/*
 !data/alexa/utterance2meta.pkl
 !data/alexa/dialog_model.json
-# Use same method as above to add 2 files in notes.
-!notes/
-notes/*
-!notes/dailies*.txt
 *egg-info*
 lib/dist
 *.swp
