@@ -77,7 +77,6 @@ jabberwocky/
 ├── alexa        # Code used to create a conversational alexa skill.
 ├── gui          # GUI scripts. The main script should be run from the project root directory. 
 ├── data         # Raw and processed data. Some files are excluded from github but the ones needed to run the app are there. This also includes miscellaneous gpt3 prompt files and conversational personas.
-├── notes        # Miscellaneous notes from the development process stored as raw text files.
 └── notebooks    # Jupyter notebooks for experimentation and exploratory analysis.
  
 ```
