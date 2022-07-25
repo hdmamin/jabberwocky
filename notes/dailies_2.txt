@@ -2858,6 +2858,7 @@ X -consider other places to share work
 
 7/25/22 mon
 -----------
+-confirm how to un-commit notes w/out overwriting them
 -share work on various channels
 -postmortem
 
