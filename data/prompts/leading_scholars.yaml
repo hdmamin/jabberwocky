@@ -1,0 +1,18 @@
+model: 3
+temperature: .3
+top_p: .99
+max_tokens: 75
+frequency_penalty: 0.0
+presence_penalty: 0.0
+stop: 
+- "\n6."
+version: 0
+reminder: "Lower models sometimes work well too. Phrasing of topic sometimes requires tuning. Occasionally gpt lists fictional names or people who don't exist or are not well known enough to come up in a google search."
+doc: |-
+  Topic could be anything: "the lifecycle of cicadas", "game theory in daily life", "ethics of Harry Potter", etc.
+prompt: |-
+  List the names of 5 of the world's leading scholars on the following topic:
+    TOPIC:
+    {}
+    EXPERTS:
+    1.

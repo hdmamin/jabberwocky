@@ -60,8 +60,7 @@ hooks:
 	chmod u+x .git/hooks/pre-commit
 
 prompt:
-	cp data/templates/prompt.yaml data/prompts/NEW_PROMPT.yaml
-	vi data/prompts/NEW_PROMPT.yaml
+	scripts/makeprompt.sh
 
 persona:
 	mkdir data/conversation_personas_custom/NEW_PERSONA
