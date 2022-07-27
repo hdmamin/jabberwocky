@@ -7,8 +7,8 @@
 |-|
 | Neil de Grasse Tyson discusses the state of science education. |
 |<video src="https://user-images.githubusercontent.com/40480855/132139847-0d0014b9-022e-4684-80bf-d46031ca4763.mp4" width="400">|
-|AI researcher and pocaster Lex Fridman discusses robot conceptions of intelligence.|
-|<video src="https://user-images.githubusercontent.com/40480855/180587882-8eb0e689-86dd-48fe-9ce3-401c360771e8.mp4" width="400">|
+|Excerpts from Alexa conversations with John Lennon, Maya Angelou, and Alan Turing.|
+|<video src="https://user-images.githubusercontent.com/40480855/181158253-4b8684e1-8857-4fc1-881a-79da567035f2.mp4" width="400">|
 
     
 # Project Description
