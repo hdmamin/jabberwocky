@@ -849,7 +849,7 @@ if __name__ == '__main__':
         help='Port to run the app on.'
     )
     ARGS = parser.parse_args()
-    CONV = ConversationManager(custom_names=[] if ARGS.custom else False,
+    CONV = ConversationManager(custom_names=ARGS.custom,
                                load_qa_pipe=not ARGS.dev)
     PROMPTER = PromptManager(['punctuate_alexa'], verbose=False)
     PRICE_MONITOR = PriceMonitor()
