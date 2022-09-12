@@ -22,4 +22,7 @@ prompt: |-
   LOCAL VARIABLES:
   {local_vars}
 
+  GLOBAL VARIABLES:
+  {global_vars}
+
   EXPLANATION AND SUGGESTED FIX:

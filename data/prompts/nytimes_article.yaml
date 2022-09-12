@@ -10,7 +10,7 @@ stop:
 version: 0
 reminder: "Max length is pretty short for the time being - you may want to increase this. Curie can work well here too. Could test lower temperature, higher frequency penalty."
 doc: |-
-  Minimally tested but it looks promising so far (see reminder). Designed to be chained after the "leading_scholars prompt". (In its current form, would need to do some string processing from that prompt's result to extract the top 1 name.) Even babbage produced solid writing quality but got a bit confused and wrote about the listed author instead of having him "write" the article.
+  Minimally tested but it looks promising so far (see reminder). Designed to be chained after the "leading_scholars prompt". (In its current form, would need to do some string processing from that prompt's result to extract the top 1 name.) Even babbage produced solid writing quality but got a bit confused and wrote about the listed author instead of having him "write" the article. Update: also tried a variant starting with "This New York Times narrative" and adding "beautifully written" to the description - seems to be good for more engaging, less fact-reliant content.
 prompt: |-
   This article about {topic} appeared in the New York Times in 2022. It was written by {name}, one of the leading scholars on the topic, and was lauded as one of the most incisive pieces of the year.
 

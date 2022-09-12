@@ -1,0 +1,18 @@
+model: code-davinci-002
+temperature: 0
+top_p: .99
+max_tokens: 250
+frequency_penalty: 0.0
+presence_penalty: 0.0
+stop: 
+- '"""'
+version: 0
+doc: |-
+  "code" arg is a function or class implementing a solution to a leetcode-style problem. I just copied this prompt from my time complexity prompt with a couple tweaks - it could likely be improved.
+reminder: Answers almost always sound reasonable but that doesn't mean they're correct! I should evaluate this more formally before we can put very much trust in it.
+prompt: |-
+  {code}
+
+  """ANSWER KEY
+  Question: In simple language a beginner could understand, provide a high level explanation of the algorithm this code implements.
+  Answer:

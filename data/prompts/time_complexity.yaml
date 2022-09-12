@@ -9,7 +9,7 @@ stop:
 version: 0
 doc: |-
   "code" arg is a function or class implementing a solution to a leetcode-style problem. The completion attempts to find the time complexity and in practice, it basically always finds the space complexity as well. You can also swap out codex in favor of the regular text davinci model - in initial experiments this provided more of an explanation while codex just provided time complexities, but I adjusted the prompt so both should provide an explanation now.
-warning: Answers almost always sound reasonable but that doesn't mean they're correct! I should evaluate this more formally before we can put very much trust in it.
+reminder: Answers almost always sound reasonable but that doesn't mean they're correct! I should evaluate this more formally before we can put very much trust in it.
 prompt: |-
   {code}
 

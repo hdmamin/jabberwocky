@@ -1,0 +1,25 @@
+model: code-davinci-002
+temperature: .0
+top_p: .99
+max_tokens: 200
+frequency_penalty: 0.0
+presence_penalty: 0.0
+stop: 
+  - 'DEVELOPER'
+version: 0
+reminder: "Could try davinci text as well but codex is free for now."
+doc: |-
+  Debugging variant for jupyter nbextension duckling. Uses the selected cell's code as the current snippet and only provides global vars (unlike the original debugger prompt, we're not actively stepping through a function's execution). Don't use docstring quotes as stop words because codex likes to put natural language explanations inside them (i.e. there's a high risk that you will get no output).
+prompt: |-
+  This is a code snippet from a jupyter notebook that is not working as expected. Help the developer debug it. First read the developer's question, then examine the snippet of code that is causing the issue and look at the values of the global variables in the notebook. Finally, explain what the problem is and instruct the developer on how to fix it. Use simple language a beginning programmer could understand.
+
+  DEVELOPER'S QUESTION:
+  {question}
+
+  CURRENT CODE SNIPPET:
+  {code}
+
+  GLOBAL VARIABLES:
+  {global_vars}
+
+  EXPLANATION AND SUGGESTED FIX:
