@@ -1,0 +1,17 @@
+# THE FIRST SET OF FIELDS BELOW MATCHES THE DEFAULTS FROM jabberwocky.openai_utils.query_gpt3(). RECENT EXPERIENCE + READING SUGGESTS FREQUENCY_PENALTY AND PRESENCE_PENALTY DEFAULTS AROUND 0.5 MIGHT BE BETTER.
+model: 3
+temperature: .8
+top_p: .99
+max_tokens: 150
+frequency_penalty: 0.0
+presence_penalty: 0.0
+stop: 
+- \n\n
+version: 0
+reminder: "This is intended to use dynamically generated examples. See maminbot.gpt_utils.sample_prompt_examples. Remember this was designed for a rather specific use case - it's not a truly generic journal entry prompt."
+doc: |-
+  At query time, we sample n examples from a cache of some sort and pass them in as the `examples` arg (this should be a numbered list where the last line contains only a number and period). This is intended to get more variety in the generated prompts. Note that n must be >= the number of examples you select otherwise gpt won't generate any new list items. Suggestions tend to skew a bit more icebreaker-y than I originally had in mind, but that's okay for now.
+prompt: |-
+  Each person will write a short journal entry about one of the {n} prompts below, then share their entry with the group. We hope that these prompts will inspire some fun, thought-provoking conversations. All prompts are G-rated.
+
+  {examples}
