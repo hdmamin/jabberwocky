@@ -949,6 +949,24 @@ class GPTBackend:
         """
         return list(cls.name2func)
 
+    @classmethod
+    def from_api_keys(cls, date_fmt="%Y.%m.%d", log_stdout=True, **api_keys):
+        """Factory method to create a GPT object when api keys are not
+        available locally. Note that warnings will still be raised since the
+        class will try to load keys locally. You will be setting api keys
+        after an instance is created. Keys must match or be a subset of
+        cls.needs_api_key. Useful for streamlit cloud where it's easier to
+        specify a single secrets.toml file and then do something like
+        GPTBackend.from_api_keys(**st.secrets.api_keys).
+        """
+        gpt = cls(date_fmt=date_fmt, log_stdout=log_stdout)
+        for k, v in api_keys.items():
+            if k not in gpt.name2key:
+                raise ValueError(f'Received unexpected api key with '
+                                 f'name "{k}".')
+            gpt.name2key[k] = v
+            return gpt
+
     def clear(self):
         """Reset instance variables tracking that were used to restore
         previous backend.
