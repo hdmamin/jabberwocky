@@ -3108,4 +3108,4 @@ TASK2FORMATTER = {}
 try:
     openai_auth()
 except Exception as e:
-    warnings.warn(str(e))
+    warnings.warn(f'Failed to load openai credentials:\n{e}')
