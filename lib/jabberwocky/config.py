@@ -58,6 +58,9 @@ class C:
 
     # Project root directory.
     root = Path('~/jabberwocky').expanduser()
+    data_dir = root/'data'
+    prompt_dir = data_dir/'prompts'
+    git_clone_url = 'https://github.com/hdmamin/jabberwocky.git'
 
     # Use with datetime.strptime() to convert from format like
     # 'Sun Apr 17 13:18:23 2022' back to datetime object. This is the format

@@ -65,7 +65,7 @@ import yaml
 
 from htools import load, select, bound_args, spacer, valuecheck, tolist, save,\
     listlike, Results, flatten, add_docstring, func_name, params, mark, \
-    random_str, deprecated, xor_none, MultiLogger, eprint
+    random_str, deprecated, xor_none, eprint, shell
 from jabberwocky.config import C
 from jabberwocky.external_data import wiki_data
 from jabberwocky.streaming import stream_response, truncate_at_first_stop
@@ -2845,6 +2845,27 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True,
     msg = kwargs.pop('reminder', None)
     if msg and verbose: print(f'{name}: {msg}{spacer()}')
     return kwargs
+
+
+def download_prompts(update=False):
+    """Download prompt data by cloning/pulling from github.
+
+    Returns
+    -------
+    pathlib.Path: Path to prompt dir, either '~/.jabberwocky/data/prompts'
+    or '~/jabberwocky/data/prompts'.
+    """
+    if C.prompt_dir.is_dir():
+        if update:
+            print('Pulling updates from github...')
+            shell(f'cd {C.prompt_dir.parent.parent} && git pull')
+        else:
+            print('Prompt dir already present, not pulling changes because '
+                  'update=False.')
+    else:
+        print('Cloning updates from github...')
+        shell(f'git clone {C.git_clone_url} {C.prompt_dir}')
+    return C.prompt_dir
 
 
 def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
