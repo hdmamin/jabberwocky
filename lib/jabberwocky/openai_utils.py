@@ -3105,4 +3105,7 @@ def upload_openai_files(purpose:('search', 'answers', 'classifications'), *,
 TASK2FORMATTER = {}
 
 # I figure if we're importing these functions, we'll need to authenticate.
-openai_auth()
+try:
+    openai_auth()
+except Exception as e:
+    warnings.warn(str(e))
