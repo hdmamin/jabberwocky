@@ -50,7 +50,7 @@ def clone_or_pull_prompts(path='~/.jabberwocky', update=False):
                   'update=False.')
             code = 0
     else:
-        print(f'{Path} is not an existing directory. Cloning from github...')
+        print(f'{path} is not an existing directory. Cloning from github...')
         # Must reference the global git clone var var here.
         code, *_ = shell(f'git clone {git_clone_url} {path}',
                          return_output=False)
