@@ -44,7 +44,7 @@ def clone_or_pull_prompts(path='~/.jabberwocky', update=False):
     if path.is_dir():
         if update:
             print('Pulling prompts from github because update=True...')
-            code, *_ = shell(f'cd {path} && git pull')
+            code, *_ = shell(f'cd {path} && git pull', return_output=False)
         else:
             print('Prompts already present, not pulling changes because '
                   'update=False.')
@@ -52,7 +52,8 @@ def clone_or_pull_prompts(path='~/.jabberwocky', update=False):
     else:
         print(f'{Path} is not an existing directory. Cloning from github...')
         # Must reference the global git clone var var here.
-        code, *_ = shell(f'git clone {git_clone_url} {path}')
+        code, *_ = shell(f'git clone {git_clone_url} {path}',
+                         return_output=False)
     if code:
         raise RuntimeError('Cloning/pulling prompts failed.')
     return path
