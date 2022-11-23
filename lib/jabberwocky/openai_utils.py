@@ -2847,27 +2847,6 @@ def load_prompt(name, prompt='', rstrip=True, verbose=True,
     return kwargs
 
 
-def download_prompts(update=False):
-    """Download prompt data by cloning/pulling from github.
-
-    Returns
-    -------
-    pathlib.Path: Path to prompt dir, either '~/.jabberwocky/data/prompts'
-    or '~/jabberwocky/data/prompts'.
-    """
-    if C.prompt_dir.is_dir():
-        if update:
-            print('Pulling updates from github...')
-            shell(f'cd {C.prompt_dir.parent.parent} && git pull')
-        else:
-            print('Prompt dir already present, not pulling changes because '
-                  'update=False.')
-    else:
-        print('Cloning updates from github...')
-        shell(f'git clone {C.git_clone_url} {C.prompt_dir}')
-    return C.prompt_dir
-
-
 def punctuate_mock_func(prompt, random_punct=True, sentence_len=15,
                         *args, **kwargs):
     """Mimic punctuate task by splitting a piece of unpunctuated text into

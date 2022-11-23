@@ -15,7 +15,7 @@ import warnings
 import yaml
 import _thread
 
-from htools import select, bound_args, copy_func, xor_none, add_docstring, \
+from htools import select, bound_args, copy_func, add_docstring, \
     listlike, MultiLogger, tolist, load, save
 from jabberwocky.config import C
 
