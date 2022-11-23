@@ -1613,7 +1613,7 @@ class PromptManager:
     """
 
     def __init__(self, tasks=(), verbose=True,
-                 prompt_dir=C.root/'data/prompts', skip_tasks=()):
+                 prompt_dir=C.prompt_dir, skip_tasks=()):
         """
         Parameters
         ----------
@@ -1835,7 +1835,7 @@ class ConversationManager:
 
     img_exts = {'.jpg', '.jpeg', '.png'}
 
-    def __init__(self, names=True, custom_names=True, data_dir=C.root/'data',
+    def __init__(self, names=True, custom_names=True, data_dir=C.data_dir,
                  backup_image='data/misc/unknown_person.png',
                  turn_window=3, me='me', prompt='conversation_transcript',
                  load_qa_pipe=False, qa_model_name=None, verbose=True):
@@ -2737,7 +2737,7 @@ def print_response(prompt, response, sep=' '):
 
 
 def load_prompt(name, prompt='', rstrip=True, verbose=True,
-                prompt_dir=C.root/'data/prompts', base_url=''):
+                prompt_dir=C.prompt_dir, base_url=''):
     """Load a gpt3 prompt from data/prompts. Note that this function went
     through several iterations and early versions of this function didn't
     allow for an input prompt parameter. This worked fine for toy examples
