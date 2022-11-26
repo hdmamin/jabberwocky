@@ -3,6 +3,7 @@ __pycache__/
 .ipynb_checkpoints
 .idea/
 data/*
+!data/dynamic_prompt_data
 !data/prompts
 !data/legacy_prompts
 !data/completions
