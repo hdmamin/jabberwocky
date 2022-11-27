@@ -949,6 +949,13 @@ class GPTBackend:
         """
         return list(cls.name2func)
 
+    def update_api_keys(self, **api_keys):
+        for k, v in api_keys.items():
+            if k not in self.name2key:
+                raise ValueError(f'Received unexpected api key with '
+                                 f'name "{k}".')
+            self.name2key[k] = v
+
     @classmethod
     def from_api_keys(cls, date_fmt="%Y.%m.%d", log_stdout=True, **api_keys):
         """Factory method to create a GPT object when api keys are not
@@ -960,12 +967,8 @@ class GPTBackend:
         GPTBackend.from_api_keys(**st.secrets.api_keys).
         """
         gpt = cls(date_fmt=date_fmt, log_stdout=log_stdout)
-        for k, v in api_keys.items():
-            if k not in gpt.name2key:
-                raise ValueError(f'Received unexpected api key with '
-                                 f'name "{k}".')
-            gpt.name2key[k] = v
-            return gpt
+        gpt.update_api_keys(**api_keys)
+        return gpt
 
     def clear(self):
         """Reset instance variables tracking that were used to restore
@@ -1613,7 +1616,7 @@ class PromptManager:
     """
 
     def __init__(self, tasks=(), verbose=True,
-                 prompt_dir=C.prompt_dir, skip_tasks=()):
+                 prompt_dir=C.prompt_dir, skip_tasks=(), gpt=None):
         """
         Parameters
         ----------
@@ -1633,7 +1636,8 @@ class PromptManager:
         # will later be filled in).
         self.prompt_dir = Path(prompt_dir)
         self.prompts = self._load_templates(tasks, skip_tasks)
-        self.log_path = GPT.logger.path
+        self.gpt = gpt or GPT
+        self.log_path = self.gpt.logger.path
 
     def _load_templates(self, tasks, skip_tasks=()):
         """Load template and default hyperparameters for each prompt.
@@ -1718,7 +1722,7 @@ class PromptManager:
             print('fully resolved kwargs:\n',
                   dict(bound_args(query_gpt3, [], kwargs)))
             return
-        return GPT.query(prompt, **kwargs)
+        return self.gpt.query(prompt, **kwargs)
 
     def kwargs(self, task, fully_resolved=True, return_prompt=False,
                extra_kwargs=None, **kwargs):
@@ -1781,7 +1785,7 @@ class PromptManager:
             kwargs[k] = curr_val
 
         if fully_resolved:
-            kwargs = dict(bound_args(GPT.query, [], kwargs))
+            kwargs = dict(bound_args(self.gpt.query, [], kwargs))
         return kwargs if return_prompt else select(kwargs, drop=['prompt'])
 
     def prompt(self, task, text='', print_=False):
