@@ -23,8 +23,7 @@ def resolve_root():
     pathlib.Path
     """
     root = Path('~/jabberwocky').expanduser()
-    cur_root = Path(__file__).parent.parent.parent
-    if root.is_dir() and (root/'data').is_dir() and cur_root == root:
+    if root.is_dir() and (root/'data').is_dir():
         return root
     return clone_or_pull_prompts('~/.jabberwocky', update=False)
 
