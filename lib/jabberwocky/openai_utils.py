@@ -75,6 +75,9 @@ from jabberwocky.utils import strip, bold, load_yaml, colored, \
     seconds_til_midnight
 
 
+# Use these with caution when writing library functionality. Better to use
+# GPT.name2key['banana'] (for example) because user might update keys via
+# GPT.update_api_keys(**kwargs).
 HF_API_KEY = load_api_key('huggingface', raise_error=False)
 BANANA_API_KEY = load_api_key('banana', raise_error=False)
 
@@ -197,7 +200,7 @@ def query_gpt_huggingface(
 
     # Docs say we can return up to 256 tokens but API sometimes throws errors
     # if we go above 250.
-    headers = {'Authorization': f'Bearer api_{HF_API_KEY}'}
+    headers = {'Authorization': f'Bearer api_{GPT.name2key["huggingface"]}'}
     # Notice the names don't always align with parameter names - I wanted
     # those to be more consistent with query_gpt3() function. Also notice
     # that types matter: if Huggingface expects a float but gets an int, we'll
@@ -444,7 +447,7 @@ def query_gpt_banana(prompt, temperature=.8, max_tokens=50, top_p=.8,
         'topP': top_p,
         'topK': top_k,
     }
-    res = banana.run(api_key=BANANA_API_KEY, model_key='gptj',
+    res = banana.run(api_key=GPT.name2key['banana'], model_key='gptj',
                      model_inputs=params)
     # str, dict
     return res['modelOutputs'][0]['output'], res
