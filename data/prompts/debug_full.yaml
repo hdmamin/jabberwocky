@@ -6,9 +6,8 @@ frequency_penalty: 0.0
 presence_penalty: 0.0
 stop: 
 - 'QUESTION'
-- '"""'
 version: 0
-reminder: "Could try davinci text as well but codex is free for now."
+reminder: "Could try davinci text as well but codex is free for now. You may want to strip triple double-quotes from the end in case codex generates them (we don't include that as a stop phrase because codex might generate a docstring as part of a correct code snippet)."
 doc: |-
   Variant that uses the full notebook/python script's code instead of just the current function. File_type arg should be either "jupyter notebook" or "python script". TODO might need to remove docstring stop sequence in case the generated solution should contain that.
 prompt: |-
