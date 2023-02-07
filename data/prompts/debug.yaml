@@ -1,17 +1,20 @@
 model: code-davinci-002
 temperature: .0
 top_p: .99
-max_tokens: 200
+max_tokens: 512
 frequency_penalty: 0.0
 presence_penalty: 0.0
+logit_bias:
+  37811: -100
 stop: 
 - 'QUESTION'
+- 'LOCAL VARIABLES'
 version: 0
 reminder: "Could try davinci text as well but codex is free for now. You may want to strip triple double-quotes from the end in case codex generates them (we don't include that as a stop phrase because codex might generate a docstring as part of a correct code snippet)."
 doc: |-
   TODO - Fill me in with a description of the prompt, what inputs shoud look like, and any other notes that may help future you remember what this prompt is trying to do. (Granted, a good prompt should usually make this obvious from the prompt text itself, but this can still be a useful way to record ideas for improvement, document where the prompt is used, or note that it's deprecated.) TODO might need to remove docstring stop sequence in case the generated solution should contain that.
 prompt: |-
-  This code snippet is not working as expected. Help me debug it. First read my question, then examine the snippet of code that is causing the issue and look at the values of the local and global variables. Ignore the roboduck() function call - it is merely for debugging. Finally, explain what the problem is and how to fix it. If you don't know what the problem is, list a few possible causes or things I could try in order to identify the issue. Use simple language because I am a beginning programmer.
+  """This code snippet is not working as expected. Help me debug it. First read my question, then examine the snippet of code that is causing the issue and look at the values of the local and global variables. Ignore the roboduck() function call - it is merely for debugging. Finally, explain what the problem is and how to fix it. If you don't know what the problem is, list a few possible causes or things I could try in order to identify the issue. Be concise and use simple language because I am a beginning programmer.
 
   QUESTION:
   {question}
