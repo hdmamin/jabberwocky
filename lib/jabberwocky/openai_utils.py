@@ -596,7 +596,7 @@ class EngineMap:
             If True and openai is the specified backend and engine is a str,
             we simply return the input (we do at least check that it contains
             one of the bases, i.e. that "ada" or "davinci" etc. is present in
-            the name. But otherwise we trust you to ensure this is a real
+            the name). But otherwise we trust you to ensure this is a real
             engine name.
             E.g. if True, 'code-ada-001' -> 'code-ada-001'
             and 'ada' -> 'ada'.
