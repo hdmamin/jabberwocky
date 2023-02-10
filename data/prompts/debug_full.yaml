@@ -14,7 +14,7 @@ reminder: "Could try davinci text as well but codex is free for now. You may wan
 doc: |-
   Variant that uses the full notebook/python script's code instead of just the current function. File_type arg should be either "jupyter notebook" or "python script". TODO might need to remove docstring stop sequence in case the generated solution should contain that.
 prompt: |-
-  """This {file_type} is not working as expected. Help me debug it. First read my question, then examine the snippet of code that is causing the issue and look at the values of the local and global variables. Ignore the roboduck() function call - it is merely for debugging. Finally, explain what the problem is and how to fix it. If you don't know what the problem is, list a few possible causes or things I could try in order to identify the issue. Be concise and use simple language because I am a beginning programmer.
+  """This {file_type} is not working as expected. Help me debug it. First read my question, then examine the snippet of code that is causing the issue and look at the values of the local and global variables. If you see a function called roboduck, ignore it. Finally, explain what the problem is and how to fix it. If you don't know what the problem is, list a few possible causes or things I could try in order to identify the issue. Be concise and use simple language because I am a beginning programmer.
 
   QUESTION:
   {question}
