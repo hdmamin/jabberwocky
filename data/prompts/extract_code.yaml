@@ -1,0 +1,20 @@
+# THE FIRST SET OF FIELDS BELOW MATCHES THE DEFAULTS FROM jabberwocky.openai_utils.query_gpt3(). RECENT EXPERIENCE + READING SUGGESTS FREQUENCY_PENALTY AND PRESENCE_PENALTY DEFAULTS AROUND 0.5 MIGHT BE BETTER.
+model: code-davinci-002
+temperature: 0
+top_p: .99
+max_tokens: 512
+frequency_penalty: 0.0
+presence_penalty: 0.0
+stop: 
+- '###'
+version: 0
+doc: |-
+  Used to separate code snippets and natural language explanations from completions in response to prompts like `debug`, `debug_full`, or `debug_duckling`. This tries to extract only the code portions.
+prompt: |-
+  This passage may contain both python code and/or natural language. Extract the python code snippets. You should keep code comments and docstrings but exclude any natural language that is not commented out. If there are no code snippets, just write N/A.
+
+  ### PASSAGE
+
+  {doc}
+
+  #### PYTHON CODE SNIPPETS

@@ -2,7 +2,7 @@ model: code-davinci-002
 temperature: .0
 top_p: .99
 max_tokens: 512
-frequency_penalty: 0.0
+frequency_penalty: 0.2
 presence_penalty: 0.0
 logit_bias:
   37811: -100
