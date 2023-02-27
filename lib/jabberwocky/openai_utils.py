@@ -1113,7 +1113,7 @@ class GPTBackend:
             './data/logs/2022.04.07.jsonlines' (current year, month, day).
             If str, use that as the log path. If False or None, do not log.
         subwords: bool
-            If True and stream=True but the currentbackend doesn't natively
+            If True and stream=True but the current backend doesn't natively
             support streaming, you have a choice of streaming words or
             subword tokens. In most cases subwords=True should be preferable,
             but if you're piping words to some kind of audio generation service
