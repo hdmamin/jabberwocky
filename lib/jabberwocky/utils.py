@@ -9,6 +9,7 @@ import logging
 import os
 from pathlib import Path
 import re
+from string import Formatter
 import sys
 from threading import Thread
 import warnings
@@ -697,3 +698,21 @@ def seconds_til_midnight(dt=None):
     dt = dt or datetime.today()
     midnight = datetime.combine(dt, time())
     return (midnight - dt).seconds
+
+
+def field_names(template):
+    """Get names of the fields/variables present in a string (in our case
+    a prompt template).
+
+    Parameters
+    ----------
+    template: str
+        String template that may contain variable(s), such that we might
+        call template.format() with it.
+
+    Returns
+    -------
+    set[str]: Unique var names present in template. Note that prompts
+    with a single unnamed variable will return no field names.
+    """
+    return set(name for _, name, *_ in Formatter().parse(template) if name)

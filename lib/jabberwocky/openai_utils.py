@@ -72,7 +72,7 @@ from jabberwocky.streaming import stream_response, truncate_at_first_stop
 from jabberwocky.utils import strip, bold, load_yaml, colored, \
     hooked_generator, load_api_key, with_signature, JsonlinesLogger,\
     thread_starmap, ReturningThread, containerize, touch, save_yaml, \
-    seconds_til_midnight
+    seconds_til_midnight, field_names
 
 
 # Use these with caution when writing library functionality. Better to use
@@ -1816,6 +1816,23 @@ class PromptManager:
             print(res)
         else:
             return res
+
+    def field_names(self, task):
+        """List fields that need to be provided to the prompt for a given task.
+
+        Parameters
+        ----------
+        task: str
+            Name of task.
+
+        Returns
+        -------
+        set[str]: Names of fields that need to be provided to fill in the
+        prompt for a given task. Note that prompts with one unnamed field
+        (e.g. `summarize`) will return an empty list too.
+        """
+        prompt = self.prompt(task)
+        return field_names(prompt)
 
     def format_prompt(self, task, template, text=''):
         # Handle tasks that require some special handling to integrate
