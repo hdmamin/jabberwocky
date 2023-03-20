@@ -2531,6 +2531,9 @@ class ConversationManager:
         return hooked_generator(res, self.turn_hook)
 
     def turn_hook(self, item, i, is_post=False):
+        """Used by `query` when stream=True to update gpt3_turns list with
+        newest response.
+        """
         text = item[0]
         if is_post:
             self.gpt3_turns[-1] = self.gpt3_turns[-1].strip()

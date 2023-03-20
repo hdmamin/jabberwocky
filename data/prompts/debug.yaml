@@ -19,7 +19,7 @@ doc: |-
 prompt: |-
   """ANSWER KEY
 
-  This code snippet is not working as expected. Help me debug it. First read my question, then examine the snippet of code that is causing the issue and look at the values of the local and global variables. If you see a function called duck, ignore it. In the section titled SOLUTION PART 1, use plain English to explain what the problem is and how to fix it. In the section titled SOLUTION PART 2, write a corrected version of the input code snippet. If you don't know what the problem is, SOLUTION PART 1 should list a few possible causes or things I could try in order to identify the issue and SOLUTION PART 2 should say N/A. Be concise and use simple language because I am a beginning programmer.
+  This code snippet is not working as expected. Help me debug it. First read my question, then examine the snippet of code that is causing the issue and look at the values of the local and global variables. In the section titled SOLUTION PART 1, use plain English to explain what the problem is and how to fix it. In the section titled SOLUTION PART 2, write a corrected version of the input code snippet. If you don't know what the problem is, SOLUTION PART 1 should list a few possible causes or things I could try in order to identify the issue and SOLUTION PART 2 should say N/A. Be concise and use simple language because I am a beginning programmer.
 
   QUESTION:
   {question}

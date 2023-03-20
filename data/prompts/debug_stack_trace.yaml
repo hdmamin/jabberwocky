@@ -8,10 +8,10 @@ logit_bias:
   37811: -100
   27901: -50
 stop: 
-- 'QUESTION'
 - 'ANSWER KEY'
 - 'SOLUTION PART 1'
 - 'SOLUTION PART 3'
+- 'STACK TRACE'
 version: 0
 reminder: "Could try davinci text as well but codex is free for now. You may want to strip triple double-quotes from the end in case codex generates them (we don't include that as a stop phrase because codex might generate a docstring as part of a correct code snippet)."
 doc: |-
@@ -19,7 +19,7 @@ doc: |-
 prompt: |-
   """ANSWER KEY
 
-  This code snippet throws an error. Help me fix it. First review the problematic code snippet and resulting stack trace, then examine the the local and global variables for additional clues. If you see a function called duck, ignore it. In the section titled SOLUTION PART 1, use plain English to explain what the problem is and how to fix it. In the section titled SOLUTION PART 2, write a corrected version of the input code snippet. If you don't know what the problem is, SOLUTION PART 1 should list a few possible causes or things I could try in order to identify the issue and SOLUTION PART 2 should say N/A. Be concise and use simple language because I am a beginning programmer.
+  This code snippet throws an error. Help me fix it. First review the problematic code snippet and resulting stack trace, then examine the the local and global variables for additional clues. In the section titled SOLUTION PART 1, use plain English to explain what the problem is and how to fix it. In the section titled SOLUTION PART 2, write a corrected version of the input code snippet. If you don't know what the problem is, SOLUTION PART 1 should list a few possible causes or things I could try in order to identify the issue and SOLUTION PART 2 should say N/A. Be concise and use simple language because I am a beginning programmer.
 
   CURRENT CODE SNIPPET:
   {code}
