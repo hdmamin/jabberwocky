@@ -594,19 +594,14 @@ class EngineMap:
             backend.
         openai_passthrough: bool
             If True and openai is the specified backend and engine is a str,
-            we simply return the input. I.e. we trust you to ensure
-            this is a real engine name.
+            we simply return the input (we do at least check that it contains
+            one of the bases, i.e. that "ada" or "davinci" etc. is present in
+            the name). But otherwise we trust you to ensure this is a real
+            engine name.
             E.g. if True, 'code-ada-001' -> 'code-ada-001'
             and 'ada' -> 'ada'.
             If False, 'code-ada-001' -> 'text-ada-001'
             and 'ada' -> 'text-ada-001'.
-
-            NOTE: in jabberwocky <3.0.0, we still checked that the model name
-            provided by the user contained one of the bases,
-            i.e. that "ada" or "davinci" etc. was present in the name. We no
-            longer do that because openai seems to be moving away from that
-            naming convention anyway (maybe? Relevant newer model names are
-            'gpt-3.5-turbo', 'gpt-4', 'gpt-4-32k').
         basify: bool
             If True and backend is openai, convert the output to one of the
             openai base engines, e.g. 'ada' instead of 'text-ada-001'.
@@ -644,8 +639,8 @@ class EngineMap:
                     'specified as an integer, it must lie in [0, 3].'
                 )
             engine_i = model
-        elif not openai_passthrough:
-            base = cls.openai_base_engine(model, strict=not openai_passthrough)
+        else:
+            base = cls.openai_base_engine(model)
             engine_i = cls.bases.index(base)
 
         backend = backend or GPT.current()
@@ -692,7 +687,7 @@ class EngineMap:
         return model
 
     @classmethod
-    def openai_base_engine(cls, model: str, strict=False):
+    def openai_base_engine(cls, model: str):
         """Extract openai base engine name (e.g. 'ada') from a potentially
         longer string (e.g. 'text-ada-001'). If you pass in the short name, it
         should just return itself.
@@ -701,26 +696,16 @@ class EngineMap:
         ----------
         model: str
             E.g. 'code-babbage-001', 'text-ada-001', 'davinci'
-        strict: bool
-            If True, raise a ValueError if no recognized base is found. If
-            False, raise a warning and return an empty string in that case.
 
         Returns
         -------
-        str: Empty if strict=False and no matches were found.
+        str
         """
         matches = [chunk for chunk in model.split('-')
                    if chunk in cls.bases]
         if not matches:
-            msg = f'Model "{model}" does not contain any of the ' \
-                  f'recognized openai bases {cls.bases}.'
-            if strict:
-                raise ValueError(msg)
-            else:
-                warnings.warn(msg)
-                return ''
-        # Strict param has no effect here because it's unclear which base to
-        # choose when multiple are found.
+            raise ValueError(f'Model "{model}" does not contain any of the '
+                             f'recognized openai bases {cls.bases}.')
         if len(matches) > 1:
             raise ValueError(f'Model "{model}" contains multiple matches '
                              f'among the recognized openai bases '
