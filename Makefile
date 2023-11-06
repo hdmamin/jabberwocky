@@ -1,4 +1,4 @@
-.PHONY: todo nb clean lib pypi readmes run_gui prompt persona gui_env alexa_env run_alexa alexa_logs
+.PHONY: todo nb clean lib pypi readmes run_gui prompt persona gui_env alexa_env run_alexa alexa_logs ping
 .SILENT: ngrok_url run_alexa alexa_logs persona prompt hooks ngrok
 
 # Convention: add _ between comment sign and TODO to hide an item that you don't want to delete entirely. This will still be findable if you run `ack TODO`.
@@ -51,6 +51,13 @@ run_alexa:
 	. alexa/venv/bin/activate; \
 	nohup python alexa/app.py > /dev/null 2>&1 &
 	echo "You can use 'make alexa_logs' to view the latest logs from your running skill."
+
+ping:
+	# Check that alexa skill is running and exposed via ngrok.
+	# Had trouble reusing `make ngrok_url` inside makefile so just repeated logic here. This is a
+	# make variable, not a shell variable.
+	$(eval public_url := $(shell curl localhost:4040/api/tunnels | jq '.tunnels[0].public_url'))
+	curl -X GET "$(public_url)/health"
 
 alexa_logs:
 	watch -n 1 -d tail alexa/app.log
